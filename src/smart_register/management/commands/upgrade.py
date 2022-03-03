@@ -53,7 +53,7 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, ini
 
     v1, __ = Validator.objects.get_or_create(name='max_length_25',
                                              message="String too long (max 25.chars)",
-                                             code="value.length>25;"
+                                             code="value.length<25;"
                                              )
     v2, __ = Validator.objects.get_or_create(name='date_after_3000',
                                              message="Date must be after 3000-12-01",
