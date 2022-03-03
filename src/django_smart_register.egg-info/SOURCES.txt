@@ -1,6 +1,0 @@
-README.md
-setup.py
-src/django_smart_register.egg-info/PKG-INFO
-src/django_smart_register.egg-info/SOURCES.txt
-src/django_smart_register.egg-info/dependency_links.txt
-src/django_smart_register.egg-info/top_level.txt
