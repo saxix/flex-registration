@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime, date, time
 
 from django import forms
 from django.contrib.postgres.fields import CICharField
@@ -21,17 +22,25 @@ class Validator(models.Model):
     def __str__(self):
         return self.name
 
+    @staticmethod
+    def js_type(value):
+        if isinstance(value, (datetime, date, time)):
+            return str(value)
+        return value
+
     def validate(self, value):
         try:
             import pyduktape
             context = pyduktape.DuktapeContext()
-            context.set_globals(value=value)
-            res = json.dumps(context.eval_js(self.code))
+            context.set_globals(value=self.js_type(value))
+            res = context.eval_js(self.code)
             if not res:
                 raise ValidationError(self.message)
+        except ValidationError:
+            raise
         except Exception as e:
             logger.exception(e)
-            raise Exception()
+            raise Exception(e)
 
 
 def get_validators(field):
@@ -53,7 +62,6 @@ class FlexForm(models.Model):
     def get_form(self):
         fields = {}
         for field in self.fields.all():
-            choices = None
             kwargs = dict(label=field.label,
                           required=field.required,
                           validators=get_validators(field)

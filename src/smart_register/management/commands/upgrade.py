@@ -55,6 +55,12 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, ini
                                              message="String too long (max 25.chars)",
                                              code="value.length>25;"
                                              )
+    v2, __ = Validator.objects.get_or_create(name='date_after_3000',
+                                             message="Date must be after 3000-12-01",
+                                             code="""var limit = Date.parse("3000-12-01");
+var dt = Date.parse(value);
+dt > limit;"""
+                                             )
 
     hh, __ = FlexForm.objects.get_or_create(name='Household',
                                             validation=""
@@ -73,7 +79,8 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, ini
                              field=forms.CharField,
                              validator=v1)
     ind.fields.get_or_create(label='Date Of Birth',
-                             field=forms.DateField)
+                             field=forms.DateField,
+                             validator=v2)
 
     ind.fields.get_or_create(label='Options',
                              field=forms.ChoiceField,

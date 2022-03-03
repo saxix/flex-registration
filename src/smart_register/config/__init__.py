@@ -3,9 +3,9 @@ import uuid
 from environ import Env
 
 
-
 def parse_bookmarks(value):
     return ''.join(value.split(r'\n'))
+
 
 def parse_emails(value):
     admins = value.split(',')

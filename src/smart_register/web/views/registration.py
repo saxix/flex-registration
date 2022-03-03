@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView
 from django.views.generic.edit import ProcessFormView, BaseFormView, FormView
 
+from smart_register.core.utils import jsonfy
 from smart_register.registration.models import DataSet, Record
 
 
@@ -43,8 +44,11 @@ class RegisterView(FormView):
 
     def get_formsets(self):
         formsets = {}
+        attrs = self.get_form_kwargs().copy()
+        attrs.pop('prefix')
         for child in self.dataset.flex_form.childs.all():
-            formsets[child.name] = formset_factory(child.get_form(), extra=2)(**self.get_form_kwargs())
+            formsets[child.name] = formset_factory(child.get_form(), extra=2)(
+                prefix=f"{child.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
@@ -71,8 +75,10 @@ class RegisterView(FormView):
             data[name] = []
             for f in fs:
                 data[name].append(f.cleaned_data)
+
         record = Record.objects.create(registration=self.dataset,
-                              data=data)
+                                       data=jsonfy(data))
+
         return render(self.request, "registration/data.html",
                       {'data': data,
                        'record': record,

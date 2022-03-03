@@ -1,16 +1,59 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load formset_tags %}
 {% block body %}
     {{ dataset }}
     <form method="post">
         {% csrf_token %}
         <table>
             {{ form }}
-            {% for name, formset in formsets.items %}
-                <tr><td>{{ name }}</td></tr>
-                {{ formset }}
-            {% endfor %}
-
         </table>
+        {% for name, formset in formsets.items %}
+            <table id="{{ name }}">
+                <tr>
+                    <td>{{ name }}
+                        <div class="managementForm">{{ formset.management_form }}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="forms {{ name }}">
+                        {% for frm in formset %}
+                            <table class="form">
+                                {{ frm }}
+                            </table>
+                        {% endfor %}
+                    </td>
+                </tr>
+            </table>
+            <input type="button" data-fs="{{ name }}" class="add" value="Add">
+
+        {% endfor %}
+
         <input type="submit">
     </form>
+    {% for name, formset in formsets.items %}
+        <script type="form-template" id="{{ name }}-empty">
+            <table class="form">{% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}</table>
+        </script>
+    {% endfor %}
+    <script>
+        $(".add").on("click", function () {
+            var targetName = $(this).data("fs");
+            var $target = $("#" + targetName);
+            var $managementForm = $target.find(".managementForm");
+            var managementFormField = function (name) {
+                return $managementForm.find("input[name=" + targetName + "-" + name + "]");
+            };
+
+            var forms = $target.find("table.form");
+            var newIndex = forms.length + 1;
+            managementFormField("TOTAL_FORMS").val(newIndex+1);
+
+            var $emptyForm = $("#" + targetName + "-empty");
+            var newFormHtml = $emptyForm.html()
+                                  .replace(new RegExp("__prefix__", "g"), newIndex)
+                                  .replace(new RegExp("<\\\\/script>", "g"));
+            $target.find('td.forms.' + targetName).append(newFormHtml);
+
+        });
+    </script>
+
 {% endblock body %}
