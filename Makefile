@@ -31,5 +31,5 @@ heroku:
 heroku-reset: heroku
 	heroku pg:reset --confirm flex-register
 	heroku run python manage.py migrate
-	heroku run python manage.py collectstatic --noinput
+	heroku run python manage.py upgrade --noinput
 
