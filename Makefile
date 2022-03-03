@@ -25,10 +25,7 @@ lint:
 	docker images | grep ${DOCKER_IMAGE_NAME}
 
 heroku:
-	@git checkout master
-	@git merge develop
 	@git push heroku develop:master
-	@git checkout develop
 	@echo "check demo at https://flex-register.herokuapp.com/"
 
 heroku-reset: heroku

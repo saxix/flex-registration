@@ -8,7 +8,7 @@ colorama==0.4.4; python_version >= "3.6" and python_full_version < "3.0.0" and p
 cryptography==36.0.1; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version < "4" and python_version >= "3.6"
 defusedxml==0.7.1; python_version >= "3.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.7"
 diff-match-patch==20200713; python_version >= "3.6"
-django-admin-extra-buttons==1.1.0
+django-admin-extra-buttons==1.3.0
 django-adminactions==1.15
 django-adminfilters==2.0.1
 django-click==2.3.0
