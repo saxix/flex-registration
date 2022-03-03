@@ -32,5 +32,5 @@ heroku:
 heroku-reset: heroku
 	heroku pg:reset --confirm django-smart-admin
 	heroku run python manage.py migrate
-	heroku run python ~Procfilemanage.py collectstatic --noinput
+	heroku run python manage.py collectstatic --noinput
 
