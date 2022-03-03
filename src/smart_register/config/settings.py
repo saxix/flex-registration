@@ -1,11 +1,15 @@
 import logging
 import mimetypes
+import os
 from collections import OrderedDict
 from django_regex.utils import RegexList
 from pathlib import Path
 
 import smart_register
+
 from . import env
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 mimetypes.add_type('image/svg+xml', '.svg', True)
 mimetypes.add_type('image/svg+xml', '.svgz', True)
@@ -55,6 +59,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.gzip.GZipMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -164,14 +169,16 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
-STATIC_ROOT = env('STATIC_ROOT')
+# STATIC_ROOT = env('STATIC_ROOT')
 # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-STATICFILES_STORAGE = env('STATICFILES_STORAGE')
+# STATICFILES_STORAGE = env('STATICFILES_STORAGE')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 STATICFILES_DIRS = [
-    # PACKAGE_DIR / 'web/static',
+    os.path.join(BASE_DIR, 'static'),
 ]
 # -------- Added Settings
 ADMINS = env('ADMINS')
