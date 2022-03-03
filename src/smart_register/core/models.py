@@ -53,10 +53,14 @@ class FlexForm(models.Model):
     def get_form(self):
         fields = {}
         for field in self.fields.all():
-            fields[field.name] = field.field(label=field.label,
-                                             required=field.required,
-                                             validators=get_validators(field),
-                                             )
+            choices = None
+            kwargs = dict(label=field.label,
+                          required=field.required,
+                          validators=get_validators(field)
+                          )
+            if field.choices and hasattr(field.field, 'choices'):
+                kwargs['choices'] = [(k.strip(), k.strip()) for k in field.choices.split(',')]
+            fields[field.name] = field.field(**kwargs)
         form_class_attrs = {
             **fields,
         }
@@ -81,6 +85,7 @@ class FlexFormField(models.Model):
     label = models.CharField(max_length=30)
     name = models.CharField(max_length=30, blank=True)
     field = StrategyClassField(registry=registry)
+    choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
     validator = models.ForeignKey(Validator, blank=True, null=True, on_delete=models.PROTECT)
 

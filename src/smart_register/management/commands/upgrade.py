@@ -72,7 +72,15 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, ini
     ind.fields.get_or_create(label='Last Name',
                              field=forms.CharField,
                              validator=v1)
+    ind.fields.get_or_create(label='Date Of Birth',
+                             field=forms.DateField)
+
+    ind.fields.get_or_create(label='Options',
+                             field=forms.ChoiceField,
+                             choices="opt 1, opt 2, opt 3")
+
     hh.childs.get_or_create(name='individuals',
                             flex_form=ind)
+
     reg = DataSet.objects.get_or_create(name="Registration1",
                                         flex_form=hh)
