@@ -180,7 +180,7 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-os.mkdir(os.path.join(BASE_DIR, 'static'))
+os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
 
 # -------- Added Settings
 ADMINS = env('ADMINS')
