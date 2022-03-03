@@ -1,1 +1,1 @@
-web: cd tests/demoapp && gunicorn demo.wsgi
+web: gunicorn smart_register.config.wsgi

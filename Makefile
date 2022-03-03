@@ -1,10 +1,5 @@
-
-develop:
-	python -m venv .venv
-	.venv/bin/pip install -e .[dev,full]
-
-demo:
-	cd tests/demoapp && ./manage.py testserver ../fixtures.json
+help:
+	echo ""
 
 clean:
 	# cleaning
@@ -16,21 +11,16 @@ fullclean:
 	@rm -rf .tox .cache
 	$(MAKE) clean
 
-docs:
-	rm -fr ~build/docs/
-	sphinx-build -n docs/ ~build/docs/
-
 lint:
 	@flake8 src/ tests/
 	@isort src/ tests/
-
 
 .PHONY: build docs
 
 
 .build:
 	docker build \
-		-t saxix/smart-admin \
+		-t saxix/flex-registration \
 		-f docker/Dockerfile .
 	docker images | grep ${DOCKER_IMAGE_NAME}
 
@@ -43,6 +33,6 @@ heroku:
 
 heroku-reset: heroku
 	heroku pg:reset --confirm django-smart-admin
-	heroku run python tests/demoapp/manage.py migrate
-	heroku run python tests/demoapp/manage.py collectstatic --noinput
+	heroku run python manage.py migrate
+	heroku run python ~Procfilemanage.py collectstatic --noinput
 

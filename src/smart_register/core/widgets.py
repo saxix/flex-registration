@@ -4,7 +4,7 @@ from django.templatetags.static import static
 
 
 class PythonEditor(forms.Textarea):
-    template_name = "steficon/widgets/codewidget.html"
+    template_name = "admin/core/widgets/editor.html"
 
     def __init__(self, *args, **kwargs):
         theme = kwargs.pop("theme", "midnight")
@@ -15,20 +15,20 @@ class PythonEditor(forms.Textarea):
     class Media:
         css = {
             "all": (
-                static("admin/steficon/codemirror/codemirror.css"),
-                static("admin/steficon/codemirror/fullscreen.css"),
-                static("admin/steficon/codemirror/midnight.css"),
-                static("admin/steficon/codemirror/foldgutter.css"),
+                static("codemirror/codemirror.css"),
+                static("codemirror/fullscreen.css"),
+                static("codemirror/midnight.css"),
+                static("codemirror/foldgutter.css"),
             )
         }
         js = (
-            static("admin/steficon/codemirror/codemirror.js"),
-            static("admin/steficon/codemirror/python.js"),
-            static("admin/steficon/codemirror/fullscreen.js"),
-            static("admin/steficon/codemirror/active-line.js"),
-            static("admin/steficon/codemirror/foldcode.js"),
-            static("admin/steficon/codemirror/foldgutter.js"),
-            static("admin/steficon/codemirror/indent-fold.js"),
+            static("codemirror/codemirror.js"),
+            static("codemirror/python.js"),
+            static("codemirror/fullscreen.js"),
+            static("codemirror/active-line.js"),
+            static("codemirror/foldcode.js"),
+            static("codemirror/foldgutter.js"),
+            static("codemirror/indent-fold.js"),
         )
 
 

@@ -4,7 +4,12 @@
     <form method="post">
         {% csrf_token %}
         <table>
-            -- {{ form }} --
+            {{ form }}
+            {% for name, formset in formsets.items %}
+                <tr><td>{{ name }}</td></tr>
+                {{ formset }}
+            {% endfor %}
+
         </table>
         <input type="submit">
     </form>
