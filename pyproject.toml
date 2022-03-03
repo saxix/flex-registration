@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "unicef-smart-register"
+name = "django-smart-register"
 version = "0.1.0"
 description = ""
 authors = ["sax <s.apostolico@gmail.com>"]
