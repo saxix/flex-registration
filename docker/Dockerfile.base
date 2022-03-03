@@ -1,0 +1,59 @@
+FROM python:3.9.2-alpine3.13
+
+ARG BUILD_DATE
+ARG PIPENV_ARGS
+ARG VERSION
+ARG TEST
+
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST 1
+ENV CPLUS_INCLUDE_PATH /usr/include/libxml2/
+ENV C_INCLUDE_PATH /usr/include/libxml2/
+ENV TEST ${TEST}
+
+RUN apk add --no-cache --virtual .build-deps \
+        cargo \
+        gcc \
+        libffi-dev \
+        libxml2-dev \
+        libxslt-dev \
+        linux-headers \
+        musl-dev \
+        openssl-dev \
+        rust \
+        postgresql-dev \
+        python3-dev
+
+
+
+
+RUN apk add --no-cache --virtual .run-deps \
+        --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
+        --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+        gosu \
+        libpq \
+        libxml2 \
+        libxslt \
+        mailcap \
+        zeromq-dev
+
+
+RUN mkdir -p /code
+COPY poetry.lock pyproject.toml /code/
+WORKDIR /code
+
+RUN set -ex \
+    ls -al /code \
+    && pip install -U pip "poetry==1.1.5" \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-dev --no-root --no-interaction --no-ansi
+
+RUN sha1sum poetry.lock > /CHECKSUM
+
+RUN apk del .build-deps \
+    && rm -rf /var/cache/apk/* \
+    && rm -fr /root/.cache/ \
+    && rm -fr /usr/include/ \
+    && pip install -U pip "poetry==1.1.5"
+
+RUN addgroup --gid 1024 sos \
+    && adduser --disabled-password --ingroup sos -S www
