@@ -29,7 +29,7 @@ heroku:
 	@echo "check demo at https://flex-register.herokuapp.com/"
 
 heroku-reset: heroku
-	heroku pg:reset --confirm django-smart-admin
+	heroku pg:reset --confirm flex-register
 	heroku run python manage.py migrate
 	heroku run python manage.py collectstatic --noinput
 
