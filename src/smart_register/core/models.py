@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime, date, time
 
+import jsonpickle
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
@@ -10,14 +11,18 @@ from django.utils.text import slugify
 from strategy_field.fields import StrategyClassField
 
 from .registry import registry
+from .utils import jsonfy, JSONEncoder, namify
 
 logger = logging.getLogger(__name__)
 
 
 class Validator(models.Model):
+    FORM = 'form'
+    FIELD = 'field'
     name = CICharField(max_length=255, unique=True)
     message = models.CharField(max_length=255)
     code = models.TextField(blank=True, null=True)
+    target = models.CharField(max_length=5, choices=((FORM, 'Form'), (FIELD, 'Field')))
 
     def __str__(self):
         return self.name
@@ -26,21 +31,35 @@ class Validator(models.Model):
     def js_type(value):
         if isinstance(value, (datetime, date, time)):
             return str(value)
+        if isinstance(value, (dict,)):
+            return jsonfy(value)
         return value
 
     def validate(self, value):
+        from py_mini_racer import MiniRacer
+        ctx = MiniRacer()
+        ctx.eval(f"var value = {jsonpickle.encode(value)};")
+        ret = ctx.eval(self.code)
         try:
-            import pyduktape
-            context = pyduktape.DuktapeContext()
-            context.set_globals(value=self.js_type(value))
-            res = context.eval_js(self.code)
-            if not res:
-                raise ValidationError(self.message)
-        except ValidationError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            raise Exception(e)
+            ret = jsonpickle.decode(ret)
+        except TypeError as e:
+            pass
+        if not ret:
+            raise ValidationError(self.message)
+
+    # def validate_(self, value):
+    #     try:
+    #         import pyduktape
+    #         context = pyduktape.DuktapeContext()
+    #         context.set_globals(value=self.js_type(value))
+    #         res = context.eval_js(self.code)
+    #         if not res:
+    #             raise ValidationError(self.message)
+    #     except ValidationError:
+    #         raise
+    #     except Exception as e:
+    #         logger.exception(e)
+    #         raise Exception(e)
 
 
 def get_validators(field):
@@ -52,9 +71,27 @@ def get_validators(field):
     return []
 
 
+class FlexFormBaseForm(forms.Form):
+    flex_form = None
+
+    def is_valid(self):
+        return super().is_valid()
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        if self.is_valid() and self.flex_form and self.flex_form.validator:
+            try:
+                self.flex_form.validator.validate(cleaned_data)
+            except Exception as e:
+                raise ValidationError(e)
+        return cleaned_data
+
+
 class FlexForm(models.Model):
     name = CICharField(max_length=255, unique=True)
-    validation = models.TextField(blank=True, null=True)
+    validator = models.ForeignKey(Validator,
+                                  limit_choices_to={'target': Validator.FORM},
+                                  blank=True, null=True, on_delete=models.PROTECT)
 
     def __str__(self):
         return self.name
@@ -70,16 +107,22 @@ class FlexForm(models.Model):
                 kwargs['choices'] = [(k.strip(), k.strip()) for k in field.choices.split(',')]
             fields[field.name] = field.field(**kwargs)
         form_class_attrs = {
+            'flex_form': self,
             **fields,
+
         }
-        flexForm = type(forms.Form)(self.name, (forms.Form,), form_class_attrs)
+        flexForm = type(FlexFormBaseForm)(f'{self.name}FlexForm', (FlexFormBaseForm,), form_class_attrs)
         return flexForm
 
 
-class ChildForm(models.Model):
+class FormSet(models.Model):
     name = CICharField(max_length=255, unique=True)
-    parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="childs")
+    parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "FormSet"
+        verbose_name_plural = "FormSets"
 
     def __str__(self):
         return self.name
@@ -95,7 +138,9 @@ class FlexFormField(models.Model):
     field = StrategyClassField(registry=registry)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
-    validator = models.ForeignKey(Validator, blank=True, null=True, on_delete=models.PROTECT)
+    validator = models.ForeignKey(Validator, blank=True, null=True,
+                                  limit_choices_to={'target': Validator.FIELD},
+                                  on_delete=models.PROTECT)
 
     class Meta:
         unique_together = ('name', 'flex_form'),
@@ -105,6 +150,8 @@ class FlexFormField(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.name:
-            self.name = slugify(self.label)
+            self.name = namify(self.label)
+        else:
+            self.name = namify(self.name)
 
         super().save(force_insert, force_update, using, update_fields)

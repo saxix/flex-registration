@@ -3,7 +3,7 @@ from django.contrib.admin import register, TabularInline
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
-from .models import FlexFormField, FlexForm, Validator, ChildForm
+from .models import FlexFormField, FlexForm, Validator, FormSet
 
 
 @register(Validator)
@@ -11,9 +11,16 @@ class ValidatorAdmin(SmartModelAdmin):
     form = ValidatorForm
 
 
-@register(ChildForm)
-class ChildFormAdmin(SmartModelAdmin):
+@register(FormSet)
+class FormSetAdmin(SmartModelAdmin):
     list_display = ('name', 'parent', 'flex_form')
+
+
+class FormSetInline(TabularInline):
+    model = FormSet
+    fk_name = 'parent'
+    extra = 0
+    fields = ('name', 'flex_form')
 
 
 @register(FlexFormField)
@@ -36,5 +43,6 @@ class FlexFormFieldInline(TabularInline):
 
 @register(FlexForm)
 class FlexFormAdmin(SmartModelAdmin):
+    list_display = ('name', 'validator')
     search_fields = ('name',)
-    inlines = [FlexFormFieldInline]
+    inlines = [FlexFormFieldInline, FormSetInline]

@@ -1,8 +1,7 @@
 from django.forms import formset_factory
 from django.shortcuts import render
-from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView
-from django.views.generic.edit import ProcessFormView, BaseFormView, FormView
+from django.views.generic.edit import FormView
 
 from smart_register.core.utils import jsonfy
 from smart_register.registration.models import DataSet, Record
@@ -46,7 +45,7 @@ class RegisterView(FormView):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop('prefix')
-        for child in self.dataset.flex_form.childs.all():
+        for child in self.dataset.flex_form.formsets.all():
             formsets[child.name] = formset_factory(child.get_form(), extra=2)(
                 prefix=f"{child.name}", **attrs)
         return formsets

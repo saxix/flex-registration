@@ -51,43 +51,51 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, ini
     from smart_register.core.models import FlexForm, Validator, FlexFormField
     from smart_register.registration.models import DataSet, Record
 
+    vf1, __ = Validator.objects.update_or_create(name='name must start with "S"',
+                                                 defaults=dict(message="name must start with 'S'",
+                                                               target=Validator.FORM,
+                                                               code="value.family_name.startsWith('S');"),
+                                                 )
     v1, __ = Validator.objects.get_or_create(name='max_length_25',
-                                             message="String too long (max 25.chars)",
-                                             code="value.length<25;"
+                                             defaults=dict(message="String too long (max 25.chars)",
+                                                           target=Validator.FIELD,
+                                                           code="value.length<25;")
                                              )
     v2, __ = Validator.objects.get_or_create(name='date_after_3000',
-                                             message="Date must be after 3000-12-01",
-                                             code="""var limit = Date.parse("3000-12-01");
+                                             defaults=dict(message="Date must be after 3000-12-01",
+                                                           target=Validator.FIELD,
+                                                           code="""var limit = Date.parse("3000-12-01");
 var dt = Date.parse(value);
 dt > limit;"""
-                                             )
+                                                           ))
 
     hh, __ = FlexForm.objects.get_or_create(name='Household',
-                                            validation=""
+                                            defaults=dict(validator=vf1)
                                             )
     hh.fields.get_or_create(label='Family Name',
                             field=forms.CharField,
                             required=True)
 
     ind, __ = FlexForm.objects.get_or_create(name='Individual',
-                                             validation=""
+                                             defaults=dict(validator=vf1)
                                              )
     ind.fields.get_or_create(label='First Name',
-                             field=forms.CharField,
-                             validator=v1)
+                             defaults=dict(field=forms.CharField,
+                                           required=True,
+                                           validator=v1))
     ind.fields.get_or_create(label='Last Name',
-                             field=forms.CharField,
-                             validator=v1)
+                             defaults=dict(field=forms.CharField,
+                                           validator=v1))
     ind.fields.get_or_create(label='Date Of Birth',
-                             field=forms.DateField,
-                             validator=v2)
+                             defaults=dict(field=forms.DateField,
+                                           validator=v2))
 
     ind.fields.get_or_create(label='Options',
-                             field=forms.ChoiceField,
-                             choices="opt 1, opt 2, opt 3")
+                             defaults=dict(field=forms.ChoiceField,
+                                           choices="opt 1, opt 2, opt 3"))
 
-    hh.childs.get_or_create(name='individuals',
-                            flex_form=ind)
+    hh.formsets.get_or_create(name='individuals',
+                            defaults=dict(flex_form=ind))
 
     reg = DataSet.objects.get_or_create(name="Registration1",
-                                        flex_form=hh)
+                                        defaults=dict(flex_form=hh))
