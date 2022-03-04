@@ -1,0 +1,9 @@
+.*
+~*
+*.db
+*.egg-info
+!.gitignore
+!.github
+!.isort.cfg
+!.flake8
+!.pre-commit-config.yaml
