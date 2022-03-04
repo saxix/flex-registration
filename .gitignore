@@ -2,6 +2,7 @@
 ~*
 *.db
 *.egg-info
+dist/
 !.gitignore
 !.github
 !.isort.cfg
