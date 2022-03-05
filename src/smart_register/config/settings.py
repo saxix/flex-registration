@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'django.forms',
     'import_export',
     # 'tinymce',
     # ---
@@ -54,9 +53,11 @@ INSTALLED_APPS = [
     'hijack',
     'smart_register',
     'smart_register.web',
+    'django.forms',
     'smart_register.core',
     'smart_register.registration',
 ]
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -77,7 +78,10 @@ ROOT_URLCONF = 'smart_register.config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [PACKAGE_DIR / 'web/templates'],
+        'DIRS': [
+            PACKAGE_DIR / 'core/templates',
+            PACKAGE_DIR / 'web/templates'
+        ],
         # 'APP_DIRS': True,
         'OPTIONS': {
             'loaders': [
@@ -178,7 +182,7 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'web/static'),
 ]
 os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
 

@@ -1,5 +1,10 @@
 from django import forms
 from strategy_field.registry import Registry
+from . import widgets
+
+WIDGET_FOR_FORMFIELD_DEFAULTS = {
+    forms.DateField: {'widget': widgets.SmartDateWidget}
+}
 
 
 class FieldRegistry(Registry):
@@ -7,7 +12,6 @@ class FieldRegistry(Registry):
 
 
 registry = FieldRegistry(forms.Field)
-
 
 registry.register(forms.BooleanField)
 registry.register(forms.CharField)
@@ -23,4 +27,3 @@ registry.register(forms.MultipleChoiceField)
 registry.register(forms.NullBooleanField)
 registry.register(forms.TimeField)
 registry.register(forms.URLField)
-

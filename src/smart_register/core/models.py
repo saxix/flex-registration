@@ -4,6 +4,7 @@ from datetime import datetime, date, time
 
 import jsonpickle
 from django import forms
+from django.contrib.admin import widgets
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -11,7 +12,7 @@ from django.template.defaultfilters import pluralize
 from django.utils.text import slugify
 from strategy_field.fields import StrategyClassField
 
-from .registry import registry
+from .registry import registry, WIDGET_FOR_FORMFIELD_DEFAULTS
 from .utils import jsonfy, JSONEncoder, namify
 
 logger = logging.getLogger(__name__)
@@ -111,9 +112,10 @@ class FlexForm(models.Model):
         for field in self.fields.all():
             kwargs = dict(label=field.label,
                           required=field.required,
-                          validators=get_validators(field)
+                          validators=get_validators(field),
                           )
-
+            if field.field in WIDGET_FOR_FORMFIELD_DEFAULTS:
+                kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field.field], **kwargs}
             if field.choices and hasattr(field.field, 'choices'):
                 kwargs['choices'] = [(k.strip(), k.strip()) for k in field.choices.split(',')]
             fields[field.name] = field.field(**kwargs)
@@ -131,6 +133,7 @@ class FormSet(models.Model):
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)
+    dynamic = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "FormSet"

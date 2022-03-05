@@ -22,6 +22,9 @@ class FormSetInline(TabularInline):
     extra = 0
     fields = ('name', 'flex_form', 'extra')
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
 
 @register(FlexFormField)
 class FlexFormFieldAdmin(SmartModelAdmin):
