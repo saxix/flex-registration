@@ -45,14 +45,16 @@ class RegisterView(FormView):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop('prefix')
-        for child in self.dataset.flex_form.formsets.all():
-            formsets[child.name] = formset_factory(child.get_form(), extra=2)(
-                prefix=f"{child.name}", **attrs)
+        for fs in self.dataset.flex_form.formsets.all():
+            formsets[fs.name] = formset_factory(fs.get_form(), extra=fs.extra)(
+                prefix=f"{fs.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
         if 'formsets' not in kwargs:
             kwargs['formsets'] = self.get_formsets()
+        kwargs['POST'] = dict(self.request.POST)
+
         return super().get_context_data(dataset=self.dataset,
                                         **kwargs)
 
@@ -80,6 +82,7 @@ class RegisterView(FormView):
 
         return render(self.request, "registration/data.html",
                       {'data': data,
+                       'POST': dict(self.request.POST),
                        'record': record,
                        })
 

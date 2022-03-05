@@ -60,4 +60,4 @@ class JSONEncoder(DjangoJSONEncoder):
 
 
 def jsonfy(data):
-    return json.dumps(data, cls=JSONEncoder)
+    return json.loads(json.dumps(data, cls=JSONEncoder))

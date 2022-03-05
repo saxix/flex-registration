@@ -13,14 +13,14 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ('name', 'parent', 'flex_form')
+    list_display = ('name', 'parent', 'flex_form', 'extra')
 
 
 class FormSetInline(TabularInline):
     model = FormSet
     fk_name = 'parent'
     extra = 0
-    fields = ('name', 'flex_form')
+    fields = ('name', 'flex_form', 'extra')
 
 
 @register(FlexFormField)

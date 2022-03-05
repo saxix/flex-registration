@@ -3,6 +3,7 @@
 *.db
 *.egg-info
 dist/
+!tests/.coveragerc
 !.gitignore
 !.github
 !.isort.cfg

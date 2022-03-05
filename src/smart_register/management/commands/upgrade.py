@@ -76,9 +76,7 @@ dt > limit;"""
                             field=forms.CharField,
                             required=True)
 
-    ind, __ = FlexForm.objects.get_or_create(name='Individual',
-                                             defaults=dict(validator=vf1)
-                                             )
+    ind, __ = FlexForm.objects.get_or_create(name='Individual')
     ind.fields.get_or_create(label='First Name',
                              defaults=dict(field=forms.CharField,
                                            required=True,

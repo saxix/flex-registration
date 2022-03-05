@@ -7,6 +7,7 @@ from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.template.defaultfilters import pluralize
 from django.utils.text import slugify
 from strategy_field.fields import StrategyClassField
 
@@ -94,7 +95,16 @@ class FlexForm(models.Model):
                                   blank=True, null=True, on_delete=models.PROTECT)
 
     def __str__(self):
+
         return self.name
+
+    def add_formset(self, form, **extra):
+        defaults = {
+            'extra': 0,
+            'name': form.name.lower() + pluralize(0)
+        }
+        defaults.update(extra)
+        return FormSet.objects.create(parent=self, flex_form=form, **defaults)
 
     def get_form(self):
         fields = {}
@@ -103,6 +113,7 @@ class FlexForm(models.Model):
                           required=field.required,
                           validators=get_validators(field)
                           )
+
             if field.choices and hasattr(field.field, 'choices'):
                 kwargs['choices'] = [(k.strip(), k.strip()) for k in field.choices.split(',')]
             fields[field.name] = field.field(**kwargs)
@@ -119,6 +130,7 @@ class FormSet(models.Model):
     name = CICharField(max_length=255, unique=True)
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
+    extra = models.IntegerField(default=0, blank=False, null=False)
 
     class Meta:
         verbose_name = "FormSet"
