@@ -34,6 +34,8 @@ social-auth-app-django = "*"
 social-auth-core = "*"
 whitenoise="6.0.0"
 django-regex = "^0.4.1"
+django-fernet-fields = "^0.6"
+celery = "^5.2.3"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"

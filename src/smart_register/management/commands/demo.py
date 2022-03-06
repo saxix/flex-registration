@@ -13,7 +13,7 @@ class NotRunningInTTYException(Exception):
 
 
 @click.command()  # noqa: C901
-def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, init_stripe, **kwargs):
+def upgrade(**kwargs):
     from smart_register.core.models import FlexForm, Validator
     from smart_register.registration.models import Registration
 

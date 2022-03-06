@@ -14,6 +14,7 @@ def parse_emails(value):
 
 
 DEFAULTS = {
+    "AUTHENTICATION_BACKENDS": (list, ""),
     "SECRET_KEY": (str, ""),
     "ADMINS": (parse_emails, ""),
     "TEST_USERS": (parse_emails, ""),

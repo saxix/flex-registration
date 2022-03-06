@@ -40,12 +40,13 @@ lint:  ## code lint
 heroku:  ## deploy on Heroku
 	@git push heroku develop:master
 	@echo "check demo at https://flex-register.herokuapp.com/"
-
-heroku-reset:  ## Reset Heroku environment
-	heroku pg:reset --confirm flex-register
 	heroku run python manage.py migrate
 	heroku run python manage.py upgrade --no-input
 	heroku run python manage.py demo --no-input
+
+heroku-reset:  ## Reset Heroku environment
+	heroku pg:reset --confirm flex-register
+	$(MAKE) heroku
 
 #
 # ONLY INITIAL DEVELOPMENT STAGE

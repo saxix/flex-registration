@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 import djclick as click
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,7 @@ class NotRunningInTTYException(Exception):
 )
 @click.option("--migrate/--no-migrate", default=True, is_flag=True, help="Run database migrations")
 @click.option("--static/--no-static", default=True, is_flag=True, help="Collect static assets")
-@click.pass_context
-def upgrade(ctx, admin_email, admin_password, static, migrate, prompt, verbosity, init_stripe, **kwargs):
+def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **kwargs):
     from smart_register.config import env
 
     extra = {"no_input": prompt, "verbosity": verbosity - 1, "stdout": None}
@@ -50,4 +49,16 @@ def upgrade(ctx, admin_email, admin_password, static, migrate, prompt, verbosity
         call_command("collectstatic", **extra)
 
     if admin_email:
-        call_command("createsuperuser", email=admin_email, password=admin_password, verbosity=verbosity)
+        from django.contrib.auth import get_user_model
+
+        username, __ = admin_email.split("@")
+        try:
+            User = get_user_model()
+            u = call_command(
+                "createsuperuser", interactive=False, username=username, email=admin_email, verbosity=verbosity
+            )
+            u = User.objects.get(username=username)
+            u.set_password(admin_password)
+            u.save()
+        except CommandError:
+            raise

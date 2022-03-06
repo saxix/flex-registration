@@ -186,16 +186,10 @@ STATICFILES_DIRS = [
 # -------- Added Settings
 ADMINS = env("ADMINS")
 TEST_USERS = env("TEST_USERS")
-AUTHENTICATION_BACKENDS = (
-    # 'social_core.backends.open_id.OpenIdAuth',
-    # 'social_core.backends.google.GoogleOpenId',
-    "social_core.backends.google.GoogleOAuth2",
-    "smart_register.core.backends.AnyUserAuthBackend",
-    # 'social_core.backends.google.GoogleOAuth',
-    # 'social_core.backends.twitter.TwitterOAuth',
-    # 'social_core.backends.yahoo.YahooOpenId',
+AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-)
+] + env("AUTHENTICATION_BACKENDS")
+
 HIJACK_PERMISSION_CHECK = "smart_register.utils.is_root"
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
