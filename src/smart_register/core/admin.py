@@ -38,7 +38,7 @@ class FlexFormFieldInline(TabularInline):
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
-        if obj.pk:
+        if obj:
             fields.append("name")
         return fields
 

@@ -1,6 +1,4 @@
 from django import forms
-from django.contrib.contenttypes.models import ContentType
-from django.templatetags.static import static
 
 
 class PictureWidget(forms.Textarea):
@@ -12,6 +10,6 @@ class PictureWidget(forms.Textarea):
         ]
         css = {"all": ["webcam/webcam.css"]}
 
-    def __init__(self, attrs=None, format=None):
+    def __init__(self, attrs=None):
         attrs = {"class": "vPictureField", **(attrs or {})}
         super().__init__(attrs=attrs)

@@ -49,20 +49,6 @@ class Validator(models.Model):
         if not ret:
             raise ValidationError(self.message)
 
-    # def validate_(self, value):
-    #     try:
-    #         import pyduktape
-    #         context = pyduktape.DuktapeContext()
-    #         context.set_globals(value=self.js_type(value))
-    #         res = context.eval_js(self.code)
-    #         if not res:
-    #             raise ValidationError(self.message)
-    #     except ValidationError:
-    #         raise
-    #     except Exception as e:
-    #         logger.exception(e)
-    #         raise Exception(e)
-
 
 def get_validators(field):
     if field.validator:
