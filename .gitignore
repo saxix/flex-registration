@@ -3,6 +3,7 @@
 *.db
 *.egg-info
 dist/
+src/smart_register/staticfiles
 !tests/.coveragerc
 !.gitignore
 !.github

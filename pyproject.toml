@@ -75,6 +75,5 @@ exclude = '''
   |\.git
   |\.ini
   |Dockerfile
-  |Jenkinfile
 )/
 '''

@@ -42,7 +42,7 @@ def add_dynamic_field(form, name, value):
 
 
 def add_extra_form_to_formset_with_data(form, prefix, field_names_and_values):
-    from webtest.forms import Form, Field as WebTestField
+    from webtest.forms import Field as WebTestField
 
     total_forms_field_name = prefix + "-TOTAL_FORMS"
     next_form_index = int(form[total_forms_field_name].value)

@@ -182,7 +182,6 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "web/static"),
 ]
-os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
 
 # -------- Added Settings
 ADMINS = env("ADMINS")
@@ -278,6 +277,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {}
 
 DATE_INPUT_FORMATS = [
     "%Y-%m-%d",  # '2006-10-25'
+    "%Y/%m/%d",  # '2006/10/25'
     "%m/%d/%Y",  # '10/25/2006'
     "%m/%d/%y",  # '10/25/06'
     "%b %d %Y",  # 'Oct 25 2006'

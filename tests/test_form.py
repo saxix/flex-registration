@@ -10,12 +10,12 @@ def test_create_form(db):
 
 
 @pytest.mark.django_db
-def test_add_formset(db):
+def test_fixed_formset(db):
     from smart_register.core.models import FlexForm
 
     master = FlexForm.objects.create(name="Master")
     detail = FlexForm.objects.create(name="Detail")
-    fs = master.add_formset(detail)
+    fs = master.add_formset(detail, extra=1, dynamic=False)
     assert fs.name == "details"
 
 

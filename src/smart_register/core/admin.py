@@ -3,7 +3,7 @@ from django.contrib.admin import TabularInline, register
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
-from .models import FlexForm, FlexFormField, FormSet, Validator, OptionSet, CustomField
+from .models import FlexForm, FlexFormField, FormSet, Validator, OptionSet, CustomFieldType
 
 
 @register(Validator)
@@ -28,13 +28,13 @@ class FormSetInline(TabularInline):
 
 @register(FlexFormField)
 class FlexFormFieldAdmin(SmartModelAdmin):
-    list_display = ("flex_form", "name", "field", "required", "validator")
+    list_display = ("flex_form", "name", "field_type", "required", "validator")
     list_filter = (("flex_form", AutoCompleteFilter),)
 
 
 class FlexFormFieldInline(TabularInline):
     model = FlexFormField
-    fields = ("label", "name", "field", "required", "validator")
+    fields = ("label", "name", "field_type", "required", "validator")
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
@@ -58,8 +58,8 @@ class OptionSetAdmin(SmartModelAdmin):
     )
 
 
-@register(CustomField)
-class CustomFieldAdmin(SmartModelAdmin):
+@register(CustomFieldType)
+class CustomFieldTypeAdmin(SmartModelAdmin):
     list_display = (
         "name",
         "attrs",

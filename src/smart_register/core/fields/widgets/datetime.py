@@ -1,6 +1,4 @@
 from django import forms
-from django.contrib.contenttypes.models import ContentType
-from django.templatetags.static import static
 
 
 class SmartDateWidget(forms.DateInput):
