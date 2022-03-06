@@ -34,17 +34,17 @@ class PythonEditor(forms.Textarea):
 
 class ContentTypeChoiceField(forms.ModelChoiceField):
     def __init__(
-            self,
-            *,
-            empty_label="---------",
-            required=True,
-            widget=None,
-            label=None,
-            initial=None,
-            help_text="",
-            to_field_name=None,
-            limit_choices_to=None,
-            **kwargs,
+        self,
+        *,
+        empty_label="---------",
+        required=True,
+        widget=None,
+        label=None,
+        initial=None,
+        help_text="",
+        to_field_name=None,
+        limit_choices_to=None,
+        **kwargs,
     ):
         queryset = ContentType.objects.order_by("model", "app_label")
         super().__init__(
@@ -62,16 +62,3 @@ class ContentTypeChoiceField(forms.ModelChoiceField):
 
     def label_from_instance(self, obj):
         return f"{obj.name.title()} ({obj.app_label})"
-
-
-class SmartDateWidget(forms.DateInput):
-    class Media:
-        js = [
-            "datetimepicker/jquery.datetimepicker.js",
-            "datetimepicker/datepicker.js",
-        ]
-        css = {'all': ["datetimepicker/jquery.datetimepicker.css"]}
-
-    def __init__(self, attrs=None, format=None):
-        attrs = {'class': 'vDateField', 'size': '10', **(attrs or {})}
-        super().__init__(attrs=attrs, format=format)

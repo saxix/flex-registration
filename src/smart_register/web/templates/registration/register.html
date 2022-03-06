@@ -24,17 +24,19 @@
                                         <td></td>
                                         <td>
                                             <input type="button" data-fs="{{ name }}" class="remove"
-                                                   value="Remove {{ name }}">
+                                                   value="Remove record">
                                         </td>
                                     </tr>
                                 </table>
                             {% endfor %}
                         </td>
                     </tr>
+                {% if formset.fs.dynamic %}
                     <tr>
                         <td></td>
-                        <td><input type="button" class="btn add" value="Add {{ name }}"></td>
+                        <td><input type="button" class="btn add" value="Add record"></td>
                     </tr>
+                {% endif %}
                 </table>
 
             {% endfor %}

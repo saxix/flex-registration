@@ -4,7 +4,7 @@ from django.db import models
 from smart_register.core.models import FlexForm
 
 
-class DataSet(models.Model):
+class Registration(models.Model):
     name = CICharField(max_length=255, unique=True)
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
     start = models.DateField(auto_now_add=True)
@@ -15,6 +15,6 @@ class DataSet(models.Model):
 
 
 class Record(models.Model):
-    registration = models.ForeignKey(DataSet, on_delete=models.PROTECT)
+    registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     timestamp = models.DateField(auto_now_add=True)
     data = models.JSONField(default=dict)

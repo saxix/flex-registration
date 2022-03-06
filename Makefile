@@ -12,8 +12,7 @@ fullclean:
 	$(MAKE) clean
 
 lint:
-	@flake8 src/ tests/
-	@isort src/ tests/
+	pre-commit run --all-files
 
 .PHONY: build docs
 
@@ -32,4 +31,3 @@ heroku-reset: heroku
 	heroku pg:reset --confirm flex-register
 	heroku run python manage.py migrate
 	heroku run python manage.py upgrade --no-input
-
