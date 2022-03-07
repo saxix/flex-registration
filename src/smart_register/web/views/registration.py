@@ -26,7 +26,6 @@ class RegisterCompleView(TemplateView):
 
 class RegisterView(FormView):
     template_name = "registration/register.html"
-    success_url = "/register/"
 
     def get_success_url(self):
         return reverse("register", args=[self.dataset.pk])
