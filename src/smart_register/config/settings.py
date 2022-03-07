@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "constance.backends.database",
     "flags",
     "hijack",
+    "crispy_forms",
     "smart_register",
     "smart_register.web",
     "django.forms",
@@ -73,6 +74,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "social_django.middleware.SocialAuthExceptionMiddleware",
 ]
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 ROOT_URLCONF = "smart_register.config.urls"
 

@@ -1,14 +1,16 @@
-{% extends "base.html" %}{% load smart_register %}
+{% extends "base.html" %}
+{% load smart_register %}
+{% load crispy_forms_tags %}
 {% block body %}
-    <div class="registration">
-        <div class="title">{{ dataset.name }}</div>
+    <div class="registration container">
+        <div class="title"><h1>{{ dataset.name }}</h1></div>
         <form method="post">
             {% csrf_token %}
             <table>
-                {{ form }}
+                {{ form|crispy }}
             </table>
             {% for name, formset in formsets.items %}
-                <table id="{{ name }}" class="formset" data-fs="{{ name }}">
+                <table id="{{ name }}" class="formset " data-fs="{{ name }}">
                     <tr>
                         <td>
                             <div class="title">{{ name }}</div>
@@ -41,7 +43,7 @@
 
             {% endfor %}
             <div class="submit-row">
-                <input type="submit" class="btn save" value="Save">
+                <input type="submit" class="btn btn-primary" value="Save">
             </div>
         </form>
         {% for name, formset in formsets.items %}
