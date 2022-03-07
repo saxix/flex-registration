@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "smart_register",
     "smart_register.web",
     "django.forms",
+    "django_celery_beat",
     "smart_register.core",
     "smart_register.registration",
 ]

@@ -1,0 +1,87 @@
+version: '3.7'
+
+volumes:
+  db:
+
+services:
+  backend:
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    environment:
+      - REDIS_INSTANCE=redis:6379
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.local
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/code/
+    command: "dev"
+    depends_on:
+      - db
+      - redis
+      - celery_worker
+  db:
+    image: mdillon/postgis:11-alpine
+    volumes:
+      - db:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  redis:
+    restart: always
+    image: redis:6.2.6-alpine3.15
+    expose:
+      - "6379"
+
+  celery_worker:
+    stdin_open: true
+    tty: true
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.local
+    env_file:
+      - .env
+    environment:
+      - REDIS_INSTANCE=redis:6379
+    volumes:
+      - ./:/code/
+    restart: always
+    command: "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A  smart_register.config.celery worker -E -l info"
+    depends_on:
+      - db
+      - redis
+      - celery-beat
+      - celery-flower
+
+  celery-beat:
+    stdin_open: true
+    tty: true
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.local
+    env_file:
+      - .env
+    environment:
+      - REDIS_INSTANCE=redis:6379
+    volumes:
+      - ./:/code/
+    restart: always
+    command: "celery -A smart_register.config.celery beat -l INFO"
+    depends_on:
+      - db
+      - redis
+  celery-flower:
+    image: saxix/flower:1.6
+    command: [ "flower", "--broker=redis://redis:6379/0", "--port=5555" ]
+    environment:
+      - FLOWER_AUTH_PROVIDER=""
+      - FLOWER_DEBUG="1"
+      - FLOWER_ADDRESS=0.0.0.0
+    ports:
+      - "5555:5555"
+    restart: always
+    depends_on:
+      - redis
