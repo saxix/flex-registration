@@ -35,8 +35,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                python-version: [ "3.9", "3.10" ]
-                django-version: [ "2.2", "3.2", "4.0" ]
+                python-version: [ "3.9",]
+                django-version: [ "3.2",]
         env:
             DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/smart_register
             PY_VER: ${{ matrix.python-version}}
