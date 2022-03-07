@@ -2,7 +2,6 @@ from django.forms import formset_factory
 from django.http import Http404
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils import translation
 from django.utils.translation import get_language_info
 from django.views.generic import CreateView, ListView, TemplateView
 from django.views.generic.edit import FormView
@@ -64,10 +63,10 @@ class RegisterView(FormView):
 
         return super().get_context_data(dataset=self.dataset, **kwargs)
 
-    def get(self, request, *args, **kwargs):
-        setattr(request, "LANGUAGE_CODE", self.dataset.locale)
-        translation.activate(self.dataset.locale)
-        return super().get(self, request, *args, **kwargs)
+    # def get(self, request, *args, **kwargs):
+    # setattr(request, "LANGUAGE_CODE", self.dataset.locale)
+    # translation.activate(self.dataset.locale)
+    # return super().get(self, request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
