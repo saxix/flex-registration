@@ -5,6 +5,6 @@ from django.urls import include, path
 actions.add_to_site(admin.site)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('smart_register.web.urls')),
+    path("admin/", admin.site.urls),
+    path("", include("smart_register.web.urls")),
 ]

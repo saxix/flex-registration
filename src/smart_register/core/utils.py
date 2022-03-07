@@ -3,6 +3,7 @@ import decimal
 import json
 import re
 import unicodedata
+
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.functional import keep_lazy_text
 from django.utils.timezone import is_aware
@@ -22,15 +23,11 @@ def namify(value, allow_unicode=False):
     """
     value = str(value)
     if allow_unicode:
-        value = unicodedata.normalize('NFKC', value)
+        value = unicodedata.normalize("NFKC", value)
     else:
-        value = (
-            unicodedata.normalize('NFKD', value)
-            .encode('ascii', 'ignore')
-            .decode('ascii')
-        )
-    value = re.sub(r'[^\w\s-]', '', value.lower())
-    return re.sub(r'[-\s]+', '_', value).strip('-_')
+        value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    value = re.sub(r"[^\w\s-]", "", value.lower())
+    return re.sub(r"[-\s]+", "_", value).strip("-_")
 
 
 class JSONEncoder(DjangoJSONEncoder):
@@ -44,8 +41,8 @@ class JSONEncoder(DjangoJSONEncoder):
             r = o.isoformat()
             if o.microsecond:
                 r = r[:23] + r[26:]
-            if r.endswith('+00:00'):
-                r = r[:-6] + 'Z'
+            if r.endswith("+00:00"):
+                r = r[:-6] + "Z"
             return r
         elif isinstance(o, datetime.date):
             return o.isoformat()

@@ -1,13 +1,14 @@
 from django import forms
 from strategy_field.registry import Registry
 
+from . import fields
+
 
 class FieldRegistry(Registry):
     pass
 
 
 registry = FieldRegistry(forms.Field)
-
 
 registry.register(forms.BooleanField)
 registry.register(forms.CharField)
@@ -23,3 +24,5 @@ registry.register(forms.MultipleChoiceField)
 registry.register(forms.NullBooleanField)
 registry.register(forms.TimeField)
 registry.register(forms.URLField)
+registry.register(fields.PictureField)
+registry.register(fields.SelectField)

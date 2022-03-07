@@ -16,11 +16,9 @@ jobs:
 
             -   name: Install dependencies
                 run: |
-                    python -m pip install --upgrade pip flake8 isort
-            -   name: Lint with flake8
-                run: |
-                    flake8 src
-                    isort -c src
+                    python -m pip install --upgrade pip pre-commit
+            -   name:
+                run: pre-commit run --all-files
 
     test:
         runs-on: ubuntu-latest

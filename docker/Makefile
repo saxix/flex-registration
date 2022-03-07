@@ -16,8 +16,8 @@ WORKER?='??'
 CONTAINER_NAME?=sos-${VERSION}
 LAZO?=$(shell which lazo)
 
-DOCKER_REGISTRY=registry.gitlab.com
-DOCKER_IMAGE_NAME=unicef/flex_form
+DOCKER_REGISTRY=ghcr.io
+DOCKER_IMAGE_NAME=saxix/smart_register
 DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:${VERSION}
 DOCKER_TARGET=${DOCKER_REGISTRY}/${DOCKER_IMAGE}
 DOCKERFILE?=Dockerfile
@@ -72,7 +72,7 @@ check:
 			--build-arg DEVELOP=${DEVELOP} \
 			--build-arg VERSION=${VERSION} \
 			--build-arg BUILD_DATE=${BUILD_DATE} \
-			--build-arg GITLAB_API_TOKEN=${GITLAB_API_TOKEN} \
+			--build-arg GITHUB_API_TOKEN=${GITLAB_API_TOKEN} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			-f docker/${DOCKERFILE} .
 	git tag $VERSION
