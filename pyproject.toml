@@ -37,6 +37,7 @@ django-regex = "^0.4.1"
 django-fernet-fields = "^0.6"
 celery = "^5.2.3"
 django-crispy-forms = "^1.14.0"
+django-celery-beat = "^2.2.1"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"
@@ -58,6 +59,7 @@ pytest-pythonpath = "^0.7.3"
 pytest-selenium = "^2.0.1"
 pytest-coverage = "^0.0"
 black = "^22.1.0"
+watchdog = "^2.1.6"
 
 
 [build-system]
