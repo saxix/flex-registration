@@ -1,42 +1,45 @@
 name: Test
 
 on:
-    push:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
         branches:
-            - master
-            - develop
-    pull_request:
+          - develop
 
 jobs:
-    lint:
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v2
-            -   uses: actions/setup-python@v2
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip pre-commit
+      - name: Format code
+        run: pre-commit run --all-files
 
-            -   name: Install dependencies
-                run: |
-                    python -m pip install --upgrade pip pre-commit
-            -   name:
-                run: pre-commit run --all-files
+  test:
+    name: "Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-latest
+    env:
+      USING_COVERAGE: '3.9'
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9"]
 
-    test:
-        runs-on: ubuntu-latest
-
-        steps:
-            -   uses: actions/checkout@v2
-
-            -   name: Set up Python ${{ matrix.python-version }}
-                uses: actions/setup-python@v2
-                with:
-                    python-version: ${{ matrix.python-version }}
-
-            -   name: Install dependencies
-                run: python -m pip install --upgrade pip .[test] "django==${DJ_VER}.*"
-
-            -   name: Test with
-                run: py.test tests/ -v
-
-            -   uses: codecov/codecov-action@v1
-                with:
-                    verbose: true # optional (default = false)
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v2
+          with:
+            python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip .[test] "django==${DJ_VER}.*"
+          - name: Test with
+            run: py.test tests/ -v
+          - uses: codecov/codecov-action@v1
+            with:
+              verbose: true # optional (default = false)

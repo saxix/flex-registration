@@ -41,7 +41,8 @@ class RegisterView(FormView):
             return Registration.objects.first()
 
     def get_form_class(self):
-        return self.dataset.flex_form.get_form()
+        if self.dataset is not None:
+            return self.dataset.flex_form.get_form()
 
     def get_form(self, form_class=None):
         return super().get_form(form_class)
@@ -50,10 +51,11 @@ class RegisterView(FormView):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop("prefix")
-        for fs in self.dataset.flex_form.formsets.all():
-            formSet = formset_factory(fs.get_form(), extra=fs.extra)
-            formSet.fs = fs
-            formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
+        if self.dataset is not None:
+            for fs in self.dataset.flex_form.formsets.all():
+                formSet = formset_factory(fs.get_form(), extra=fs.extra)
+                formSet.fs = fs
+                formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
