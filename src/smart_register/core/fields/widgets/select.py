@@ -3,5 +3,8 @@ from django import forms
 
 class SmartSelectWidget(forms.Select):
     def __init__(self, attrs=None):
-        attrs = {"class": "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", **(attrs or {})}
+        attrs = {
+            "class": "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline",
+            **(attrs or {}),
+        }
         super().__init__(attrs=attrs)
