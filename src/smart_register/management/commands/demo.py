@@ -5,6 +5,9 @@ import logging
 import djclick as click
 from django import forms
 
+from smart_register.core import fields
+from smart_register.core.models import OptionSet
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,6 +40,13 @@ var dt = Date.parse(value);
 dt > limit;""",
         ),
     )
+    OptionSet.objects.get_or_create(
+        name="italian_locations",
+        defaults={
+            "data": "1:Rome\n2:Milan",
+            "separator": ":",
+        },
+    )
 
     hh, __ = FlexForm.objects.get_or_create(name="Household", defaults=dict(validator=vf1))
     hh.fields.get_or_create(label="Family Name", field_type=forms.CharField, required=True)
@@ -48,6 +58,10 @@ dt > limit;""",
 
     ind.fields.get_or_create(
         label="Options", defaults=dict(field_type=forms.ChoiceField, choices="opt 1, opt 2, opt 3")
+    )
+
+    ind.fields.get_or_create(
+        label="Location", defaults={"field_type": fields.SelectField, "choices": "italian_locations"}
     )
 
     hh.formsets.get_or_create(name="individuals", defaults=dict(flex_form=ind))

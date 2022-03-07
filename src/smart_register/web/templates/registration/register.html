@@ -1,5 +1,7 @@
-{% extends "base.html" %}{% load smart_register %}
+{% extends "base.html" %}{% load smart_register l10n %}
 {% block body %}
+    {{ language }}
+
     <div class="registration">
         <div class="title">{{ dataset.name }}</div>
         <form method="post">

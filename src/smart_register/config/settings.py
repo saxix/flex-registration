@@ -140,14 +140,15 @@ LANGUAGE_CODE = "en"
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
     ("en-us", "English"),
-    ("de-de", "Deutsch"),
-    ("es-es", "Español"),
-    ("fr-fr", "Français"),
-    ("it-it", "Italiano"),
-    ("ro-ro", "Română"),
-    ("pt-pt", "Português"),
-    ("pl-pl", "Pусский"),
-    # ('ru-ru', 'Polskie'),
+    ("pl-pl", "Polskie"),
+    ("uk-UA", "український")
+    # ("de-de", "Deutsch"),
+    # ("es-es", "Español"),
+    # ("fr-fr", "Français"),
+    # ("it-it", "Italiano"),
+    # ("ro-ro", "Română"),
+    # ("pt-pt", "Português"),
+    # ("pl-pl", "Pусский"),
     # ('ta-ta', 'தமிழ்'),  # Tamil
     # ('hi-hi', 'हिंदी'),  # Hindi
 )

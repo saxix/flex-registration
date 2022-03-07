@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 
@@ -9,6 +10,11 @@ class Registration(models.Model):
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
     start = models.DateField(auto_now_add=True)
     end = models.DateField(blank=True, null=True)
+    active = models.BooleanField(default=False)
+    locale = models.CharField(max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE)
+
+    class Meta:
+        get_latest_by = "start"
 
     def __str__(self):
         return self.name

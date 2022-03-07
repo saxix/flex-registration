@@ -66,3 +66,4 @@ reset-migrations: ## reset django migrations
 	./manage.py makemigrations
 	./manage.py makemigrations --check
 	./manage.py upgrade --no-input
+	./manage.py demo

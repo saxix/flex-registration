@@ -21,6 +21,7 @@ class FormSetInline(TabularInline):
     fk_name = "parent"
     extra = 0
     fields = ("name", "flex_form", "extra")
+    show_change_link = True
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         return super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -35,6 +36,7 @@ class FlexFormFieldAdmin(SmartModelAdmin):
 class FlexFormFieldInline(TabularInline):
     model = FlexFormField
     fields = ("label", "name", "field_type", "required", "validator")
+    show_change_link = True
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))

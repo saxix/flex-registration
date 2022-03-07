@@ -1,5 +1,9 @@
 from django.forms import formset_factory
+from django.http import Http404
 from django.shortcuts import render
+from django.urls import reverse
+from django.utils import translation
+from django.utils.translation import get_language_info
 from django.views.generic import CreateView, ListView, TemplateView
 from django.views.generic.edit import FormView
 
@@ -22,18 +26,20 @@ class RegisterCompleView(TemplateView):
 
 class RegisterView(FormView):
     template_name = "registration/register.html"
-    # success_url = reverse_lazy('register-done')
-    success_url = "/register/1/"
+    success_url = "/register/"
 
     def get_success_url(self):
-        return super().get_success_url()
+        return reverse("register", args=[self.dataset.pk])
 
     @property
     def dataset(self):
-        if "pk" in self.kwargs:
-            return Registration.objects.get(id=self.kwargs["pk"])
-        else:
-            return Registration.objects.first()
+        try:
+            if "pk" in self.kwargs:
+                return Registration.objects.get(active=True, id=self.kwargs["pk"])
+            else:
+                return Registration.objects.latest()
+        except Exception:
+            raise Http404
 
     def get_form_class(self):
         return self.dataset.flex_form.get_form()
@@ -54,9 +60,15 @@ class RegisterView(FormView):
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
+        kwargs["language"] = get_language_info(self.dataset.locale)
         kwargs["POST"] = dict(self.request.POST)
 
         return super().get_context_data(dataset=self.dataset, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        setattr(request, "LANGUAGE_CODE", self.dataset.locale)
+        translation.activate(self.dataset.locale)
+        return super().get(self, request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()

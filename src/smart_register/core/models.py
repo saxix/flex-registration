@@ -71,7 +71,6 @@ class FlexForm(models.Model):
         verbose_name_plural = "FlexForms"
 
     def __str__(self):
-
         return self.name
 
     def add_formset(self, form, **extra):
@@ -82,16 +81,17 @@ class FlexForm(models.Model):
     def get_form(self):
         fields = {}
         for field in self.fields.all():
-            kwargs = dict(
-                label=field.label,
-                required=field.required,
-                validators=get_validators(field),
-            )
-            if field.field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
-                kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field.field_type], **kwargs}
-            if field.choices and hasattr(field.field_type, "choices"):
-                kwargs["choices"] = [(k.strip(), k.strip()) for k in field.choices.split(",")]
-            fields[field.name] = field.field_type(**kwargs)
+            # kwargs = dict(
+            #     label=field.label,
+            #     required=field.required,
+            #     validators=get_validators(field),
+            # )
+            # if field.field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
+            #     kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field.field_type], **kwargs}
+            # if field.choices and hasattr(field.field_type, "choices"):
+            #     kwargs["choices"] = [(k.strip(), k.strip()) for k in field.choices.split(",")]
+            # fields[field.name] = field.field_type(**kwargs)
+            fields[field.name] = field.get_instance()
         form_class_attrs = {
             "flex_form": self,
             **fields,
@@ -129,7 +129,7 @@ class FlexFormField(models.Model):
         Validator, blank=True, null=True, limit_choices_to={"target": Validator.FIELD}, on_delete=models.PROTECT
     )
     regex = RegexField(blank=True, null=True)
-    advanced = models.JSONField(default=dict)
+    advanced = models.JSONField(default=dict, blank=True, null=True)
 
     class Meta:
         unique_together = (("name", "flex_form"),)
@@ -138,6 +138,24 @@ class FlexFormField(models.Model):
 
     def __str__(self):
         return f"{self.name} {self.field_type}"
+
+    def get_instance(self):
+        kwargs = dict(
+            label=self.label,
+            required=self.required,
+            validators=get_validators(self),
+        )
+        if self.field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
+            kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[self.field_type], **kwargs}
+        if self.choices and hasattr(self.field_type, "choices"):
+            kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
+        return self.field_type(**kwargs)
+
+    def clean(self):
+        try:
+            self.get_instance()
+        except Exception as e:
+            raise ValidationError(e)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.name:
