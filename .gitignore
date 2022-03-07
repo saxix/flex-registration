@@ -13,3 +13,4 @@ src/smart_register/staticfiles
 !.isort.cfg
 !.flake8
 !.pre-commit-config.yaml
+.env
