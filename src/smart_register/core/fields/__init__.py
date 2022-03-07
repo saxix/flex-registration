@@ -5,4 +5,4 @@ from .gis import LocationField
 from .picture import PictureField
 from .select import SelectField
 
-WIDGET_FOR_FORMFIELD_DEFAULTS = {forms.DateField: {"widget": widgets.SmartDateWidget}}
+WIDGET_FOR_FORMFIELD_DEFAULTS = {forms.DateField: {"widget": widgets.SmartDateWidget}, forms.CharField: {"widget": widgets.SmartTextWidget} }
