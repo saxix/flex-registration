@@ -56,7 +56,7 @@ jobs:
             -   name: Install dependencies
                 run: poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
             -   name: Test with
-                run: py.test tests/ -v
+                run: python -m pytest tests/ -v
 
             -   uses: codecov/codecov-action@v1
                 with:
