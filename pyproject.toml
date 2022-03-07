@@ -8,7 +8,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-django = "^3 || ^4"
+django = "^3"
 django-admin-extra-buttons = "^1.1.0"
 django-adminactions = "^1.15"
 django-adminfilters = "^2.0.1"
