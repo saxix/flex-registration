@@ -177,9 +177,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
 # STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-# STATICFILES_STORAGE = env('STATICFILES_STORAGE')
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "web/static"),
@@ -228,10 +225,6 @@ LOGGING = {
         "handlers": ["console"],
         "level": "ERROR",
     },
-    "root": {
-        "handlers": ["console"],
-        "level": "ERROR",
-    },
     "environ": {
         "handlers": ["console"],
         "level": "ERROR",
@@ -242,14 +235,6 @@ LOGGING = {
         "level": "DEBUG",
     },
     "django": {
-        "handlers": ["console"],
-        "level": "ERROR",
-    },
-    "parso": {
-        "handlers": ["null"],
-        "level": "WARNING",
-    },
-    "cssutils": {
         "handlers": ["console"],
         "level": "ERROR",
     },
@@ -288,17 +273,6 @@ DATE_INPUT_FORMATS = [
 
 CONSTANCE_CONFIG = OrderedDict(
     {
-        # System options:
-        "ALLOW_PASSWORD_RECOVERY": (True, "", bool),
-        # Minifier
-        "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
-        "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
-        # Other
-        # 'MAX_SENDERS': (1, 'Max total number of senders', int),
-        # 'MAX_RECIPIENTS': (5, 'Max total number of recipients', int),
-        "MAX_GROUPS": (2, "Max number of group per user", int),
-        # 'MAX_GROUP_SENDERS': (3, 'Max number of senders per group', int),
-        # 'MAX_GROUP_RECIPIENTS': (5, 'Max number of recipients per group', int),
         "SMART_ADMIN_BOOKMARKS": (
             env("SMART_ADMIN_BOOKMARKS"),
             "",
@@ -372,16 +346,6 @@ SOCIAL_AUTH_PIPELINE = (
     # Update the user record with any changed info from the auth service.
     "social_core.pipeline.user.user_details",
 )
-# Twilio
-TWILIO_DEFAULT_CALLERID = TWILIO_CALLER_ID = env("TWILIO_CALLER")
-TWILIO_ACCOUNT_SID = env("TWILIO_SID")
-TWILIO_AUTH_TOKEN = env("TWILIO_TOKEN")
-TWILIO_MESSAGING_SERVICE_SID = env("TWILIO_SERVICE")
-
-TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30  # 1 month
-TWO_FACTOR_REMEMBER_COOKIE_PREFIX = "2f_bob_"
-TWO_FACTOR_REMEMBER_COOKIE_SECURE = env("TWO_FACTOR_REMEMBER_COOKIE_SECURE")
-TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = env("TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY")
 
 # CELERY STUFF
 BROKER_URL = env("CELERY_BROKER_URL")
@@ -432,17 +396,6 @@ SMART_ADMIN_PROFILE_LINK = True
 
 IMPERSONATE_HEADER_KEY = env("IMPERSONATE_HEADER_KEY")
 
-JS_REVERSE_JS_MINIFY = False
-JS_REVERSE_EXCLUDE_NAMESPACES = [
-    "admin",
-    "two_factor",
-    "twilio",
-    "stripe",
-    "social",
-    "javascript-catalog",
-    "account",
-]
-
 
 # DEBUG TOOLBAR
 def show_ddt(request):  # pragma: no-cover
@@ -453,10 +406,6 @@ def show_ddt(request):  # pragma: no-cover
     if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*", "/healthcheck/")):
         return False
     return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
-    # if request.user.is_authenticated:
-    #     if request.path in RegexList(('/tpl/.*', '/api/.*', '/dal/.*', '/healthcheck/')):
-    #         return False
-    # return request.META.get('HTTP_DEV_DDT', None) == env('DEV_DDT_KEY')
 
 
 DEBUG_TOOLBAR_CONFIG = {
@@ -483,39 +432,8 @@ DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
 
-VOICE = "Polly.Giorgio"
-
-# https://django-analytical.readthedocs.io/en/latest/install.html
-GOOGLE_ANALYTICS_GTAG_PROPERTY_ID = env("GOOGLE_ANALYTICS_GTAG_PROPERTY_ID")
-GOOGLE_ANALYTICS_JS_PROPERTY_ID = env("GOOGLE_ANALYTICS_JS_PROPERTY_ID")
-ANALYTICAL_INTERNAL_IPS = env.list("ANALYTICAL_INTERNAL_IPS")
-
-# https://console.firebase.google.com/u/0/project/bitcaster-localhost/settings/cloudmessaging
-GCM_API_KEY = env("GCM_API_KEY")
-GCM_APP_ID = env("GCM_APP_ID")
-GCM_PROJECT_ID = env("GCM_PROJECT_ID")
-GCM_SENDER_ID = env("GCM_SENDER_ID")
-GCM_SERVER_KEY = env("GCM_SERVER_KEY")
-# GCM_PRIVATE_KEY = env('GCM_PRIVATE_KEY')
-# GCM_PUBLIC_KEY = env('GCM_PUBLIC_KEY')
-
 CORS_ORIGIN_ALLOW_ALL = True
-
 CORS_ALLOW_CREDENTIALS = True
-
-FCM_DJANGO_SETTINGS = {
-    # default: _('FCM Django')
-    "APP_VERBOSE_NAME": "Bob",
-    # Your firebase API KEY
-    "FCM_SERVER_KEY": env("GCM_SERVER_KEY"),
-    # true if you want to have only one active device per registered user at a time
-    # default: False
-    "ONE_DEVICE_PER_USER": False,
-    # devices to which notifications cannot be sent,
-    # are deleted upon receiving error response from FCM
-    # default: False
-    "DELETE_INACTIVE_DEVICES": True,
-}
 
 RATELIMIT = {
     "PERIODS": {
@@ -550,111 +468,9 @@ SYSINFO = {
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
-TINYMCE_DEFAULT_CONFIG = {
-    "height": "320px",
-    "width": "960px",
-    "menubar": False,
-    "plugins": "advlist "
-    "autolink "
-    "lists "
-    "link "
-    "image "
-    "charmap "
-    "print "
-    "preview "
-    "anchor "
-    "searchreplace "
-    "visualblocks "
-    "code "
-    "fullscreen "
-    "insertdatetime "
-    "media "
-    "table "
-    "paste "
-    "code "
-    "help "
-    "wordcount ",
-    "toolbar": "undo "
-    "redo "
-    "code "
-    "render "
-    "save "
-    "| "
-    "bold italic underline strikethrough "
-    "| "
-    "formatselect "
-    "| "
-    "alignleft aligncenter alignright alignjustify "
-    "| "
-    "outdent indent "
-    "|  "
-    "numlist bullist checklist "
-    "| "
-    "forecolor backcolor "
-    "casechange "
-    "permanentpen "
-    "formatpainter "
-    "removeformat "
-    "| "
-    "pagebreak "
-    "| "
-    "emoticons "
-    "| "
-    "fullscreen  "
-    "| "
-    "image "
-    "pageembed ",
-    "custom_undo_redo_levels": 10,
-    # "language": "es_ES",  # To force a specific language instead of the Django current language.
-}
-# TINYMCE_EXTRA_MEDIA = {'css': {
-#     'all': [
-#         '/static/bob/app.css'
-#     ],
-# },
-#     'js': [],
-# }
-
-# django-flags
-# https://cfpb.github.io/django-flags/
 FLAGS_STATE_LOGGING = DEBUG
 
 FLAGS = {
-    "GROUP_MESSAGE_FROM_SITE": [],
-    "GROUP_CHAT_FROM_SITE": [],
     "DEVELOP_DEVELOPER": [],
-    "DEVELOP_AUTOFILL_FORM": [],
-    "DEVELOP_FOOTER": [],
     "DEVELOP_DEBUG_TOOLBAR": [],
 }
-# https://django-sql-explorer.readthedocs.io/en/latest/settings.html
-EXPLORER_CONNECTIONS = {"Default": "default"}
-EXPLORER_DEFAULT_CONNECTION = "default"
-EXPLORER_SQL_BLACKLIST = (
-    "ALTER",
-    "CREATE TABLE",
-    "DELETE",
-    "DROP",
-    "GRANT",
-    "INSERT INTO",
-    "OWNER TO" "RENAME ",
-    "REPLACE",
-    "SCHEMA",
-    "TRUNCATE",
-    "UPDATE",
-)
-
-EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.admin",
-)
-EXPLORER_ASYNC_SCHEMA = False
-EXPLORER_TASKS_ENABLED = True
-EXPLORER_FROM_EMAIL = "bob+explorer@os4d.org"
-EXPLORER_PERMISSION_VIEW = lambda r: r.user.is_superuser
-EXPLORER_PERMISSION_CHANGE = lambda r: r.user.is_superuser
-# EXPLORER_TRANSFORMS = [
-#     ('user', '<a href="https://yoursite.com/profile/{0}/">{0}</a>')
-# ]
