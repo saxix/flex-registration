@@ -1,6 +1,6 @@
 from django.forms import formset_factory
 from django.shortcuts import render
-from django.views.generic import CreateView, ListView, TemplateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView
 from django.views.generic.edit import FormView
 
 from smart_register.core.utils import jsonfy
@@ -9,6 +9,11 @@ from smart_register.registration.models import Registration, Record
 
 class DataSetListView(ListView):
     model = Registration
+
+
+class DataSetDetailView(DetailView):
+    model = Registration
+    # template_name='registration/dataset_detail.html'
 
 
 class DataSetView(CreateView):

@@ -24,19 +24,19 @@
                                         <td></td>
                                         <td>
                                             <input type="button" data-fs="{{ name }}" class="remove"
-                                                   value="Remove record">
+                                                value="Remove record">
                                         </td>
                                     </tr>
                                 </table>
                             {% endfor %}
                         </td>
                     </tr>
-                {% if formset.fs.dynamic %}
-                    <tr>
-                        <td></td>
-                        <td><input type="button" class="btn add" value="Add record"></td>
-                    </tr>
-                {% endif %}
+                    {% if formset.fs.dynamic %}
+                        <tr>
+                            <td></td>
+                            <td><input type="button" class="btn add" value="Add record"></td>
+                        </tr>
+                    {% endif %}
                 </table>
 
             {% endfor %}
@@ -47,14 +47,14 @@
         {% for name, formset in formsets.items %}
             <script type="form-template" id="{{ name }}-empty">
                 <table class="form" data-index="__prefix__">
-                    {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
-                    <tr>
-                        <td></td>
-                        <td>
-                            <input type="button" data-fs="{{ name }}"
-                                   class="btn remove" value="Remove {{ name }}">
-                        </td>
-                    </tr>
+                {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
+                <tr>
+                <td></td>
+                <td>
+                <input type="button" data-fs="{{ name }}"
+                class="btn remove" value="Remove {{ name }}">
+                </td>
+                </tr>
                 </table>
             </script>
         {% endfor %}
@@ -75,8 +75,8 @@
                 self.reindex = function () {
                     $target.find("table.form").each(function (i, e) {
                         var c = $(e).html()
-                                    .replace(new RegExp("__prefix__", "g"), i)
-                                    .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + i);
+                            .replace(new RegExp("__prefix__", "g"), i)
+                            .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + i);
                         {# .replace(new RegExp("<\\\\/script>", "g")); #}
                         $(e).replaceWith(c);
                     });
@@ -95,7 +95,7 @@
                     var newIndex = $target.find("table.form").length;
                     managementFormField("TOTAL_FORMS").val(newIndex + 1);
                     var newFormHtml = $emptyForm.html()
-                                                .replace(new RegExp("__prefix__", "g"), newIndex);
+                        .replace(new RegExp("__prefix__", "g"), newIndex);
 
                     $target.find("td.forms." + targetName).append(newFormHtml);
                     self.bindRemove();
