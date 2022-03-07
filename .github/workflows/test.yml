@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       USING_COVERAGE: '3.9'
+      DJ_VER: '3.2'
     strategy:
       matrix:
         python-version: ["3.8", "3.9"]
