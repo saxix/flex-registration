@@ -6,7 +6,9 @@ from django.urls import reverse
 def simple_registration(simple_form):
     from smart_register.registration.models import Registration
 
-    reg, __ = Registration.objects.get_or_create(name="registration #1", defaults=dict(flex_form=simple_form))
+    reg, __ = Registration.objects.get_or_create(
+        name="registration #1", defaults={"flex_form": simple_form, "active": True}
+    )
     return reg
 
 
@@ -14,7 +16,9 @@ def simple_registration(simple_form):
 def complex_registration(complex_form):
     from smart_register.registration.models import Registration
 
-    reg, __ = Registration.objects.get_or_create(name="registration #1", defaults=dict(flex_form=complex_form))
+    reg, __ = Registration.objects.get_or_create(
+        name="registration #2", defaults={"flex_form": complex_form, "active": True}
+    )
     return reg
 
 
