@@ -1,6 +1,7 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.forms import formset_factory
 from django.shortcuts import render
-from django.views.generic import CreateView, ListView, TemplateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView
 from django.views.generic.edit import FormView
 
 from smart_register.core.utils import jsonfy
@@ -9,6 +10,12 @@ from smart_register.registration.models import DataSet, Record
 
 class DataSetListView(ListView):
     model = DataSet
+    context_object_name = 'datasets'
+
+
+class DataSetDetailView(DetailView):
+    model = DataSet
+    # template_name='registration/dataset_detail.html'
 
 
 class DataSetView(CreateView):
@@ -17,11 +24,11 @@ class DataSetView(CreateView):
 
 
 class RegisterCompleView(TemplateView):
-    template_name = "registration/register_done.html"
+    template_name = 'registration/register_done.html'
 
 
 class RegisterView(FormView):
-    template_name = "registration/register.html"
+    template_name = 'registration/register.html'
     # success_url = reverse_lazy('register-done')
     success_url = '/register/1/'
 
@@ -31,7 +38,12 @@ class RegisterView(FormView):
     @property
     def dataset(self):
         if 'pk' in self.kwargs:
-            return DataSet.objects.get(id=self.kwargs['pk'])
+            try:
+                data = DataSet.objects.get(id=self.kwargs['pk'])
+            except ObjectDoesNotExist:
+                return DataSet.objects.first()
+            else:
+                return data
         else:
             return DataSet.objects.first()
 
@@ -45,9 +57,11 @@ class RegisterView(FormView):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop('prefix')
-        for fs in self.dataset.flex_form.formsets.all():
-            formsets[fs.name] = formset_factory(fs.get_form(), extra=fs.extra)(
-                prefix=f"{fs.name}", **attrs)
+        if self.dataset is not None:
+            for fs in self.dataset.flex_form.formsets.all():
+                formsets[fs.name] = formset_factory(fs.get_form(), extra=fs.extra)(
+                    prefix=f'{fs.name}', **attrs
+                )
         return formsets
 
     def get_context_data(self, **kwargs):
@@ -55,8 +69,7 @@ class RegisterView(FormView):
             kwargs['formsets'] = self.get_formsets()
         kwargs['POST'] = dict(self.request.POST)
 
-        return super().get_context_data(dataset=self.dataset,
-                                        **kwargs)
+        return super().get_context_data(dataset=self.dataset, **kwargs)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -77,16 +90,21 @@ class RegisterView(FormView):
             for f in fs:
                 data[name].append(f.cleaned_data)
 
-        record = Record.objects.create(registration=self.dataset,
-                                       data=jsonfy(data))
+        record = Record.objects.create(registration=self.dataset, data=jsonfy(data))
 
-        return render(self.request, "registration/data.html",
-                      {'data': data,
-                       'POST': dict(self.request.POST),
-                       'record': record,
-                       })
+        return render(
+            self.request,
+            'registration/data.html',
+            {
+                'data': data,
+                'POST': dict(self.request.POST),
+                'record': record,
+            },
+        )
 
     def form_invalid(self, form, formsets):
         """If the form is invalid, render the invalid form."""
-        return self.render_to_response(self.get_context_data(form=form,
-                                                             formsets=formsets))
+
+        return self.render_to_response(
+            self.get_context_data(form=form, formsets=formsets)
+        )

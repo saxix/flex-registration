@@ -1,6 +1,6 @@
-import adminactions.actions as actions
+from adminactions import actions
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
 actions.add_to_site(admin.site)
 

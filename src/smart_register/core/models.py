@@ -1,18 +1,15 @@
-import json
-import logging
-from datetime import datetime, date, time
-
 import jsonpickle
+import logging
+from datetime import date, datetime, time
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.defaultfilters import pluralize
-from django.utils.text import slugify
 from strategy_field.fields import StrategyClassField
 
 from .registry import registry
-from .utils import jsonfy, JSONEncoder, namify
+from .utils import jsonfy, namify
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +35,13 @@ class Validator(models.Model):
 
     def validate(self, value):
         from py_mini_racer import MiniRacer
+
         ctx = MiniRacer()
-        ctx.eval(f"var value = {jsonpickle.encode(value)};")
+        ctx.eval(f'var value = {jsonpickle.encode(value)};')
         ret = ctx.eval(self.code)
         try:
             ret = jsonpickle.decode(ret)
-        except TypeError as e:
+        except TypeError as e:  # noqa F841
             pass
         if not ret:
             raise ValidationError(self.message)
@@ -65,6 +63,7 @@ class Validator(models.Model):
 
 def get_validators(field):
     if field.validator:
+
         def inner(value):
             field.validator.validate(value)
 
@@ -90,51 +89,58 @@ class FlexFormBaseForm(forms.Form):
 
 class FlexForm(models.Model):
     name = CICharField(max_length=255, unique=True)
-    validator = models.ForeignKey(Validator,
-                                  limit_choices_to={'target': Validator.FORM},
-                                  blank=True, null=True, on_delete=models.PROTECT)
+    validator = models.ForeignKey(
+        Validator,
+        limit_choices_to={'target': Validator.FORM},
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
 
     def __str__(self):
 
         return self.name
 
     def add_formset(self, form, **extra):
-        defaults = {
-            'extra': 0,
-            'name': form.name.lower() + pluralize(0)
-        }
+        defaults = {'extra': 0, 'name': form.name.lower() + pluralize(0)}
         defaults.update(extra)
         return FormSet.objects.create(parent=self, flex_form=form, **defaults)
 
     def get_form(self):
         fields = {}
         for field in self.fields.all():
-            kwargs = dict(label=field.label,
-                          required=field.required,
-                          validators=get_validators(field)
-                          )
+            kwargs = dict(
+                label=field.label,
+                required=field.required,
+                validators=get_validators(field),
+            )
 
             if field.choices and hasattr(field.field, 'choices'):
-                kwargs['choices'] = [(k.strip(), k.strip()) for k in field.choices.split(',')]
+                kwargs['choices'] = [
+                    (k.strip(), k.strip()) for k in field.choices.split(',')
+                ]
             fields[field.name] = field.field(**kwargs)
         form_class_attrs = {
             'flex_form': self,
             **fields,
-
         }
-        flexForm = type(FlexFormBaseForm)(f'{self.name}FlexForm', (FlexFormBaseForm,), form_class_attrs)
+        flexForm = type(FlexFormBaseForm)(
+            f'{self.name}FlexForm', (FlexFormBaseForm,), form_class_attrs
+        )
         return flexForm
 
 
 class FormSet(models.Model):
     name = CICharField(max_length=255, unique=True)
-    parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
+    parent = models.ForeignKey(
+        FlexForm, on_delete=models.CASCADE, related_name='formsets'
+    )
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)
 
     class Meta:
-        verbose_name = "FormSet"
-        verbose_name_plural = "FormSets"
+        verbose_name = 'FormSet'
+        verbose_name_plural = 'FormSets'
 
     def __str__(self):
         return self.name
@@ -144,23 +150,31 @@ class FormSet(models.Model):
 
 
 class FlexFormField(models.Model):
-    flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name='fields')
+    flex_form = models.ForeignKey(
+        FlexForm, on_delete=models.CASCADE, related_name='fields'
+    )
     label = models.CharField(max_length=30)
     name = models.CharField(max_length=30, blank=True)
     field = StrategyClassField(registry=registry)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
-    validator = models.ForeignKey(Validator, blank=True, null=True,
-                                  limit_choices_to={'target': Validator.FIELD},
-                                  on_delete=models.PROTECT)
+    validator = models.ForeignKey(
+        Validator,
+        blank=True,
+        null=True,
+        limit_choices_to={'target': Validator.FIELD},
+        on_delete=models.PROTECT,
+    )
 
     class Meta:
-        unique_together = ('name', 'flex_form'),
+        unique_together = (('name', 'flex_form'),)
 
     def __str__(self):
-        return f"{self.name} {self.field}"
+        return f'{self.name} {self.field}'
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
         if not self.name:
             self.name = namify(self.label)
         else:

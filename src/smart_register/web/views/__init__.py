@@ -1,2 +1,3 @@
-from .registration import DataSetView, RegisterView, DataSetListView, RegisterCompleView
+from .registration import (DataSetDetailView, DataSetListView,
+                           DataSetView, RegisterCompleView, RegisterView,)
 from .site import HomeView

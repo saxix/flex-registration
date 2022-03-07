@@ -3,7 +3,6 @@ import decimal
 import json
 import re
 import unicodedata
-
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.functional import keep_lazy_text
 from django.utils.timezone import is_aware
@@ -25,7 +24,11 @@ def namify(value, allow_unicode=False):
     if allow_unicode:
         value = unicodedata.normalize('NFKC', value)
     else:
-        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+        value = (
+            unicodedata.normalize('NFKD', value)
+            .encode('ascii', 'ignore')
+            .decode('ascii')
+        )
     value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '_', value).strip('-_')
 

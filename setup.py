@@ -18,7 +18,7 @@ setup(
     python_requires='==3.*,>=3.8',
     keywords='django',
     packages=[],
-    package_dir={"": "src"},
+    package_dir={'': 'src'},
     package_data={},
     extras_require={},
 )

@@ -1,9 +1,9 @@
 from adminfilters.autocomplete import AutoCompleteFilter
-from django.contrib.admin import register, TabularInline
+from django.contrib.admin import TabularInline, register
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
-from .models import FlexFormField, FlexForm, Validator, FormSet
+from .models import FlexForm, FlexFormField, FormSet, Validator
 
 
 @register(Validator)
@@ -26,8 +26,7 @@ class FormSetInline(TabularInline):
 @register(FlexFormField)
 class FlexFormFieldAdmin(SmartModelAdmin):
     list_display = ('flex_form', 'name', 'field', 'required', 'validator')
-    list_filter = (('flex_form', AutoCompleteFilter),
-                   )
+    list_filter = (('flex_form', AutoCompleteFilter),)
 
 
 class FlexFormFieldInline(TabularInline):
@@ -36,7 +35,7 @@ class FlexFormFieldInline(TabularInline):
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
-        if obj.pk:
+        if obj:
             fields.append('name')
         return fields
 

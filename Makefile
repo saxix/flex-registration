@@ -32,4 +32,3 @@ heroku-reset: heroku
 	heroku pg:reset --confirm flex-register
 	heroku run python manage.py migrate
 	heroku run python manage.py upgrade --no-input
-

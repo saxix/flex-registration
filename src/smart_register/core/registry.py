@@ -23,4 +23,3 @@ registry.register(forms.MultipleChoiceField)
 registry.register(forms.NullBooleanField)
 registry.register(forms.TimeField)
 registry.register(forms.URLField)
-

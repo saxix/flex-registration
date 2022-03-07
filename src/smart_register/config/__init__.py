@@ -1,5 +1,4 @@
 import uuid
-
 from environ import Env
 
 
@@ -65,7 +64,10 @@ DEFAULTS = {
     'SOCIAL_AUTH_GOOGLE_OAUTH_KEY': (str, ''),
     'SOCIAL_AUTH_GOOGLE_OAUTH_SECRET': (str, ''),
     'STATIC_ROOT': (str, '/tmp/static/'),
-    'STATICFILES_STORAGE': (str, 'django.contrib.staticfiles.storage.StaticFilesStorage'),
+    'STATICFILES_STORAGE': (
+        str,
+        'django.contrib.staticfiles.storage.StaticFilesStorage',
+    ),
     # Stripe - see CONTRIBUTING.md
     'STRIPE_SECRET_KEY': (str, ''),
     'STRIPE_PUBLIC_KEY': (str, ''),

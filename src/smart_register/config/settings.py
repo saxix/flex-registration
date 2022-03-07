@@ -219,21 +219,12 @@ LOGIN_URL = 'login'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
+    'filters': {'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'}},
     'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s: %(message)s'
-        }
+        'verbose': {'format': '%(levelname)s %(asctime)s %(module)s: %(message)s'}
     },
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'},
         'null': {
             'class': 'logging.NullHandler',
         },
@@ -283,9 +274,7 @@ USE_X_FORWARDED_HOST = env('USE_X_FORWARDED_HOST')
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 # CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 
-CONSTANCE_ADDITIONAL_FIELDS = {
-
-}
+CONSTANCE_ADDITIONAL_FIELDS = {}
 
 DATE_INPUT_FORMATS = [
     '%Y-%m-%d',  # '2006-10-25'
@@ -314,7 +303,11 @@ CONSTANCE_CONFIG = OrderedDict(
         'MAX_GROUPS': (2, 'Max number of group per user', int),
         # 'MAX_GROUP_SENDERS': (3, 'Max number of senders per group', int),
         # 'MAX_GROUP_RECIPIENTS': (5, 'Max number of recipients per group', int),
-        'SMART_ADMIN_BOOKMARKS': (env('SMART_ADMIN_BOOKMARKS'), '', str,),
+        'SMART_ADMIN_BOOKMARKS': (
+            env('SMART_ADMIN_BOOKMARKS'),
+            '',
+            str,
+        ),
     }
 )
 
@@ -432,9 +425,7 @@ if SENTRY_DSN:
     )
 
 SMART_ADMIN_SECTIONS = {
-    'aa': ['smart_register',
-           'smart_register.core',
-           'registration'],
+    'aa': ['smart_register', 'smart_register.core', 'registration'],
     'Other': [],
     '_hidden_': [],
 }
@@ -462,6 +453,7 @@ def show_ddt(request):  # pragma: no-cover
     # use https://bewisse.com/modheader/ to set custom header
     # key must be `X-DDT` (no HTTP_ prefix no underscore)
     from flags.state import flag_enabled
+
     if request.path in RegexList(('/tpl/.*', '/api/.*', '/dal/.*', '/healthcheck/')):
         return False
     return flag_enabled('DEVELOP_DEBUG_TOOLBAR', request=request)
@@ -567,55 +559,55 @@ TINYMCE_DEFAULT_CONFIG = {
     'width': '960px',
     'menubar': False,
     'plugins': 'advlist '
-               'autolink '
-               'lists '
-               'link '
-               'image '
-               'charmap '
-               'print '
-               'preview '
-               'anchor '
-               'searchreplace '
-               'visualblocks '
-               'code '
-               'fullscreen '
-               'insertdatetime '
-               'media '
-               'table '
-               'paste '
-               'code '
-               'help '
-               'wordcount ',
+    'autolink '
+    'lists '
+    'link '
+    'image '
+    'charmap '
+    'print '
+    'preview '
+    'anchor '
+    'searchreplace '
+    'visualblocks '
+    'code '
+    'fullscreen '
+    'insertdatetime '
+    'media '
+    'table '
+    'paste '
+    'code '
+    'help '
+    'wordcount ',
     'toolbar': 'undo '
-               'redo '
-               'code '
-               'render '
-               'save '
-               '| '
-               'bold italic underline strikethrough '
-               '| '
-               'formatselect '
-               '| '
-               'alignleft aligncenter alignright alignjustify '
-               '| '
-               'outdent indent '
-               '|  '
-               'numlist bullist checklist '
-               '| '
-               'forecolor backcolor '
-               'casechange '
-               'permanentpen '
-               'formatpainter '
-               'removeformat '
-               '| '
-               'pagebreak '
-               '| '
-               'emoticons '
-               '| '
-               'fullscreen  '
-               '| '
-               'image '
-               'pageembed ',
+    'redo '
+    'code '
+    'render '
+    'save '
+    '| '
+    'bold italic underline strikethrough '
+    '| '
+    'formatselect '
+    '| '
+    'alignleft aligncenter alignright alignjustify '
+    '| '
+    'outdent indent '
+    '|  '
+    'numlist bullist checklist '
+    '| '
+    'forecolor backcolor '
+    'casechange '
+    'permanentpen '
+    'formatpainter '
+    'removeformat '
+    '| '
+    'pagebreak '
+    '| '
+    'emoticons '
+    '| '
+    'fullscreen  '
+    '| '
+    'image '
+    'pageembed ',
     'custom_undo_redo_levels': 10,
     # "language": "es_ES",  # To force a specific language instead of the Django current language.
 }
@@ -649,8 +641,7 @@ EXPLORER_SQL_BLACKLIST = (
     'DROP',
     'GRANT',
     'INSERT INTO',
-    'OWNER TO'
-    'RENAME ',
+    'OWNER TO' 'RENAME ',
     'REPLACE',
     'SCHEMA',
     'TRUNCATE',
@@ -661,7 +652,7 @@ EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.admin'
+    'django.contrib.admin',
 )
 EXPLORER_ASYNC_SCHEMA = False
 EXPLORER_TASKS_ENABLED = True

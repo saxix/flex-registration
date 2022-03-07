@@ -1,2 +1,24 @@
 {% extends "base.html" %}
-registration/dataset_list.html
+{% block title %}Dataset list{% endblock title %}
+{% block body %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Flex Form</th>
+                <th>Start</th>
+                <th>End</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dataset in datasets %}
+                <tr>
+                    <td><a href="{% url 'result-detail' dataset.pk %}">{{dataset.name}}</a></td>
+                    <td>{{dataset.flex_form}}</td>
+                    <td>{{dataset.start}}</td>
+                    <td>{{dataset.end}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock body %}

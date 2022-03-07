@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dataset Detail{% endblock title %}
+{% block body%}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Start</th>
+                <th>Flext Form</th>
+                <th>End</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{object.name}}</td>
+                <td>{{object.flex_form}}</td>
+                <td>{{object.start}}</td>
+                <td>{{object.end}}</td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock body %}
