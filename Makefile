@@ -40,7 +40,7 @@ lint:  ## code lint
 heroku:  ## deploy on Heroku
 	git checkout heroku
 	git merge develop
-	poetry export -o requirements.txt
+	poetry export --without-hashes -o requirements.txt
 	echo 'web: gunicorn smart_register.config.wsgi' > Procfile
 	echo 'python-3.9.2' > runtime.txt
 	git add requirements.txt runtime.txt Procfile
