@@ -27,3 +27,4 @@ registry.register(forms.URLField)
 
 registry.register(fields.PictureField)
 registry.register(fields.SelectField)
+registry.register(fields.SelectField)

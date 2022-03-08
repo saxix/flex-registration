@@ -5,7 +5,7 @@
 *.egg-info
 dist/
 __pycache__
-src/smart_register/staticfiles
+#src/smart_register/staticfiles
 !tests/.coveragerc
 !.gitignore
 !.github

@@ -2,6 +2,7 @@ import logging
 from datetime import date, datetime, time
 
 import jsonpickle
+from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -174,6 +175,7 @@ class OptionSet(models.Model):
 
 class CustomFieldType(models.Model):
     name = CICharField(max_length=100, unique=True)
+    base_type = StrategyClassField(registry=registry, default=forms.CharField)
     attrs = models.JSONField(default=dict)
     regex = RegexField(blank=True, null=True)
     clean = models.TextField(blank=True, null=True)
