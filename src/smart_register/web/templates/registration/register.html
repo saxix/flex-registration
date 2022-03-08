@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load smart_register l10n %}
+
+
 {% block body %}
+    {{ form.media }}
 <div class="min-h-screen flex justify-center bg-gray-100">
   <div class="w-full lg:w-1/2">
     <div class="text-center mb-16">
@@ -11,7 +14,7 @@
       </h3>
     </div>
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
-      <form class="w-full">
+      <form class="w-full" method="post">
         {% csrf_token %} {% for field in form %}
         <div class="mb-4">
           <label
@@ -39,14 +42,6 @@
                 {% for frm in formset %}
                 <div class="w-full form">
                   {{ frm }}
-                  <div>
-                    <input
-                      type="button"
-                      data-fs="{{ name }}"
-                      class="remove"
-                      value="Remove record"
-                    />
-                  </div>
                 </div>
                 {% endfor %}
               </div>
@@ -84,6 +79,7 @@
     </script>
     {% endfor %}
     <script>
+
       var pluginName = "formset";
       var Formset = function (el) {
           var self = this;
@@ -99,23 +95,28 @@
           };
           self.reindex = function () {
               $target.find("div.form").each(function (i, e) {
+
                   var c = $(e).html()
                       .replace(new RegExp("__prefix__", "g"), i)
                       .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + i);
-                  {# .replace(new RegExp("<\\\\/script>", "g")); #}
-                  $(e).replaceWith(c);
+                   {#.replace(new RegExp("<\\\\/script>", "g"));#}
+                  $(e).html(c);
               });
+              self.bindRemoveToElement($target.find("input[type=button].remove"))
           };
           self.bindRemove = function () {
               var $remButton = $target.find("input[type=button].remove").last();
-              $remButton.on("click", function () {
+              self.bindRemoveToElement($remButton)
+          }
+          self.bindRemoveToElement = function (element){
+              element.on("click", function () {
                   var newIndex = $target.find("div.form").length - 1;
                   managementFormField("TOTAL_FORMS").val(newIndex);
                   var $form = $(this).closest("div.form");
                   $form.remove();
                   self.reindex();
               });
-          };
+          }
           addButton.on("click", function () {
               var newIndex = $target.find("div.form").length;
               managementFormField("TOTAL_FORMS").val(newIndex + 1);

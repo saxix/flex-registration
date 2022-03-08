@@ -37,7 +37,8 @@
         }
     });
 
-    $("table.formset").on("click", ".show-camera", function () {
+    $("div.formset").on("click", ".show-camera", function () {
+        console.log('XD')
         var win = $(window);
         session = new Session($(this).data("target"));
         $("#camera div").css({
@@ -48,7 +49,7 @@
         $("#camera").show();
         startup();
     });
-    $("table.formset").on("click", ".clear-camera", function () {
+    $("div.formset").on("click", ".clear-camera", function () {
         session = new Session($(this).data("target"));
         session.context.fillStyle = "#AAA";
         session.context.fillRect(0, 0, session.canvas.width, session.canvas.height);
