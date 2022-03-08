@@ -85,7 +85,10 @@ class FlexForm(models.Model):
     def get_form(self):
         fields = {}
         for field in self.fields.all():
-            fields[field.name] = field.get_instance()
+            try:
+                fields[field.name] = field.get_instance()
+            except TypeError:
+                pass
         form_class_attrs = {
             "flex_form": self,
             **fields,
