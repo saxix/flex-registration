@@ -62,8 +62,6 @@ jobs:
         run: |
               poetry config --local cache-dir /.poetry/cache
               poetry install
-#              pip uninstall --yes django
-#              pip install {env:DJANGO} poetry
               poetry run pytest tests/
 
 
