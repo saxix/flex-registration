@@ -1,5 +1,10 @@
+from admin_extra_buttons.decorators import button
 from adminfilters.autocomplete import AutoCompleteFilter
+from django import forms
 from django.contrib.admin import TabularInline, register
+from django.db.models import JSONField
+from django.shortcuts import render
+from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
@@ -31,6 +36,9 @@ class FormSetInline(TabularInline):
 class FlexFormFieldAdmin(SmartModelAdmin):
     list_display = ("flex_form", "name", "field_type", "required", "validator")
     list_filter = (("flex_form", AutoCompleteFilter),)
+    formfield_overrides = {
+        JSONField: {"widget": JSONEditor},
+    }
 
 
 class FlexFormFieldInline(TabularInline):
@@ -60,10 +68,39 @@ class OptionSetAdmin(SmartModelAdmin):
     )
 
 
+class XXX(forms.ChoiceField):
+    pass
+
+
 @register(CustomFieldType)
 class CustomFieldTypeAdmin(SmartModelAdmin):
     list_display = (
         "name",
+        "base_type",
         "attrs",
     )
     search_fields = ("name",)
+    formfield_overrides = {
+        JSONField: {"widget": JSONEditor},
+    }
+
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        fld = ctx["original"]
+        field_type = fld.base_type
+        kwargs = fld.attrs.copy()
+        field = field_type(**kwargs)
+        form_class_attrs = {
+            "sample": field,
+        }
+        formClass = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+
+        if request.method == "POST":
+            form = formClass(request.POST)
+            if form.is_valid():
+                self.message_user(request, "Form validation success")
+        else:
+            form = formClass()
+        ctx["form"] = form
+        return render(request, "admin/core/customfieldtype/test.html", ctx)

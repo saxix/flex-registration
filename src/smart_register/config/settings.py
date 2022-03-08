@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "import_export",
-    # 'tinymce',
     # ---
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
@@ -58,6 +57,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "smart_register.core",
     "smart_register.registration",
+    "jsoneditor",
 ]
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
@@ -474,3 +474,7 @@ FLAGS = {
     "DEVELOP_DEVELOPER": [],
     "DEVELOP_DEBUG_TOOLBAR": [],
 }
+
+JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"
+JSON_EDITOR_CSS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.css"
+JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
