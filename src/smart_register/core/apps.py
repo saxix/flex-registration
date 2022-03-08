@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.db import OperationalError
 
 
 class Config(AppConfig):
@@ -8,5 +9,8 @@ class Config(AppConfig):
         from smart_register.core.registry import field_registry
         from smart_register.core.models import CustomFieldType
 
-        for field in CustomFieldType.objects.all():
-            field_registry.register(field.get_class())
+        try:
+            for field in CustomFieldType.objects.all():
+                field_registry.register(field.get_class())
+        except OperationalError:
+            pass
