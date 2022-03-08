@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from django.db import OperationalError
+from django.db import OperationalError, ProgrammingError
 
 
 class Config(AppConfig):
@@ -12,5 +12,5 @@ class Config(AppConfig):
         try:
             for field in CustomFieldType.objects.all():
                 field_registry.register(field.get_class())
-        except OperationalError:
+        except (OperationalError, ProgrammingError):
             pass
