@@ -101,7 +101,6 @@
                       .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + i);
                    {#.replace(new RegExp("<\\\\/script>", "g"));#}
                   $(e).html(c);
-                    console.log("-----",i)
               });
               self.bindRemoveToElement($target.find("input[type=button].remove"))
           };
@@ -111,11 +110,9 @@
           }
           self.bindRemoveToElement = function (element){
               element.on("click", function () {
-                  console.log('click')
                   var newIndex = $target.find("div.form").length - 1;
                   managementFormField("TOTAL_FORMS").val(newIndex);
                   var $form = $(this).closest("div.form");
-                  console.log('$form',$form)
                   $form.remove();
                   self.reindex();
               });
