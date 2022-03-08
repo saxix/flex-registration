@@ -41,8 +41,8 @@ heroku:  ## deploy on Heroku
 	git checkout heroku
 	git merge develop
 	poetry export -o requirements.txt
-	cat 'web: gunicorn smart_register.config.wsgi' > Procfile
-	cat 'python-3.9.2' > runtime.txt
+	echo 'web: gunicorn smart_register.config.wsgi' > Procfile
+	echo 'python-3.9.2' > runtime.txt
 	git add requirements.txt runtime.txt Procfile
 	git commit -m "setup heroku config"
 	@git push heroku heroku:master
