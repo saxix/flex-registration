@@ -1,7 +1,6 @@
 .*
 ~*
 *.py[ico]
-
 *.db
 *.egg-info
 dist/
