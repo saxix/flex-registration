@@ -1,147 +1,157 @@
-{% extends "base.html" %}{% load smart_register l10n %}
+{% extends "base.html" %}
+{% load smart_register l10n %}
 {% block body %}
-<div class="min-h-screen flex   justify-center bg-gray-100">
-<div class="w-full lg:w-1/2">
-   <div class="text-center mb-16">
-      <h3 class="pt-8 text-indigo-600 text-4xl leading-normal font-extrabold tracking-tight text-gray-900">
-         {{ dataset.name }}
+<div class="min-h-screen flex justify-center bg-gray-100">
+  <div class="w-full lg:w-1/2">
+    <div class="text-center mb-16">
+      <h3
+        class="pt-8 text-indigo-600 text-4xl leading-normal font-extrabold tracking-tight text-gray-900"
+      >
+        {{ dataset.name }}
       </h3>
-   </div>
-   <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
-      <form class="w-full ">
-         {% csrf_token %}
-         {% for field in form %}
-         <div class="mb-4">
-            <label class="block uppercase tracking-wide text-gray-700  font-bold mb-2"
-               for="{{ field.auto_id }}">{{ field.label }}</label>
-            {{ field }}
-         </div>
-         {% endfor %}
-         {% for name, formset in formsets.items %}
-         <div class="shadow-md rounded bg-gray-100 p-4">
-            <table id="{{ name }}" class="formset" data-fs="{{ name }}">
-               <tr>
-                  <td>
-                     <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">{{ name }}</div>
-                     <div class="managementForm">{{ formset.management_form }}</div>
-                  </td>
-               </tr>
-               <tr>
-                  <td class="forms {{ name }}">
-                     {% for frm in formset %}
-                     <table class="bla form">
-                        {{ frm }}
-                        <tr>
-                           <td></td>
-                           <td>
-                              <input type="button" data-fs="{{ name }}" class="remove"
-                                 value="Remove record">
-                           </td>
-                        </tr>
-                     </table>
-                     {% endfor %}
-                  </td>
-               </tr>
-               {% if formset.fs.dynamic %}
-               <tr>
-                  <td></td>
-                  <td><input type="button"
-                     class="add bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-                     value="Add record"></td>
-               </tr>
-               {% endif %}
-            </table>
-         </div>
-         {% endfor %}
-         <div class="submit-row">
-            <input type="submit"
-               class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-               value="Save">
-         </div>
+    </div>
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
+      <form class="w-full">
+        {% csrf_token %} {% for field in form %}
+        <div class="mb-4">
+          <label
+            class="block uppercase tracking-wide text-gray-700 font-bold mb-2"
+            for="{{ field.auto_id }}"
+            >{{ field.label }}</label
+          >
+          {{ field }}
+        </div>
+        {% endfor %} {% for name, formset in formsets.items %}
+        <div class="shadow-md rounded bg-gray-100 p-4">
+          <div id="{{ name }}" class="w-full formset" data-fs="{{ name }}">
+            <div>
+              <div>
+                <div
+                  class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title"
+                >
+                  {{ name }}
+                </div>
+                <div class="managementForm">{{ formset.management_form }}</div>
+              </div>
+            </div>
+            <div>
+              <div class="w-100 forms {{ name }}">
+                {% for frm in formset %}
+                <div class="w-full form">
+                  {{ frm }}
+                  <div>
+                    <input
+                      type="button"
+                      data-fs="{{ name }}"
+                      class="remove"
+                      value="Remove record"
+                    />
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% if formset.fs.dynamic %}
+            <div>
+              <div>
+                <input
+                  type="button"
+                  class="add bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
+                  value="Add record"
+                />
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        <div class="submit-row">
+          <input
+            type="submit"
+            class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            value="Save"
+          />
+        </div>
       </form>
-      {% for name, formset in formsets.items %}
-      <script type="form-template" id="{{ name }}-empty">
-         <table class="form" data-index="__prefix__">
-             {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
-             <tr>
-                 <td></td>
-                 <td>
-                     <input type="button" data-fs="{{ name }}"
-                            class="btn remove bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" value="Remove {{ name }}">
-                 </td>
-             </tr>
-         </table>
-      </script>
-      {% endfor %}
-      <script>
-         var pluginName = "formset";
-         var Formset = function (el) {
-             var self = this;
-             var targetName = $(el).data("fs");
-             var $target = $("#" + targetName);
-             var $managementForm = $target.find(".managementForm");
-             var addButton = $target.find("input[type=button].add");
-             {#var $forms = $target.find("table.form");#}
-             var $emptyForm = $("#" + targetName + "-empty");
-
-             var managementFormField = function (name) {
-                 return $managementForm.find("input[name=" + targetName + "-" + name + "]");
-             };
-             self.reindex = function () {
-                 $target.find("table.form").each(function (i, e) {
-                     var c = $(e).html()
-                         .replace(new RegExp("__prefix__", "g"), i)
-                         .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + i);
-                     {# .replace(new RegExp("<\\\\/script>", "g")); #}
-                     $(e).replaceWith(c);
-                 });
-             };
-             self.bindRemove = function () {
-                 var $remButton = $target.find("input[type=button].remove").last();
-                 $remButton.on("click", function () {
-                     var newIndex = $target.find("table.form").length - 1;
-                     managementFormField("TOTAL_FORMS").val(newIndex);
-                     var $form = $(this).closest("table.form");
-                     $form.remove();
-                     self.reindex();
-                 });
-             };
-             addButton.on("click", function () {
-                 var newIndex = $target.find("table.form").length;
-                 managementFormField("TOTAL_FORMS").val(newIndex + 1);
-                 var newFormHtml = $emptyForm.html()
-                     .replace(new RegExp("__prefix__", "g"), newIndex);
-
-                 $target.find("td.forms." + targetName).append(newFormHtml);
-                 self.bindRemove();
-             });
-             return self;
-         };
-         Formset.all = [];
-         Formset.reindex = function () {
-             for (var fs of Formset.all) {
-                 fs.reindex();
-             }
-         };
-         Formset.getOrCreate = function (el, options) {
-             var rev = $(el).data(pluginName);
-             if (!rev) {
-                 rev = new Formset(el);
-                 rev.bindRemove();
-                 Formset.all.push(rev);
-             }
-             return rev;
-         };
-
-         $(".formset").each(function (i, e) {
-             return Formset.getOrCreate(this, {});
-         });
-         $("form").on("submit", function (e) {
-         });
-      </script>
-   </div>
-</div>
+    </div>
     {% for name, formset in formsets.items %}
-        {{ formset.media }}
+    <script type="form-template" id="{{ name }}-empty">
+      <div class="form w-full" data-index="__prefix__">
+          {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
+                  <input type="button" data-fs="{{ name }}"
+             class="btn remove bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" value="Remove {{ name }}">
+      </div>
+    </script>
     {% endfor %}
+    <script>
+      var pluginName = "formset";
+      var Formset = function (el) {
+          var self = this;
+          var targetName = $(el).data("fs");
+          var $target = $("#" + targetName);
+          var $managementForm = $target.find(".managementForm");
+          var addButton = $target.find("input[type=button].add");
+          {#var $forms = $target.find("div.form");#}
+          var $emptyForm = $("#" + targetName + "-empty");
+
+          var managementFormField = function (name) {
+              return $managementForm.find("input[name=" + targetName + "-" + name + "]");
+          };
+          self.reindex = function () {
+              $target.find("div.form").each(function (i, e) {
+                  var c = $(e).html()
+                      .replace(new RegExp("__prefix__", "g"), i)
+                      .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + i);
+                  {# .replace(new RegExp("<\\\\/script>", "g")); #}
+                  $(e).replaceWith(c);
+              });
+          };
+          self.bindRemove = function () {
+              var $remButton = $target.find("input[type=button].remove").last();
+              $remButton.on("click", function () {
+                  var newIndex = $target.find("div.form").length - 1;
+                  managementFormField("TOTAL_FORMS").val(newIndex);
+                  var $form = $(this).closest("div.form");
+                  $form.remove();
+                  self.reindex();
+              });
+          };
+          addButton.on("click", function () {
+              var newIndex = $target.find("div.form").length;
+              managementFormField("TOTAL_FORMS").val(newIndex + 1);
+              var newFormHtml = $emptyForm.html()
+                  .replace(new RegExp("__prefix__", "g"), newIndex);
+
+              $target.find("div.forms." + targetName).append(newFormHtml);
+              self.bindRemove();
+          });
+          return self;
+      };
+      Formset.all = [];
+      Formset.reindex = function () {
+          for (var fs of Formset.all) {
+              fs.reindex();
+          }
+      };
+      Formset.getOrCreate = function (el, options) {
+          var rev = $(el).data(pluginName);
+          if (!rev) {
+              rev = new Formset(el);
+              rev.bindRemove();
+              Formset.all.push(rev);
+          }
+          return rev;
+      };
+
+      $(".formset").each(function (i, e) {
+          return Formset.getOrCreate(this, {});
+      });
+      $("form").on("submit", function (e) {
+      });
+    </script>
+  </div>
+</div>
+{% for name, formset in formsets.items %}
+{{ formset.media }}
+{% endfor %}
 {% endblock body %}
