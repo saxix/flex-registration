@@ -2,7 +2,7 @@ exclude: '^$'
 fail_fast: false
 repos:
   - repo: git://github.com/pre-commit/pre-commit-hooks
-    rev: v2.1.0
+    rev: v4.1.0
     hooks:
       #      - id: double-quote-string-fixer
       #        stages: [commit]
@@ -21,7 +21,7 @@ repos:
         stages: [commit]
 
   - repo: https://github.com/saxix/pch
-    rev: fc387f4
+    rev: fc387f44c7c1a51b762a5866ce9d954900e5af68
     hooks:
       - id: check-missed-migrations
         args:
@@ -43,13 +43,13 @@ repos:
         stages: [commit]
 
   - repo: https://github.com/psf/black
-    rev: 21.12b0
+    rev: 22.1.0
     hooks:
       - id: black
         stages: [ commit ]
 
-  - repo: https://gitlab.com/pycqa/flake8.git
-    rev: 3.7.9
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
     hooks:
       - id: flake8
         additional_dependencies:

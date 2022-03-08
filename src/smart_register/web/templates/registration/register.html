@@ -1,13 +1,13 @@
 {% extends "base.html" %}{% load smart_register l10n %}
 {% block body %}
-  <div class="min-h-screen flex   justify-center bg-gray-100">
+<div class="min-h-screen flex   justify-center bg-gray-100">
 <div class="w-full lg:w-1/2">
    <div class="text-center mb-16">
       <h3 class="pt-8 text-indigo-600 text-4xl leading-normal font-extrabold tracking-tight text-gray-900">
          {{ dataset.name }}
       </h3>
    </div>
-   <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 h-screen" method="post">
+   <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
       <form class="w-full ">
          {% csrf_token %}
          {% for field in form %}
