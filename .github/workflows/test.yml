@@ -60,7 +60,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-              poetry config --local cache-dir /.poetry/cache
               poetry install
               poetry run pytest tests/
 
