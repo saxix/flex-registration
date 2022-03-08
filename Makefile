@@ -38,7 +38,14 @@ lint:  ## code lint
 	pre-commit run --all-files
 
 heroku:  ## deploy on Heroku
-	@git push heroku develop:master
+	git checkout heroku
+	git merge develop
+	poetry export -o requirements.txt
+	cat "web: gunicorn smart_register.config.wsgi" > Procfile
+	cat "python-3.9.2" > runtime.txt
+	git add requirements.txt runtime.txt Procfile
+	git commit -m "setup heroku config"
+	@git push heroku heroku:master
 	@echo "check demo at https://flex-register.herokuapp.com/"
 	heroku run python manage.py migrate
 	heroku run python manage.py upgrade --no-input
