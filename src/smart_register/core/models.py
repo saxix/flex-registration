@@ -5,14 +5,16 @@ import jsonpickle
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.template.defaultfilters import pluralize
 from django_regex.fields import RegexField
 from strategy_field.fields import StrategyClassField
+from strategy_field.utils import fqn
 
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS
-from .forms import FlexFormBaseForm
-from .registry import registry
+from .forms import FlexFormBaseForm, CustomFieldMixin
+from .registry import field_registry, form_registry, import_custom_field
 from .utils import jsonfy, namify
 
 logger = logging.getLogger(__name__)
@@ -63,6 +65,7 @@ def get_validators(field):
 
 class FlexForm(models.Model):
     name = CICharField(max_length=255, unique=True)
+    base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
     validator = models.ForeignKey(
         Validator, limit_choices_to={"target": Validator.FORM}, blank=True, null=True, on_delete=models.PROTECT
     )
@@ -82,22 +85,12 @@ class FlexForm(models.Model):
     def get_form(self):
         fields = {}
         for field in self.fields.all():
-            # kwargs = dict(
-            #     label=field.label,
-            #     required=field.required,
-            #     validators=get_validators(field),
-            # )
-            # if field.field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
-            #     kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field.field_type], **kwargs}
-            # if field.choices and hasattr(field.field_type, "choices"):
-            #     kwargs["choices"] = [(k.strip(), k.strip()) for k in field.choices.split(",")]
-            # fields[field.name] = field.field_type(**kwargs)
             fields[field.name] = field.get_instance()
         form_class_attrs = {
             "flex_form": self,
             **fields,
         }
-        flexForm = type(FlexFormBaseForm)(f"{self.name}FlexForm", (FlexFormBaseForm,), form_class_attrs)
+        flexForm = type(FlexFormBaseForm)(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
 
 
@@ -123,7 +116,7 @@ class FlexFormField(models.Model):
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=30)
     name = CICharField(max_length=30, blank=True)
-    field_type = StrategyClassField(registry=registry)
+    field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
     validator = models.ForeignKey(
@@ -141,16 +134,34 @@ class FlexFormField(models.Model):
         return f"{self.name} {self.field_type}"
 
     def get_instance(self):
-        kwargs = dict(
-            label=self.label,
-            required=self.required,
-            validators=get_validators(self),
-        )
-        if self.field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
-            kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[self.field_type], **kwargs}
-        if self.choices and hasattr(self.field_type, "choices"):
+        # if hasattr(self.field_type, "custom") and isinstance(self.field_type.custom, CustomFieldType):
+        if issubclass(self.field_type, CustomFieldMixin):
+            field_type = self.field_type.custom.base_type
+            kwargs = self.field_type.custom.attrs.copy()
+            if self.validator:
+                kwargs.setdefault("validators", get_validators(self))
+            elif self.field_type.custom.validator:
+                kwargs["validators"] = get_validators(self.field_type.custom)
+            else:
+                kwargs["validators"] = []
+            kwargs.setdefault("label", self.label)
+            kwargs.setdefault("required", self.required)
+            regex = self.regex or self.field_type.custom.regex
+        else:
+            field_type = self.field_type
+            regex = self.regex
+            kwargs = dict(
+                label=self.label,
+                required=self.required,
+                validators=get_validators(self),
+            )
+        if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
+            kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
+        if self.choices and hasattr(field_type, "choices"):
             kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
-        return self.field_type(**kwargs)
+        if regex:
+            kwargs["validators"].append(RegexValidator(regex))
+        return field_type(**kwargs)
 
     def clean(self):
         try:
@@ -174,8 +185,28 @@ class OptionSet(models.Model):
 
 
 class CustomFieldType(models.Model):
-    name = CICharField(max_length=100, unique=True)
-    base_type = StrategyClassField(registry=registry, default=forms.CharField)
+    name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[A-Z][a-zA-Z0-9_]*")])
+    base_type = StrategyClassField(registry=field_registry, default=forms.CharField)
     attrs = models.JSONField(default=dict)
     regex = RegexField(blank=True, null=True)
-    clean = models.TextField(blank=True, null=True)
+    # choices = models.CharField(max_length=2000, blank=True, null=True)
+    # required = models.BooleanField(default=False)
+    validator = models.ForeignKey(
+        Validator, blank=True, null=True, limit_choices_to={"target": Validator.FIELD}, on_delete=models.PROTECT
+    )
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        try:
+            kwargs = self.attrs.copy()
+            class_ = self.get_class()
+            class_(**kwargs)
+        except Exception as e:
+            raise ValidationError(f"Error instantiating {fqn(class_)}: {e}")
+
+    def get_class(self):
+        attrs = self.attrs.copy()
+        attrs["custom"] = self
+        return type(self.base_type)(self.name, (CustomFieldMixin, self.base_type), attrs)

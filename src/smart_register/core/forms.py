@@ -8,6 +8,10 @@ class ValidatorForm(forms.ModelForm):
     code = forms.CharField(widget=PythonEditor)
 
 
+class CustomFieldMixin:
+    custom = None
+
+
 class FlexFormBaseForm(forms.Form):
     flex_form = None
 
