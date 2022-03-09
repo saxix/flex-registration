@@ -49,6 +49,7 @@ field_registry.register(forms.URLField)
 field_registry.register(fields.PictureField)
 field_registry.register(fields.SelectField)
 field_registry.register(fields.MultiCheckboxField)
+field_registry.register(fields.RadioField)
 
 form_registry = FieldRegistry(forms.BaseForm)
 form_registry.register(forms.Form)
