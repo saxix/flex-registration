@@ -1,5 +1,4 @@
 from admin_extra_buttons.decorators import view
-from cryptography.hazmat.primitives import serialization
 from django import forms
 from django.contrib import messages
 from django.db import models
@@ -36,22 +35,10 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         ctx = self.get_common_context(
             request, pk, title="Generate Private/Public Key pair to encrypt this Registration data"
         )
-        from cryptography.hazmat.backends import default_backend
-        from cryptography.hazmat.primitives.asymmetric import rsa
 
         if request.method == "POST":
             ctx["title"] = "Key Pair Generated"
-            private_key = rsa.generate_private_key(public_exponent=65537, key_size=4096, backend=default_backend())
-            public_key = private_key.public_key()
-
-            private_pem = private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption(),
-            )
-            public_pem = public_key.public_bytes(
-                encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )
+            private_pem, public_pem = self.object.setup_encryption_keys()
             self.object.public_key = public_pem
             self.object.save()
             ctx["private_key"] = private_pem

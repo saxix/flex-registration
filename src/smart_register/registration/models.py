@@ -1,3 +1,4 @@
+import base64
 import json
 
 from cryptography.hazmat.backends import default_backend
@@ -30,15 +31,43 @@ class Registration(models.Model):
     def __str__(self):
         return self.name
 
+    def setup_encryption_keys(self):
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives.asymmetric import rsa
+
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=1024, backend=default_backend())
+        public_key = private_key.public_key()
+
+        private_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        public_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        self.public_key = public_pem.decode()
+        self.save()
+        return private_pem, public_pem
+
+    def encrypt(self, value):
+        public_key = serialization.load_pem_public_key(self.public_key.encode(), backend=default_backend())
+        if not isinstance(value, str):
+            value = json.dumps(value, cls=JSONEncoder).encode("utf8")
+        e = public_key.encrypt(
+            value,
+            padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None),
+        )
+        return base64.b64encode(e).decode()
+
     def add_record(self, data):
+        # value = {'f': self.fernet.encrypt(json.dumps(value,
+        #                                              cls=self.encoder,
+        #                                              ).encode('utf8')).decode('utf8')}
+
         if self.public_key:
-            public_key = serialization.load_pem_public_key(self.public_key, backend=default_backend())
-            message = json.dumps(data, cls=JSONEncoder)
-            encrypted = public_key.encrypt(
-                message,
-                padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None),
-            )
-            payload = {"data": encrypted}
+            e = self.encrypt(data)
+            payload = {"data": e}
         else:
             payload = {"data": data}
         return Record.objects.create(registration=self, data=jsonfy(payload))
