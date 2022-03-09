@@ -4,6 +4,7 @@ from strategy_field.exceptions import StrategyAttributeError, StrategyImportErro
 from strategy_field.registry import Registry
 
 from . import fields
+from .fields.captcha import SmartCaptchaField
 from .forms import FlexFormBaseForm
 
 
@@ -45,10 +46,12 @@ field_registry.register(forms.MultipleChoiceField)
 field_registry.register(forms.NullBooleanField)
 field_registry.register(forms.TimeField)
 field_registry.register(forms.URLField)
+field_registry.register(SmartCaptchaField)
 
 field_registry.register(fields.PictureField)
 field_registry.register(fields.SelectField)
 field_registry.register(fields.MultiCheckboxField)
+field_registry.register(fields.RadioField)
 
 form_registry = FieldRegistry(forms.BaseForm)
 form_registry.register(forms.Form)
