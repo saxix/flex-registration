@@ -1,0 +1,14 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% block action-content %}
+    <table>
+        <tr>
+            <th>Private</th>
+            <td><textarea readonly style="width: 600px; height: 200px">{{ private_key.decode }}</textarea></td>
+        </tr>
+        <tr>
+            <th>Public</th>
+            <td><textarea readonly style="width: 600px; height: 200px">{{ public_key.decode }}</textarea>
+            </td>
+        </tr>
+    </table>
+{% endblock action-content %}

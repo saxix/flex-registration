@@ -13,6 +13,8 @@ class Registration(models.Model):
     active = models.BooleanField(default=False)
     locale = models.CharField(max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE)
 
+    public_key = models.TextField(blank=True, null=True)
+
     class Meta:
         get_latest_by = "start"
 
