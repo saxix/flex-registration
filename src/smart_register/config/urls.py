@@ -7,5 +7,5 @@ actions.add_to_site(admin.site)
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("smart_register.web.urls")),
-    path('captcha/', include('captcha.urls')),
+    path("captcha/", include("captcha.urls")),
 ]
