@@ -24,8 +24,6 @@ RUN apk add --no-cache --virtual .build-deps \
         python3-dev
 
 
-
-
 RUN apk add --no-cache --virtual .run-deps \
         --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
         --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
@@ -43,7 +41,7 @@ WORKDIR /code
 
 RUN set -ex \
     ls -al /code \
-    && pip install -U pip "poetry==1.1.5" \
+    && pip install -U pip "poetry==1.1.12" \
     && poetry config virtualenvs.create false \
     && poetry install --no-dev --no-root --no-interaction --no-ansi
 
@@ -53,7 +51,7 @@ RUN apk del .build-deps \
     && rm -rf /var/cache/apk/* \
     && rm -fr /root/.cache/ \
     && rm -fr /usr/include/ \
-    && pip install -U pip "poetry==1.1.5"
+    && pip install -U pip "poetry==1.1.12"
 
-RUN addgroup --gid 1024 sos \
-    && adduser --disabled-password --ingroup sos -S www
+RUN addgroup --gid 1024 www \
+    && adduser --disabled-password --ingroup www -S www

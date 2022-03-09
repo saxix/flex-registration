@@ -1,5 +1,5 @@
 ARG BASE_IMAGE
-FROM registry.gitlab.com/bitcaster/sos/base:${BASE_IMAGE}
+FROM ghcr.io/saxix/smart_register/base:${BASE_IMAGE}
 
 EXPOSE 8000
 VOLUME ["/var/sos/"]
