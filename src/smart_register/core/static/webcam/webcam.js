@@ -9,8 +9,8 @@
         self.$image = $("#div_" + fieldName + " canvas img");
         self.$field = $("#id_" + fieldName);
     };
-    $("<div class='flex justify-center align-center' id='"+ cameraId +"'>" +
-        "<div class='w-full md:w-1/3 bg-white rounded shadow border p-6'><video>Video stream not available.</video>" +
+    $("<div class='flex justify-center items-center' id='"+ cameraId +"'>" +
+        "<div class='w-full md:w-1/3 bg-white rounded shadow border p-6 flex items-center flex-col'><video>Video stream not available.</video>" +
         "<div class='w-full flex justify-between align-center'>" +
         "<button type='button' class='snap bg-white hover:bg-gray-100 text-gray-800 font-semibold my-2 mx-2 py-2 px-4 border border-gray-400 rounded shadow'>Take photo</button>" +
         "<button type='button' class='cancel bg-white hover:bg-gray-100 text-gray-800 font-semibold my-2 mx-2 py-2 px-4 border border-gray-400 rounded shadow'>Cancel</button>" +
@@ -45,7 +45,7 @@
         //     position: "absolute",
         //     top: "100px"
         // });
-        $("#camera").show();
+        $("#camera").css("display", "flex");
         startup();
     });
     $("div.formset").on("click", ".clear-camera", function () {

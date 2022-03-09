@@ -21,8 +21,6 @@ services:
     command: "dev"
     depends_on:
       - db
-      - redis
-      - celery_worker
   db:
     image: mdillon/postgis:11-alpine
     volumes:
