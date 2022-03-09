@@ -55,7 +55,6 @@ stages:
               command: push
               repository: $(Docker.app_repository)
               containerRegistry: $(Docker.registry)
-              arguments: '--cache-from=$(Docker.url)/$(Docker.repository):latest'
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
