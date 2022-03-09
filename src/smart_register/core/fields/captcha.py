@@ -5,7 +5,7 @@ from captcha.conf import settings
 from captcha.fields import CaptchaField
 from captcha.models import CaptchaStore
 from django.core.exceptions import ImproperlyConfigured
-from django.forms.widgets import HiddenInput, MultiWidget, TextInput
+from django.forms.widgets import HiddenInput, MultiWidget
 from django.template.loader import render_to_string
 from django.urls import reverse, NoReverseMatch
 from django.utils.safestring import mark_safe
@@ -53,7 +53,8 @@ class BaseCaptchaTextInput(MultiWidget):
             reverse("captcha-image", args=("dummy",))
         except NoReverseMatch:
             raise ImproperlyConfigured(
-                "Make sure you've included captcha.urls as explained in the INSTALLATION section on http://readthedocs.org/docs/django-simple-captcha/en/latest/usage.html#installation"
+                "Make sure you've included captcha.urls as explained in the INSTALLATION section "
+                "on http://readthedocs.org/docs/django-simple-captcha/en/latest/usage.html#installation"
             )
 
         if settings.CAPTCHA_GET_FROM_POOL:

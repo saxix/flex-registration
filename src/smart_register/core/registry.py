@@ -2,7 +2,6 @@ from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from strategy_field.exceptions import StrategyAttributeError, StrategyImportError
 from strategy_field.registry import Registry
-from captcha.fields import CaptchaField
 
 from . import fields
 from .fields.captcha import SmartCaptchaField
