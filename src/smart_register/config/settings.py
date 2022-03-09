@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     "smart_register",
     "smart_register.web",
     "django.forms",
-    "django_celery_beat",
     "smart_register.core",
     "smart_register.registration",
     "jsoneditor",
@@ -347,22 +346,10 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
-# CELERY STUFF
-BROKER_URL = env("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
-CELERY_ACCEPT_CONTENT = ["application/json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_TASK_ALWAYS_EAGER = env("CELERY_ALWAYS_EAGER")
-CELERY_ALWAYS_EAGER = env("CELERY_ALWAYS_EAGER")
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
 MAX_OBSERVED = 1
 SENTRY_DSN = env("SENTRY_DSN")
 if SENTRY_DSN:
     import sentry_sdk
-    from sentry_sdk.integrations.celery import CeleryIntegration
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.logging import LoggingIntegration
     from sentry_sdk.integrations.redis import RedisIntegration
@@ -378,7 +365,6 @@ if SENTRY_DSN:
             DjangoIntegration(transaction_style="url"),
             sentry_logging,
             RedisIntegration(),
-            CeleryIntegration(),
         ],
         release=smart_register.VERSION,
         send_default_pii=True,
