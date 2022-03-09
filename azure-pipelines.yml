@@ -50,14 +50,13 @@ stages:
                 $(Build.SourceVersion)
                 latest
           - task: Docker@2
-              displayName: Push
-              inputs:
-                command: push
-                buildContext: "**/.."
-                dockerfile: $(Docker.filePath)
-                repository: $(Docker.app_repository)
-                containerRegistry: $(Docker.registry)
-                tags: |
-                  $(Build.BuildId)
-                  $(Build.SourceVersion)
-                  latest
+            displayName: Push
+            inputs:
+              command: push
+              repository: $(Docker.app_repository)
+              containerRegistry: $(Docker.registry)
+              arguments: '--cache-from=$(Docker.url)/$(Docker.repository):latest'
+              tags: |
+                $(Build.BuildId)
+                $(Build.SourceVersion)
+                latest
