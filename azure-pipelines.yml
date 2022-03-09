@@ -36,6 +36,7 @@ stages:
             displayName: Build&Push
             inputs:
               command: buildAndPush
+              buildContext: "**/.."
               dockerfile: $(Docker.filePath)
               repository: $(Docker.app_repository)
               containerRegistry: $(Docker.registry)
