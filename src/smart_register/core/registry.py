@@ -2,8 +2,10 @@ from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from strategy_field.exceptions import StrategyAttributeError, StrategyImportError
 from strategy_field.registry import Registry
+from captcha.fields import CaptchaField
 
 from . import fields
+from .fields.captcha import SmartCaptchaField
 from .forms import FlexFormBaseForm
 
 
@@ -45,6 +47,7 @@ field_registry.register(forms.MultipleChoiceField)
 field_registry.register(forms.NullBooleanField)
 field_registry.register(forms.TimeField)
 field_registry.register(forms.URLField)
+field_registry.register(SmartCaptchaField)
 
 field_registry.register(fields.PictureField)
 field_registry.register(fields.SelectField)

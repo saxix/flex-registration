@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "django.forms",
     "import_export",
     # ---
     "smart_admin.apps.SmartLogsConfig",
@@ -51,12 +52,12 @@ INSTALLED_APPS = [
     "constance.backends.database",
     "flags",
     "hijack",
+    "jsoneditor",
+    "captcha",
     "smart_register",
     "smart_register.web",
-    "django.forms",
     "smart_register.core",
     "smart_register.registration",
-    "jsoneditor",
 ]
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
