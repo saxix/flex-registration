@@ -372,7 +372,10 @@ if SENTRY_DSN:
     )
 
 SMART_ADMIN_SECTIONS = {
-    "aa": ["smart_register", "smart_register.core", "registration"],
+    "Registration": ["registration"],
+    "Form Builder": ["core"],
+    "Configuration": ["constance", "flags"],
+    "Security": ["auth", "social_auth"],
     "Other": [],
     "_hidden_": [],
 }

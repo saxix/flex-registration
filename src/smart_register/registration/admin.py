@@ -19,9 +19,19 @@ class RegistrationResource(resources.ModelResource):
 
 @register(Registration)
 class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
+    search_fields = ("name",)
+    date_hierarchy = "start"
+    list_filter = ("active",)
+    list_display = ("name", "start", "end", "active", "locale", "secure")
     formfield_overrides = {models.TextField: {"widget": forms.PasswordInput}}
     exclude = ("public_key",)
     change_form_template = None
+    autocomplete_fields = ("flex_form",)
+
+    def secure(self, obj):
+        return bool(obj.public_key)
+
+    secure.boolean = True
 
     @view()
     def removekey(self, request, pk):
@@ -39,8 +49,6 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         if request.method == "POST":
             ctx["title"] = "Key Pair Generated"
             private_pem, public_pem = self.object.setup_encryption_keys()
-            self.object.public_key = public_pem
-            self.object.save()
             ctx["private_key"] = private_pem
             ctx["public_key"] = public_pem
 
@@ -49,4 +57,4 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
 
 @register(Record)
 class RecordAdmin(SmartModelAdmin):
-    pass
+    readonly_fields = ("registration", "data")
