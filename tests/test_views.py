@@ -1,4 +1,10 @@
+import base64
+import json
+
 import pytest
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 from django.urls import reverse
 
 
@@ -9,6 +15,18 @@ def simple_registration(simple_form):
     reg, __ = Registration.objects.get_or_create(
         name="registration #1", defaults={"flex_form": simple_form, "active": True}
     )
+    return reg
+
+
+@pytest.fixture()
+def encrypted_registration(simple_form):
+    from smart_register.registration.models import Registration
+
+    reg, __ = Registration.objects.get_or_create(
+        name="registration #1", defaults={"flex_form": simple_form, "active": True}
+    )
+    priv, pub = reg.setup_encryption_keys()
+    reg._private_pem = priv
     return reg
 
 
@@ -33,7 +51,7 @@ def test_register_simple(django_app, simple_registration):
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
     res = res.form.submit()
-    assert res.context["record"].data["first_name"] == "first"
+    assert res.context["record"].data["data"]["first_name"] == "first"
 
 
 def add_dynamic_field(form, name, value):
@@ -84,6 +102,34 @@ def test_register_complex(django_app, complex_registration):
         },
     )
     res = res.form.submit()
-    assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
-    assert res.context["record"].data["form2s"][0]["last_name"] == "Last"
-    assert res.context["record"].data["form2s"][1]["first_name"] == "First2"
+    assert res.context["record"].data["data"]["form2s"][0]["first_name"] == "First1"
+    assert res.context["record"].data["data"]["form2s"][0]["last_name"] == "Last"
+    assert res.context["record"].data["data"]["form2s"][1]["first_name"] == "First2"
+
+
+def decrypt(private_pem, data):
+    private_key = serialization.load_pem_private_key(private_pem, password=None, backend=default_backend())
+
+    stream = data["data"]
+    decoded = base64.b64decode(stream)
+    decrypted = private_key.decrypt(
+        decoded, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+    )
+    return json.loads(decrypted.decode())
+
+
+@pytest.mark.django_db
+def test_register_encrypted(django_app, encrypted_registration):
+    url = reverse("register", args=[encrypted_registration.pk])
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["first_name"] = "first_name"
+    res.form["last_name"] = "f"
+    res = res.form.submit()
+    res.form["first_name"] = "first"
+    res.form["last_name"] = "last"
+    res = res.form.submit()
+    record = res.context["record"]
+    decrypted = decrypt(encrypted_registration._private_pem, record.data)
+
+    assert decrypted["first_name"] == "first"

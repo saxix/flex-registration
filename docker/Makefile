@@ -52,7 +52,7 @@ build-base:
 			${BUILD_OPTIONS} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE} \
 			-f docker/${DOCKERFILE}.base .
-	cd .. && git tag base-${BASE}
+	#cd .. && git tag base-${BASE}
 	docker tag ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE} ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:latest
 ifeq ($(PUSH_BASE), 1)
 	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE}

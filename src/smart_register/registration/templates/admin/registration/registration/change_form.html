@@ -1,0 +1,13 @@
+{% extends "admin_extra_buttons/change_form.html" %}
+{% block after_field_sets %}
+    <div style="margin:10px;">
+        {% if original.public_key %}
+            <strong style="background-color:darkseagreen;padding: 10px;">Encryption Key found.</strong>
+            <a href="{% url "admin:registration_registration_removekey" original.pk %}">Remove Key</a>
+        {% else %}
+            <strong style="background-color:#ff9898;padding: 10px;">Encryption Not set.</strong>
+            <a href="{% url "admin:registration_registration_generate_keys" original.pk %}">Generate Key</a>
+        {% endif %}
+    </div>
+{% endblock %}
+{% block inline_field_sets %}{% endblock %}
