@@ -6,6 +6,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from django.urls import reverse
+from webtest import Upload
 
 
 @pytest.fixture()
@@ -147,3 +148,41 @@ def test_register_encrypted(django_app, encrypted_registration):
     decrypted = decrypt(encrypted_registration._private_pem, record.data)
 
     assert decrypted["first_name"] == "first"
+
+
+@pytest.mark.django_db
+def test_upload_image(django_app, complex_registration, mock_storage):
+    url = reverse("register", args=[complex_registration.pk])
+    res = django_app.get(url)
+    res.form["family_name"] = "HH #1"
+
+    add_extra_form_to_formset_with_data(
+        res.form,
+        "form2s",
+        {
+            "first_name": "First1",
+            "last_name": "Last",
+            "date_of_birth": "2000-12-01",
+            "image": Upload("tests/data/image.jpeg"),
+        },
+    )
+    res = res.form.submit()
+    assert res.context["record"].data["data"]["family_name"] == "HH #1"
+    assert res.context["record"].data["data"]["form2s"][0]["image"] == "image.jpeg"
+
+
+@pytest.mark.skip("Problem with encrypted file")
+@pytest.mark.django_db
+def test_upload_image_register_encrypted(django_app, encrypted_registration, mock_storage):
+    url = reverse("register", args=[encrypted_registration.pk])
+    res = django_app.get(url)
+    res.form["first_name"] = "first"
+    res.form["last_name"] = "last"
+    res.form["image"] = Upload("tests/data/image.jpeg")
+
+    res = res.form.submit()
+    record = res.context["record"]
+    decrypted = decrypt(encrypted_registration._private_pem, record.data)
+
+    assert decrypted["first_name"] == "first"
+    assert decrypted["image"] == "image.jpeg"
