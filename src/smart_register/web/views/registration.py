@@ -34,7 +34,7 @@ class RegisterView(FormView):
             if "pk" in self.kwargs:
                 return Registration.objects.get(active=True, id=self.kwargs["pk"])
             else:
-                return Registration.objects.latest()
+                return Registration.objects.filter(active=True).latest()
         except Exception:
             raise Http404
 
