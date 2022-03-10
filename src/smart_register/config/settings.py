@@ -8,7 +8,7 @@ import smart_register
 
 from . import env
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 mimetypes.add_type("image/svg+xml", ".svg", True)
 mimetypes.add_type("image/svg+xml", ".svgz", True)
@@ -173,6 +173,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# Ensure STATIC_ROOT exists.
+os.makedirs(STATIC_ROOT, exist_ok=True)
+
 STATIC_URL = "/static/"
 # STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
