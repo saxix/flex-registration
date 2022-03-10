@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ObjectDoesNotExist
-from strategy_field.exceptions import StrategyAttributeError, StrategyImportError
+from strategy_field.exceptions import StrategyAttributeError
 from strategy_field.registry import Registry
 
 from . import fields
@@ -19,7 +19,7 @@ def import_custom_field(value, exc):
     try:
         return get_custom_field(value).get_class()
     except ObjectDoesNotExist:
-        raise StrategyImportError(value)
+        return None
 
 
 class FieldRegistry(Registry):
@@ -52,6 +52,8 @@ field_registry.register(fields.PictureField)
 field_registry.register(fields.SelectField)
 field_registry.register(fields.MultiCheckboxField)
 field_registry.register(fields.RadioField)
+field_registry.register(fields.YesNoRadio)
+field_registry.register(fields.YesNoChoice)
 
 form_registry = FieldRegistry(forms.BaseForm)
 form_registry.register(forms.Form)
