@@ -4,7 +4,6 @@ from .mixins import TailWindMixin
 
 
 class SmartDateWidget(TailWindMixin, forms.DateInput):
-    # https://www.cssscript.com/vanilla-date-range-picker/
     class Media:
         js = [
             "datetimepicker/datepicker.js",

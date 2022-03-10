@@ -1,9 +1,11 @@
+import os
+
 import pytest
 from django import forms
 
 
 def pytest_configure(config):
-    pass
+    os.environ["DEBUG"] = "0"
 
 
 @pytest.fixture()

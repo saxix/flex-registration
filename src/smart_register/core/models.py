@@ -78,6 +78,21 @@ class FlexForm(models.Model):
     def __str__(self):
         return self.name
 
+    def add_field(
+        self, label, field_type=forms.CharField, required=False, choices=None, regex=None, validator=None, **kwargs
+    ):
+        return self.fields.get_or_create(
+            label=label,
+            defaults={
+                "field_type": field_type,
+                "choices": choices,
+                "regex": regex,
+                "validator": validator,
+                "advanced": kwargs,
+                "required": required,
+            },
+        )[0]
+
     def add_formset(self, form, **extra):
         defaults = {"extra": 0, "name": form.name.lower() + pluralize(0)}
         defaults.update(extra)

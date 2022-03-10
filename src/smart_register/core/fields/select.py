@@ -18,7 +18,7 @@ class SelectField(forms.ChoiceField):
                         value.append(line.split(options.separator))
                 else:
                     for line in options.data.split("\n"):
-                        value.append((line, line))
+                        value.append([line.lower(), line])
             except OptionSet.DoesNotExist:
                 raise ValueError(f"OptionSet '{value}' does not exists")
         self._choices = self.widget.choices = value
