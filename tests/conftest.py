@@ -24,9 +24,7 @@ def simple_form():
     frm.fields.get_or_create(
         label="Last Name", defaults={"field_type": forms.CharField, "required": True, "validator": v1}
     )
-    frm.fields.get_or_create(
-        label="Image", defaults={"field_type": forms.ImageField, "required": False}
-    )
+    frm.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     return frm
 
 
@@ -52,9 +50,7 @@ def complex_form():
     )
     ind.fields.get_or_create(label="Date Of Birth", defaults={"field_type": forms.DateField, "required": True})
 
-    ind.fields.get_or_create(
-        label="Image", defaults={"field_type": forms.ImageField, "required": False}
-    )
+    ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     hh.add_formset(ind)
     return hh
 
@@ -68,7 +64,7 @@ def mock_storage(monkeypatch):
 
     def _mock_save(instance, name, content):
         setattr(instance, f"mock_{clean_name(name)}_exists", True)
-        return str(name).replace('\\', '/')
+        return str(name).replace("\\", "/")
 
     def _mock_delete(instance, name):
         setattr(instance, f"mock_{clean_name(name)}_exists", False)
