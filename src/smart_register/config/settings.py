@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartConfig",
     # 'smart_admin',
+    "admin_ordering",
     "django_sysinfo",
     "admin_extra_buttons",
     "social_django",

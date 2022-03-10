@@ -259,6 +259,20 @@ docs = ["markdown-include", "mdx-gh-links", "mkdocs", "mkdocs-material", "mkdocs
 test = ["coverage", "factory-boy", "django-webtest", "pdbpp", "pyquery", "pytest", "pytest-cov", "pytest-django", "pytest-echo", "pytest-pythonpath", "tox (>=2.3)", "wheel"]
 
 [[package]]
+name = "django-admin-ordering"
+version = "0.15.0"
+description = "Orderable change lists and inlines done right^Wsimple"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+django-js-asset = "*"
+
+[package.extras]
+tests = ["coverage"]
+
+[[package]]
 name = "django-adminactions"
 version = "1.15"
 description = "Collections of useful actions to use with django.contrib.admin.ModelAdmin"
@@ -366,6 +380,20 @@ python-versions = ">=3.6"
 diff-match-patch = "*"
 Django = ">=2.2"
 tablib = {version = ">=3.0.0", extras = ["html", "ods", "xls", "xlsx", "yaml"]}
+
+[[package]]
+name = "django-js-asset"
+version = "2.0.0"
+description = "script tag with additional attributes for django.forms.Media"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+Django = ">=2.2"
+
+[package.extras]
+tests = ["coverage"]
 
 [[package]]
 name = "django-jsoneditor"
@@ -1791,7 +1819,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "5f028b750c509c1dbe29b79fa5879cd4bf07c81a1a810ec6b6ef9814ebdab497"
+content-hash = "edb1141612318db717dbb680d9f481b248b3b5a8228a8d3fb52920d58763bc0c"
 
 [metadata.files]
 appnope = [
@@ -2011,6 +2039,10 @@ django = [
 django-admin-extra-buttons = [
     {file = "django-admin-extra-buttons-1.3.0.tar.gz", hash = "sha256:4f43d660af47396f1ecec7262cd903d8414b6b612aaeed6c10dfdb50b1f20c49"},
 ]
+django-admin-ordering = [
+    {file = "django_admin_ordering-0.15.0-py3-none-any.whl", hash = "sha256:477f1551bed353fb4019d2bc28b7b353f4b98f059aa73fb3727d9798d92cb392"},
+    {file = "django_admin_ordering-0.15.0.tar.gz", hash = "sha256:75b2db5d5f798f2f40ebdc0446179fb369e93eac46e731cd5e84506c2c13a9ce"},
+]
 django-adminactions = [
     {file = "django-adminactions-1.15.tar.gz", hash = "sha256:a3e16fb25e1d326c82dc5f854ae9e08b502c6c49d9dc64baa5c46b062e53d4eb"},
 ]
@@ -2040,6 +2072,10 @@ django-hijack = [
 django-import-export = [
     {file = "django-import-export-2.7.1.tar.gz", hash = "sha256:4bc65943a5ce66aeaf2b5d0d6f75b1863b63b10323bf235e46500bef5d6dd85b"},
     {file = "django_import_export-2.7.1-py3-none-any.whl", hash = "sha256:254ca359782efca932c398edabc15dd51d31da241e85cc03af5b720173e0b2fe"},
+]
+django-js-asset = [
+    {file = "django_js_asset-2.0.0-py3-none-any.whl", hash = "sha256:86f9f300d682537ddaf0487dc2ab356581b8f50c069bdba91d334a46e449f923"},
+    {file = "django_js_asset-2.0.0.tar.gz", hash = "sha256:adc1ee1efa853fad42054b540c02205344bb406c9bddf87c9e5377a41b7db90f"},
 ]
 django-jsoneditor = [
     {file = "django-jsoneditor-0.2.2.tar.gz", hash = "sha256:c4d9de033840e0b736ac1c4fcc56298a4a0470402db8aaf35d30567127d8397c"},
