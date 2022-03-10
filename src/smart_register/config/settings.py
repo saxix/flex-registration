@@ -4,8 +4,6 @@ import os
 from collections import OrderedDict
 from pathlib import Path
 
-from django_regex.utils import RegexList
-
 import smart_register
 
 from . import env
@@ -43,6 +41,7 @@ INSTALLED_APPS = [
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartConfig",
     # 'smart_admin',
+    "admin_ordering",
     "django_sysinfo",
     "admin_extra_buttons",
     "social_django",
@@ -386,42 +385,6 @@ SMART_ADMIN_PROFILE_LINK = True
 
 IMPERSONATE_HEADER_KEY = env("IMPERSONATE_HEADER_KEY")
 
-
-# DEBUG TOOLBAR
-def show_ddt(request):  # pragma: no-cover
-    # use https://bewisse.com/modheader/ to set custom header
-    # key must be `X-DDT` (no HTTP_ prefix no underscore)
-    from flags.state import flag_enabled
-
-    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*", "/healthcheck/")):
-        return False
-    return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
-
-
-DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK": show_ddt,
-    "JQUERY_URL": "",
-}
-INTERNAL_IPS = env.list("INTERNAL_IPS")
-DEBUG_TOOLBAR_PANELS = [
-    "debug_toolbar.panels.history.HistoryPanel",
-    "debug_toolbar.panels.versions.VersionsPanel",
-    "debug_toolbar.panels.timer.TimerPanel",
-    # 'flags.panels.FlagsPanel',
-    # 'flags.panels.FlagChecksPanel',
-    "debug_toolbar.panels.settings.SettingsPanel",
-    "debug_toolbar.panels.headers.HeadersPanel",
-    "debug_toolbar.panels.request.RequestPanel",
-    "debug_toolbar.panels.sql.SQLPanel",
-    "debug_toolbar.panels.staticfiles.StaticFilesPanel",
-    "debug_toolbar.panels.templates.TemplatesPanel",
-    "debug_toolbar.panels.cache.CachePanel",
-    "debug_toolbar.panels.signals.SignalsPanel",
-    "debug_toolbar.panels.logging.LoggingPanel",
-    "debug_toolbar.panels.redirects.RedirectsPanel",
-    "debug_toolbar.panels.profiling.ProfilingPanel",
-]
-
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -462,7 +425,6 @@ FLAGS_STATE_LOGGING = DEBUG
 
 FLAGS = {
     "DEVELOP_DEVELOPER": [],
-    "DEVELOP_DEBUG_TOOLBAR": [],
 }
 
 JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"

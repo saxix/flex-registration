@@ -2,6 +2,9 @@
 branch = True
 source = smart_register
 include =
+omit =
+    src/smart_register/core/backends.py
+    src/smart_register/management/commands/*
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -18,6 +21,7 @@ exclude_lines =
     # Don't complain if non-runnable code isn't run:
     #if 0:
     if __name__ == .__main__.:
+    if DEBUG:
 
 ignore_errors = True
 

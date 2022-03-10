@@ -2,6 +2,7 @@ import logging
 from datetime import date, datetime, time
 
 import jsonpickle
+from admin_ordering.models import OrderableModel
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
@@ -77,14 +78,41 @@ class FlexForm(models.Model):
     def __str__(self):
         return self.name
 
+    def add_field(
+        self,
+        label,
+        field_type=forms.CharField,
+        required=False,
+        choices=None,
+        regex=None,
+        validator=None,
+        name=None,
+        **kwargs,
+    ):
+        if isinstance(choices, (list, tuple)):
+            kwargs["choices"] = choices
+            choices = None
+        return self.fields.update_or_create(
+            label=label,
+            defaults={
+                "name": name,
+                "field_type": field_type,
+                "choices": choices,
+                "regex": regex,
+                "validator": validator,
+                "advanced": kwargs,
+                "required": required,
+            },
+        )[0]
+
     def add_formset(self, form, **extra):
         defaults = {"extra": 0, "name": form.name.lower() + pluralize(0)}
         defaults.update(extra)
-        return FormSet.objects.create(parent=self, flex_form=form, **defaults)
+        return FormSet.objects.update_or_create(parent=self, flex_form=form, **defaults)
 
     def get_form(self):
         fields = {}
-        for field in self.fields.all():
+        for field in self.fields.order_by("ordering"):
             try:
                 fields[field.name] = field.get_instance()
             except TypeError:
@@ -115,9 +143,9 @@ class FormSet(models.Model):
         return self.flex_form.get_form()
 
 
-class FlexFormField(models.Model):
+class FlexFormField(OrderableModel):
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
-    label = models.CharField(max_length=30)
+    label = models.CharField(max_length=2000)
     name = CICharField(max_length=30, blank=True)
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
@@ -129,9 +157,10 @@ class FlexFormField(models.Model):
     advanced = models.JSONField(default=dict, blank=True, null=True)
 
     class Meta:
-        unique_together = (("name", "flex_form"),)
+        unique_together = (("flex_form", "name"),)
         verbose_name = "FlexForm Field"
         verbose_name_plural = "FlexForm Fields"
+        ordering = ["ordering"]
 
     def __str__(self):
         return f"{self.name} {self.field_type}"
@@ -152,16 +181,16 @@ class FlexFormField(models.Model):
             regex = self.regex or self.field_type.custom.regex
         else:
             field_type = self.field_type
+            kwargs = self.advanced.copy()
             regex = self.regex
-            kwargs = dict(
-                label=self.label,
-                required=self.required,
-                validators=get_validators(self),
-            )
+            kwargs.setdefault("label", self.label)
+            kwargs.setdefault("required", self.required)
+            kwargs.setdefault("validators", get_validators(self))
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
             kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
-        if self.choices and hasattr(field_type, "choices"):
-            kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
+        if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
+            # kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
+            kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
         return field_type(**kwargs)
@@ -187,6 +216,15 @@ class OptionSet(models.Model):
     separator = models.CharField(max_length=1, default="", blank=True)
 
 
+def clean_choices(value):
+    if not isinstance(value, (list, tuple)):
+        raise ValueError("choices must be list or tuple")
+    try:
+        return list(dict(value).items())
+    except ValueError:
+        return list(zip(map(str.lower, value), value))
+
+
 class CustomFieldType(models.Model):
     name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[A-Z][a-zA-Z0-9_]*")])
     base_type = StrategyClassField(registry=field_registry, default=forms.CharField)
@@ -197,6 +235,13 @@ class CustomFieldType(models.Model):
     validator = models.ForeignKey(
         Validator, blank=True, null=True, limit_choices_to={"target": Validator.FIELD}, on_delete=models.PROTECT
     )
+
+    @staticmethod
+    def build(name, defaults):
+        choices = defaults.get("attrs", {}).get("choices", {})
+        if choices:
+            defaults["attrs"]["choices"] = clean_choices(choices)
+        return CustomFieldType.objects.update_or_create(name=name, defaults=defaults)[0]
 
     def __str__(self):
         return self.name

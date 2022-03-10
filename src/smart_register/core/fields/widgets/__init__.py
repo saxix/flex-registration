@@ -3,4 +3,4 @@ from .datetime import SmartDateWidget
 from .editor import PythonEditor
 from .text import SmartTextWidget
 from .select import SmartSelectWidget
-from .radio import RadioWidget
+from .radio import RadioWidget, YesNoRadioWidget
