@@ -46,6 +46,8 @@ field_registry.register(forms.MultipleChoiceField)
 field_registry.register(forms.NullBooleanField)
 field_registry.register(forms.TimeField)
 field_registry.register(forms.URLField)
+field_registry.register(forms.ImageField)
+field_registry.register(forms.FileField)
 field_registry.register(SmartCaptchaField)
 
 field_registry.register(fields.PictureField)

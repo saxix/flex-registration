@@ -37,6 +37,7 @@ django-regex = "^0.4.1"
 django-jsoneditor = "^0.2.2"
 django-simple-captcha = "^0.5.17"
 django-admin-ordering = "^0.15.0"
+Pillow = "^9.0.1"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"

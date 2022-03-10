@@ -1,3 +1,5 @@
+from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.forms import formset_factory
 from django.http import Http404
 from django.shortcuts import render
@@ -86,6 +88,16 @@ class RegisterView(FormView):
             for f in fs:
                 data[name].append(f.cleaned_data)
 
+        def parse_field(field):
+            if isinstance(field, InMemoryUploadedFile):
+                return default_storage.save(field.name, field)
+            elif isinstance(field, dict):
+                return {item[0]: parse_field(item[1]) for item in field.items()}
+            elif isinstance(field, list):
+                return [parse_field(item) for item in field]
+            return field
+
+        data = {field_name: parse_field(field) for field_name, field in data.items()}
         record = self.registration.add_record(data)
 
         return render(

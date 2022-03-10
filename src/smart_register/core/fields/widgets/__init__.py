@@ -5,3 +5,5 @@ from .text import SmartTextWidget
 from .select import SmartSelectWidget
 from .radio import RadioWidget, YesNoRadioWidget
 from .multi_checkbox import MultiCheckboxWidget
+from .image import ImageWidget
+from .upload_file import UploadFileWidget
