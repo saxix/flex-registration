@@ -26,12 +26,15 @@
                         {{ field }}
                     </div>
                 {% endfor %}
-                    <div v-for="(formset, index) in formsets">
+                    <div v-for="(formset, index) in formsets" :key="'formset'+index">
                         <div v-html="formset.managementForm">
                         </div>
                         <div class="shadow-md rounded bg-gray-100 p-4">
-                            <div v-for="(form, indexForm) in formset.forms">
-                                <div v-html="form"></div>
+                            <div v-for="(form, indexForm) in formset.forms" :key="'form'+form.key">
+                                <div v-html="form.form"></div>
+                                <input type="button" @click="removeForm(index,indexForm)"
+                                       class="btn remove bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow"
+                                       value="Remove {{ name }}">
                             </div>
                             <input
                                     type="button"
@@ -83,10 +86,8 @@
             {% for name, formset in formsets.items %}
 
                 {
-                    forms: [{% for frm in formset %}'
-                        {% linebreakless %}{{ frm }}{% endlinebreakless %}',
-                    {% endfor %}],
-                    managementForm:'{% linebreakless %}{{ formset.management_form }}{% endlinebreakless %}',
+                    forms: [{% for frm in formset %}'{% linebreakless %}{{ frm }}{% endlinebreakless %}',{% endfor %}],
+                    managementForm: '{% linebreakless %}{{ formset.management_form }}{% endlinebreakless %}',
                     name: '{{name}}'
                 },
             {% endfor %}
@@ -94,7 +95,7 @@
     </script>
     <script>
         function setIndex(index, html, targetName) {
-           return html.replace(new RegExp("__prefix__", "g"), index)
+            return html.replace(new RegExp("__prefix__", "g"), index)
                 .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + index);
         }
 
@@ -104,51 +105,29 @@
             data: {
                 test: '[[test2]]',
                 test2: 'xDDDD',
-                formsets: filledFormsets,
+                formsets: filledFormsets.map((item) => ({
+                    ...item,
+                    forms: item.forms.map(form => ({form, key: crypto.randomUUID()}))
+                })),
             },
             methods: {
                 addEmptyForm: function (formsetIndex) {
                     let template = formestTemplates[formsetIndex]
                     let html = setIndex(this.formsets[formsetIndex].forms.length, template.html, template.name)
-                    filledFormsets[formsetIndex].forms.push(html)
+                    this.formsets[formsetIndex].forms.push({form: html, key: crypto.randomUUID()})
+                    $("input[name=" + template.name + "-TOTAL_FORMS]").val(this.formsets[formsetIndex].forms.length)
+                },
+                removeForm: function (formsetIndex, formIndex) {
+                    console.log('this.formsets', this.formsets[formsetIndex].forms)
+                    let forms = this.formsets[formsetIndex].forms
+                    let name = this.formsets[formsetIndex].name
+                    forms.splice(formIndex, 1)
+                    for (let i = formIndex; i < forms.length; i++) {
+                        forms[i] = setIndex(i, forms[i], name)
+                    }
+                    $("input[name=" + name + "-TOTAL_FORMS]").val(this.formsets[formsetIndex].forms.length)
                 },
             }
         });
     </script>
-    <div id="xDDDD">
-     {% for name, formset in formsets.items %}
-        <div class="shadow-md rounded bg-gray-100 p-4">
-          <div id="{{ name }}" class="w-full formset" data-fs="{{ name }}">
-            <div>
-              <div>
-                <div
-                  class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title"
-                >
-                  {{ name }}
-                </div>
-                <div class="managementForm">{{ formset.management_form }}</div>
-              </div>
-            </div>
-            <div>
-              <div class="w-100 forms {{ name }}">
-                {% for frm in formset %}
-                <div class="w-full form">
-                  {{ frm }}
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-            {% if formset.fs.dynamic %}
-            <div>
-              <div>
-                <input
-                  type="button"
-                  class="add bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-                  value="Add record"
-                />
-              </div>
-            </div>
-            {% endif %}
-    {% endfor %}
-    </div>
 {% endblock body %}
