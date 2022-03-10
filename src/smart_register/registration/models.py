@@ -61,10 +61,6 @@ class Registration(models.Model):
         return base64.b64encode(e).decode()
 
     def add_record(self, data):
-        # value = {'f': self.fernet.encrypt(json.dumps(value,
-        #                                              cls=self.encoder,
-        #                                              ).encode('utf8')).decode('utf8')}
-
         if self.public_key:
             e = self.encrypt(data)
             payload = {"data": e}

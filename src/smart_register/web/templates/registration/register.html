@@ -73,7 +73,7 @@
     </div>
     {% for name, formset in formsets.items %}
     <script type="form-template" id="{{ name }}-empty">
-      <div class="form w-full" data-index="__prefix__">
+      <div class="form w-full margin-2" data-index="__prefix__">
           {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
                   <input type="button" data-fs="{{ name }}"
              class="btn remove bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" value="Remove {{ name }}">
