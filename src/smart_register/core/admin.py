@@ -1,4 +1,5 @@
 from admin_extra_buttons.decorators import button
+from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
 from django.contrib.admin import TabularInline, register
@@ -33,18 +34,25 @@ class FormSetInline(TabularInline):
 
 
 @register(FlexFormField)
-class FlexFormFieldAdmin(SmartModelAdmin):
-    list_display = ("flex_form", "name", "field_type", "required", "validator")
+class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
+    list_display = ("ordering", "flex_form", "name", "field_type", "required", "validator")
     list_filter = (("flex_form", AutoCompleteFilter),)
+    list_editable = ["ordering"]
+
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
+    ordering_field = "ordering"
+    order = "ordering"
 
 
-class FlexFormFieldInline(TabularInline):
+class FlexFormFieldInline(OrderableAdmin, TabularInline):
     model = FlexFormField
-    fields = ("label", "name", "field_type", "required", "validator")
+    fields = ("ordering", "label", "name", "field_type", "required", "validator")
     show_change_link = True
+    ordering_field = "ordering"
+    extra = 0
+    ordering_field_hide_input = True
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
@@ -66,10 +74,6 @@ class OptionSetAdmin(SmartModelAdmin):
         "name",
         "separator",
     )
-
-
-class XXX(forms.ChoiceField):
-    pass
 
 
 @register(CustomFieldType)
