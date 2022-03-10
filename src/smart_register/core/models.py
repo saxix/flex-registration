@@ -108,7 +108,7 @@ class FlexForm(models.Model):
     def add_formset(self, form, **extra):
         defaults = {"extra": 0, "name": form.name.lower() + pluralize(0)}
         defaults.update(extra)
-        return FormSet.objects.update_or_create(parent=self, flex_form=form, **defaults)
+        return FormSet.objects.update_or_create(parent=self, flex_form=form, **defaults)[0]
 
     def get_form(self):
         fields = {}
