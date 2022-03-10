@@ -2,6 +2,7 @@ import logging
 from datetime import date, datetime, time
 
 import jsonpickle
+from admin_ordering.models import OrderableModel
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.exceptions import ValidationError
@@ -99,7 +100,7 @@ class FlexForm(models.Model):
 
     def get_form(self):
         fields = {}
-        for field in self.fields.all():
+        for field in self.fields.order_by("ordering"):
             try:
                 fields[field.name] = field.get_instance()
             except TypeError:
@@ -130,7 +131,7 @@ class FormSet(models.Model):
         return self.flex_form.get_form()
 
 
-class FlexFormField(models.Model):
+class FlexFormField(OrderableModel):
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=30)
     name = CICharField(max_length=30, blank=True)
@@ -144,9 +145,10 @@ class FlexFormField(models.Model):
     advanced = models.JSONField(default=dict, blank=True, null=True)
 
     class Meta:
-        unique_together = (("name", "flex_form"),)
+        unique_together = (("flex_form", "name"),)
         verbose_name = "FlexForm Field"
         verbose_name_plural = "FlexForm Fields"
+        ordering = ["ordering"]
 
     def __str__(self):
         return f"{self.name} {self.field_type}"
