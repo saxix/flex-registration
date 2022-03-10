@@ -103,7 +103,10 @@ def upgrade(**kwargs):
     ind, __ = FlexForm.objects.get_or_create(name="Individual")
     doc, __ = FlexForm.objects.get_or_create(name="Document")
     bank, __ = FlexForm.objects.get_or_create(name="Bank Account")
+
     base.add_formset(hh, extra=1, dynamic=False)
+    base.add_formset(ind, extra=1, dynamic=True)
+    # ind.add_formset(doc, extra=0, dynamic=True)
 
     base.add_field(
         "With whom may we share your information (select one or multiple among the following)?",
@@ -117,3 +120,6 @@ def upgrade(**kwargs):
     )
     base.add_field("Residence status", "smart_register.core.models.ResidenceStatus")
     Registration.objects.get_or_create(name="Ucraina", defaults=dict(flex_form=base))
+
+    ind.add_field("First Name")
+    doc.add_field("Document Number")
