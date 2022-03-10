@@ -16,4 +16,5 @@ WIDGET_FOR_FORMFIELD_DEFAULTS = {
     RadioField: {"widget": widgets.RadioWidget},
     YesNoRadio: {"widget": widgets.YesNoRadioWidget},
     YesNoChoice: {"widget": widgets.SmartSelectWidget},
+    MultiCheckboxField: {"widget": widgets.MultiCheckboxWidget},
 }
