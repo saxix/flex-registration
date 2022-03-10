@@ -6,7 +6,7 @@ class SelectField(forms.ChoiceField):
         return self._choices
 
     def _set_choices(self, value):
-        if value:
+        if value:  # pragma: no branch
             try:
                 value = value[0][0]
                 from smart_register.core.models import OptionSet

@@ -430,3 +430,8 @@ FLAGS = {
 JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"
 JSON_EDITOR_CSS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.css"
 JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
+
+# CAPTCHA_IMAGE_SIZE = 300,200
+CAPTCHA_FONT_SIZE = 40
+CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
+# CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'

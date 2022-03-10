@@ -79,11 +79,23 @@ class FlexForm(models.Model):
         return self.name
 
     def add_field(
-        self, label, field_type=forms.CharField, required=False, choices=None, regex=None, validator=None, **kwargs
+        self,
+        label,
+        field_type=forms.CharField,
+        required=False,
+        choices=None,
+        regex=None,
+        validator=None,
+        name=None,
+        **kwargs,
     ):
-        return self.fields.get_or_create(
+        if isinstance(choices, (list, tuple)):
+            kwargs["choices"] = choices
+            choices = None
+        return self.fields.update_or_create(
             label=label,
             defaults={
+                "name": name,
                 "field_type": field_type,
                 "choices": choices,
                 "regex": regex,
@@ -96,7 +108,7 @@ class FlexForm(models.Model):
     def add_formset(self, form, **extra):
         defaults = {"extra": 0, "name": form.name.lower() + pluralize(0)}
         defaults.update(extra)
-        return FormSet.objects.create(parent=self, flex_form=form, **defaults)
+        return FormSet.objects.update_or_create(parent=self, flex_form=form, **defaults)[0]
 
     def get_form(self):
         fields = {}
@@ -113,7 +125,7 @@ class FlexForm(models.Model):
         return flexForm
 
 
-class FormSet(models.Model):
+class FormSet(OrderableModel):
     name = CICharField(max_length=255, unique=True)
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
@@ -123,6 +135,7 @@ class FormSet(models.Model):
     class Meta:
         verbose_name = "FormSet"
         verbose_name_plural = "FormSets"
+        ordering = ["ordering"]
 
     def __str__(self):
         return self.name
@@ -133,7 +146,7 @@ class FormSet(models.Model):
 
 class FlexFormField(OrderableModel):
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
-    label = models.CharField(max_length=30)
+    label = models.CharField(max_length=2000)
     name = CICharField(max_length=30, blank=True)
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
@@ -169,16 +182,16 @@ class FlexFormField(OrderableModel):
             regex = self.regex or self.field_type.custom.regex
         else:
             field_type = self.field_type
+            kwargs = self.advanced.copy()
             regex = self.regex
-            kwargs = dict(
-                label=self.label,
-                required=self.required,
-                validators=get_validators(self),
-            )
+            kwargs.setdefault("label", self.label)
+            kwargs.setdefault("required", self.required)
+            kwargs.setdefault("validators", get_validators(self))
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
             kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
-        if self.choices and hasattr(field_type, "choices"):
-            kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
+        if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
+            # kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
+            kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
         return field_type(**kwargs)
@@ -204,6 +217,15 @@ class OptionSet(models.Model):
     separator = models.CharField(max_length=1, default="", blank=True)
 
 
+def clean_choices(value):
+    if not isinstance(value, (list, tuple)):
+        raise ValueError("choices must be list or tuple")
+    try:
+        return list(dict(value).items())
+    except ValueError:
+        return list(zip(map(str.lower, value), value))
+
+
 class CustomFieldType(models.Model):
     name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[A-Z][a-zA-Z0-9_]*")])
     base_type = StrategyClassField(registry=field_registry, default=forms.CharField)
@@ -214,6 +236,13 @@ class CustomFieldType(models.Model):
     validator = models.ForeignKey(
         Validator, blank=True, null=True, limit_choices_to={"target": Validator.FIELD}, on_delete=models.PROTECT
     )
+
+    @staticmethod
+    def build(name, defaults):
+        choices = defaults.get("attrs", {}).get("choices", {})
+        if choices:
+            defaults["attrs"]["choices"] = clean_choices(choices)
+        return CustomFieldType.objects.update_or_create(name=name, defaults=defaults)[0]
 
     def __str__(self):
         return self.name

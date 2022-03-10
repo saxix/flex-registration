@@ -3,10 +3,13 @@
 import logging
 
 import djclick as click
-from django import forms
+from django.db.transaction import atomic
 
-from smart_register.core import fields
-from smart_register.core.models import OptionSet
+from smart_register.core.models import FlexForm
+from smart_register.core import registry
+from smart_register.core.models import CustomFieldType
+from smart_register.core.registry import field_registry
+from smart_register.registration.models import Registration
 
 logger = logging.getLogger(__name__)
 
@@ -17,53 +20,106 @@ class NotRunningInTTYException(Exception):
 
 @click.command()  # noqa: C901
 def upgrade(**kwargs):
-    from smart_register.core.models import FlexForm, Validator
-    from smart_register.registration.models import Registration
-
-    vf1, __ = Validator.objects.update_or_create(
-        name='name must start with "S"',
-        defaults=dict(
-            message="name must start with 'S'", target=Validator.FORM, code="value.family_name.startsWith('S');"
-        ),
-    )
-    v1, __ = Validator.objects.get_or_create(
-        name="max_length_25",
-        defaults=dict(message="String too long (max 25.chars)", target=Validator.FIELD, code="value.length<25;"),
-    )
-    v2, __ = Validator.objects.get_or_create(
-        name="date_after_3000",
-        defaults=dict(
-            message="Date must be after 3000-12-01",
-            target=Validator.FIELD,
-            code="""var limit = Date.parse("3000-12-01");
-var dt = Date.parse(value);
-dt > limit;""",
-        ),
-    )
-    OptionSet.objects.get_or_create(
-        name="italian_locations",
-        defaults={
-            "data": "1:Rome\n2:Milan",
-            "separator": ":",
+    custom_fields = [
+        {
+            "name": "MaritalStatus",
+            "base_type": registry.forms.ChoiceField,
+            "attrs": {"choices": ["Single", "Married", "Divorced", "Widowed", "Separated"]},
         },
-    )
+        {
+            "name": "ResidenceStatus",
+            "base_type": registry.forms.ChoiceField,
+            "attrs": {
+                "choices": (
+                    ("idp", "Displaced | Internally Displaced Person (IDP)"),
+                    ("refugee", "Displaced | Refugee / Asylum Seeker"),
+                    ("others_of_concern", "Displaced | Others of Concern"),
+                    ("host", "Non-displaced | Hosting a displaced family"),
+                    ("non_host", "Non-displaced | Not hosting a displaced family"),
+                    ("returnee", "Returnee"),
+                    ("repatriated", "Repatriate"),
+                )
+            },
+        },
+        {"name": "Gender", "base_type": registry.forms.ChoiceField, "attrs": {"choices": ["Female", "Male"]}},
+        {
+            "name": "ID Type",
+            "base_type": registry.forms.ChoiceField,
+            "attrs": {
+                "choices": (
+                    ("not_available", "Not Available"),
+                    ("birth_certificate", "Birth Certificate"),
+                    ("drivers_license", "Driver's License"),
+                    ("electoral_card", "Electoral Card"),
+                    ("unhcr_id", "UNHCR ID"),
+                    ("national_id", "National ID"),
+                    ("national_passport", "National Passport"),
+                    ("scope_id", "WFP Scope ID"),
+                    ("other", "Other"),
+                )
+            },
+        },
+        {
+            "name": "Relationship",
+            "base_type": registry.forms.ChoiceField,
+            "attrs": {
+                "choices": (
+                    ("son_daughter", "Son / Daughter"),
+                    ("wife_husband", "Wife / Husband"),
+                    ("brother_sister", "Brother / Sister"),
+                    ("mother_father", "Mother / Father"),
+                    ("aunt_uncle", "Aunt / Uncle"),
+                    ("grandmother_grandfather", "Grandmother / Grandfather"),
+                    ("motherInLaw_fatherInLaw", "Mother-in-law / Father-in-law"),
+                    ("daughterInLaw_sonInLaw", "Daughter-in-law / Son-in-law"),
+                    ("sisterInLaw_brotherInLaw", "Sister-in-law / Brother-in-law"),
+                    ("granddaugher_grandson", "Granddaughter / Grandson"),
+                    ("nephew_niece", "Nephew / Niece"),
+                    ("cousin", "Cousin"),
+                )
+            },
+        },
+        {
+            "name": "Collector",
+            "base_type": registry.forms.ChoiceField,
+            "attrs": {
+                "choices": (
+                    ("primary", "Primary"),
+                    ("alternate", "Alternate"),
+                    ("no_role", "No"),
+                )
+            },
+        },
+    ]
 
-    hh, __ = FlexForm.objects.get_or_create(name="Household", defaults=dict(validator=vf1))
-    hh.fields.get_or_create(label="Family Name", field_type=forms.CharField, required=True)
+    for fld in custom_fields:
+        name = fld.pop("name")
+        with atomic():
+            fld = CustomFieldType.build(name, fld)
+            field_registry.register(fld.get_class())
 
+    base, __ = FlexForm.objects.get_or_create(name="Basic")
+    hh, __ = FlexForm.objects.get_or_create(name="Household")
     ind, __ = FlexForm.objects.get_or_create(name="Individual")
-    ind.fields.get_or_create(label="First Name", defaults=dict(field_type=forms.CharField, required=True, validator=v1))
-    ind.fields.get_or_create(label="Last Name", defaults=dict(field_type=forms.CharField, validator=v1))
-    ind.fields.get_or_create(label="Date Of Birth", defaults=dict(field_type=forms.DateField, validator=v2))
+    doc, __ = FlexForm.objects.get_or_create(name="Document")
+    bank, __ = FlexForm.objects.get_or_create(name="Bank Account")
 
-    ind.fields.get_or_create(
-        label="Options", defaults=dict(field_type=forms.ChoiceField, choices="opt 1, opt 2, opt 3")
+    base.add_formset(hh, extra=1, dynamic=False)
+    base.add_formset(ind, extra=1, dynamic=True)
+    # ind.add_formset(doc, extra=0, dynamic=True)
+
+    base.add_field(
+        "With whom may we share your information (select one or multiple among the following)?",
+        registry.fields.MultiCheckboxField,
+        choices=(
+            ("unicef", "UNICEF"),
+            ("priv_partner", "Private partners"),
+            ("gov_partner", "Government partners"),
+        ),
+        name="enum_org",
     )
+    base.add_field("Residence status", "smart_register.core.models.ResidenceStatus")
+    Registration.objects.get_or_create(name="Ucraina", defaults=dict(flex_form=base))
 
-    ind.fields.get_or_create(
-        label="Location", defaults={"field_type": fields.SelectField, "choices": "italian_locations"}
-    )
-
-    hh.formsets.get_or_create(name="individuals", defaults=dict(flex_form=ind))
-
-    Registration.objects.get_or_create(name="Registration1", defaults=dict(flex_form=hh))
+    ind.add_field("First Name")
+    doc.add_field("Document Number")

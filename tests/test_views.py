@@ -41,6 +41,20 @@ def complex_registration(complex_form):
 
 
 @pytest.mark.django_db
+def test_register_latest(django_app, simple_registration):
+    url = reverse("register-latest")
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["first_name"] = "first_name"
+    res.form["last_name"] = "f"
+    res = res.form.submit()
+    res.form["first_name"] = "first"
+    res.form["last_name"] = "last"
+    res = res.form.submit()
+    assert res.context["record"].data["data"]["first_name"] == "first"
+
+
+@pytest.mark.django_db
 def test_register_simple(django_app, simple_registration):
     url = reverse("register", args=[simple_registration.pk])
     res = django_app.get(url)

@@ -22,12 +22,14 @@ class FormSetAdmin(SmartModelAdmin):
     list_display = ("name", "parent", "flex_form", "extra")
 
 
-class FormSetInline(TabularInline):
+class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
     fk_name = "parent"
     extra = 0
-    fields = ("name", "flex_form", "extra")
+    fields = ("ordering", "name", "flex_form", "extra")
     show_change_link = True
+    ordering_field = "ordering"
+    ordering_field_hide_input = True
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         return super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -50,8 +52,8 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
     model = FlexFormField
     fields = ("ordering", "label", "name", "field_type", "required", "validator")
     show_change_link = True
-    ordering_field = "ordering"
     extra = 0
+    ordering_field = "ordering"
     ordering_field_hide_input = True
 
     def get_readonly_fields(self, request, obj=None):
@@ -103,7 +105,9 @@ class CustomFieldTypeAdmin(SmartModelAdmin):
         if request.method == "POST":
             form = formClass(request.POST)
             if form.is_valid():
-                self.message_user(request, "Form validation success")
+                self.message_user(
+                    request, f"Form validation success. " f"You have selected: {form.cleaned_data['sample']}"
+                )
         else:
             form = formClass()
         ctx["form"] = form

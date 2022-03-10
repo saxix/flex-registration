@@ -55,6 +55,6 @@ field_registry.register(fields.RadioField)
 field_registry.register(fields.YesNoRadio)
 field_registry.register(fields.YesNoChoice)
 
-form_registry = FieldRegistry(forms.BaseForm)
+form_registry = Registry(forms.BaseForm)
 form_registry.register(forms.Form)
 form_registry.register(FlexFormBaseForm)

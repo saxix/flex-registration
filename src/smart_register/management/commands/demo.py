@@ -48,10 +48,10 @@ dt > limit;""",
         },
     )
 
-    hh, __ = FlexForm.objects.get_or_create(name="Household", defaults=dict(validator=vf1))
+    hh, __ = FlexForm.objects.get_or_create(name="Demo Household", defaults=dict(validator=vf1))
     hh.fields.get_or_create(label="Family Name", field_type=forms.CharField, required=True)
 
-    ind, __ = FlexForm.objects.get_or_create(name="Individual")
+    ind, __ = FlexForm.objects.get_or_create(name="Demo Individual")
     ind.fields.get_or_create(label="First Name", defaults=dict(field_type=forms.CharField, required=True, validator=v1))
     ind.fields.get_or_create(label="Last Name", defaults=dict(field_type=forms.CharField, validator=v1))
     ind.fields.get_or_create(label="Date Of Birth", defaults=dict(field_type=forms.DateField, validator=v2))
@@ -66,4 +66,4 @@ dt > limit;""",
 
     hh.formsets.get_or_create(name="individuals", defaults=dict(flex_form=ind))
 
-    Registration.objects.get_or_create(name="Registration1", defaults=dict(flex_form=hh))
+    Registration.objects.get_or_create(name="Demo Registration1", defaults=dict(flex_form=hh))
