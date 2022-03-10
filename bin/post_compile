@@ -2,6 +2,7 @@
 
 ls -al
 set -eo pipefail
+source $HOME/.poetry/env
 
 indent() {
   sed "s/^/       /"
