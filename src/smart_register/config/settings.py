@@ -36,12 +36,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.forms",
-    "import_export",
     # ---
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartConfig",
     # 'smart_admin',
+    "import_export",
     "admin_ordering",
     "django_sysinfo",
     "admin_extra_buttons",
@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     "smart_register.core",
     "smart_register.registration",
 ]
+if DEBUG:
+    INSTALLED_APPS.append('django_extensions')
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
