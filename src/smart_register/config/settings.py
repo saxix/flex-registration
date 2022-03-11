@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     "admin_ordering",
     "django_sysinfo",
     "admin_extra_buttons",
-    "social_django",
     "adminfilters",
     "adminactions",
     "constance",
@@ -72,7 +71,6 @@ MIDDLEWARE = [
     "hijack.middleware.HijackUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "social_django.middleware.SocialAuthExceptionMiddleware",
 ]
 
 ROOT_URLCONF = "smart_register.config.urls"
@@ -92,8 +90,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "social_django.context_processors.backends",
-                "social_django.context_processors.login_redirect",
                 "constance.context_processors.config",
             ],
         },
