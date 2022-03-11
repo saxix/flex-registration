@@ -318,6 +318,14 @@ dev = ["fabric", "livereload", "wheel", "check-manifest", "flake8", "mccabe", "p
 test = ["pytest", "coverage (<5)", "pytest-django", "pytest-cov", "pytest-flake8"]
 
 [[package]]
+name = "django-concurrency"
+version = "2.4"
+description = "Optimistic lock implementation for Django. Prevents users from doing concurrent editing."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "django-constance"
 version = "2.8.0"
 description = "Django live settings with pluggable backends, including Redis."
@@ -1708,7 +1716,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "d343850b7691cf5586755822e171b1dcfc6873b26a49abde897726a637a4f3be"
+content-hash = "b0d59ba786273720ef6a4c529a13f1c1cf49009a6178e54e67178e10824d448a"
 
 [metadata.files]
 appnope = [
@@ -1941,6 +1949,10 @@ django-adminfilters = [
 django-click = [
     {file = "django-click-2.3.0.tar.gz", hash = "sha256:bffb0d10c3f3dfe3f5b116ce902c7a7a9aa4e9c046de95259dc044462eb746b4"},
     {file = "django_click-2.3.0-py2.py3-none-any.whl", hash = "sha256:b862d6b2424edba564968834c8570e39db8142babaa843fa791a4958a2dabb54"},
+]
+django-concurrency = [
+    {file = "django-concurrency-2.4.tar.gz", hash = "sha256:6d45e19f4a288da34578aaeb8eceb394ffac5bfaee8dc43f157c051c7b9cae6c"},
+    {file = "django_concurrency-2.4-py2.py3-none-any.whl", hash = "sha256:ae7dcec114ba14216c97c33870de45b62e381aa99ec3c7c4e047921b25d9246f"},
 ]
 django-constance = [
     {file = "django-constance-2.8.0.tar.gz", hash = "sha256:0a492454acc78799ce7b9f7a28a00c53427d513f34f8bf6fdc90a46d8864b2af"},
