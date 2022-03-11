@@ -126,16 +126,18 @@ class FlexForm(models.Model):
 
 
 class FormSet(OrderableModel):
-    name = CICharField(max_length=255, unique=True)
+    name = CICharField(max_length=255)
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)
+    required = models.IntegerField(default=0, blank=False, null=False)
     dynamic = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "FormSet"
         verbose_name_plural = "FormSets"
         ordering = ["ordering"]
+        unique_together = (("flex_form", "name"),)
 
     def __str__(self):
         return self.name

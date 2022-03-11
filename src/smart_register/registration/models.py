@@ -31,6 +31,9 @@ class Registration(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+
     def setup_encryption_keys(self):
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives.asymmetric import rsa
@@ -53,11 +56,20 @@ class Registration(models.Model):
     def encrypt(self, value):
         public_key = serialization.load_pem_public_key(self.public_key.encode(), backend=default_backend())
         if not isinstance(value, str):
-            value = json.dumps(value, cls=JSONEncoder).encode("utf8")
-        e = public_key.encrypt(
-            value,
-            padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None),
-        )
+            value = json.dumps(value, cls=JSONEncoder)
+
+        value = value.encode("utf8")
+        try:
+            e = public_key.encrypt(
+                value,
+                padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None),
+            )
+        except ValueError as e:
+            raise ValueError(
+                f"""Encryption failed: {e}
+{value}"""
+            )
+
         return base64.b64encode(e).decode()
 
     def add_record(self, data):

@@ -34,7 +34,7 @@ class RegisterView(FormView):
             if "pk" in self.kwargs:
                 return Registration.objects.get(active=True, id=self.kwargs["pk"])
             else:
-                return Registration.objects.latest()
+                return Registration.objects.filter(active=True).latest()
         except Exception:
             raise Http404
 
@@ -51,6 +51,7 @@ class RegisterView(FormView):
         for fs in self.registration.flex_form.formsets.all():
             formSet = formset_factory(fs.get_form(), extra=fs.extra)
             formSet.fs = fs
+            formSet.required = fs.required
             formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
         return formsets
 

@@ -8,7 +8,7 @@ import smart_register
 
 from . import env
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 mimetypes.add_type("image/svg+xml", ".svg", True)
 mimetypes.add_type("image/svg+xml", ".svgz", True)
@@ -22,6 +22,7 @@ SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
+DEBUG_PROPAGATE_EXCEPTIONS = env("DEBUG_PROPAGATE_EXCEPTIONS")
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
@@ -44,13 +45,11 @@ INSTALLED_APPS = [
     "admin_ordering",
     "django_sysinfo",
     "admin_extra_buttons",
-    "social_django",
     "adminfilters",
     "adminactions",
     "constance",
     "constance.backends.database",
     "flags",
-    "hijack",
     "jsoneditor",
     "captcha",
     "smart_register",
@@ -68,10 +67,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "hijack.middleware.HijackUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "social_django.middleware.SocialAuthExceptionMiddleware",
 ]
 
 ROOT_URLCONF = "smart_register.config.urls"
@@ -91,8 +88,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "social_django.context_processors.backends",
-                "social_django.context_processors.login_redirect",
                 "constance.context_processors.config",
             ],
         },
@@ -173,6 +168,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# Ensure STATIC_ROOT exists.
+os.makedirs(STATIC_ROOT, exist_ok=True)
+
 STATIC_URL = "/static/"
 # STATIC_ROOT = env('STATIC_ROOT')
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
@@ -188,7 +186,6 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ] + env("AUTHENTICATION_BACKENDS")
 
-HIJACK_PERMISSION_CHECK = "smart_register.utils.is_root"
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_COOKIE_SECURE = False
@@ -212,7 +209,7 @@ LOGIN_URL = "login"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
+    # "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
     "formatters": {"verbose": {"format": "%(levelname)s %(asctime)s %(module)s: %(message)s"}},
     "handlers": {
         "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
@@ -280,72 +277,6 @@ CONSTANCE_CONFIG = OrderedDict(
     }
 )
 
-FERNET_KEYS = env("FERNET_KEYS")
-FERNET_USE_HKDF = True
-
-SOCIAL_AUTH_FIELDS_STORED_IN_SESSION = ["key", "state"]
-SOCIAL_AUTH_JSONFIELD_ENABLED = True
-SOCIAL_AUTH_REDIRECT_IS_HTTPS = env.bool("USE_HTTPS")
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/summary/"
-SOCIAL_AUTH_NEW_USER_REDIRECT_URL = "/subscribe/"
-SOCIAL_AUTH_INACTIVE_USER_URL = "/subscribe/"
-SOCIAL_AUTH_INACTIVE_USER_LOGIN = True
-SOCIAL_AUTH_LOGIN_ERROR_URL = "/login/error/"
-SOCIAL_AUTH_NEW_ASSOCIATION_REDIRECT_URL = "/account/security/"
-SOCIAL_AUTH_DISCONNECT_REDIRECT_URL = "/account/security/"
-SOCIAL_AUTH_LOGIN_URL = "/login/"
-SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = [
-    "username",
-    "email",
-    "is_active",
-]
-SOCIAL_AUTH_IMMUTABLE_USER_FIELDS = [
-    "last_name",
-    "first_name",
-]
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env("SOCIAL_AUTH_GOOGLE_OAUTH_KEY")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env("SOCIAL_AUTH_GOOGLE_OAUTH_SECRET")
-# SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS = env('SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS')
-# SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_EMAILS = env('SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_EMAILS')
-SOCIAL_AUTH_GOOGLE_OAUTH2_RAISE_EXCEPTIONS = False
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ["https://www.googleapis.com/auth/plus.login"]
-
-SOCIAL_AUTH_PIPELINE = (
-    # Get the information we can about the user and return it in a simple
-    # format to create the user instance later. In some cases the details are
-    # already part of the auth response from the provider, but sometimes this
-    # could hit a provider API.
-    "social_core.pipeline.social_auth.social_details",
-    # Get the social uid from whichever service we're authing thru. The uid is
-    # the unique identifier of the given user in the provider.
-    "social_core.pipeline.social_auth.social_uid",
-    # Verifies that the current auth process is valid within the current
-    # project, this is where emails and domains whitelists are applied (if
-    # defined).
-    "social_core.pipeline.social_auth.auth_allowed",
-    # Checks if the current social-account is already associated in the site.
-    "social_core.pipeline.social_auth.social_user",
-    # Make up a username for this person, appends a random string at the end if
-    # there's any collision.
-    "social_core.pipeline.user.get_username",
-    # Send a validation email to the user to verify its email address.
-    # Disabled by default.
-    # 'social_core.pipeline.mail.mail_validation',
-    # Associates the current social details with another user account with
-    # a similar email address. Disabled by default.
-    "social_core.pipeline.social_auth.associate_by_email",  # ONLY WITH CERTIFIED PROVIDERS
-    # Create a user account if we haven't found one yet.
-    # 'social_core.pipeline.user.create_user',
-    # Create the record that associates the social account with the user.
-    "social_core.pipeline.social_auth.associate_user",
-    # Populate the extra_data field in the social record with the values
-    # specified by settings (and the default ones like access_token, etc).
-    "social_core.pipeline.social_auth.load_extra_data",
-    # Update the user record with any changed info from the auth service.
-    "social_core.pipeline.user.user_details",
-)
-
 MAX_OBSERVED = 1
 SENTRY_DSN = env("SENTRY_DSN")
 if SENTRY_DSN:
@@ -382,8 +313,6 @@ SMART_ADMIN_TITLE = "="
 SMART_ADMIN_HEADER = "="
 
 SMART_ADMIN_PROFILE_LINK = True
-
-IMPERSONATE_HEADER_KEY = env("IMPERSONATE_HEADER_KEY")
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

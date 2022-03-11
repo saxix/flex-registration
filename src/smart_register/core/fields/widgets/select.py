@@ -4,4 +4,4 @@ from .mixins import TailWindMixin
 
 
 class SmartSelectWidget(TailWindMixin, forms.Select):
-    pass
+    template_name = "django/forms/widgets/smart_select.html"
