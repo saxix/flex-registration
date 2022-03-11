@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     "constance",
     "constance.backends.database",
     "flags",
-    "hijack",
     "jsoneditor",
     "captcha",
     "smart_register",
