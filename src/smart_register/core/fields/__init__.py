@@ -11,6 +11,8 @@ from .radio import RadioField, YesNoRadio, YesNoChoice
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
     forms.CharField: {"widget": widgets.SmartTextWidget},
+    forms.IntegerField: {"widget": widgets.NumberWidget},
+    forms.FloatField: {"widget": widgets.NumberWidget},
     forms.ChoiceField: {"widget": widgets.SmartSelectWidget},
     SelectField: {"widget": widgets.SmartSelectWidget},
     RadioField: {"widget": widgets.RadioWidget},
