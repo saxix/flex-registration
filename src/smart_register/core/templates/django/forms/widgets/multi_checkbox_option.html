@@ -1,5 +1,5 @@
 {% if widget.wrap_label %}
-    <label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
+    <label class="form-check-label inline-block text-gray-800" {% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
 {% endif %}
 <input
         type="{{ widget.type }}"
