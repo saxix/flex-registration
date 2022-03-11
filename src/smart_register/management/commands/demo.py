@@ -66,4 +66,4 @@ dt > limit;""",
 
     hh.formsets.get_or_create(name="individuals", defaults=dict(flex_form=ind))
 
-    Registration.objects.get_or_create(name="Demo Registration1", defaults=dict(flex_form=hh))
+    Registration.objects.get_or_create(name="Demo Registration1", defaults=dict(flex_form=hh), active=True)

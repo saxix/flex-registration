@@ -26,31 +26,39 @@
                         >
                         {{ field }}
                     </div>
-                {% endfor %} {% for name, formset in formsets.items %}
-                    <div class="shadow-md rounded bg-gray-100 p-4">
-                        <div class="w-full formset" data-fs="{{ name }}"
-                             data-required="{{ formset.required }}" data-extra="{{ formset.extra }}">
-                            <div>
+                {% endfor %}
+                    {% for name, formset in formsets.items %}
+                        <div class="shadow-md rounded bg-gray-100 p-4">
+                            <div class="w-full formset" data-fs="{{ name }}"
+                                 data-required="{{ formset.required }}" data-extra="{{ formset.extra }}">
                                 <div>
-                                    <div
-                                            class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title"
-                                    >
-                                        {{ name }}
+                                    <div>
+                                        <div
+                                                class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title"
+                                        >
+                                            {{ name }}
+                                        </div>
+                                        <div class="managementForm">{{ formset.management_form }}</div>
                                     </div>
-                                    <div class="managementForm">{{ formset.management_form }}</div>
                                 </div>
-                            </div>
-                            <div>
-                                <div class="w-100 forms form-container {{ name }}" id="{{ name }}">
-                                    {% for frm in formset %}
-                                        <div class="w-full" id="{{ frm.prefix }}-row">
-                                            {{ frm }}
-                                    {% endfor %}
+                                <div class="flex flex-col">
+                                    <div class="w-100 forms form-container {{ name }}" id="{{ name }}">
+                                        {% for frm in formset %}
+                                            <div class="w-full" id="{{ frm.prefix }}-row">
+                                                {{ frm }}
+                                            </div>
+                                            <div class="delete-container py-4">
+
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="add-container py-4">
+
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
                     <div class="submit-row">
                         <input
                                 type="submit"
@@ -61,32 +69,32 @@
                 </form>
             </div>
             {% for name, formset in formsets.items %}
-                <script type="form-template" id="{{ name }}-empty">
-                    <div class="form w-full margin-2" data-index="__prefix__">
-                        <h2># __prefix__ </h2>
-                        {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
-                        <input type="button" data-fs="{{ name }}"
-                               class="btn remove bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow"
-                               value="Remove {{ name }}">
+                <div type="form-template" id="{{ name }}-empty" class="hidden">
+
+                    {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
+                    <div class="delete-container py-4">
+
                     </div>
-                </script>
+                </div>
             {% endfor %}
 
         </div>
     </div>
     {% for name, formset in formsets.items %}
         {{ formset.media }}
-        <script>
-            console.log(1111, "{{ formset.prefix }}", $("#{{ formset.prefix }}") );
-        </script>
     {% endfor %}
 
+
     <script>
-            $("#individuals").formset({
+        {% for name, formset in formsets.items %}
+            $("#{{ name }}").formset({
                 {#formCssClass: "",#}
-                prefix: "{{ formset.prefix }}",
-                {#addCssClass: "mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline",#}
-                {#deleteCssClass: "mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline",#}
+                prefix: "{{ name }}",
+                formTemplate:"#individuals-empty",
+                deleteContainerClass: "delete-container",
+                addContainerClass: "add-container",
+                addCssClass: "add-button bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow",
+                deleteCssClass: "delete-button bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",
                 addText: 'Add Record',
                 deleteText: 'Remove Record',
                 added: function (row) {
@@ -95,6 +103,8 @@
                     });
                 }
             });
-        </script>
+
+        {% endfor %}
+    </script>
 
 {% endblock body %}

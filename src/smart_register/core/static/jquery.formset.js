@@ -53,8 +53,8 @@
             },
 
             insertDeleteLink = function(row) {
-                var delCssSelector = $.trim(options.deleteCssClass).replace(/\s+/g, '.'),
-                    addCssSelector = $.trim(options.addCssClass).replace(/\s+/g, '.');
+                var delCssSelector = 'delete-button',
+                    addCssSelector = 'add-button';
 
                 var delButtonHTML = '<a class="' + options.deleteCssClass + '" href="javascript:void(0)">' + options.deleteText +'</a>';
                 if (options.deleteContainerClass) {
@@ -208,7 +208,7 @@
                 var formCount = parseInt(totalForms.val()),
                     row = options.formTemplate.clone(true).removeClass('formset-custom-template'),
                     buttonRow = $($(this).parents('tr.' + options.formCssClass + '-add').get(0) || this),
-                    delCssSelector = $.trim(options.deleteCssClass).replace(/\s+/g, '.');
+                    delCssSelector = 'delete-button';
                 applyExtraClasses(row, formCount);
                 row.insertBefore(buttonRow).show();
                 row.find(childElementSelector).each(function() {
