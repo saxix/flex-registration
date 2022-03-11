@@ -19,14 +19,14 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "parent", "flex_form", "extra")
+    list_display = ("name", "parent", "flex_form", "extra", "required")
 
 
 class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
     fk_name = "parent"
     extra = 0
-    fields = ("ordering", "name", "flex_form", "extra")
+    fields = ("name", "flex_form", "extra", "required", "ordering")
     show_change_link = True
     ordering_field = "ordering"
     ordering_field_hide_input = True

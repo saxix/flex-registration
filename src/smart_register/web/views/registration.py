@@ -51,6 +51,7 @@ class RegisterView(FormView):
         for fs in self.registration.flex_form.formsets.all():
             formSet = formset_factory(fs.get_form(), extra=fs.extra)
             formSet.fs = fs
+            formSet.required = fs.required
             formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
         return formsets
 

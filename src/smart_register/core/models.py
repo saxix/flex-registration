@@ -130,6 +130,7 @@ class FormSet(OrderableModel):
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)
+    required = models.IntegerField(default=0, blank=False, null=False)
     dynamic = models.BooleanField(default=True)
 
     class Meta:
