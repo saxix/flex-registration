@@ -34,6 +34,7 @@ django-jsoneditor = "^0.2.2"
 django-simple-captcha = "^0.5.17"
 django-admin-ordering = "^0.15.0"
 django-concurrency = "^2.4"
+py-mini-racer = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"
