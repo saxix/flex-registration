@@ -7,6 +7,7 @@ from .select import SelectField
 from .custom import CustomField
 from .multi_checkbox import MultiCheckboxField
 from .radio import RadioField, YesNoRadio, YesNoChoice
+from .document import DocumentField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},

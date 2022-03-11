@@ -54,6 +54,7 @@ field_registry.register(fields.MultiCheckboxField)
 field_registry.register(fields.RadioField)
 field_registry.register(fields.YesNoRadio)
 field_registry.register(fields.YesNoChoice)
+field_registry.register(fields.DocumentField)
 
 form_registry = Registry(forms.BaseForm)
 form_registry.register(forms.Form)
