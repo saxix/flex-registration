@@ -2,12 +2,21 @@
 {% block action-content %}
     {{ error }}
     <table>
-        <tr><th>Label</th><td>{{ original.label }}</td></tr>
-        <tr><th>Required</th><td>{{ original.required }}</td></tr>
-        <tr><th>Choices</th><td>{{ original.choices }}</td></tr>
-        <tr><th>Field Type</th><td>{{ field_type }}</td></tr>
-        <tr><th>field</th><td>{{ field }}</td></tr>
-        <tr><th>field_kwargs</th><td>{{ field_kwargs }}</td></tr>
+        <tr>
+            <th>Label</th>
+            <td>{{ original.label }}</td>
+        </tr>
+        <tr>
+            <th>Required</th>
+            <td>{{ original.required }}</td>
+        </tr>
+        {% for k,v in debug_info.items %}
+            <tr>
+                <th>{{ k }}</th>
+                <td>{{ v }}</td>
+            </tr>
+        {% endfor %}
+
     </table>
 
     <form method="post">

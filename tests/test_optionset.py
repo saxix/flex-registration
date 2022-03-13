@@ -34,7 +34,7 @@ def test_parent(db):
 
 def test_view_base(db, django_app):
     obj = OptionSet.objects.create(name="locations-1", data="Rome\r\nMilan")
-    url = reverse("optionset", args=[obj.pk])
+    url = reverse("optionset", args=[obj.name])
     res = django_app.get(url)
     assert json.loads(res.content) == {
         "results": [{"id": "rome", "parent": None, "text": "Rome"}, {"id": "milan", "parent": None, "text": "Milan"}]
@@ -43,7 +43,7 @@ def test_view_base(db, django_app):
 
 def test_view_complex(db, django_app):
     obj = OptionSet.objects.create(name="locations-2", data="1:Rome\r\n2:Milan", separator=":", columns="pk,label")
-    url = reverse("optionset", args=[obj.pk])
+    url = reverse("optionset", args=[obj.name])
     res = django_app.get(url)
     assert json.loads(res.content) == {
         "results": [{"id": "1", "parent": None, "text": "Rome"}, {"id": "2", "parent": None, "text": "Milan"}]
@@ -54,7 +54,7 @@ def test_view_parent(db, django_app):
     obj = OptionSet.objects.create(
         name="locations-3", data="1:1:Rome\r\n2:1:Milan", separator=":", columns="pk,parent,label"
     )
-    url = reverse("optionset", args=[obj.pk])
+    url = reverse("optionset", args=[obj.name])
     res = django_app.get(url)
     assert json.loads(res.content) == {
         "results": [{"id": "1", "parent": "1", "text": "Rome"}, {"id": "2", "parent": "1", "text": "Milan"}]

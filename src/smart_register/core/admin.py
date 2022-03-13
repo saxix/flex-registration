@@ -54,8 +54,12 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         try:
             fld = ctx["original"]
             instance = fld.get_instance()
-            ctx["field"] = {
+            ctx["debug_info"] = {
                 "instance": instance,
+                "kwargs": fld.advanced,
+                "options": getattr(instance, "options", None),
+                "choices": getattr(instance, "choices", None),
+                "widget": getattr(instance, "widget", None),
             }
             form_class_attrs = {
                 "sample": instance,

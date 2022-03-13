@@ -13,10 +13,12 @@ logger = logging.getLogger(__name__)
 class SelectField(forms.ChoiceField):
     widget = SmartSelectWidget
 
-    def __init__(self, *, choices=(), **kwargs):
+    def __init__(self, **kwargs):
+        self._choices = []
         self.parent = kwargs.pop("parent", None)
+        options = kwargs.pop("datasource", None)
         super().__init__(**kwargs)
-        self.choices = choices
+        self.choices = options
 
     def widget_attrs(self, widget):
         attrs = super().widget_attrs(widget)
@@ -24,24 +26,22 @@ class SelectField(forms.ChoiceField):
             attrs["data-parent"] = self.parent
         return attrs
 
-    def _get_choices(self):
-        return self._choices
+    def _get_options(self):
+        return self._options
 
-    def _set_choices(self, value):
+    def _set_options(self, value):
         if value:  # pragma: no branch
             try:
-                if isinstance(value, (list, tuple)):
-                    value = value[0][0]
                 from smart_register.core.models import OptionSet
 
-                options = OptionSet.objects.get(name=value)
-                value = list(options.as_choices())
+                optset = OptionSet.objects.get(name=value)
+                value = list(optset.as_choices())
             except OptionSet.DoesNotExist as e:
                 logger.exception(e)
                 raise ValueError(f"OptionSet '{value}' does not exists")
-        self._choices = self.widget.choices = value
+        self._options = self.widget.choices = value
 
-    choices = property(_get_choices, _set_choices)
+    choices = property(_get_options, _set_options)
 
 
 class AjaxSelectField(forms.Field):
@@ -67,10 +67,6 @@ class AjaxSelectField(forms.Field):
         return attrs
 
     def get_bound_field(self, form, field_name):
-        """
-        Return a BoundField instance that will be used when accessing the form
-        field in a template.
-        """
         ret = BoundField(form, self, field_name)
         ret.field.widget.attrs["data-name"] = ret.name
         ret.field.widget.attrs["data-label"] = ret.label

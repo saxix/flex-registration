@@ -14,7 +14,6 @@ WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.IntegerField: {"widget": widgets.NumberWidget},
     forms.FloatField: {"widget": widgets.NumberWidget},
     forms.ChoiceField: {"widget": widgets.SmartChoiceWidget},
-    SelectField: {"widget": widgets.SmartSelectWidget},
     RadioField: {"widget": widgets.RadioWidget},
     YesNoRadio: {"widget": widgets.YesNoRadioWidget},
     YesNoChoice: {"widget": widgets.SmartSelectWidget},

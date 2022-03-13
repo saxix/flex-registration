@@ -10,9 +10,16 @@ class SmartChoiceWidget(TailWindMixin, forms.Select):
 class SmartSelectWidget(TailWindMixin, forms.Select):
     template_name = "django/forms/widgets/smart_select.html"
 
-    @staticmethod
-    def _choice_has_empty_value(choice):
-        return False
+    # def __init__(self, attrs=None, choices=()):
+    #     super().__init__(attrs)
+    #     self.choices = list(choices)
+
+    # def options(self):
+    #     # FIXME: remove this line (pdb)
+    #     breakpoint()
+    #     """Yield a flat list of options for this widgets."""
+    #     for opt in self.choices:
+    #         yield opt
 
 
 class AjaxSelectWidget(TailWindMixin, forms.Select):

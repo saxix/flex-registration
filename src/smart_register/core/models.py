@@ -193,13 +193,12 @@ class FlexFormField(OrderableModel):
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
-            if self.choices and hasattr(field_type, "choices"):
-                kwargs["choices"] = self.choices
+            # if self.choices and hasattr(field_type, "choices"):
+            #     kwargs["choices"] = self.choices
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
             kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
-        # if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
-        #     # kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
-        #     kwargs["choices"] = clean_choices(self.choices.split(","))
+        if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
+            kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
         return field_type(**kwargs)
@@ -314,6 +313,12 @@ class CustomFieldType(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+        cls = self.get_class()
+        if cls not in field_registry:
+            field_registry.register(cls)
 
     def clean(self):
         try:
