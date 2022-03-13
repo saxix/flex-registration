@@ -1,5 +1,11 @@
 (function ($) {
+    console.log("ajax_select.js");
     $(".ajaxSelect").each(function (i, e) {
+        console.log("ajax_select.js", i, e);
+        if ($(e).data('select2')){
+            return
+        }
+        console.log("ajax_select.js", i, e);
         var $target = $(e);
         var url = $target.data("ajax-url");
         var source = $target.data("source");
