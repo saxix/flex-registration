@@ -93,4 +93,4 @@ class Record(models.Model):
         if self.registration.public_key:
             return {"error": "Cannot access encrypted data"}
         else:
-            return json.loads(self.storage.decode())
+            return json.loads(self.storage.tobytes().decode())
