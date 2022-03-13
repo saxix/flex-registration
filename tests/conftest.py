@@ -6,6 +6,7 @@ from django import forms
 
 def pytest_configure(config):
     os.environ["DEBUG"] = "0"
+    os.environ["ADMINS"] = "admin@demo.org"
 
 
 @pytest.fixture()
