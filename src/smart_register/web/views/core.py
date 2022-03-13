@@ -32,5 +32,5 @@ def filter_optionset(obj, request):
 
 class OptionsListView(BaseListView):
     def get(self, request, *args, **kwargs):
-        obj = get_object_or_404(OptionSet, pk=self.kwargs["pk"])
+        obj = get_object_or_404(OptionSet, name=self.kwargs["name"])
         return filter_optionset(obj, request)

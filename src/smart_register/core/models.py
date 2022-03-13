@@ -193,11 +193,13 @@ class FlexFormField(OrderableModel):
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
+            if self.choices and hasattr(field_type, "choices"):
+                kwargs["choices"] = self.choices
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
             kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
-        if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
-            # kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
-            kwargs["choices"] = clean_choices(self.choices.split(","))
+        # if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
+        #     # kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
+        #     kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
         return field_type(**kwargs)
@@ -241,6 +243,7 @@ class OptionSet(models.Model):
 
     def get_data(self):
         value = cache.get(self.get_cache_key(), version=self.version)
+        parent_col = None
         if not value:
             columns = self.columns.split(",")
             if len(columns) == 1:
@@ -249,7 +252,7 @@ class OptionSet(models.Model):
                 pk_col = columns.index("pk")
             if len(columns) >= 2:
                 label_col = columns.index("label")
-            if len(columns) == 3:
+            if len(columns) == 3 and "parent" in columns:
                 parent_col = columns.index("parent")
 
             value = []
@@ -258,10 +261,10 @@ class OptionSet(models.Model):
                     pk, parent, label = line.strip().lower(), None, line
                 else:
                     cols = line.split(self.separator)
-                    if len(columns) == 2:
-                        pk, parent, label = cols[pk_col], None, cols[label_col]
-                    elif len(columns) == 3:
+                    if len(columns) == 3 and "parent" in columns:
                         pk, parent, label = cols[pk_col], cols[parent_col], cols[label_col]
+                    elif len(columns) > 1:
+                        pk, parent, label = cols[pk_col], None, cols[label_col]
                     else:
                         raise ValueError("")
                 values = {

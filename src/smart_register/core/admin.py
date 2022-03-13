@@ -48,6 +48,35 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     ordering_field = "ordering"
     order = "ordering"
 
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        try:
+            fld = ctx["original"]
+            instance = fld.get_instance()
+            ctx["field"] = {
+                "instance": instance,
+            }
+            form_class_attrs = {
+                "sample": instance,
+            }
+            formClass = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+
+            if request.method == "POST":
+                form = formClass(request.POST)
+                if form.is_valid():
+                    self.message_user(
+                        request, f"Form validation success. " f"You have selected: {form.cleaned_data['sample']}"
+                    )
+            else:
+                form = formClass()
+            ctx["form"] = form
+        except Exception as e:
+            raise
+            ctx["error"] = e
+
+        return render(request, "admin/core/flexformfield/test.html", ctx)
+
 
 class FlexFormFieldInline(OrderableAdmin, TabularInline):
     model = FlexFormField
@@ -73,10 +102,8 @@ class FlexFormAdmin(SmartModelAdmin):
 
 @register(OptionSet)
 class OptionSetAdmin(SmartModelAdmin):
-    list_display = (
-        "name",
-        "separator",
-    )
+    search_fields = ("name",)
+    list_display = ("name", "id", "separator", "columns")
 
     @button()
     def view_json(self, request, pk):

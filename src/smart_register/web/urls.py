@@ -7,5 +7,5 @@ urlpatterns = [
     path("register/<int:pk>/", RegisterView.as_view(), name="register"),
     path("register/", RegisterView.as_view(), name="register-latest"),
     path("register/complete/", RegisterCompleView.as_view(), name="register-done"),
-    path("options/<int:pk>/", OptionsListView.as_view(), name="optionset"),
+    path("options/<slug:name>/", OptionsListView.as_view(), name="optionset"),
 ]
