@@ -36,6 +36,7 @@ django-admin-ordering = "^0.15.0"
 django-concurrency = "^2.4"
 py-mini-racer = "^0.6.0"
 pycryptodome = "^3.14.1"
+cryptography = "^36.0.1"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"
