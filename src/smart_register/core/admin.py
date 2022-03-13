@@ -10,6 +10,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
 from .models import FlexForm, FlexFormField, FormSet, Validator, OptionSet, CustomFieldType
+from ..web.views.core import filter_optionset
 
 
 @register(Validator)
@@ -76,6 +77,11 @@ class OptionSetAdmin(SmartModelAdmin):
         "name",
         "separator",
     )
+
+    @button()
+    def view_json(self, request, pk):
+        obj = self.get_object(request, pk)
+        return filter_optionset(obj, request)
 
 
 @register(CustomFieldType)
