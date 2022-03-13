@@ -1,16 +1,11 @@
 from django.forms import formset_factory
-from django.http import Http404
-from django.shortcuts import render
+from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import get_language_info
-from django.views.generic import CreateView, ListView, TemplateView
+from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
 
-from smart_register.registration.models import Registration
-
-
-class DataSetListView(ListView):
-    model = Registration
+from smart_register.registration.models import Registration, Record
 
 
 class DataSetView(CreateView):
@@ -21,12 +16,14 @@ class DataSetView(CreateView):
 class RegisterCompleView(TemplateView):
     template_name = "registration/register_done.html"
 
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            record=Record.objects.get(registration__id=self.kwargs["pk"], id=self.kwargs["rec"]), **kwargs
+        )
+
 
 class RegisterView(FormView):
     template_name = "registration/register.html"
-
-    def get_success_url(self):
-        return reverse("register", args=[self.registration.pk])
 
     @property
     def registration(self):
@@ -35,7 +32,7 @@ class RegisterView(FormView):
                 return Registration.objects.get(active=True, id=self.kwargs["pk"])
             else:
                 return Registration.objects.filter(active=True).latest()
-        except Exception:
+        except Exception:  # pragma: no cover
             raise Http404
 
     def get_form_class(self):
@@ -51,6 +48,7 @@ class RegisterView(FormView):
         for fs in self.registration.flex_form.formsets.all():
             formSet = formset_factory(fs.get_form(), extra=fs.extra)
             formSet.fs = fs
+            formSet.required = fs.required
             formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
         return formsets
 
@@ -61,11 +59,6 @@ class RegisterView(FormView):
         kwargs["POST"] = dict(self.request.POST)
 
         return super().get_context_data(dataset=self.registration, **kwargs)
-
-    # def get(self, request, *args, **kwargs):
-    # setattr(request, "LANGUAGE_CODE", self.dataset.locale)
-    # translation.activate(self.dataset.locale)
-    # return super().get(self, request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -87,16 +80,8 @@ class RegisterView(FormView):
                 data[name].append(f.cleaned_data)
 
         record = self.registration.add_record(data)
-
-        return render(
-            self.request,
-            "registration/data.html",
-            {
-                "data": data,
-                "POST": dict(self.request.POST),
-                "record": record,
-            },
-        )
+        success_url = reverse("register-done", args=[self.registration.pk, record.pk])
+        return HttpResponseRedirect(success_url)
 
     def form_invalid(self, form, formsets):
         """If the form is invalid, render the invalid form."""

@@ -10,6 +10,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
 from .models import FlexForm, FlexFormField, FormSet, Validator, OptionSet, CustomFieldType
+from ..web.views.core import filter_optionset
 
 
 @register(Validator)
@@ -19,14 +20,14 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "parent", "flex_form", "extra")
+    list_display = ("name", "parent", "flex_form", "extra", "required")
 
 
 class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
     fk_name = "parent"
     extra = 0
-    fields = ("ordering", "name", "flex_form", "extra")
+    fields = ("name", "flex_form", "extra", "required", "ordering")
     show_change_link = True
     ordering_field = "ordering"
     ordering_field_hide_input = True
@@ -46,6 +47,39 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     }
     ordering_field = "ordering"
     order = "ordering"
+
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        try:
+            fld = ctx["original"]
+            instance = fld.get_instance()
+            ctx["debug_info"] = {
+                "instance": instance,
+                "kwargs": fld.advanced,
+                "options": getattr(instance, "options", None),
+                "choices": getattr(instance, "choices", None),
+                "widget": getattr(instance, "widget", None),
+            }
+            form_class_attrs = {
+                "sample": instance,
+            }
+            formClass = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+
+            if request.method == "POST":
+                form = formClass(request.POST)
+                if form.is_valid():
+                    self.message_user(
+                        request, f"Form validation success. " f"You have selected: {form.cleaned_data['sample']}"
+                    )
+            else:
+                form = formClass()
+            ctx["form"] = form
+        except Exception as e:
+            raise
+            ctx["error"] = e
+
+        return render(request, "admin/core/flexformfield/test.html", ctx)
 
 
 class FlexFormFieldInline(OrderableAdmin, TabularInline):
@@ -72,10 +106,13 @@ class FlexFormAdmin(SmartModelAdmin):
 
 @register(OptionSet)
 class OptionSetAdmin(SmartModelAdmin):
-    list_display = (
-        "name",
-        "separator",
-    )
+    search_fields = ("name",)
+    list_display = ("name", "id", "separator", "columns")
+
+    @button()
+    def view_json(self, request, pk):
+        obj = self.get_object(request, pk)
+        return filter_optionset(obj, request)
 
 
 @register(CustomFieldType)

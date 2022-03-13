@@ -1,160 +1,110 @@
-{% extends "base.html" %}
-{% load smart_register l10n %}
-
+{% extends "base.html" %}{% load smart_register l10n static %}
+{% block head %}
+    <script src="{% static "jquery.formset.js" %}"></script>
+{% endblock head %}
 
 {% block body %}
     {{ form.media }}
-<div class="min-h-screen flex justify-center bg-gray-100">
-  <div class="w-full lg:w-1/2">
-    <div class="text-center mb-16">
-      <h3
-        class="pt-8 text-indigo-600 text-4xl leading-normal font-extrabold tracking-tight text-gray-900"
-      >
-        {{ dataset.name }}
-      </h3>
-    </div>
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
-      <form class="w-full" method="post">
-        {% csrf_token %} {% for field in form %}
-        <div class="mb-4">
-          <label
-            class="block uppercase tracking-wide text-gray-700 font-bold mb-2"
-            for="{{ field.auto_id }}"
-            >{{ field.label }}</label
-          >
-          {{ field }}
-        </div>
-        {% endfor %} {% for name, formset in formsets.items %}
-        <div class="shadow-md rounded bg-gray-100 p-4">
-          <div id="{{ name }}" class="w-full formset" data-fs="{{ name }}">
-            <div>
-              <div>
-                <div
-                  class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title"
+    <div class="min-h-screen flex justify-center bg-gray-100">
+        <div class="w-full lg:w-1/2">
+            <div class="text-center mb-16">
+                <h3
+                        class="pt-8 text-indigo-600 text-4xl leading-normal font-extrabold tracking-tight text-gray-900"
                 >
-                  {{ name }}
-                </div>
-                <div class="managementForm">{{ formset.management_form }}</div>
-              </div>
+                    {{ dataset.name }}
+                </h3>
             </div>
-            <div>
-              <div class="w-100 forms {{ name }}">
-                {% for frm in formset %}
-                <div class="w-full form">
-                  {{ frm }}
-                </div>
+            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
+                {{ form.errors }}
+                <form class="w-full" method="post">
+                    {% csrf_token %} {% for field in form %}
+                    <div class="mb-4">
+                        <label
+                                class="block uppercase tracking-wide text-gray-700 font-bold mb-2"
+                                for="{{ field.auto_id }}"
+                        >{{ field.label }}</label
+                        >
+                        {{ field }}
+                    </div>
                 {% endfor %}
-              </div>
-            </div>
-            {% if formset.fs.dynamic %}
-            <div>
-              <div>
-                <input
-                  type="button"
-                  class="add bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-                  value="Add record"
-                />
-              </div>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
+                    {% for name, formset in formsets.items %}
+                        <div class="shadow-md rounded bg-gray-100 p-4">
+                            <div class="w-full formset" data-fs="{{ name }}"
+                                 data-required="{{ formset.required }}" data-extra="{{ formset.extra }}">
+                                <div>
+                                    <div>
+                                        <div
+                                                class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title"
+                                        >
+                                            {{ name }}
+                                        </div>
+                                        <div class="managementForm">{{ formset.management_form }}</div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col">
+                                    <div class="w-100 forms form-container {{ name }}" id="{{ name }}">
+                                        {% for frm in formset %}
+                                            <div class="w-full" id="{{ frm.prefix }}-row">
+                                                {{ frm }}
+                                            </div>
+                                            <div class="delete-container py-4 my-2">
 
-        {{form.errors}}
-        <div class="submit-row">
-          <input
-            type="submit"
-            class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            value="Save"
-          />
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="add-container py-4">
+
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="submit-row">
+                        <input
+                                type="submit"
+                                class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                value="Save"
+                        />
+                    </div>
+                </form>
+            </div>
+            {% for name, formset in formsets.items %}
+                <div type="form-template" id="{{ name }}-empty" class="hidden">
+
+                    {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
+                    <div class="delete-container py-4 my-2">
+
+                    </div>
+                </div>
+            {% endfor %}
+
         </div>
-      </form>
     </div>
     {% for name, formset in formsets.items %}
-    <script type="form-template" id="{{ name }}-empty">
-      <div class="form w-full margin-2" data-index="__prefix__">
-          {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
-                  <input type="button" data-fs="{{ name }}"
-             class="btn remove bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" value="Remove {{ name }}">
-      </div>
-    </script>
+        {{ formset.media }}
     {% endfor %}
+
+
     <script>
+        {% for name, formset in formsets.items %}
+            $("#{{ name }}").formset({
+                {#formCssClass: "",#}
+                prefix: "{{ name }}",
+                formTemplate:"#individuals-empty",
+                deleteContainerClass: "delete-container",
+                addContainerClass: "add-container",
+                addCssClass: "add-button bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow",
+                deleteCssClass: "delete-button bg-white hover:bg-gray-100 text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",
+                addText: 'Add Record',
+                deleteText: 'Remove Record',
+                added: function (row) {
+                    $(row).find(".vDateField").each(function (i) {
+                        console.log(111111, i);
+                    });
+                }
+            });
 
-      var pluginName = "formset";
-      var Formset = function (el) {
-          var self = this;
-          var targetName = $(el).data("fs");
-          var $target = $("#" + targetName);
-          var $managementForm = $target.find(".managementForm");
-          var addButton = $target.find("input[type=button].add");
-          {#var $forms = $target.find("div.form");#}
-          var $emptyForm = $("#" + targetName + "-empty");
-
-          var managementFormField = function (name) {
-              return $managementForm.find("input[name=" + targetName + "-" + name + "]");
-          };
-          self.reindex = function () {
-              $target.find("div.form").each(function (i, e) {
-
-                  var c = $(e).html()
-                      .replace(new RegExp("__prefix__", "g"), i)
-                      .replace(new RegExp(targetName + "-\n+", "g"), targetName + "-" + i);
-                   {#.replace(new RegExp("<\\\\/script>", "g"));#}
-                  $(e).html(c);
-              });
-              self.bindRemoveToElement($target.find("input[type=button].remove"))
-          };
-          self.bindRemove = function () {
-              var $remButton = $target.find("input[type=button].remove").last();
-              self.bindRemoveToElement($remButton)
-          }
-          self.bindRemoveToElement = function (element){
-              element.on("click", function () {
-                  var newIndex = $target.find("div.form").length - 1;
-                  managementFormField("TOTAL_FORMS").val(newIndex);
-                  var $form = $(this).closest("div.form");
-                  $form.remove();
-                  self.reindex();
-              });
-          }
-          addButton.on("click", function () {
-              var newIndex = $target.find("div.form").length;
-              managementFormField("TOTAL_FORMS").val(newIndex + 1);
-              var newFormHtml = $emptyForm.html()
-                  .replace(new RegExp("__prefix__", "g"), newIndex);
-
-              $target.find("div.forms." + targetName).append(newFormHtml);
-              self.bindRemove();
-          });
-          return self;
-      };
-      Formset.all = [];
-      Formset.reindex = function () {
-          for (var fs of Formset.all) {
-              fs.reindex();
-          }
-      };
-      Formset.getOrCreate = function (el, options) {
-          var rev = $(el).data(pluginName);
-          if (!rev) {
-              rev = new Formset(el);
-              rev.bindRemove();
-              Formset.all.push(rev);
-          }
-          return rev;
-      };
-
-      $(".formset").each(function (i, e) {
-          return Formset.getOrCreate(this, {});
-      });
-      $("form").on("submit", function (e) {
-      });
+        {% endfor %}
     </script>
-  </div>
-</div>
-{% for name, formset in formsets.items %}
-{{ formset.media }}
-{% endfor %}
+
 {% endblock body %}
