@@ -1,0 +1,20 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% block action-content %}
+    {{ error }}
+    <table>
+        <tr><th>Label</th><td>{{ original.label }}</td></tr>
+        <tr><th>Required</th><td>{{ original.required }}</td></tr>
+        <tr><th>Choices</th><td>{{ original.choices }}</td></tr>
+        <tr><th>Field Type</th><td>{{ field_type }}</td></tr>
+        <tr><th>field</th><td>{{ field }}</td></tr>
+        <tr><th>field_kwargs</th><td>{{ field_kwargs }}</td></tr>
+    </table>
+
+    <form method="post">
+        {% csrf_token %}
+        <table>
+            {{ form }}
+        </table>
+        <input type="submit">
+    </form>
+{% endblock action-content %}

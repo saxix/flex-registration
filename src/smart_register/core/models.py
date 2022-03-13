@@ -3,8 +3,10 @@ from datetime import date, datetime, time
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
+from concurrency.fields import IntegerVersionField
 from django import forms
 from django.contrib.postgres.fields import CICharField
+from django.core.cache import caches
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -19,6 +21,8 @@ from .registry import field_registry, form_registry, import_custom_field
 from .utils import jsonfy, namify
 
 logger = logging.getLogger(__name__)
+
+cache = caches["default"]
 
 
 class Validator(models.Model):
@@ -189,11 +193,13 @@ class FlexFormField(OrderableModel):
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
+            if self.choices and hasattr(field_type, "choices"):
+                kwargs["choices"] = self.choices
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
             kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
-        if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
-            # kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
-            kwargs["choices"] = clean_choices(self.choices.split(","))
+        # if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
+        #     # kwargs["choices"] = [(k.strip(), k.strip()) for k in self.choices.split(",")]
+        #     kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
         return field_type(**kwargs)
@@ -214,9 +220,69 @@ class FlexFormField(OrderableModel):
 
 
 class OptionSet(models.Model):
+    version = IntegerVersionField()
     name = CICharField(max_length=100)
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
+    columns = models.CharField(
+        max_length=20, default="label", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
+    )
+
+    def clean(self):
+        cols = self.columns.split(",")
+        if self.separator and len(cols) == 1:
+            raise ValidationError("You must define columns order if 'separator' is set.")
+
+        if len(cols) > 3:
+            raise ValidationError("Invalid columns definition")
+
+        super().clean()
+
+    def get_cache_key(self):
+        return f"options-{self.pk}-{self.name}-{self.version}"
+
+    def get_data(self):
+        value = cache.get(self.get_cache_key(), version=self.version)
+        parent_col = None
+        if not value:
+            columns = self.columns.split(",")
+            if len(columns) == 1:
+                pk_col = label_col = 0
+            if len(columns) > 1:
+                pk_col = columns.index("pk")
+            if len(columns) >= 2:
+                label_col = columns.index("label")
+            if len(columns) == 3 and "parent" in columns:
+                parent_col = columns.index("parent")
+
+            value = []
+            for line in self.data.split("\r\n"):
+                if len(columns) == 1:
+                    pk, parent, label = line.strip().lower(), None, line
+                else:
+                    cols = line.split(self.separator)
+                    if len(columns) == 3 and "parent" in columns:
+                        pk, parent, label = cols[pk_col], cols[parent_col], cols[label_col]
+                    elif len(columns) > 1:
+                        pk, parent, label = cols[pk_col], None, cols[label_col]
+                    else:
+                        raise ValueError("")
+                values = {
+                    "pk": pk,
+                    "parent": parent,
+                    "label": label,
+                }
+                value.append(values)
+            cache.set(self.get_cache_key(), value)
+        return value
+
+    def as_choices(self):
+        data = self.get_data()
+        for entry in data:
+            yield entry["pk"], entry["label"]
+
+    def as_json(self):
+        return self.get_data()
 
 
 def clean_choices(value):

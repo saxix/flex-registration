@@ -25,6 +25,16 @@ def flat(db):
     )[0]
 
 
+@pytest.fixture
+def nested(db):
+    return OptionSet.objects.get_or_create(
+        name="italian_locations",
+        defaults={
+            "data": "Rome\nMilan",
+        },
+    )[0]
+
+
 def test_select_complex(complex):
     fld = SelectField(choices=[["italian_locations", "italian_locations"]])
     assert fld.choices == [["1", "Rome"], ["2", "Milan"]]
