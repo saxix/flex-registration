@@ -249,6 +249,12 @@ class CustomFieldType(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+        cls = self.get_class()
+        if cls not in field_registry:
+            field_registry.register(cls)
+
     def clean(self):
         try:
             kwargs = self.attrs.copy()
