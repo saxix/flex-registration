@@ -20,8 +20,7 @@ variables:
   Docker.filePath: "**/docker/Dockerfile.local"
   Docker.app_repository: "flexregister"
   Docker.registry: "ICTD-HOPE-DEV-ACR"
-  Docker.repository: "uniappsk8shopedev"
-  Docker.url: "uniappsakshopedev.azurecr.io"
+  Docker.repository: "unihopeukrsrdev"
 
 stages:
   - stage: build_and_push
