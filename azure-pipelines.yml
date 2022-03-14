@@ -36,7 +36,7 @@ stages:
             inputs:
               containerRegistry: '$(Docker.registry)'
               command: 'login'
-          - script: "docker pull $(Docker.registry).azurecr.io/$(Docker.registry):latest"
+          - script: "docker pull $(Docker.registry).azurecr.io/$(Docker.repository):latest"
             displayName: Pull latest for layer caching
             continueOnError: true # for first build, no cache
           - task: Docker@2
@@ -46,7 +46,7 @@ stages:
               dockerfile: $(Docker.filePath)
               repository: $(Docker.repository)
               buildContext: "**/.."
-              arguments: '--cache-from=$(Docker.registry).azurecr.io/$(Docker.registry):latest'
+              arguments: '--cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
