@@ -1,12 +1,9 @@
 (function ($) {
-    console.log("ajax_select.js");
     $(function () {
         $(".ajaxSelect").each(function (i, e) {
-            console.log("ajax_select.js", i, e);
             if ($(e).data("select2")) {
                 return;
             }
-            console.log("ajax_select.js", i, e);
             var $target = $(e);
             var url = $target.data("ajax-url");
             var source = $target.data("source");
@@ -15,6 +12,17 @@
             var name = $target.data("name");
             var $formContainer = $target.parents(".form-container");
             var $parent = null;
+
+            if (parentName) {
+                $parent = $formContainer.find("[data-source=" + parentName + "]");
+                // if (!$parent.length) {
+                //     throw Error("Cannot find parent element '" + parentName + "' for " + name);
+                // }
+                $parent.on("change", function () {
+                    $target.trigger("change.select2");
+                    $target.find("option[value]").remove();
+                });
+            }
             $target.select2({
                 placeholder: "Select " + label,
                 ajax: {
@@ -32,13 +40,6 @@
                 }
             });
 
-            if (parentName) {
-                $parent = $formContainer.find("[data-source=" + parentName + "]");
-                $parent.on("change", function () {
-                    $target.trigger("change.select2");
-                    $target.find("option[value]").remove();
-                });
-            }
         });
     });
 })($);

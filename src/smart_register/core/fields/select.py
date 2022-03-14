@@ -38,7 +38,7 @@ class SelectField(forms.ChoiceField):
                 value = list(optset.as_choices())
             except OptionSet.DoesNotExist as e:
                 logger.exception(e)
-                raise ValueError(f"OptionSet '{value}' does not exists")
+                value = []
         self._options = self.widget.choices = value
 
     choices = property(_get_options, _set_options)
