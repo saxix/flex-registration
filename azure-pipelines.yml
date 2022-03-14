@@ -18,9 +18,8 @@ variables:
   #                          Mandatory variables 
   # ========================================================================
   Docker.filePath: "**/docker/Dockerfile.local"
-  Docker.app_repository: "flexregister"
-  Docker.registry: "ICTD-HOPE-DEV-ACR"
-  Docker.repository: "unihopeukrsrdev"
+  Docker.repository: "flex-registration"
+  Docker.registry: "unihopeukrsrdev"
 
 stages:
   - stage: build_and_push
@@ -37,7 +36,7 @@ stages:
               command: buildAndPush
               buildContext: "**/.."
               dockerfile: $(Docker.filePath)
-              repository: $(Docker.app_repository)
+              repository: $(Docker.repository)
               containerRegistry: $(Docker.registry)
               tags: |
                 $(Build.BuildId)
