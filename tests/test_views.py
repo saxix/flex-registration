@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from django.urls import reverse
 from webtest import Upload
@@ -145,6 +147,7 @@ def test_upload_image(django_app, complex_registration, mock_storage):
     url = reverse("register", args=[complex_registration.pk])
     res = django_app.get(url)
     res.form["family_name"] = "HH #1"
+    IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
 
     add_extra_form_to_formset_with_data(
         res.form,
@@ -153,25 +156,27 @@ def test_upload_image(django_app, complex_registration, mock_storage):
             "first_name": "First1",
             "last_name": "Last",
             "date_of_birth": "2000-12-01",
-            "image": Upload("tests/data/image.jpeg"),
+            "image": IMAGE,
         },
     )
     res = res.form.submit().follow()
     assert res.context["record"].data["family_name"] == "HH #1"
-    assert res.context["record"].data["form2s"][0]["image"] == "image.jpeg"
+    assert res.context["record"].data["form2s"][0]["image"] == str(IMAGE.content)
 
 
 @pytest.mark.django_db
 def test_upload_image_register_encrypted(django_app, encrypted_registration, mock_storage):
     url = reverse("register", args=[encrypted_registration.pk])
+    IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
+
     res = django_app.get(url)
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
-    res.form["image"] = Upload("tests/data/image.jpeg")
+    res.form["image"] = IMAGE
 
     res = res.form.submit().follow()
     record = res.context["record"]
     data = record.decrypt(encrypted_registration._private_pem)
 
     assert data["first_name"] == "first"
-    assert data["image"] == "image.jpeg"
+    assert data["image"] == str(IMAGE.content)
