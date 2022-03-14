@@ -43,6 +43,7 @@ stages:
             displayName: Build
             inputs:
               command: build
+              dockerfile: $(Docker.filePath)
               buildContext: "**/.."
               arguments: '--cache-from=$(Docker.registry).azurecr.io/$(Docker.registry):latest'
               tags: |
