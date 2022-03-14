@@ -20,7 +20,8 @@ variables:
   Docker.filePath: "**/docker/Dockerfile.local"
   Docker.repository: "flex-registration"
   Docker.registry: "unihopeukrsrdev"
-  azureSubscription: "uni-hope-ukr-sr-dev"
+  azureSubscription: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
+  appName: "uni-hope-ukr-sr-dev"
 
 stages:
   - stage: build_and_push
@@ -53,7 +54,7 @@ stages:
           - task: AzureWebAppContainer@1
             displayName: Azure Web App on Container Deploy
             inputs:
-              appName: webappforcontainers
+              appName: $(appName)
               azureSubscription: $(azureSubscription)
               imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
               appSettings: |
