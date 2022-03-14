@@ -9,15 +9,14 @@ services:
     tty: true
     env_file:
       - .env
-    environment:
-      - REDIS_INSTANCE=redis:6379
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.local
     ports:
-      - "80:80"
+      - "8000:8000"
     volumes:
       - ./:/code/
+    command: "dev"
     depends_on:
       - db
   db:
