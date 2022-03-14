@@ -22,6 +22,7 @@
                 {{ form.errors }}
                 <form class="w-full" method="post">
                     {% csrf_token %}
+                    <div class="form-container">
                     {% for field in form %}
                         <div class="mb-4">
                             <label class="block uppercase tracking-wide text-gray-700 font-bold mb-2"
@@ -29,6 +30,7 @@
                             {{ field }}
                         </div>
                     {% endfor %}
+                    </div>
                     {% for name, formset in formsets.items %}
                         <div class="shadow-md rounded bg-gray-100 p-4">
                             <div class="w-full formset">
