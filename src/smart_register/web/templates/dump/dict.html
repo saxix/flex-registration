@@ -1,0 +1,13 @@
+{% load smart_register %}<table>{% for k,v in value.items %}
+    <tr class="{% cycle 'row1' 'row2' %}">
+        <th>{{ k }}</th>
+        <td>
+            {% if v|islist %}
+                <table>{% include "dump/list.html" %}</table>
+            {% else %}
+                {{ v }}
+            {% endif %}
+        </td>
+    </tr>
+{% endfor %}
+</table>
