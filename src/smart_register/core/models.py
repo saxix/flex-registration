@@ -143,7 +143,7 @@ class FormSet(OrderableModel):
         verbose_name = "FormSet"
         verbose_name_plural = "FormSets"
         ordering = ["ordering"]
-        unique_together = (("flex_form", "name"),)
+        unique_together = (("parent", "flex_form", "name"),)
 
     def __str__(self):
         return self.name
