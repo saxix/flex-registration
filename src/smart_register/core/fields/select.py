@@ -14,9 +14,9 @@ class SelectField(forms.ChoiceField):
     widget = SmartSelectWidget
 
     def __init__(self, **kwargs):
-        self._choices = []
+        self._choices = ()
         self.parent = kwargs.pop("parent", None)
-        options = kwargs.pop("datasource", None)
+        options = kwargs.pop("datasource", [])
         super().__init__(**kwargs)
         self.choices = options
 

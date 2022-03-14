@@ -1,4 +1,5 @@
 from admin_extra_buttons.decorators import view
+from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib import messages
 from django.shortcuts import render
 from import_export import resources
@@ -21,7 +22,6 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     date_hierarchy = "start"
     list_filter = ("active",)
     list_display = ("name", "start", "end", "active", "locale", "secure")
-    # formfield_overrides = {models.TextField: {"widget": forms.PasswordInput}}
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)
@@ -56,4 +56,9 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
 
 @register(Record)
 class RecordAdmin(SmartModelAdmin):
-    readonly_fields = ("registration", "data")
+    date_hierarchy = "timestamp"
+    search_fields = ("registration__name",)
+    list_display = ("registration", "timestamp", "id")
+    readonly_fields = ("registration", "timestamp", "id")
+    list_filter = (("registration", AutoCompleteFilter),)
+    change_form_template = None

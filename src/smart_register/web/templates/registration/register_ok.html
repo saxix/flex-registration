@@ -30,7 +30,6 @@
         {% for name, formset in formsets.items %}
             $(function () {
                 var $target = $(".form-container.{{ formset.prefix }}");
-                console.log(111111, $target);
                 var config = {
                     {#formCssClass: "",#}
                     {#prefix: "{{ name }}",#}

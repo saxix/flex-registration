@@ -18,9 +18,10 @@ variables:
   #                          Mandatory variables 
   # ========================================================================
   Docker.filePath: "**/docker/Dockerfile.local"
-  Docker.app_repository: "flexregister"
-  Docker.registry: "ICTD-HOPE-DEV-ACR"
-  Docker.repository: "unihopeukrsrdev"
+  Docker.repository: "flex-registration"
+  Docker.registry: "unihopeukrsrdev"
+  azureSubscription: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
+  appName: "uni-hope-ukr-sr-dev"
 
 stages:
   - stage: build_and_push
@@ -37,8 +38,30 @@ stages:
               command: buildAndPush
               buildContext: "**/.."
               dockerfile: $(Docker.filePath)
-              repository: $(Docker.app_repository)
+              repository: $(Docker.repository)
               containerRegistry: $(Docker.registry)
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
+  - stage: deploy
+    displayName: Deploy
+    jobs:
+      - job: deploy_backend
+        pool:
+          vmImage: ubuntu-latest
+        displayName: "Deploy app"
+        steps:
+          - task: AzureWebAppContainer@1
+            displayName: Azure Web App on Container Deploy
+            inputs:
+              appName: $(appName)
+              azureSubscription: $(azureSubscription)
+              imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
+              appSettings: "-PYTHONPATH $(PYTHONPATH)
+              -ALLOWED_HOSTS $(ALLOWED_HOSTS)
+              -AUTHENTICATION_BACKENDS $(AUTHENTICATION_BACKENDS)
+              -SECRET_KEY $(SECRET_KEY)
+              -ADMIN_EMAIL $(ADMIN_EMAIL)
+              -ADMIN_PASSWORD $(ADMIN_PASSWORD)
+              -DEBUG $(DEBUG)
+              "
