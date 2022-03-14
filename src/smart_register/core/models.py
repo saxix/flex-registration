@@ -222,7 +222,8 @@ class FlexFormField(OrderableModel):
 
 class OptionSet(models.Model):
     version = IntegerVersionField()
-    name = CICharField(max_length=100)
+    name = CICharField(max_length=100, unique=True)
+    description = models.CharField(max_length=1000, blank=True, null=True)
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
     columns = models.CharField(
