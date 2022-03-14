@@ -41,13 +41,14 @@
                                     <div class="w-100 forms">
                                         {{ formset.management_form }}
                                         {% for frm in formset %}
-                                            <div class="w-full  form-container {{ formset.prefix }}">
+
+                                            <div class="w-full my-5 p-3 border border-gray-400 form-container {{ formset.prefix }}">
                                                 {{ frm }}
-                                            <div class="add-container my-5"></div>
+                                                <div class="flex">
+                                            <div class="flex-auto "></div>
+                                            <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>
+                                                </div>
                                             </div>
-{#                                            <div class="{{ name }}-delete py-4 my-2 float-right">#}
-{##}
-{#                                            </div>#}
                                         {% endfor %}
                                         <div class="{{ name }}-add"></div>
 
@@ -75,18 +76,14 @@
         {% for name, formset in formsets.items %}
             $(function () {
                 var $target = $(".form-container.{{ formset.prefix }}");
-                console.log(111111, $target);
                 var config = {
-                    {#formCssClass: "",#}
-                    {#prefix: "{{ name }}",#}
-                    formTemplate: "#{{ name }}-empty",
-                    {#deleteContainerClass: "delete-container",#}
+                    formCssClass: "form-container",
+                    prefix: "{{ formset.prefix }}",
+                    {#formTemplate: "#{{ name }}-empty",#}
+                    deleteContainerClass: "{{ name }}-delete",
                     {#addContainerClass: "add-container",#}
                     addCssClass: "add-button bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow",
                     deleteCssClass: "delete-button bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",
-                    {#hideLastAddForm: true,#}
-                    {#max_num: {{ formset.max_num }},#}
-                    {#min_num: {{ formset.min_num }},#}
                     added: function (row) {
                         $(row).find(".vDateField").each(function (i) {
                             console.log(111111, i);

@@ -25,6 +25,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)
+    save_as = True
 
     def secure(self, obj):
         return bool(obj.public_key)
