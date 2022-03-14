@@ -1,21 +1,21 @@
 from django import forms
 
 from . import widgets
-from .gis import LocationField
-from .picture import PictureField
-from .select import SelectField
+from .captcha import SmartCaptchaField
 from .custom import CustomField
-from .multi_checkbox import MultiCheckboxField
-from .radio import RadioField, YesNoRadio, YesNoChoice
 from .document import DocumentField
+from .gis import LocationField
+from .multi_checkbox import MultiCheckboxField
+from .picture import PictureField
+from .radio import RadioField, YesNoChoice, YesNoRadio
+from .select import AjaxSelectField, SelectField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
     forms.CharField: {"widget": widgets.SmartTextWidget},
     forms.IntegerField: {"widget": widgets.NumberWidget},
     forms.FloatField: {"widget": widgets.NumberWidget},
-    forms.ChoiceField: {"widget": widgets.SmartSelectWidget},
-    SelectField: {"widget": widgets.SmartSelectWidget},
+    forms.ChoiceField: {"widget": widgets.SmartChoiceWidget},
     RadioField: {"widget": widgets.RadioWidget},
     YesNoRadio: {"widget": widgets.YesNoRadioWidget},
     YesNoChoice: {"widget": widgets.SmartSelectWidget},

@@ -9,8 +9,6 @@ services:
     tty: true
     env_file:
       - .env
-    environment:
-      - REDIS_INSTANCE=redis:6379
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.local

@@ -40,21 +40,19 @@
             },
 
             showAddButton = function() {
-                return maxForms.length == 0 ||   // For Django versions pre 1.2
-                    (maxForms.val() == '' || (maxForms.val() - totalForms.val() > 0));
+                return (maxForms.val() === '' || (maxForms.val() - totalForms.val() > 0));
             },
 
             /**
              * Indicates whether delete link(s) can be displayed - when total forms > min forms
              */
             showDeleteLinks = function() {
-                return minForms.length == 0 ||   // For Django versions pre 1.7
-                    (minForms.val() == '' || (totalForms.val() - minForms.val() > 0));
+                return (minForms.val() === '' || (totalForms.val() - minForms.val() > 0));
             },
 
             insertDeleteLink = function(row) {
-                var delCssSelector = 'delete-button',
-                    addCssSelector = 'add-button';
+                var delCssSelector = $.trim(options.deleteCssClass).replace(/\s+/g, '.'),
+                    addCssSelector = $.trim(options.addCssClass).replace(/\s+/g, '.');
 
                 var delButtonHTML = '<a class="' + options.deleteCssClass + '" href="javascript:void(0)">' + options.deleteText +'</a>';
                 if (options.deleteContainerClass) {
@@ -122,33 +120,34 @@
                 });
             };
 
-        $$.each(function(i) {
-            var row = $(this),
-                del = row.find('input:checkbox[id $= "-DELETE"]');
-            if (del.length) {
-                // If you specify "can_delete = True" when creating an inline formset,
-                // Django adds a checkbox to each form in the formset.
-                // Replace the default checkbox with a hidden field:
-                if (del.is(':checked')) {
-                    // If an inline formset containing deleted forms fails validation, make sure
-                    // we keep the forms hidden (thanks for the bug report and suggested fix Mike)
-                    del.before('<input type="hidden" name="' + del.attr('name') +'" id="' + del.attr('id') +'" value="on" />');
-                    row.hide();
-                } else {
-                    del.before('<input type="hidden" name="' + del.attr('name') +'" id="' + del.attr('id') +'" />');
-                }
-                // Hide any labels associated with the DELETE checkbox:
-                $('label[for="' + del.attr('id') + '"]').hide();
-                del.remove();
-            }
-            if (hasChildElements(row)) {
-                row.addClass(options.formCssClass);
-                if (row.is(':visible')) {
-                    insertDeleteLink(row);
-                    applyExtraClasses(row, i);
-                }
-            }
-        });
+        // $$.each(function(i) {
+        //     console.log(111111, $$);
+        //     var row = $(this),
+        //         del = row.find('input:checkbox[id $= "-DELETE"]');
+        //     if (del.length) {
+        //         // If you specify "can_delete = True" when creating an inline formset,
+        //         // Django adds a checkbox to each form in the formset.
+        //         // Replace the default checkbox with a hidden field:
+        //         if (del.is(':checked')) {
+        //             // If an inline formset containing deleted forms fails validation, make sure
+        //             // we keep the forms hidden (thanks for the bug report and suggested fix Mike)
+        //             del.before('<input type="hidden" name="' + del.attr('name') +'" id="' + del.attr('id') +'" value="on" />');
+        //             row.hide();
+        //         } else {
+        //             del.before('<input type="hidden" name="' + del.attr('name') +'" id="' + del.attr('id') +'" />');
+        //         }
+        //         // Hide any labels associated with the DELETE checkbox:
+        //         $('label[for="' + del.attr('id') + '"]').hide();
+        //         del.remove();
+        //     }
+        //     if (hasChildElements(row)) {
+        //         row.addClass(options.formCssClass);
+        //         if (row.is(':visible')) {
+        //             insertDeleteLink(row);
+        //             applyExtraClasses(row, i);
+        //         }
+        //     }
+        // });
 
         if ($$.length) {
             var hideAddButton = !showAddButton(),
@@ -178,6 +177,7 @@
                         elem.val('');
                     }
                 });
+                insertDeleteLink(template);
             }
             // FIXME: Perhaps using $.data would be a better idea?
             options.formTemplate = template;
@@ -208,7 +208,7 @@
                 var formCount = parseInt(totalForms.val()),
                     row = options.formTemplate.clone(true).removeClass('formset-custom-template'),
                     buttonRow = $($(this).parents('tr.' + options.formCssClass + '-add').get(0) || this),
-                    delCssSelector = 'delete-button';
+                    delCssSelector = $.trim(options.deleteCssClass).replace(/\s+/g, '.');
                 applyExtraClasses(row, formCount);
                 row.insertBefore(buttonRow).show();
                 row.find(childElementSelector).each(function() {

@@ -7,34 +7,36 @@ from smart_register.core.models import OptionSet
 @pytest.fixture
 def complex(db):
     return OptionSet.objects.get_or_create(
-        name="italian_locations",
-        defaults={
-            "data": "1:Rome\n2:Milan",
-            "separator": ":",
-        },
+        name="complex",
+        defaults={"data": "1:Rome\r\n2:Milan", "separator": ":", "columns": "pk,label"},
     )[0]
 
 
 @pytest.fixture
 def flat(db):
     return OptionSet.objects.get_or_create(
-        name="italian_locations",
+        name="flat",
         defaults={
-            "data": "Rome\nMilan",
+            "data": "Rome\r\nMilan",
+        },
+    )[0]
+
+
+@pytest.fixture
+def nested(db):
+    return OptionSet.objects.get_or_create(
+        name="nested",
+        defaults={
+            "data": "Rome\r\nMilan",
         },
     )[0]
 
 
 def test_select_complex(complex):
-    fld = SelectField(choices=[["italian_locations", "italian_locations"]])
-    assert fld.choices == [["1", "Rome"], ["2", "Milan"]]
+    fld = SelectField(datasource="complex")
+    assert fld.choices == [("1", "Rome"), ("2", "Milan")]
 
 
 def test_select_flat(flat):
-    fld = SelectField(choices=[["italian_locations", "italian_locations"]])
-    assert fld.choices == [["rome", "Rome"], ["milan", "Milan"]]
-
-
-def test_error(db):
-    with pytest.raises(ValueError):
-        SelectField(choices="italian_locations")
+    fld = SelectField(datasource="flat")
+    assert fld.choices == [("rome", "Rome"), ("milan", "Milan")]

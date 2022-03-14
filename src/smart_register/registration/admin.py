@@ -1,7 +1,5 @@
 from admin_extra_buttons.decorators import view
-from django import forms
 from django.contrib import messages
-from django.db import models
 from django.shortcuts import render
 from import_export import resources
 
@@ -23,10 +21,11 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     date_hierarchy = "start"
     list_filter = ("active",)
     list_display = ("name", "start", "end", "active", "locale", "secure")
-    formfield_overrides = {models.TextField: {"widget": forms.PasswordInput}}
+    # formfield_overrides = {models.TextField: {"widget": forms.PasswordInput}}
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)
+    save_as = True
 
     def secure(self, obj):
         return bool(obj.public_key)

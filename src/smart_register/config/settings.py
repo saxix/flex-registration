@@ -181,7 +181,6 @@ STATICFILES_DIRS = [
 
 # -------- Added Settings
 ADMINS = env("ADMINS")
-TEST_USERS = env("TEST_USERS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ] + env("AUTHENTICATION_BACKENDS")

@@ -6,6 +6,7 @@ import unicodedata
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.functional import keep_lazy_text
+from django.utils.text import slugify
 from django.utils.timezone import is_aware
 
 
@@ -27,7 +28,7 @@ def namify(value, allow_unicode=False):
     else:
         value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     value = re.sub(r"[^\w\s-]", "", value.lower())
-    return re.sub(r"[-\s]+", "_", value).strip("-_")
+    return slugify(re.sub(r"[-\s]+", "_", value).strip("-_"))
 
 
 class JSONEncoder(DjangoJSONEncoder):
@@ -53,14 +54,22 @@ class JSONEncoder(DjangoJSONEncoder):
             if o.microsecond:
                 r = r[:12]
             return r
+        elif isinstance(o, set):
+            return list(o)
         elif isinstance(o, decimal.Decimal):
             return str(o)
+        elif isinstance(o, bytes):
+            return str(o, encoding="utf-8")
         else:
             return super().default(o)
 
 
+def safe_json(data):
+    return json.dumps(data, cls=JSONEncoder)
+
+
 def jsonfy(data):
-    return json.loads(json.dumps(data, cls=JSONEncoder))
+    return json.loads(safe_json(data))
 
 
 def underscore_to_camelcase(value):
@@ -70,7 +79,7 @@ def underscore_to_camelcase(value):
                 lambda index_word: index_word[1].lower()
                 if index_word[0] == 0
                 else index_word[1][0].upper() + (index_word[1][1:] if len(index_word[1]) > 0 else ""),
-                list(enumerate(re.split(re.compile(r"_+"), value[1:]))),
+                list(enumerate(re.split(re.compile(r"[_ ]+"), value[1:]))),
             )
         )
     )
