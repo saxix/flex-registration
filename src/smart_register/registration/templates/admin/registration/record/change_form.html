@@ -1,0 +1,5 @@
+{% extends "admin_extra_buttons/change_form.html" %}{% load smart_register %}
+{% block after_field_sets %}
+    {% dump_dict original.data %}
+{% endblock %}
+{% block inline_field_sets %}{% endblock %}
