@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load static %}
 {% block body %}
 <section class="text-gray-700 body-font">
    <div class="container mx-auto flex px-5 py-6 lg:py-24 flex-col-reverse lg:flex-row items-center">
@@ -13,7 +13,7 @@
          <a href="{% url "register-latest" %}" class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-4xl">Registration</a>
       </div>
       <div class="lg:max-w-lg flex-col justify-center flex md:w-4/5 lg:w-full w-full">
-         <img class="object-cover object-center rounded" alt="hero" src="../static/unicef_logo.jpeg">
+         <img class="object-cover object-center rounded" alt="hero" src="{% static "unicef_logo.jpeg" %}">
       </div>
    </div>
 </section>
