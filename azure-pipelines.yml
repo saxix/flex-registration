@@ -33,23 +33,22 @@ stages:
         displayName: "[APP]"
         steps:
           - task: Docker@2
-              inputs:
-                containerRegistry: '$(Docker.registry)'
-                command: 'login'
+            inputs:
+              containerRegistry: '$(Docker.registry)'
+              command: 'login'
           - script: "docker pull $(Docker.registry).azurecr.io/$(Docker.registry):latest"
             displayName: Pull latest for layer caching
             continueOnError: true # for first build, no cache
           - task: Docker@2
-              displayName: Build
-              inputs:
-                command: build
-                buildContext: "**/.."
-                arguments: '--cache-from=$(Docker.registry).azurecr.io/$(Docker.registry):latest'
-                tags: |
-                  $(Build.BuildId)
-                  $(Build.SourceVersion)
-                  latest
-                - stage: deploy
+            displayName: Build
+            inputs:
+              command: build
+              buildContext: "**/.."
+              arguments: '--cache-from=$(Docker.registry).azurecr.io/$(Docker.registry):latest'
+              tags: |
+                $(Build.BuildId)
+                $(Build.SourceVersion)
+                latest
           - task: Docker@2
             displayName: Push
             inputs:
