@@ -112,7 +112,7 @@ class FlexForm(models.Model):
     def add_formset(self, form, **extra):
         defaults = {"extra": 0, "name": form.name.lower() + pluralize(0)}
         defaults.update(extra)
-        return FormSet.objects.update_or_create(parent=self, flex_form=form, **defaults)[0]
+        return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
     def get_form(self):
         fields = {}
@@ -134,7 +134,9 @@ class FormSet(OrderableModel):
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)
-    required = models.IntegerField(default=0, blank=False, null=False)
+    max_num = models.IntegerField(default=None, blank=True, null=True)
+    min_num = models.IntegerField(default=0, blank=False, null=False)
+
     dynamic = models.BooleanField(default=True)
 
     class Meta:
@@ -256,6 +258,8 @@ class OptionSet(models.Model):
 
             value = []
             for line in self.data.split("\r\n"):
+                if not line.strip():
+                    continue
                 if len(columns) == 1:
                     pk, parent, label = line.strip().lower(), None, line
                 else:

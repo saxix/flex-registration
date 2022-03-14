@@ -46,9 +46,11 @@ class RegisterView(FormView):
         attrs = self.get_form_kwargs().copy()
         attrs.pop("prefix")
         for fs in self.registration.flex_form.formsets.all():
-            formSet = formset_factory(fs.get_form(), extra=fs.extra)
+            formSet = formset_factory(
+                fs.get_form(), extra=fs.extra, min_num=fs.min_num, absolute_max=fs.max_num, max_num=fs.max_num
+            )
             formSet.fs = fs
-            formSet.required = fs.required
+            formSet.required = fs.min_num > 0
             formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
         return formsets
 

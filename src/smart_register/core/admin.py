@@ -1,16 +1,16 @@
-from admin_extra_buttons.decorators import button
+from admin_extra_buttons.decorators import button, link
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
 from django.contrib.admin import TabularInline, register
 from django.db.models import JSONField
 from django.shortcuts import render
+from django.urls import reverse
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
 from .models import FlexForm, FlexFormField, FormSet, Validator, OptionSet, CustomFieldType
-from ..web.views.core import filter_optionset
 
 
 @register(Validator)
@@ -20,14 +20,14 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "parent", "flex_form", "extra", "required")
+    list_display = ("name", "parent", "flex_form", "extra", "max_num", "min_num")
 
 
 class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
     fk_name = "parent"
     extra = 0
-    fields = ("name", "flex_form", "extra", "required", "ordering")
+    fields = ("name", "flex_form", "extra", "max_num", "min_num", "ordering")
     show_change_link = True
     ordering_field = "ordering"
     ordering_field_hide_input = True
@@ -109,10 +109,13 @@ class OptionSetAdmin(SmartModelAdmin):
     search_fields = ("name",)
     list_display = ("name", "id", "separator", "columns")
 
-    @button()
-    def view_json(self, request, pk):
-        obj = self.get_object(request, pk)
-        return filter_optionset(obj, request)
+    @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
+    def view_json(self, button):
+        original = button.context["original"]
+        url = reverse("optionset", args=[original.name])
+        button.href = url
+        # obj = self.get_object(request, pk)
+        # return filter_optionset(obj, request)
 
 
 @register(CustomFieldType)
