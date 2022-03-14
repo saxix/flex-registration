@@ -4,7 +4,6 @@ from strategy_field.exceptions import StrategyAttributeError
 from strategy_field.registry import Registry
 
 from . import fields
-from .fields.captcha import SmartCaptchaField
 from .forms import FlexFormBaseForm
 
 
@@ -39,24 +38,26 @@ field_registry.register(forms.DateField)
 field_registry.register(forms.DateTimeField)
 field_registry.register(forms.DurationField)
 field_registry.register(forms.EmailField)
+field_registry.register(forms.FileField)
 field_registry.register(forms.FloatField)
 field_registry.register(forms.GenericIPAddressField)
+field_registry.register(forms.ImageField)
 field_registry.register(forms.IntegerField)
 field_registry.register(forms.MultipleChoiceField)
 field_registry.register(forms.NullBooleanField)
 field_registry.register(forms.TimeField)
 field_registry.register(forms.URLField)
-field_registry.register(forms.ImageField)
-field_registry.register(forms.FileField)
-field_registry.register(SmartCaptchaField)
 
-field_registry.register(fields.PictureField)
-field_registry.register(fields.SelectField)
-field_registry.register(fields.MultiCheckboxField)
-field_registry.register(fields.RadioField)
-field_registry.register(fields.YesNoRadio)
-field_registry.register(fields.YesNoChoice)
 field_registry.register(fields.AjaxSelectField)
+field_registry.register(fields.DocumentField)
+field_registry.register(fields.MultiCheckboxField)
+field_registry.register(fields.PictureField)
+field_registry.register(fields.RadioField)
+field_registry.register(fields.SelectField)
+field_registry.register(fields.SmartCaptchaField)
+field_registry.register(fields.SmartCaptchaField)
+field_registry.register(fields.YesNoChoice)
+field_registry.register(fields.YesNoRadio)
 
 form_registry = Registry(forms.BaseForm)
 form_registry.register(forms.Form)
