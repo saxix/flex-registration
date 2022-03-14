@@ -40,8 +40,3 @@ def test_select_complex(complex):
 def test_select_flat(flat):
     fld = SelectField(datasource="flat")
     assert fld.choices == [("rome", "Rome"), ("milan", "Milan")]
-
-
-def test_error(db):
-    with pytest.raises(ValueError):
-        SelectField(choices="flat")

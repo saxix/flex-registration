@@ -58,7 +58,6 @@
                 if (options.deleteContainerClass) {
                     // If we have a specific container for the remove button,
                     // place it as the last child of that container:
-                    console.log(1111111, row);
                     row.find('[class*="' + options.deleteContainerClass + '"]').append(delButtonHTML);
                 } else if (row.is('TR')) {
                     // If the forms are laid out in table rows, insert
