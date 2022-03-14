@@ -30,7 +30,7 @@ stages:
       - job: build_push_backend
         pool:
           vmImage: ubuntu-latest
-        displayName: "[APP]"
+        displayName: "Build and Push"
         steps:
           - task: Docker@2
             inputs:
