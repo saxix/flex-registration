@@ -13,19 +13,11 @@
             var $formContainer = $target.parents(".form-container");
             var $parent = null;
 
-            if (parentName) {
-                $parent = $formContainer.find("[data-source=" + parentName + "]");
-                // if (!$parent.length) {
-                //     throw Error("Cannot find parent element '" + parentName + "' for " + name);
-                // }
-                $parent.on("change", function () {
-                    $target.trigger("change.select2");
-                    $target.find("option[value]").remove();
-                });
-            }
             $target.select2({
                 placeholder: "Select " + label,
+                // disabled: true,
                 ajax: {
+                    minimumInputLength: 2,
                     url: url,
                     dataType: "json",
                     data: function (params) {
@@ -40,6 +32,28 @@
                 }
             });
 
+            if (parentName) {
+                $parent = $formContainer.find("[data-source=" + parentName + "]");
+                var subscribers = $parent.data("subscribers") || [];
+                subscribers.push($target);
+                $parent.data("subscribers", subscribers);
+                $target.prop("disabled", true);
+
+                var process = function($t){
+                    $t.find("option[value]").remove();
+                    $t.trigger("change.select2");
+                    $.each($t.data("subscribers"), function(i, $e){
+                        process($e);
+                    });
+                }
+                $parent.on("change", function (e) {
+                    var $self = $(e.target);
+                    $target.prop("disabled", !$self.val());
+                    $.each($self.data("subscribers"), function(i, $e){
+                        process($e);
+                    });
+                });
+            }
         });
     });
 })($);

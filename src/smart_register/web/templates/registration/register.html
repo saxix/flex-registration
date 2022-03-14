@@ -56,9 +56,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div type="form-template" id="{{ name }}-empty" class="hidden">
-                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}
-                        </div>
+{#                        <div type="form-template" id="{{ name }}-empty" class="hidden">#}
+{#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
+{#                        </div>#}
                     {% endfor %}
                     <div class="submit-row">
                         <input
@@ -86,7 +86,7 @@
                     deleteCssClass: "delete-button bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",
                     added: function (row) {
                         $(row).find(".vDateField").each(function (i) {
-                            console.log(111111, i);
+
                         });
                     }
                 };
@@ -94,29 +94,4 @@
             });
         {% endfor %}
     </script>
-{##}
-{#    <script>#}
-{#        {% for name, formset in formsets.items %}#}
-{#            var config = {#}
-                {#formCssClass: "",#}
-{#                prefix: "{{ name }}",#}
-{#                formTemplate: "#{{ name }}-empty",#}
-                {#deleteContainerClass: "delete-container",#}
-{#                addContainerClass: "add-container",#}
-{#                addCssClass: "add-button bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow",#}
-{#                deleteCssClass: "delete-button bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",#}
-{#                hideLastAddForm: true,#}
-                {#max_num: {{ formset.max_num }},#}
-                {#min_num: {{ formset.min_num }},#}
-{#                added: function (row) {#}
-{#                    $(row).find(".vDateField").each(function (i) {#}
-{#                        console.log(111111, i);#}
-{#                    });#}
-{#                }#}
-{#            };#}
-{#            $("#{{ name }}").formset(config);#}
-{##}
-{#        {% endfor %}#}
-{#    </script>#}
-
 {% endblock body %}
