@@ -54,6 +54,8 @@ stages:
             displayName: Push
             inputs:
               command: Push
+              buildContext: "**/.."
+              dockerfile: $(Docker.filePath)
               repository: $(Docker.repository)
               containerRegistry: $(Docker.registry)
               tags: |
