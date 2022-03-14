@@ -1,12 +1,14 @@
-import base64
-import json
-
 import pytest
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding
 from django.urls import reverse
 from webtest import Upload
+
+LANGUAGES = {
+    "english": "first",
+    "ukrainian": "АаБбВвГгҐґДдЕеЄєЖжЗзИиІіЇїЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЬьЮюЯя",
+    "chinese": "姓名",
+    "japanese": "ファーストネーム",
+    "arabic": "الاسم الأول",
+}
 
 
 @pytest.fixture()
@@ -41,18 +43,18 @@ def complex_registration(complex_form):
     return reg
 
 
-@pytest.mark.django_db
-def test_register_latest(django_app, simple_registration):
+@pytest.mark.parametrize("first_name", LANGUAGES.values(), ids=LANGUAGES.keys())
+def test_register_latest(django_app, first_name, simple_registration):
     url = reverse("register-latest")
     res = django_app.get(url)
     res = res.form.submit()
-    res.form["first_name"] = "first_name"
-    res.form["last_name"] = "f"
+    res.form["first_name"] = first_name
+    res.form["last_name"] = "l"
     res = res.form.submit()
-    res.form["first_name"] = "first"
+    res.form["first_name"] = first_name
     res.form["last_name"] = "last"
-    res = res.form.submit()
-    assert res.context["record"].data["data"]["first_name"] == "first"
+    res = res.form.submit().follow()
+    assert res.context["record"].data["first_name"] == first_name
 
 
 @pytest.mark.django_db
@@ -65,8 +67,8 @@ def test_register_simple(django_app, simple_registration):
     res = res.form.submit()
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
-    res = res.form.submit()
-    assert res.context["record"].data["data"]["first_name"] == "first"
+    res = res.form.submit().follow()
+    assert res.context["record"].data["first_name"] == "first"
 
 
 def add_dynamic_field(form, name, value):
@@ -116,38 +118,26 @@ def test_register_complex(django_app, complex_registration):
             "date_of_birth": "2000-12-01",
         },
     )
-    res = res.form.submit()
-    assert res.context["record"].data["data"]["form2s"][0]["first_name"] == "First1"
-    assert res.context["record"].data["data"]["form2s"][0]["last_name"] == "Last"
-    assert res.context["record"].data["data"]["form2s"][1]["first_name"] == "First2"
+    res = res.form.submit().follow()
+    assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
+    assert res.context["record"].data["form2s"][0]["last_name"] == "Last"
+    assert res.context["record"].data["form2s"][1]["first_name"] == "First2"
 
 
-def decrypt(private_pem, data):
-    private_key = serialization.load_pem_private_key(private_pem, password=None, backend=default_backend())
-
-    stream = data["data"]
-    decoded = base64.b64decode(stream)
-    decrypted = private_key.decrypt(
-        decoded, padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
-    )
-    return json.loads(decrypted.decode())
-
-
-@pytest.mark.django_db
-def test_register_encrypted(django_app, encrypted_registration):
+@pytest.mark.parametrize("first_name", LANGUAGES.values(), ids=LANGUAGES.keys())
+def test_register_encrypted(django_app, first_name, encrypted_registration):
     url = reverse("register", args=[encrypted_registration.pk])
     res = django_app.get(url)
     res = res.form.submit()
-    res.form["first_name"] = "first_name"
+    res.form["first_name"] = first_name
     res.form["last_name"] = "f"
     res = res.form.submit()
-    res.form["first_name"] = "first"
+    res.form["first_name"] = first_name
     res.form["last_name"] = "last"
-    res = res.form.submit()
+    res = res.form.submit().follow()
     record = res.context["record"]
-    decrypted = decrypt(encrypted_registration._private_pem, record.data)
-
-    assert decrypted["first_name"] == "first"
+    data = record.decrypt(encrypted_registration._private_pem)
+    assert data["first_name"] == first_name
 
 
 @pytest.mark.django_db
@@ -166,12 +156,11 @@ def test_upload_image(django_app, complex_registration, mock_storage):
             "image": Upload("tests/data/image.jpeg"),
         },
     )
-    res = res.form.submit()
-    assert res.context["record"].data["data"]["family_name"] == "HH #1"
-    assert res.context["record"].data["data"]["form2s"][0]["image"] == "image.jpeg"
+    res = res.form.submit().follow()
+    assert res.context["record"].data["family_name"] == "HH #1"
+    assert res.context["record"].data["form2s"][0]["image"] == "image.jpeg"
 
 
-@pytest.mark.skip("Problem with encrypted file")
 @pytest.mark.django_db
 def test_upload_image_register_encrypted(django_app, encrypted_registration, mock_storage):
     url = reverse("register", args=[encrypted_registration.pk])
@@ -180,9 +169,9 @@ def test_upload_image_register_encrypted(django_app, encrypted_registration, moc
     res.form["last_name"] = "last"
     res.form["image"] = Upload("tests/data/image.jpeg")
 
-    res = res.form.submit()
+    res = res.form.submit().follow()
     record = res.context["record"]
-    decrypted = decrypt(encrypted_registration._private_pem, record.data)
+    data = record.decrypt(encrypted_registration._private_pem)
 
-    assert decrypted["first_name"] == "first"
-    assert decrypted["image"] == "image.jpeg"
+    assert data["first_name"] == "first"
+    assert data["image"] == "image.jpeg"

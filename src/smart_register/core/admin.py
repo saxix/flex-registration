@@ -1,10 +1,11 @@
-from admin_extra_buttons.decorators import button
+from admin_extra_buttons.decorators import button, link
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
 from django.contrib.admin import TabularInline, register
 from django.db.models import JSONField
 from django.shortcuts import render
+from django.urls import reverse
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
@@ -19,14 +20,14 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "parent", "flex_form", "extra")
+    list_display = ("name", "parent", "flex_form", "extra", "max_num", "min_num")
 
 
 class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
     fk_name = "parent"
     extra = 0
-    fields = ("ordering", "name", "flex_form", "extra")
+    fields = ("name", "flex_form", "extra", "max_num", "min_num", "ordering")
     show_change_link = True
     ordering_field = "ordering"
     ordering_field_hide_input = True
@@ -46,6 +47,39 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     }
     ordering_field = "ordering"
     order = "ordering"
+
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        try:
+            fld = ctx["original"]
+            instance = fld.get_instance()
+            ctx["debug_info"] = {
+                "instance": instance,
+                "kwargs": fld.advanced,
+                "options": getattr(instance, "options", None),
+                "choices": getattr(instance, "choices", None),
+                "widget": getattr(instance, "widget", None),
+            }
+            form_class_attrs = {
+                "sample": instance,
+            }
+            formClass = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+
+            if request.method == "POST":
+                form = formClass(request.POST)
+                if form.is_valid():
+                    self.message_user(
+                        request, f"Form validation success. " f"You have selected: {form.cleaned_data['sample']}"
+                    )
+            else:
+                form = formClass()
+            ctx["form"] = form
+        except Exception as e:
+            raise
+            ctx["error"] = e
+
+        return render(request, "admin/core/flexformfield/test.html", ctx)
 
 
 class FlexFormFieldInline(OrderableAdmin, TabularInline):
@@ -68,14 +102,27 @@ class FlexFormAdmin(SmartModelAdmin):
     list_display = ("name", "validator")
     search_fields = ("name",)
     inlines = [FlexFormFieldInline, FormSetInline]
+    save_as = True
 
 
 @register(OptionSet)
 class OptionSetAdmin(SmartModelAdmin):
-    list_display = (
-        "name",
-        "separator",
-    )
+    search_fields = ("name",)
+    list_display = ("name", "id", "separator", "columns")
+    save_as = True
+
+    @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
+    def view_json(self, button):
+        original = button.context["original"]
+        if original:
+            url = reverse("optionset", args=[original.name])
+            button.href = url
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        if request.method == "POST" and "_saveasnew" in request.POST:
+            object_id = None
+
+        return super().change_view(request, object_id)
 
 
 @register(CustomFieldType)

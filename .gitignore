@@ -6,6 +6,9 @@
 dist/
 __pycache__
 coverage.xml
+node_modules
+package-lock.json
+package.json
 !tests/.coveragerc
 !.gitignore
 !.github

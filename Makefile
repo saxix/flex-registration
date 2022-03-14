@@ -42,9 +42,8 @@ heroku:  ## deploy on Heroku
 	git merge develop
 	@git push heroku heroku:master
 	@echo "check demo at https://flex-register.herokuapp.com/"
-	heroku run python manage.py migrate
 	heroku run python manage.py upgrade --no-input
-	heroku run python manage.py demo --no-input
+	git checkout develop
 
 heroku-reset:  ## Reset Heroku environment
 	heroku pg:reset --confirm flex-register
@@ -68,4 +67,3 @@ reset-migrations: ## reset django migrations
 	./manage.py makemigrations
 	./manage.py makemigrations --check
 	./manage.py upgrade --no-input
-	./manage.py demo
