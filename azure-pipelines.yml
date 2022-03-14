@@ -20,7 +20,7 @@ variables:
   Docker.filePath: "**/docker/Dockerfile.local"
   Docker.repository: "flex-registration"
   Docker.registry: "unihopeukrsrdev"
-  azureSubscription: "uni-hope-ukr-sr-dev"
+  azureSubscription: "rs-uni-hope-ukr-sr-dev"
 
 stages:
   - stage: build_and_push
