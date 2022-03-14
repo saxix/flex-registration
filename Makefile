@@ -43,6 +43,7 @@ heroku:  ## deploy on Heroku
 	@git push heroku heroku:master
 	@echo "check demo at https://flex-register.herokuapp.com/"
 	heroku run python manage.py upgrade --no-input
+	git checkout develop
 
 heroku-reset:  ## Reset Heroku environment
 	heroku pg:reset --confirm flex-register

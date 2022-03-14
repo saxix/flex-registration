@@ -102,20 +102,27 @@ class FlexFormAdmin(SmartModelAdmin):
     list_display = ("name", "validator")
     search_fields = ("name",)
     inlines = [FlexFormFieldInline, FormSetInline]
+    save_as = True
 
 
 @register(OptionSet)
 class OptionSetAdmin(SmartModelAdmin):
     search_fields = ("name",)
     list_display = ("name", "id", "separator", "columns")
+    save_as = True
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
     def view_json(self, button):
         original = button.context["original"]
-        url = reverse("optionset", args=[original.name])
-        button.href = url
-        # obj = self.get_object(request, pk)
-        # return filter_optionset(obj, request)
+        if original:
+            url = reverse("optionset", args=[original.name])
+            button.href = url
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        if request.method == "POST" and "_saveasnew" in request.POST:
+            object_id = None
+
+        return super().change_view(request, object_id)
 
 
 @register(CustomFieldType)

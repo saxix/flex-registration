@@ -40,16 +40,14 @@
             },
 
             showAddButton = function() {
-                return maxForms.length == 0 ||   // For Django versions pre 1.2
-                    (maxForms.val() == '' || (maxForms.val() - totalForms.val() > 0));
+                return (maxForms.val() === '' || (maxForms.val() - totalForms.val() > 0));
             },
 
             /**
              * Indicates whether delete link(s) can be displayed - when total forms > min forms
              */
             showDeleteLinks = function() {
-                return minForms.length == 0 ||   // For Django versions pre 1.7
-                    (minForms.val() == '' || (totalForms.val() - minForms.val() > 0));
+                return (minForms.val() === '' || (totalForms.val() - minForms.val() > 0));
             },
 
             insertDeleteLink = function(row) {
@@ -60,6 +58,7 @@
                 if (options.deleteContainerClass) {
                     // If we have a specific container for the remove button,
                     // place it as the last child of that container:
+                    console.log(1111111, row);
                     row.find('[class*="' + options.deleteContainerClass + '"]').append(delButtonHTML);
                 } else if (row.is('TR')) {
                     // If the forms are laid out in table rows, insert
@@ -179,6 +178,7 @@
                         elem.val('');
                     }
                 });
+                insertDeleteLink(template);
             }
             // FIXME: Perhaps using $.data would be a better idea?
             options.formTemplate = template;
