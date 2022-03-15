@@ -3,29 +3,37 @@ trigger:
   branches:
     include:
     - develop
-    - staging
     - master
     - ops/*
-  paths:
-    exclude:
-    -  docs/*
 pr: none
 resources:
   - repo: self
 
 variables:
-  # ========================================================================
-  #                          Mandatory variables
-  # ========================================================================
-  Docker.filePath: "**/docker/Dockerfile"
-  Docker.repository: "flex-registration"
-  Docker.registry: "unihopeukrsrdev"
-  azureSubscription: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
-  appName: "uni-hope-ukr-sr-dev"
+  - name: Docker.filePath
+    value: "**/docker/Dockerfile"
+  - name: Docker.repository
+    value: "flex-registration"
+  - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+    - group: flex-registration-prod
+    - name: Docker.registry
+      value: "unihopeukrsr"
+    - name: azureSubscription
+      value: "UNI_WEBS rs-uni-hope-ukr-sr"
+    - name: appName
+      value: "uni-hope-ukr-sr"
+  - ${{ else }}:
+    - group: flex-registration-dev
+    - name: Docker.registry
+      value: "unihopeukrsrdev"
+    - name: azureSubscription
+      value: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
+    - name: appName
+      value: "uni-hope-ukr-sr-dev"
 
 stages:
   - stage: build_and_push
-    displayName: BUILD and PUSH
+    displayName: BUILD and PUSH $(Build.SourceBranchName)
     jobs:
       - job: build_push_backend
         pool:
