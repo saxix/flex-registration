@@ -14,7 +14,7 @@
             <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> -
             <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> -
             {% for name, formset in formsets.items %}
-                <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.pk %}">Edit {{ name }}</a> -
+                <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> -
             {% endfor %}
         </div>
         </div>

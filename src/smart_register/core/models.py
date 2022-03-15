@@ -18,7 +18,7 @@ from strategy_field.utils import fqn
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS
 from .forms import FlexFormBaseForm, CustomFieldMixin
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import jsonfy, namify
+from .utils import jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -322,7 +322,7 @@ class CustomFieldType(models.Model):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
         cls = self.get_class()
-        if cls not in field_registry:
+        if fqn(cls) not in field_registry:
             field_registry.register(cls)
 
     def clean(self):
@@ -336,4 +336,4 @@ class CustomFieldType(models.Model):
     def get_class(self):
         attrs = self.attrs.copy()
         attrs["custom"] = self
-        return type(self.base_type)(self.name, (CustomFieldMixin, self.base_type), attrs)
+        return type(self.base_type)(underscore_to_camelcase(self.name), (CustomFieldMixin, self.base_type), attrs)
