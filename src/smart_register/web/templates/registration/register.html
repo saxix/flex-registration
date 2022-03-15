@@ -1,16 +1,99 @@
-{% extends "base.html" %}
-{% block body %}
-    {{ dataset }}
-    <form method="post">
-        {% csrf_token %}
-        <table>
-            {{ form }}
-            {% for name, formset in formsets.items %}
-                <tr><td>{{ name }}</td></tr>
-                {{ formset }}
-            {% endfor %}
+{% extends "base.html" %}{% load smart_register l10n static %}
+{% block head %}
+    <script src="{% static "jquery.formset.js" %}"></script>
+    {{ form.media }}
+    {% for name, formset in formsets.items %}
+        {{ formset.media }}
+    {% endfor %}
+{% endblock head %}
 
-        </table>
-        <input type="submit">
-    </form>
+{% block body %}
+    <div class="min-h-screen flex justify-center bg-gray-100">
+        <div class="w-full lg:w-1/2">
+            <div class="text-center mb-16">
+                <h3 class="pt-8 text-indigo-600 text-4xl leading-normal font-extrabold tracking-tight text-gray-900">
+                    {{ dataset.name }}
+                </h3>
+            </div>
+            <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
+                {{ dataset.intro|safe }}
+            </div>
+            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
+                {{ form.errors }}
+                <form class="w-full" method="post">
+                    {% csrf_token %}
+                    <div class="form-container">
+                    {% for field in form %}
+                        <div class="mb-4">
+                            <label class="block uppercase tracking-wide text-gray-700 font-bold mb-2"
+                                   for="{{ field.auto_id }}">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                    </div>
+                    {% for name, formset in formsets.items %}
+                        <div class="shadow-md rounded bg-gray-100 p-4">
+                            <div class="w-full formset">
+                                    <div>
+                                        <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
+                                            {{ name }}
+                                        </div>
+                                    </div>
+                                <div class="flex flex-col">
+                                    <div class="w-100 forms">
+                                        {{ formset.management_form }}
+                                        {% for frm in formset %}
+
+                                            <div class="w-full my-5 p-3 border border-gray-400 form-container {{ formset.prefix }}">
+                                                {{ frm }}
+                                                <div class="flex">
+                                            <div class="flex-auto "></div>
+                                            <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                        <div class="{{ name }}-add"></div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+{#                        <div type="form-template" id="{{ name }}-empty" class="hidden">#}
+{#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
+{#                        </div>#}
+                    {% endfor %}
+                    <div class="submit-row">
+                        <input
+                                type="submit"
+                                class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                value="Save"
+                        />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        {% for name, formset in formsets.items %}
+            $(function () {
+                var $target = $(".form-container.{{ formset.prefix }}");
+                var config = {
+                    formCssClass: "form-container",
+                    prefix: "{{ formset.prefix }}",
+                    {#formTemplate: "#{{ name }}-empty",#}
+                    deleteContainerClass: "{{ name }}-delete",
+                    {#addContainerClass: "add-container",#}
+                    addCssClass: "add-button bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow",
+                    deleteCssClass: "delete-button bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",
+                    added: function (row) {
+                        $(row).find(".vDateField").each(function (i) {
+
+                        });
+                    }
+                };
+                $target.formset(config);
+            });
+        {% endfor %}
+    </script>
 {% endblock body %}

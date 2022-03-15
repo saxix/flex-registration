@@ -1,57 +1,69 @@
 from django.forms import formset_factory
-from django.shortcuts import render
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, TemplateView
-from django.views.generic.edit import ProcessFormView, BaseFormView, FormView
+from django.http import Http404, HttpResponseRedirect
+from django.urls import reverse
+from django.utils.translation import get_language_info
+from django.views.generic import CreateView, TemplateView
+from django.views.generic.edit import FormView
 
-from smart_register.registration.models import DataSet, Record
-
-
-class DataSetListView(ListView):
-    model = DataSet
+from smart_register.registration.models import Registration, Record
 
 
 class DataSetView(CreateView):
-    model = DataSet
+    model = Registration
     fields = ()
 
 
 class RegisterCompleView(TemplateView):
     template_name = "registration/register_done.html"
 
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            record=Record.objects.get(registration__id=self.kwargs["pk"], id=self.kwargs["rec"]), **kwargs
+        )
+
 
 class RegisterView(FormView):
     template_name = "registration/register.html"
-    # success_url = reverse_lazy('register-done')
-    success_url = '/register/1/'
-
-    def get_success_url(self):
-        return super().get_success_url()
 
     @property
-    def dataset(self):
-        if 'pk' in self.kwargs:
-            return DataSet.objects.get(id=self.kwargs['pk'])
-        else:
-            return DataSet.objects.first()
+    def registration(self):
+        filters = {}
+        if not self.request.user.is_staff:
+            filters["active"] = True
+        try:
+            if "pk" in self.kwargs:
+                return Registration.objects.get(id=self.kwargs["pk"], **filters)
+            else:
+                return Registration.objects.filter(**filters).latest()
+        except Exception:  # pragma: no cover
+            raise Http404
 
     def get_form_class(self):
-        return self.dataset.flex_form.get_form()
+        return self.registration.flex_form.get_form()
 
     def get_form(self, form_class=None):
         return super().get_form(form_class)
 
     def get_formsets(self):
         formsets = {}
-        for child in self.dataset.flex_form.childs.all():
-            formsets[child.name] = formset_factory(child.get_form(), extra=2)(**self.get_form_kwargs())
+        attrs = self.get_form_kwargs().copy()
+        attrs.pop("prefix")
+        for fs in self.registration.flex_form.formsets.all():
+            formSet = formset_factory(
+                fs.get_form(), extra=fs.extra, min_num=fs.min_num, absolute_max=fs.max_num, max_num=fs.max_num
+            )
+            formSet.fs = fs
+            formSet.required = fs.min_num > 0
+            formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
-        if 'formsets' not in kwargs:
-            kwargs['formsets'] = self.get_formsets()
-        return super().get_context_data(dataset=self.dataset,
-                                        **kwargs)
+        if "formsets" not in kwargs:
+            kwargs["formsets"] = self.get_formsets()
+        kwargs["language"] = get_language_info(self.registration.locale)
+        kwargs["POST"] = dict(self.request.POST)
+
+        return super().get_context_data(dataset=self.registration, **kwargs)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -71,14 +83,11 @@ class RegisterView(FormView):
             data[name] = []
             for f in fs:
                 data[name].append(f.cleaned_data)
-        record = Record.objects.create(registration=self.dataset,
-                              data=data)
-        return render(self.request, "registration/data.html",
-                      {'data': data,
-                       'record': record,
-                       })
+
+        record = self.registration.add_record(data)
+        success_url = reverse("register-done", args=[self.registration.pk, record.pk])
+        return HttpResponseRedirect(success_url)
 
     def form_invalid(self, form, formsets):
         """If the form is invalid, render the invalid form."""
-        return self.render_to_response(self.get_context_data(form=form,
-                                                             formsets=formsets))
+        return self.render_to_response(self.get_context_data(form=form, formsets=formsets))

@@ -1,0 +1,57 @@
+exclude: '^$'
+fail_fast: false
+repos:
+  - repo: git://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      #      - id: double-quote-string-fixer
+      #        stages: [commit]
+
+      - id: debug-statements
+        stages: [commit]
+
+      - id: end-of-file-fixer
+        exclude: .bumpversion.cfg
+        stages: [commit]
+
+      - id: check-merge-conflict
+        stages: [commit]
+
+      - id: check-case-conflict
+        stages: [commit]
+
+  - repo: https://github.com/saxix/pch
+    rev: fc387f44c7c1a51b762a5866ce9d954900e5af68
+    hooks:
+      - id: check-missed-migrations
+        args:
+          - src
+        stages: [commit]
+
+      - id: check-untracked
+        args:
+          - src
+          - tests
+        stages: [push]
+
+      - id: check-forbidden
+        args:
+          - -p
+          - /\.showbrowser\(/
+          - -p
+          - /print\(111/
+        stages: [commit]
+
+  - repo: https://github.com/psf/black
+    rev: 22.1.0
+    hooks:
+      - id: black
+        stages: [ commit ]
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-black>=0.1.1
+        language_version: python3

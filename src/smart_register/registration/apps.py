@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class Config(AppConfig):
-    name = 'smart_register.registration'
+    name = "smart_register.registration"

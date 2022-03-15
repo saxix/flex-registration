@@ -1,0 +1,15 @@
+body {
+  font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;
+  font-size: 10pt;
+}
+
+ul.errorlist {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+ul.errorlist li {
+  color: red;
+}
+
+/*# sourceMappingURL=base.css.map */

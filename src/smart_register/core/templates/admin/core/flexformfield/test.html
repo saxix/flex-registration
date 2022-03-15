@@ -1,0 +1,29 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% block action-content %}
+    {{ error }}
+    <table>
+        <tr>
+            <th>Label</th>
+            <td>{{ original.label }}</td>
+        </tr>
+        <tr>
+            <th>Required</th>
+            <td>{{ original.required }}</td>
+        </tr>
+        {% for k,v in debug_info.items %}
+            <tr>
+                <th>{{ k }}</th>
+                <td>{{ v }}</td>
+            </tr>
+        {% endfor %}
+
+    </table>
+
+    <form method="post">
+        {% csrf_token %}
+        <table>
+            {{ form }}
+        </table>
+        <input type="submit">
+    </form>
+{% endblock action-content %}
