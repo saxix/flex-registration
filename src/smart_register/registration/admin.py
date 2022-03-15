@@ -95,7 +95,11 @@ class DecryptForm(forms.Form):
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
-    list_display = ("registration", "timestamp", "id")
+    list_display = (
+        "timestamp",
+        "id",
+        "registration",
+    )
     readonly_fields = ("registration", "timestamp", "id")
     list_filter = (("registration", AutoCompleteFilter),)
     change_form_template = None

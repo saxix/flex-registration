@@ -99,10 +99,19 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
 
 @register(FlexForm)
 class FlexFormAdmin(SmartModelAdmin):
-    list_display = ("name", "validator")
+    list_display = ("name", "validator", "used_by", "childs", "parents")
     search_fields = ("name",)
     inlines = [FlexFormFieldInline, FormSetInline]
     save_as = True
+
+    def used_by(self, obj):
+        return ", ".join(obj.registration_set.values_list("name", flat=True))
+
+    def childs(self, obj):
+        return ", ".join(obj.formsets.values_list("name", flat=True))
+
+    def parents(self, obj):
+        return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
 
 
 @register(OptionSet)
