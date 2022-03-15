@@ -7,6 +7,9 @@ from django.views.generic import TemplateView
 class HomeView(TemplateView):
     template_name = "index.html"
 
+    def get_template_names(self):
+        return [config.HOME_TEMPLATE, self.template_name]
+
 
 class ProbeView(View):
     http_method_names = ["get", "head"]

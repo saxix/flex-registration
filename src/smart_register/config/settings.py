@@ -270,6 +270,8 @@ DATE_INPUT_FORMATS = [
 
 CONSTANCE_CONFIG = OrderedDict(
     {
+        "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
+        "HOME_TEMPLATE": ("home.html", "Default home.html", str),
         "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
         "SMART_ADMIN_BOOKMARKS": (
             env("SMART_ADMIN_BOOKMARKS"),

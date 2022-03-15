@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load smart_register l10n static %}
+{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static %}
 {% block head %}
     <script src="{% static "jquery.formset.js" %}"></script>
     {{ form.media }}
@@ -8,6 +8,17 @@
 {% endblock head %}
 
 {% block body %}
+    {% if user.is_staff %}
+        <div class="fixed" style="background-color: black; color: white; width: 100%; z-index: 1000">
+        <div class="float-right">
+            <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> -
+            <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> -
+            {% for name, formset in formsets.items %}
+                <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.pk %}">Edit {{ name }}</a> -
+            {% endfor %}
+        </div>
+        </div>
+    {% endif %}
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
             <div class="text-center mb-16">
