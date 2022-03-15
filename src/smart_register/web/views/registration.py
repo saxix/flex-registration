@@ -30,12 +30,13 @@ class RegisterView(FormView):
         filters = {}
         if not self.request.user.is_staff:
             filters["active"] = True
+        base = Registration.objects.select_related("flex_form")
         try:
             if "pk" in self.kwargs:
-                return Registration.objects.get(id=self.kwargs["pk"], **filters)
+                return base.get(id=self.kwargs["pk"], **filters)
             else:
-                return Registration.objects.filter(**filters).latest()
-        except Exception:  # pragma: no cover
+                return base.filter(**filters).latest()
+        except Registration.DoesNotExist:  # pragma: no cover
             raise Http404
 
     def get_form_class(self):

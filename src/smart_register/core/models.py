@@ -1,3 +1,4 @@
+import functools
 import logging
 from datetime import date, datetime, time
 
@@ -69,6 +70,7 @@ def get_validators(field):
 
 
 class FlexForm(models.Model):
+    version = IntegerVersionField()
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
     validator = models.ForeignKey(
@@ -114,9 +116,10 @@ class FlexForm(models.Model):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
+    @functools.cache
     def get_form(self):
         fields = {}
-        for field in self.fields.order_by("ordering"):
+        for field in self.fields.select_related("validator").order_by("ordering"):
             try:
                 fields[field.name] = field.get_instance()
             except TypeError:
@@ -128,8 +131,13 @@ class FlexForm(models.Model):
         flexForm = type(FlexFormBaseForm)(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+        self.get_form.cache_clear()
+
 
 class FormSet(OrderableModel):
+    version = IntegerVersionField()
     name = CICharField(max_length=255)
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
@@ -153,6 +161,7 @@ class FormSet(OrderableModel):
 
 
 class FlexFormField(OrderableModel):
+    version = IntegerVersionField()
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
     name = CICharField(max_length=30, blank=True)
@@ -218,6 +227,7 @@ class FlexFormField(OrderableModel):
             self.name = namify(self.name)
 
         super().save(force_insert, force_update, using, update_fields)
+        self.flex_form.get_form.cache_clear()
 
 
 class OptionSet(models.Model):
