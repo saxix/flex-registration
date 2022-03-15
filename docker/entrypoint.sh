@@ -1,28 +1,23 @@
-#!/bin/sh -e
-export MEDIA_ROOT="/var/sos/media"
-export STATIC_ROOT="/var/sos/static"
-export CACHE_TTL=604800 # 1 week
+#!/bin/bash
+set -e
 
-mkdir -p /var/sos/run ${MEDIA_ROOT} ${STATIC_ROOT}
-chown www:sos -R /code /var/sos/ ${MEDIA_ROOT} ${STATIC_ROOT}
-chmod 775 /code /var/sos/ ${MEDIA_ROOT} ${STATIC_ROOT}
-chmod g+s /code /var/sos/ ${MEDIA_ROOT} ${STATIC_ROOT}
+if [ $# -eq 0 ]; then
 
-rm -f /var/sos/run/*
-
-echo "$*"
-echo "STATIC_ROOT ${STATIC_ROOT}"
-echo "MEDIA_ROOT ${MEDIA_ROOT}"
-
-export BOB_VERSION=`django-admin bob version`
-
-cd /var/sos/
-
-if [ "$*" = "run" ]; then
-  django-admin upgrade -v 3
-  exec gosu www circusd /etc/circus.conf
-elif [ "$*" = "dev" ]; then
-  exec gosu www django-admin runserver 0.0.0.0:8000
+    python manage.py upgrade --no-input
+    exec gunicorn smart_register.config.wsgi -c /code/gunicorn_config.py
 else
-  exec "$@"
+    case "$1" in
+        "dev")
+        until pg_isready -h db -p 5432;
+          do echo "waiting for database"; sleep 2; done;
+        python manage.py collectstatic --no-input
+        python manage.py migrate
+
+        python manage.py runserver 0.0.0.0:8000
+
+        ;;
+    *)
+    exec "$@"
+    ;;
+    esac
 fi

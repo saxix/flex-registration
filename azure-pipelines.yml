@@ -15,9 +15,9 @@ resources:
 
 variables:
   # ========================================================================
-  #                          Mandatory variables 
+  #                          Mandatory variables
   # ========================================================================
-  Docker.filePath: "**/docker/Dockerfile.local"
+  Docker.filePath: "**/docker/Dockerfile"
   Docker.repository: "flex-registration"
   Docker.registry: "unihopeukrsrdev"
   azureSubscription: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
