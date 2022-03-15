@@ -1,5 +1,5 @@
 FROM python:3.9.2-slim-buster
-
+ARG BUILD_DATE
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
@@ -34,8 +34,8 @@ ENV ADMINS="" \
     PYTHONUNBUFFERED=1 \
     SECRET_KEY="secret-key-just-for-build" \
     SENTRY_DSN="" \
-    STATIC_ROOT="/var/run/static"
-
+    STATIC_ROOT="/var/run/static" \
+    PYTHONPATH="/code/src/"
 
 ADD . /code/
 
@@ -44,4 +44,6 @@ WORKDIR /code/
 EXPOSE 8000
 
 ADD ./docker/entrypoint.sh /bin/
+RUN chmod +x /bin/entrypoint.sh
+
 ENTRYPOINT ["entrypoint.sh"]

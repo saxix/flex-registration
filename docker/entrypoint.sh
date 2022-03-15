@@ -2,7 +2,6 @@
 set -e
 
 if [ $# -eq 0 ]; then
-
     python manage.py upgrade --no-input
     exec gunicorn smart_register.config.wsgi -c /code/gunicorn_config.py
 else
