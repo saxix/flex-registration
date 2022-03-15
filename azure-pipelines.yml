@@ -77,10 +77,8 @@ stages:
               appName: $(appName)
               azureSubscription: $(azureSubscription)
               imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
-              appSettings: "-PYTHONPATH $(PYTHONPATH)
-              -ADMIN_URL acdc
+              appSettings: "-ADMIN_URL acdc
               -ALLOWED_HOSTS $(ALLOWED_HOSTS)
-              -AUTHENTICATION_BACKENDS $(AUTHENTICATION_BACKENDS)
               -SECRET_KEY $(SECRET_KEY)
               -ADMIN_EMAIL $(ADMIN_EMAIL)
               -ADMIN_PASSWORD $(ADMIN_PASSWORD)

@@ -55,7 +55,6 @@ check:
 
 .build:
 	cd .. && docker build \
-			--build-arg DEVELOP=${DEVELOP} \
 			--build-arg VERSION=${VERSION} \
 			--build-arg BUILD_DATE=${BUILD_DATE} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
