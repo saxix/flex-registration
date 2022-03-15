@@ -1,6 +1,10 @@
-$("body").on("focus", ".vDateField", function () {
-    new Datepicker(this, {
-        autohide: true,
-        format: 'yyyy-mm-dd',
-    });
-});
+(function ($) {
+    $(function () {
+        $("body").on("focus", ".vDateField", function () {
+            new Datepicker(this, {
+                autohide: true,
+                format: 'yyyy-mm-dd',
+            });
+        });
+    })
+})(jQuery);
