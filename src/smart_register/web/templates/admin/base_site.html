@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}{% load smart %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block userlinks %}{{ block.super }}
+    {% if enable_switch %} / {% smart_toggler %}{% endif %}
+    {% if sysinfo %} / <a href="{{ sysinfo }}">System Info</a> {% endif %}
+    {% if profile_link %} / <a href="{{ profile_link }}">Profile</a> {% endif %}
+{% endblock %}
+
+{% block branding %}
+    {% if config.MAINTENANCE_MODE %}
+        <div style="color:yellow;font-weight: bold;padding: 3px">
+            <a href="{% url "admin:constance_config_changelist" %}">MAINTENANCE MODE ACTIVE</a>
+        </div>
+    {% endif %}
+    <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

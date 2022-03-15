@@ -1,7 +1,8 @@
-from admin_extra_buttons.decorators import view
+from admin_extra_buttons.decorators import view, link
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib import messages
 from django.shortcuts import render
+from django.urls import reverse
 from import_export import resources
 
 from django.contrib.admin import register
@@ -31,6 +32,11 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         return bool(obj.public_key)
 
     secure.boolean = True
+
+    @link(html_attrs={"class": "aeb-green "})
+    def _view_on_site(self, button):
+        button.href = reverse("register", args=[button.original.pk])
+        button.html_attrs["target"] = f"_{button.original.pk}"
 
     @view()
     def removekey(self, request, pk):

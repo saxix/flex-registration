@@ -27,11 +27,14 @@ class RegisterView(FormView):
 
     @property
     def registration(self):
+        filters = {}
+        if not self.request.user.is_staff:
+            filters["active"] = True
         try:
             if "pk" in self.kwargs:
-                return Registration.objects.get(active=True, id=self.kwargs["pk"])
+                return Registration.objects.get(id=self.kwargs["pk"], **filters)
             else:
-                return Registration.objects.filter(active=True).latest()
+                return Registration.objects.filter(**filters).latest()
         except Exception:  # pragma: no cover
             raise Http404
 

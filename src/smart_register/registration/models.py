@@ -25,10 +25,6 @@ class Registration(models.Model):
         null=True,
     )
 
-    # public_key2 = models.BinaryField(
-    #     blank=True,
-    #     null=True,
-    # )
     class Meta:
         get_latest_by = "start"
 
@@ -83,7 +79,6 @@ class Registration(models.Model):
 class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     timestamp = models.DateField(auto_now_add=True)
-    # data = models.JSONField(default=dict)
     storage = models.BinaryField(null=True, blank=True)
 
     def decrypt(self, private_key):
