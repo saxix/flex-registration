@@ -44,4 +44,4 @@ WORKDIR /code/
 EXPOSE 8000
 
 ADD ./docker/entrypoint.sh /bin/
-ENTRYPOINT ["entrypoint-local.sh"]
+ENTRYPOINT ["entrypoint.sh"]
