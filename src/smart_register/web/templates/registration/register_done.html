@@ -1,14 +1,22 @@
 {% extends config.BASE_TEMPLATE %}
 {% block body %}
-  <div class="py-12 text-center">
-<div class="text-3xl">
-    Registration successful
-   <div class="mt-20">Please save your registration id</div>
-   <pre class="text-2xl p-5">
+    <div class="py-12 text-center">
+        <div class="text-3xl">
+            Registration successful
+            <div class="mt-20">Please save your registration id</div>
+            <pre class="text-2xl p-5">
 HOPE-{{ record.timestamp.year }}{{ record.timestamp.month }}{{ record.timestamp.day }}{{ record.id }}</pre>
-</div>
-<div class="text-center mt-10">
-   <a href="{% url "register" record.registration.pk %}" class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">Start New Registration</a>
-</div>
-
+        </div>
+        <div class="flex flex-row justify-center items-center">
+            <img width="300" height="300" src="data:image/png;base64,{{ qrcode }}" alt="Red dot"/>
+        </div>
+{#        <div class="text-center mt-10">#}
+{#            <a href="{{ url }}">{{ url }}</a>#}
+{#        </div>#}
+        <div class="text-center mt-10">
+            <a href="{% url "register" record.registration.pk %}"
+               class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">Start
+                New Registration</a>
+        </div>
+    </div>
 {% endblock body %}
