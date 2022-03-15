@@ -60,5 +60,5 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
             u = User.objects.get(username=username)
             u.set_password(admin_password)
             u.save()
-        except CommandError:
-            raise
+        except CommandError as e:
+            print(e)
