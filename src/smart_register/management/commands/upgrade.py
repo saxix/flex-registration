@@ -30,8 +30,9 @@ class NotRunningInTTYException(Exception):
     help="Admin password",
 )
 @click.option("--migrate/--no-migrate", default=True, is_flag=True, help="Run database migrations")
+@click.option("--data/--no-data", default=True, is_flag=True, help="Load initial data")
 @click.option("--static/--no-static", default=True, is_flag=True, help="Collect static assets")
-def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **kwargs):
+def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, data, **kwargs):
     from smart_register.config import env
 
     extra = {"no_input": prompt, "verbosity": verbosity - 1, "stdout": None}
@@ -47,6 +48,9 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
         if not Path(env("STATIC_ROOT")).exists():
             Path(env("STATIC_ROOT")).mkdir(parents=True)
         call_command("collectstatic", **extra)
+
+    if data:
+        call_command("load_data", **extra)
 
     if admin_email:
         from django.contrib.auth import get_user_model

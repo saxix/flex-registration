@@ -237,8 +237,11 @@ class OptionSet(models.Model):
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
     columns = models.CharField(
-        max_length=20, default="label", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
+        max_length=100, default="label", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
+
+    def __str__(self):
+        return self.name
 
     def clean(self):
         cols = self.columns.split(",")
@@ -269,7 +272,7 @@ class OptionSet(models.Model):
 
             value = []
             for line in self.data.split("\r\n"):
-                if not line.strip():
+                if not line.strip() or line.startswith("#"):
                     continue
                 if len(columns) == 1:
                     pk, parent, label = line.strip().lower(), None, line

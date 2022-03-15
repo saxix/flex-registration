@@ -4,6 +4,15 @@ from .widgets import SmartTextWidget
 from django.utils.translation import gettext as _
 
 
+class DocumentTypeInput(forms.Select):
+    def __init__(self, attrs=None):
+        attrs = {
+            "placeholder": _("Document country..."),
+            **(attrs or {}),
+        }
+        super().__init__(attrs)
+
+
 class DocumentCountryInput(SmartTextWidget):
     def __init__(self, attrs=None):
         attrs = {
@@ -23,8 +32,14 @@ class DocumentNumberInput(SmartTextWidget):
 
 
 class DocumentWidget(forms.MultiWidget):
+    template_name = "django/forms/widgets/multiwidget.html"
+
     def __init__(self, attrs=None):
-        widgets = (DocumentCountryInput(attrs), DocumentNumberInput(attrs))
+        widgets = (
+            DocumentTypeInput(attrs),
+            DocumentCountryInput(attrs),
+            DocumentNumberInput(attrs),
+        )
         super().__init__(widgets, attrs)
 
     def decompress(self, value):
@@ -36,6 +51,7 @@ class DocumentField(forms.MultiValueField):
 
     def __init__(self, *args, **kwargs):
         fields = (
+            forms.CharField(),
             forms.CharField(),
             forms.CharField(),
         )
