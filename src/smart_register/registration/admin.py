@@ -105,12 +105,13 @@ class RecordAdmin(SmartModelAdmin):
         ctx = self.get_common_context(request, pk, title="To decrypt you need to provide Registration Private Key")
         if request.method == "POST":
             form = DecryptForm(request.POST)
-            ctx["title"] = "Data have decrypted only to be showed on this page. Still encrypted on the DB"
+            ctx["title"] = "Data have been decrypted only to be showed on this page. Still encrypted on the DB"
             if form.is_valid():
                 key = form.cleaned_data["key"]
                 try:
                     ctx["decrypted"] = self.object.decrypt(key)
                 except Exception as e:
+                    ctx["title"] = "Error decrypting data"
                     self.message_error_to_user(request, e)
         else:
             form = DecryptForm()
