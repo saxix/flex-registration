@@ -87,6 +87,6 @@ class Record(models.Model):
     @property
     def data(self):
         if self.registration.public_key:
-            return {"error": "Cannot access encrypted data"}
+            return {"Forbidden": "Cannot access encrypted data"}
         else:
             return json.loads(self.storage.tobytes().decode())
