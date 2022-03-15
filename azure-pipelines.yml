@@ -10,12 +10,12 @@ resources:
   - repo: self
 
 variables:
-  - group: flex-registration-dev
   - name: Docker.filePath
     value: "**/docker/Dockerfile"
   - name: Docker.repository
     value: "flex-registration"
   - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+    - group: flex-registration-prod
     - name: Docker.registry
       value: "unihopeukrsr"
     - name: azureSubscription
@@ -23,6 +23,7 @@ variables:
     - name: appName
       value: "uni-hope-ukr-sr"
   - ${{ else }}:
+    - group: flex-registration-dev
     - name: Docker.registry
       value: "unihopeukrsrdev"
     - name: azureSubscription
