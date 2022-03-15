@@ -90,5 +90,6 @@ stages:
               -SECRET_KEY $(SECRET_KEY)
               -ADMIN_EMAIL $(ADMIN_EMAIL)
               -ADMIN_PASSWORD $(ADMIN_PASSWORD)
+              -ROOT_TOKEN $(ROOT_TOKEN)
               -DEBUG $(DEBUG)
               "
