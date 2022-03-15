@@ -44,4 +44,6 @@ WORKDIR /code/
 EXPOSE 8000
 
 ADD ./docker/entrypoint.sh /bin/
+RUN chmod +x /bin/entrypoint.sh
+
 ENTRYPOINT ["entrypoint.sh"]

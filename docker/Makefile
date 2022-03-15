@@ -58,7 +58,6 @@ check:
 			--build-arg DEVELOP=${DEVELOP} \
 			--build-arg VERSION=${VERSION} \
 			--build-arg BUILD_DATE=${BUILD_DATE} \
-			--build-arg GITHUB_API_TOKEN=${GITLAB_API_TOKEN} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			-f docker/${DOCKERFILE} .
 	git tag ${VERSION}
