@@ -25,6 +25,7 @@ DEBUG = env("DEBUG")
 DEBUG_PROPAGATE_EXCEPTIONS = env("DEBUG_PROPAGATE_EXCEPTIONS")
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+ADMIN_URL = env("ADMIN_URL")
 
 # Application definition
 SITE_ID = 1
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
+    "smart_register.web.middlewares.MaintenanceMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -268,6 +270,7 @@ DATE_INPUT_FORMATS = [
 
 CONSTANCE_CONFIG = OrderedDict(
     {
+        "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
         "SMART_ADMIN_BOOKMARKS": (
             env("SMART_ADMIN_BOOKMARKS"),
             "",

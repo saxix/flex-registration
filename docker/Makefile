@@ -47,19 +47,6 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-build-base:
-	cd .. && docker build \
-			${BUILD_OPTIONS} \
-			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE} \
-			-f docker/${DOCKERFILE}.base .
-	#cd .. && git tag base-${BASE}
-	docker tag ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE} ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:latest
-ifeq ($(PUSH_BASE), 1)
-	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE}
-	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:latest
-endif
-	docker images | grep "${DOCKER_IMAGE_NAME}/base" | grep ${BASE}
-
 check:
 	@[ -z "`git status --porcelain`" ] || ( git status ; echo "Uncommited changes"; exit 1 )
 	export IMAGE_EXISTS=`curl --silent --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" https://gitlab.com/api/v4/projects/22122245/registry/repositories/1473455/tags/${VERSION} | jq '.location'`
@@ -68,14 +55,13 @@ check:
 
 .build:
 	cd .. && docker build \
-			--build-arg BASE_IMAGE="${BASE}" \
 			--build-arg DEVELOP=${DEVELOP} \
 			--build-arg VERSION=${VERSION} \
 			--build-arg BUILD_DATE=${BUILD_DATE} \
 			--build-arg GITHUB_API_TOKEN=${GITLAB_API_TOKEN} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			-f docker/${DOCKERFILE} .
-	git tag $VERSION
+	git tag ${VERSION}
 	git push --tags
 	docker images | grep "${DOCKER_IMAGE_NAME}" | grep ${VERSION}
 
