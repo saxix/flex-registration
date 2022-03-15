@@ -1,9 +1,10 @@
 from django.urls import path
 
 from .views import OptionsListView
-from .views import HomeView, RegisterCompleView, RegisterView, MaintenanceView
+from .views import HomeView, RegisterCompleView, RegisterView, MaintenanceView, ProbeView
 
 urlpatterns = [
+    path("probe/", ProbeView.as_view(), name="probe"),
     path("", HomeView.as_view(), name="index"),
     path("maintenance", MaintenanceView.as_view(), name="maintenance"),
     path("register/<int:pk>/", RegisterView.as_view(), name="register"),

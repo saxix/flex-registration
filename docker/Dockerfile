@@ -34,8 +34,8 @@ ENV ADMINS="" \
     PYTHONUNBUFFERED=1 \
     SECRET_KEY="secret-key-just-for-build" \
     SENTRY_DSN="" \
-    STATIC_ROOT="/var/run/static"
-
+    STATIC_ROOT="/var/run/static" \
+    PYTHONPATH="/code/src/"
 
 ADD . /code/
 
