@@ -9,6 +9,7 @@ actions.add_to_site(admin.site)
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path("", include("smart_register.web.urls")),
+    path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
 ]
