@@ -21,3 +21,14 @@ WIDGET_FOR_FORMFIELD_DEFAULTS = {
     YesNoChoice: {"widget": widgets.SmartSelectWidget},
     MultiCheckboxField: {"widget": widgets.MultiCheckboxWidget},
 }
+
+
+class SmartFieldMixin:
+    def __init__(self, *args, **kwargs) -> None:
+        self.smart_attrs = kwargs.pop("smart_attrs", {})
+        super().__init__(*args, **kwargs)
+
+    def widget_attrs(self, widget):
+        attrs = super().widget_attrs(widget)
+        attrs |= self.smart_attrs
+        return attrs

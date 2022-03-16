@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from .fields.widgets import PythonEditor
@@ -17,6 +18,16 @@ class FlexFormBaseForm(forms.Form):
 
     def is_valid(self):
         return super().is_valid()
+
+    @property
+    def media(self):
+        extra = "" if settings.DEBUG else ".min"
+        base = super().media
+        return base + forms.Media(
+            js=[
+                "/static/smart%s.js" % extra,
+            ]
+        )
 
     def clean(self):
         cleaned_data = self.cleaned_data
