@@ -4,14 +4,15 @@ import json
 import re
 import unicodedata
 
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.functional import keep_lazy_text
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
 
 
-def is_root(request):
-    return False
+def is_root(request, *args, **kwargs):
+    return request.user.is_superuser and request.headers.get("x-root-token") == settings.ROOT_TOKEN
 
 
 @keep_lazy_text

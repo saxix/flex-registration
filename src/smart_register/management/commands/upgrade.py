@@ -51,14 +51,20 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
     if admin_email:
         from django.contrib.auth import get_user_model
 
-        username, __ = admin_email.split("@")
-        try:
-            User = get_user_model()
-            u = call_command(
-                "createsuperuser", interactive=False, username=username, email=admin_email, verbosity=verbosity
-            )
-            u = User.objects.get(username=username)
-            u.set_password(admin_password)
-            u.save()
-        except CommandError as e:
-            print(e)
+        User = get_user_model()
+        if User.objects.filter(is_superuser=True).exists():
+            print("Superuser already exists. Ignoring ADMIN_EMAIL")
+        else:
+            username, __ = admin_email.split("@")
+            if User.objects.filter(username=username).exists():
+                print("User with this name already exists")
+            else:
+                try:
+                    call_command(
+                        "createsuperuser", interactive=False, username=username, email=admin_email, verbosity=verbosity
+                    )
+                    u = User.objects.get(username=username)
+                    u.set_password(admin_password)
+                    u.save()
+                except CommandError:
+                    raise
