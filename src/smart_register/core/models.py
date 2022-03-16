@@ -16,7 +16,7 @@ from django_regex.fields import RegexField
 from strategy_field.fields import StrategyClassField
 from strategy_field.utils import fqn
 
-from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS
+from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import FlexFormBaseForm, CustomFieldMixin
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import jsonfy, namify, underscore_to_camelcase
@@ -201,6 +201,11 @@ class FlexFormField(OrderableModel):
             field_type = self.field_type
             kwargs = self.advanced.copy()
             regex = self.regex
+
+            smart_attrs = kwargs.pop("smart", {})
+            smart_attrs["data-flex"] = self.name
+            kwargs.setdefault("smart_attrs", smart_attrs)
+
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
@@ -212,7 +217,13 @@ class FlexFormField(OrderableModel):
             kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
-        return field_type(**kwargs)
+        try:
+            tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
+            fld = tt(**kwargs)
+        except Exception as e:
+            logger.exception(e)
+            raise
+        return fld
 
     def clean(self):
         try:
