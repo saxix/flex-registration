@@ -300,7 +300,6 @@ if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.logging import LoggingIntegration
-    from sentry_sdk.integrations.redis import RedisIntegration
 
     sentry_logging = LoggingIntegration(
         level=logging.INFO,  # Capture info and above as breadcrumbs
@@ -312,7 +311,6 @@ if SENTRY_DSN:
         integrations=[
             DjangoIntegration(transaction_style="url"),
             sentry_logging,
-            RedisIntegration(),
         ],
         release=smart_register.VERSION,
         send_default_pii=True,
