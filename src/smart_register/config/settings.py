@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "flags",
     "jsoneditor",
     "captcha",
+    "social_django",
+    # ---
     "smart_register",
     "smart_register.web",
     "smart_register.core",
@@ -91,6 +93,9 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "constance.context_processors.config",
+                # Social auth context_processors
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
             ],
         },
     },
@@ -185,6 +190,7 @@ STATICFILES_DIRS = [
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
+    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -366,3 +372,46 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
+
+# Azure login
+
+# Social Auth settings.
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = env("AZURE_CLIENT_ID")
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env("AZURE_CLIENT_SECRET")
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_KEY")
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+    "username",
+    "first_name",
+    "last_name",
+    "email",
+]
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+
+SOCIAL_AUTH_PIPELINE = (
+    "smart_register.core.authentication.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.user.get_username",
+    "smart_register.core.authentication.require_email",
+    "social_core.pipeline.social_auth.associate_by_email",
+    "smart_register.core.authentication.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "smart_register.core.authentication.user_details",
+)
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_USER_FIELDS = [
+    "email",
+    "fullname",
+]
+
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
+    "openid",
+    "email",
+    "profile",
+]
+
+SOCIAL_AUTH_SANITIZE_REDIRECTS = True
+# fix admin name
+LOGIN_URL = "/login/azuread-tenant-oauth2"
+LOGIN_REDIRECT_URL = ADMIN_URL

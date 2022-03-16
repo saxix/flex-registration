@@ -50,6 +50,9 @@ DEFAULTS = {
     "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "USE_HTTPS": (bool, False),
+    "AZURE_CLIENT_ID": (str, None),
+    "AZURE_CLIENT_SECRET": (str, None),
+    "AZURE_TENANT_KEY": (str, None),
 }
 
 env = Env(**DEFAULTS)
