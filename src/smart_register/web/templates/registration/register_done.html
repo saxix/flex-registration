@@ -7,12 +7,11 @@
             <pre class="text-2xl p-5">
 HOPE-{{ record.timestamp.year }}{{ record.timestamp.month }}{{ record.timestamp.day }}{{ record.id }}</pre>
         </div>
+        {% if config.QRCODE %}
         <div class="flex flex-row justify-center items-center">
             <img width="300" height="300" src="data:image/png;base64,{{ qrcode }}" alt="Red dot"/>
         </div>
-{#        <div class="text-center mt-10">#}
-{#            <a href="{{ url }}">{{ url }}</a>#}
-{#        </div>#}
+        {% endif %}
         <div class="text-center mt-10">
             <a href="{% url "register" record.registration.pk %}"
                class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">Start

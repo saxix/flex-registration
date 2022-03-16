@@ -4,6 +4,7 @@ from hashlib import md5
 from pathlib import Path
 
 import qrcode
+from constance import config
 from django.conf import settings
 from django.forms import formset_factory
 from django.http import Http404, HttpResponseRedirect
@@ -57,7 +58,10 @@ class RegisterCompleteView(TemplateView):
 
     def get_context_data(self, **kwargs):
         record = Record.objects.get(registration__id=self.kwargs["pk"], id=self.kwargs["rec"])
-        qrcode, url = self.get_qrcode(record)
+        if config.QRCODE:
+            qrcode, url = self.get_qrcode(record)
+        else:
+            qrcode, url = None, None
         return super().get_context_data(qrcode=qrcode, url=url, record=record, **kwargs)
 
 
