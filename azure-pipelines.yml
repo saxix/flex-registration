@@ -54,7 +54,7 @@ stages:
               dockerfile: $(Docker.filePath)
               repository: $(Docker.repository)
               buildContext: "**/.."
-              arguments: '--cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
+              arguments: '--build-arg VERSION=$(Build.SourceVersion) --build-arg BUILD_DATE=$(Get-Date -Format yyyyMMddhhmmss) --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
