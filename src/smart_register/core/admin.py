@@ -1,12 +1,23 @@
-from admin_extra_buttons.decorators import button, link
+import io
+import json
+import tempfile
+from json import JSONDecodeError
+from pathlib import Path
+
+import requests
+from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
+from django.conf import settings
 from django.contrib.admin import TabularInline, register
+from django.core.management import call_command
 from django.db.models import JSONField
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from jsoneditor.forms import JSONEditor
+from requests.auth import HTTPBasicAuth
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
@@ -97,6 +108,13 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
         return fields
 
 
+class SyncForm(forms.Form):
+    host = forms.URLField()
+    username = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput)
+
+
+# https://uni-hope-ukr-sr-dev.azurefd.net/acdc/core/flexformfield/
 @register(FlexForm)
 class FlexFormAdmin(SmartModelAdmin):
     list_display = ("name", "validator", "used_by", "childs", "parents")
@@ -112,6 +130,44 @@ class FlexFormAdmin(SmartModelAdmin):
 
     def parents(self, obj):
         return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
+
+    @view(http_basic_auth=True, login_required=True)
+    def export(self, request):
+        buf = io.StringIO()
+        call_command("dumpdata", "core", stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
+        return JsonResponse(json.loads(buf.getvalue()), safe=False)
+
+    @button(label="Import")
+    def _import(self, request):
+        ctx = self.get_common_context(request)
+        if request.method == "POST":
+            form = SyncForm(request.POST)
+            if form.is_valid():
+                try:
+                    auth = HTTPBasicAuth(form.cleaned_data["username"], form.cleaned_data["password"])
+                    url = f"{form.cleaned_data['host']}core/flexform/export/"
+                    workdir = Path(".").absolute()
+                    out = io.StringIO()
+                    with requests.get(url, stream=True, auth=auth) as res:
+                        if res.status_code != 200:
+                            raise Exception(res.status_code)
+                        ctx["url"] = url
+                        with tempfile.NamedTemporaryFile(
+                            dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
+                        ) as fdst:
+                            fdst.write(res.content)
+                            call_command("loaddata", (workdir / fdst.name).absolute(), stdout=out)
+                            message = out.getvalue()
+                            self.message_user(request, message)
+
+                    ctx["res"] = res
+                    # ctx['data'] = res.json
+                except (Exception, JSONDecodeError) as e:
+                    self.message_error_to_user(request, e)
+        else:
+            form = SyncForm(initial={"host": "http://localhost:8000/acdc/"})
+        ctx["form"] = form
+        return render(request, "admin/core/flexform/import.html", ctx)
 
 
 @register(OptionSet)

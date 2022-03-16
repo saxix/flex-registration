@@ -695,6 +695,14 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "html-json-forms"
+version = "1.1.1"
+description = "Implementation of the HTML JSON Forms spec for use with the Django REST Framework."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "identify"
 version = "2.4.11"
 description = "File identification library for Python"
@@ -832,6 +840,17 @@ description = "Experimental type system extensions for programs checked with the
 category = "dev"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "natural-keys"
+version = "2.0.0"
+description = "Enhanced support for natural keys in Django and Django REST Framework"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+html-json-forms = ">=1.0.0"
 
 [[package]]
 name = "nodeenv"
@@ -1911,7 +1930,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "c7469dca35e361c03ea831588bc1292e0336d69ceafac12cfc15fd9bb8820779"
+content-hash = "49a66dd3d2be4055292f053adf210ae467df6c497a96aa66d2bb9382a1d162fc"
 
 [metadata.files]
 appnope = [
@@ -2345,6 +2364,10 @@ h11 = [
     {file = "h11-0.13.0-py3-none-any.whl", hash = "sha256:8ddd78563b633ca55346c8cd41ec0af27d3c79931828beffb46ce70a379e7442"},
     {file = "h11-0.13.0.tar.gz", hash = "sha256:70813c1135087a248a4d38cc0e1a0181ffab2188141a93eaf567940c3957ff06"},
 ]
+html-json-forms = [
+    {file = "html-json-forms-1.1.1.tar.gz", hash = "sha256:16dc413dc858fcc53602ad509c1aef735534838e1bae888bf429e210a9c48f6b"},
+    {file = "html_json_forms-1.1.1-py3-none-any.whl", hash = "sha256:51e7e9088bc88e324027144ca25d8bcdd37da28f311a8436bfd88944138ed409"},
+]
 identify = [
     {file = "identify-2.4.11-py2.py3-none-any.whl", hash = "sha256:fd906823ed1db23c7a48f9b176a1d71cb8abede1e21ebe614bac7bdd688d9213"},
     {file = "identify-2.4.11.tar.gz", hash = "sha256:2986942d3974c8f2e5019a190523b0b0e2a07cb8e89bf236727fb4b26f27f8fd"},
@@ -2387,6 +2410,10 @@ mccabe = [
 mypy-extensions = [
     {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
+]
+natural-keys = [
+    {file = "natural-keys-2.0.0.tar.gz", hash = "sha256:e50b6d7d15fd79860e626163184b2f2df9de4fb6f7851d4b9e4ceb311e989f8d"},
+    {file = "natural_keys-2.0.0-py3-none-any.whl", hash = "sha256:cc21d4c19475a37fdef44a8d68f6b9f11c4bdb15af1ab331eb60badfe571eca2"},
 ]
 nodeenv = [
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},

@@ -13,11 +13,12 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.template.defaultfilters import pluralize
 from django_regex.fields import RegexField
-from strategy_field.fields import StrategyClassField
+from natural_keys import NaturalKeyModel
 from strategy_field.utils import fqn
 
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
-from .forms import FlexFormBaseForm, CustomFieldMixin
+from .fields.strategy import StrategyClassField
+from .forms import CustomFieldMixin, FlexFormBaseForm
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import jsonfy, namify, underscore_to_camelcase
 
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 cache = caches["default"]
 
 
-class Validator(models.Model):
+class Validator(NaturalKeyModel):
     FORM = "form"
     FIELD = "field"
     name = CICharField(max_length=255, unique=True)
@@ -69,7 +70,7 @@ def get_validators(field):
     return []
 
 
-class FlexForm(models.Model):
+class FlexForm(NaturalKeyModel):
     version = IntegerVersionField()
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
@@ -136,7 +137,7 @@ class FlexForm(models.Model):
         self.get_form.cache_clear()
 
 
-class FormSet(OrderableModel):
+class FormSet(NaturalKeyModel, OrderableModel):
     version = IntegerVersionField()
     name = CICharField(max_length=255)
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
@@ -160,7 +161,7 @@ class FormSet(OrderableModel):
         return self.flex_form.get_form()
 
 
-class FlexFormField(OrderableModel):
+class FlexFormField(NaturalKeyModel, OrderableModel):
     version = IntegerVersionField()
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
@@ -202,7 +203,7 @@ class FlexFormField(OrderableModel):
             kwargs = self.advanced.copy()
             regex = self.regex
 
-            smart_attrs = kwargs.pop("smart", {})
+            smart_attrs = kwargs.pop("smart", {}).copy()
             smart_attrs["data-flex"] = self.name
             kwargs.setdefault("smart_attrs", smart_attrs)
 
@@ -241,7 +242,7 @@ class FlexFormField(OrderableModel):
         self.flex_form.get_form.cache_clear()
 
 
-class OptionSet(models.Model):
+class OptionSet(NaturalKeyModel, models.Model):
     version = IntegerVersionField()
     name = CICharField(max_length=100, unique=True)
     description = models.CharField(max_length=1000, blank=True, null=True)
@@ -319,7 +320,7 @@ def clean_choices(value):
         return list(zip(map(str.lower, value), value))
 
 
-class CustomFieldType(models.Model):
+class CustomFieldType(NaturalKeyModel, models.Model):
     name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[A-Z][a-zA-Z0-9_]*")])
     base_type = StrategyClassField(registry=field_registry, default=forms.CharField)
     attrs = models.JSONField(default=dict)
