@@ -14,7 +14,7 @@ variables:
     value: "**/docker/Dockerfile"
   - name: Docker.repository
     value: "flex-registration"
-    now: $(Get-Date -Format yyyyMMddhhmmss)
+    buildDate: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
   - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
     - group: flex-registration-prod
     - name: Docker.registry
@@ -55,7 +55,7 @@ stages:
               dockerfile: $(Docker.filePath)
               repository: $(Docker.repository)
               buildContext: "**/.."
-              arguments: '--build-arg VERSION=$(Build.SourceVersion) --build-arg BUILD_DATE=$(now) --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
+              arguments: '--build-arg VERSION=$(Build.SourceVersion) --build-arg BUILD_DATE=$(buildDate) --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
