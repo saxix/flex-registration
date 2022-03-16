@@ -9,12 +9,14 @@
 
 {% block body %}
     {% if user.is_staff %}
-        <div class="fixed" style="background-color: black; color: white; width: 100%; z-index: 1000">
-        <div class="float-right">
-            <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> -
-            <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> -
+        <div class="fixed flex" style="background-color: black; color: white; width: 100%; z-index: 1000">
+        <div class="inline-flex flex-shrink">Version: {{ smart.version }}</div> - 
+        <div class="inline-flex flex-grow"> Build date: {{ smart.build_date }}</div>
+        <div class="inline-flex">
+            <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
+            <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> - 
             {% for name, formset in formsets.items %}
-                <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> -
+                <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> - 
             {% endfor %}
             <a target="admin" href="{% url "admin:index" %}">Admin</a>
             &nbsp;&nbsp;&nbsp;
