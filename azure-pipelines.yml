@@ -85,7 +85,7 @@ stages:
               appName: $(appName)
               azureSubscription: $(azureSubscription)
               imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
-              appSettings: "-ADMIN_URL $(ADMIN_URL)/
+              appSettings: "-ADMIN_URL $(ADMIN_URL)
               -ALLOWED_HOSTS $(ALLOWED_HOSTS)
               -SECRET_KEY $(SECRET_KEY)
               -SENTRY_DSN $(SENTRY_DSN)
