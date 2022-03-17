@@ -93,19 +93,31 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         return render(request, "admin/core/flexformfield/test.html", ctx)
 
 
+class FlexFormFieldForm(forms.ModelForm):
+    class Meta:
+        model = FlexFormField
+        exclude = ()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # if self.instance and self.instance.pk:
+        self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
+
+
 class FlexFormFieldInline(OrderableAdmin, TabularInline):
     model = FlexFormField
+    form = FlexFormFieldForm
     fields = ("ordering", "label", "name", "field_type", "required", "validator")
     show_change_link = True
     extra = 0
     ordering_field = "ordering"
     ordering_field_hide_input = True
 
-    def get_readonly_fields(self, request, obj=None):
-        fields = list(super().get_readonly_fields(request, obj))
-        if obj:
-            fields.append("name")
-        return fields
+    # def get_readonly_fields(self, request, obj=None):
+    #     fields = list(super().get_readonly_fields(request, obj))
+    #     # if obj and obj.pk:
+    #     #     fields.append("name")
+    #     return fields
 
 
 class SyncForm(forms.Form):
@@ -131,7 +143,7 @@ class FlexFormAdmin(SmartModelAdmin):
     def parents(self, obj):
         return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
 
-    @view(http_basic_auth=True, login_required=True)
+    @view(http_basic_auth=True, permission=lambda request, obj: request.user.is_superuser)
     def export(self, request):
         buf = io.StringIO()
         call_command("dumpdata", "core", stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
@@ -165,7 +177,7 @@ class FlexFormAdmin(SmartModelAdmin):
                 except (Exception, JSONDecodeError) as e:
                     self.message_error_to_user(request, e)
         else:
-            form = SyncForm(initial={"host": "http://localhost:8000/acdc/"})
+            form = SyncForm(initial={"host": request.build_absolute_uri("/")})
         ctx["form"] = form
         return render(request, "admin/core/flexform/import.html", ctx)
 
