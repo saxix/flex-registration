@@ -4,6 +4,8 @@ import os
 from collections import OrderedDict
 from pathlib import Path
 
+from django_regex.utils import RegexList
+
 import smart_register
 
 from . import env
@@ -38,6 +40,8 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.forms",
     "import_export",
+    # -- dev --
+    "debug_toolbar",
     # ---
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
@@ -53,6 +57,8 @@ INSTALLED_APPS = [
     "flags",
     "jsoneditor",
     "captcha",
+    "social_django",
+    # ---
     "smart_register",
     "smart_register.web",
     "smart_register.core",
@@ -70,6 +76,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -91,6 +98,10 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "constance.context_processors.config",
+                "smart_register.web.context_processors.smart",
+                # Social auth context_processors
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
             ],
         },
     },
@@ -185,6 +196,7 @@ STATICFILES_DIRS = [
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
+    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -270,6 +282,9 @@ DATE_INPUT_FORMATS = [
 
 CONSTANCE_CONFIG = OrderedDict(
     {
+        "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
+        "HOME_TEMPLATE": ("home.html", "Default home.html", str),
+        "QRCODE": (False, "Enable QRCode generation", bool),
         "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
         "SMART_ADMIN_BOOKMARKS": (
             env("SMART_ADMIN_BOOKMARKS"),
@@ -285,7 +300,6 @@ if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
     from sentry_sdk.integrations.logging import LoggingIntegration
-    from sentry_sdk.integrations.redis import RedisIntegration
 
     sentry_logging = LoggingIntegration(
         level=logging.INFO,  # Capture info and above as breadcrumbs
@@ -297,7 +311,6 @@ if SENTRY_DSN:
         integrations=[
             DjangoIntegration(transaction_style="url"),
             sentry_logging,
-            RedisIntegration(),
         ],
         release=smart_register.VERSION,
         send_default_pii=True,
@@ -356,6 +369,7 @@ FLAGS_STATE_LOGGING = DEBUG
 
 FLAGS = {
     "DEVELOP_DEVELOPER": [],
+    "DEVELOP_DEBUG_TOOLBAR": [],
 }
 
 JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"
@@ -366,3 +380,88 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
+
+
+# DEBUG TOOLBAR
+def show_ddt(request):  # pragma: no-cover
+    # use https://bewisse.com/modheader/ to set custom header
+    # key must be `X-DDT` (no HTTP_ prefix no underscore)
+    from flags.state import flag_enabled
+
+    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):
+        return False
+    return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
+    # if request.user.is_authenticated:
+    #     if request.path in RegexList(('/tpl/.*', '/api/.*', '/dal/.*', '/healthcheck/')):
+    #         return False
+    # return request.META.get('HTTP_DEV_DDT', None) == env('DEV_DDT_KEY')
+
+
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": show_ddt,
+    "JQUERY_URL": "",
+}
+INTERNAL_IPS = env.list("INTERNAL_IPS")
+DEBUG_TOOLBAR_PANELS = [
+    # 'debug_toolbar.panels.history.HistoryPanel',
+    # 'debug_toolbar.panels.versions.VersionsPanel',
+    # 'debug_toolbar.panels.timer.TimerPanel',
+    # 'flags.panels.FlagsPanel',
+    # 'flags.panels.FlagChecksPanel',
+    # 'debug_toolbar.panels.settings.SettingsPanel',
+    "debug_toolbar.panels.headers.HeadersPanel",
+    "debug_toolbar.panels.request.RequestPanel",
+    "debug_toolbar.panels.sql.SQLPanel",
+    "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+    # 'debug_toolbar.panels.templates.TemplatesPanel',
+    "debug_toolbar.panels.cache.CachePanel",
+    # 'debug_toolbar.panels.signals.SignalsPanel',
+    "debug_toolbar.panels.logging.LoggingPanel",
+    # 'debug_toolbar.panels.redirects.RedirectsPanel',
+    "debug_toolbar.panels.profiling.ProfilingPanel",
+]
+
+ROOT_TOKEN = env("ROOT_TOKEN")
+
+# Azure login
+
+# Social Auth settings.
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = env("AZURE_CLIENT_ID")
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env("AZURE_CLIENT_SECRET")
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_KEY")
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+    "username",
+    "first_name",
+    "last_name",
+    "email",
+]
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+
+SOCIAL_AUTH_PIPELINE = (
+    "smart_register.core.authentication.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.user.get_username",
+    "smart_register.core.authentication.require_email",
+    "social_core.pipeline.social_auth.associate_by_email",
+    "smart_register.core.authentication.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "smart_register.core.authentication.user_details",
+)
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_USER_FIELDS = [
+    "email",
+    "fullname",
+]
+
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
+    "openid",
+    "email",
+    "profile",
+]
+
+SOCIAL_AUTH_SANITIZE_REDIRECTS = True
+# fix admin name
+LOGIN_URL = "/login/azuread-tenant-oauth2"
+LOGIN_REDIRECT_URL = ADMIN_URL

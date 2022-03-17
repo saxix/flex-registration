@@ -14,5 +14,5 @@ class SmartDateWidget(TailWindMixin, forms.DateInput):
     def __init__(self, attrs=None, format=None):
         super().__init__(attrs=attrs, format=format)
         self.attrs.setdefault("class", {})
-        self.attrs["class"] += " vDateField"
+        self.attrs["class"] += " vDateField "
         self.attrs["size"] = 10

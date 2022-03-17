@@ -1,16 +1,21 @@
-{% extends "base.html" %}
+{% extends config.BASE_TEMPLATE %}
 {% block body %}
-    <div class="text-center">
+    <div class="py-12 text-center">
         <div class="text-3xl">
-            {#    <div class="flex text-xl center-block">#}
             Registration successful
-        </div>
-        <div class="mt-20">Please save your registration id</div>
-        <pre class="text-2xl p-5">
+            <div class="mt-20">Please save your registration id</div>
+            <pre class="text-2xl p-5">
 HOPE-{{ record.timestamp.year }}{{ record.timestamp.month }}{{ record.timestamp.day }}{{ record.id }}</pre>
+        </div>
+        {% if config.QRCODE %}
+        <div class="flex flex-row justify-center items-center">
+            <img width="300" height="300" src="data:image/png;base64,{{ qrcode }}" alt="Red dot"/>
+        </div>
+        {% endif %}
+        <div class="text-center mt-10">
+            <a href="{% url "register" record.registration.pk %}"
+               class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">Start
+                New Registration</a>
+        </div>
     </div>
-    <div class="text-center mt-10">
-        <a href="{% url "register" record.registration.pk %}" class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">Start New Registration</a>
-    </div>
-
 {% endblock body %}

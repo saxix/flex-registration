@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from strategy_field.exceptions import StrategyAttributeError
 from strategy_field.registry import Registry
+from strategy_field.utils import fqn
 
 from . import fields
 from .forms import FlexFormBaseForm
@@ -23,6 +24,8 @@ def import_custom_field(value, exc):
 
 class FieldRegistry(Registry):
     def __contains__(self, y):
+        if isinstance(y, str):
+            return y in [fqn(s) for s in self]
         try:
             return super().__contains__(y)
         except StrategyAttributeError:

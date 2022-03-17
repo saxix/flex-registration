@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load smart_register l10n static %}
+{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static %}
 {% block head %}
     <script src="{% static "jquery.formset.js" %}"></script>
     {{ form.media }}
@@ -8,6 +8,21 @@
 {% endblock head %}
 
 {% block body %}
+    {% if user.is_staff %}
+        <div class="fixed flex" style="background-color: black; color: white; width: 100%; z-index: 1000">
+        <div class="inline-flex flex-shrink">Version: {{ smart.version }}</div> - 
+        <div class="inline-flex flex-grow"> Build date: {{ smart.build_date }}</div>
+        <div class="inline-flex">
+            <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
+            <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> - 
+            {% for name, formset in formsets.items %}
+                <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> - 
+            {% endfor %}
+            <a target="admin" href="{% url "admin:index" %}">Admin</a>
+            &nbsp;&nbsp;&nbsp;
+        </div>
+        </div>
+    {% endif %}
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
             <div class="text-center mb-16">
@@ -19,17 +34,21 @@
                 {{ dataset.intro|safe }}
             </div>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
-                {{ form.errors }}
+                {{ form.non_field_errors }}
                 <form class="w-full" method="post">
                     {% csrf_token %}
                     <div class="form-container">
                     {% for field in form %}
-                        <div class="mb-4">
-                            <label class="block uppercase tracking-wide text-gray-700 font-bold mb-2"
+                        <div class="mb-4 field-container">
+                            <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
                                    for="{{ field.auto_id }}">{{ field.label }}</label>
+                            <div class="text-sm	">{{ field|smart:"description" }}</div>
+                            {{ field.errors }}
                             {{ field }}
+                            <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
                         </div>
                     {% endfor %}
+
                     </div>
                     {% for name, formset in formsets.items %}
                         <div class="shadow-md rounded bg-gray-100 p-4">
@@ -43,12 +62,21 @@
                                     <div class="w-100 forms">
                                         {{ formset.management_form }}
                                         {% for frm in formset %}
-
                                             <div class="w-full my-5 p-3 border border-gray-400 form-container {{ formset.prefix }}">
-                                                {{ frm }}
+                                                {% for field in frm %}
+                                                    <div class="mb-4 field-container">
+                                                        <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
+                                                               for="{{ field.auto_id }}">{{ field.label }}</label>
+                                                        <div class="text-sm	">{{ field|smart:"description" }}</div>
+                                                        {{ field.errors }}
+                                                        {{ field }}
+                                                        <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
+                                                    </div>
+                                                {% endfor %}
+{#                                                {{ frm }}#}
                                                 <div class="flex">
-                                            <div class="flex-auto "></div>
-                                            <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>
+                                                    <div class="flex-auto "></div>
+                                                    <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>
                                                 </div>
                                             </div>
                                         {% endfor %}

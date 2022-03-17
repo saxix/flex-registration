@@ -1,5 +1,6 @@
 FROM python:3.9.2-slim-buster
 ARG BUILD_DATE
+ARG VERSION
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
@@ -27,6 +28,7 @@ RUN poetry config virtualenvs.create false \
 
 ENV ADMINS="" \
     BUILD_DATE=${BUILD_DATE} \
+    VERSION=${VERSION} \
     DATABASE_URL="" \
     DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
     IPSTACK_KEY="" \
