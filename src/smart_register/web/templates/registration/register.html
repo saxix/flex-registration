@@ -11,7 +11,7 @@
         <div class="fixed flex staff-toolbar">
             <div class="inline-flex flex-shrink">&nbsp;&nbsp;&nbsp;Version: {{ smart.version|slice:':7'|join:'' }}</div> - 
             <div class="inline-flex flex-shrink"> Build date: {{ smart.build_date }}</div> - 
-            <div class="inline-flex flex-grow"> {{ debug }}</div>
+            <div class="inline-flex flex-grow"> {{ smart.debug }} {{ smart.env }}</div>
             <div class="inline-flex">
                 <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
                 <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> - 
