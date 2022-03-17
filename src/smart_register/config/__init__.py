@@ -14,8 +14,8 @@ def parse_emails(value):
 
 
 DEFAULTS = {
-    "ADMIN_URL": (str, "admin/"),
-    "ADMIN_TITLE": (str, "PRODUCTION"),
+    "DJANGO_ADMIN_URL": (str, "admin/"),
+    "DJANGO_ADMIN_TITLE": (str, "PRODUCTION"),
     "AUTHENTICATION_BACKENDS": (list, []),
     "SECRET_KEY": (str, ""),
     "ADMINS": (parse_emails, ""),
