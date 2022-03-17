@@ -34,7 +34,6 @@
 
             if (parentName) {
                 $parent = $formContainer.find("[data-source=" + parentName + "]");
-                console.log(label, parentName, $parent);
                 var subscribers = $parent.data("subscribers") || [];
                 subscribers.push($target);
                 $parent.data("subscribers", subscribers);

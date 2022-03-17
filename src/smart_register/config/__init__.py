@@ -38,6 +38,7 @@ DEFAULTS = {
     "INTERNAL_IPS": (list, ["127.0.0.1", "localhost"]),
     "CACHE_DEFAULT": (str, "locmemcache://"),
     "MEDIA_ROOT": (str, "/tmp/media/"),
+    "ROOT_TOKEN": (str, uuid.uuid4().hex),
     # Sentry - see CONTRIBUTING.md
     "SENTRY_DSN": (str, ""),
     "SENTRY_SECURITY_TOKEN": (str, ""),
@@ -50,6 +51,9 @@ DEFAULTS = {
     "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "USE_HTTPS": (bool, False),
+    "AZURE_CLIENT_ID": (str, None),
+    "AZURE_CLIENT_SECRET": (str, None),
+    "AZURE_TENANT_KEY": (str, None),
 }
 
 env = Env(**DEFAULTS)

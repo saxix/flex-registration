@@ -1,3 +1,3 @@
 from .core import OptionsListView
-from .registration import RegisterCompleView, RegisterView
-from .site import HomeView, MaintenanceView
+from .registration import RegisterCompleteView, RegisterView, QRVerify
+from .site import HomeView, MaintenanceView, ProbeView

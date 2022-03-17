@@ -3,29 +3,39 @@ trigger:
   branches:
     include:
     - develop
-    - staging
     - master
     - ops/*
-  paths:
-    exclude:
-    -  docs/*
 pr: none
 resources:
   - repo: self
 
 variables:
-  # ========================================================================
-  #                          Mandatory variables
-  # ========================================================================
-  Docker.filePath: "**/docker/Dockerfile"
-  Docker.repository: "flex-registration"
-  Docker.registry: "unihopeukrsrdev"
-  azureSubscription: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
-  appName: "uni-hope-ukr-sr-dev"
+  - name: Docker.filePath
+    value: "**/docker/Dockerfile"
+  - name: Docker.repository
+    value: "flex-registration"
+  - name: buildDate
+    value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
+  - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+    - group: flex-registration-prod
+    - name: Docker.registry
+      value: "unihopeukrsr"
+    - name: azureSubscription
+      value: "UNI_WEBS rs-uni-hope-ukr-sr"
+    - name: appName
+      value: "uni-hope-ukr-sr"
+  - ${{ else }}:
+    - group: flex-registration-dev
+    - name: Docker.registry
+      value: "unihopeukrsrdev"
+    - name: azureSubscription
+      value: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
+    - name: appName
+      value: "uni-hope-ukr-sr-dev"
 
 stages:
   - stage: build_and_push
-    displayName: BUILD and PUSH
+    displayName: BUILD and PUSH $(Build.SourceBranchName)
     jobs:
       - job: build_push_backend
         pool:
@@ -46,7 +56,7 @@ stages:
               dockerfile: $(Docker.filePath)
               repository: $(Docker.repository)
               buildContext: "**/.."
-              arguments: '--cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
+              arguments: '--build-arg VERSION=$(Build.SourceVersion) --build-arg BUILD_DATE=$(buildDate) --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
@@ -77,11 +87,12 @@ stages:
               appName: $(appName)
               azureSubscription: $(azureSubscription)
               imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
-              appSettings: "-PYTHONPATH $(PYTHONPATH)
+              appSettings: "-ADMIN_URL $(ADMIN_URL)
               -ALLOWED_HOSTS $(ALLOWED_HOSTS)
-              -AUTHENTICATION_BACKENDS $(AUTHENTICATION_BACKENDS)
               -SECRET_KEY $(SECRET_KEY)
+              -SENTRY_DSN $(SENTRY_DSN)
               -ADMIN_EMAIL $(ADMIN_EMAIL)
               -ADMIN_PASSWORD $(ADMIN_PASSWORD)
+              -ROOT_TOKEN $(ROOT_TOKEN)
               -DEBUG $(DEBUG)
               "

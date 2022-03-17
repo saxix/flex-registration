@@ -1,3 +1,4 @@
+import functools
 import logging
 from datetime import date, datetime, time
 
@@ -12,20 +13,21 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.template.defaultfilters import pluralize
 from django_regex.fields import RegexField
-from strategy_field.fields import StrategyClassField
+from natural_keys import NaturalKeyModel
 from strategy_field.utils import fqn
 
-from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS
-from .forms import FlexFormBaseForm, CustomFieldMixin
+from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
+from .fields.strategy import StrategyClassField
+from .forms import CustomFieldMixin, FlexFormBaseForm
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import jsonfy, namify
+from .utils import jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
 cache = caches["default"]
 
 
-class Validator(models.Model):
+class Validator(NaturalKeyModel):
     FORM = "form"
     FIELD = "field"
     name = CICharField(max_length=255, unique=True)
@@ -68,7 +70,8 @@ def get_validators(field):
     return []
 
 
-class FlexForm(models.Model):
+class FlexForm(NaturalKeyModel):
+    version = IntegerVersionField()
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
     validator = models.ForeignKey(
@@ -114,9 +117,10 @@ class FlexForm(models.Model):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
+    @functools.cache
     def get_form(self):
         fields = {}
-        for field in self.fields.order_by("ordering"):
+        for field in self.fields.select_related("validator").order_by("ordering"):
             try:
                 fields[field.name] = field.get_instance()
             except TypeError:
@@ -128,8 +132,13 @@ class FlexForm(models.Model):
         flexForm = type(FlexFormBaseForm)(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+        self.get_form.cache_clear()
 
-class FormSet(OrderableModel):
+
+class FormSet(NaturalKeyModel, OrderableModel):
+    version = IntegerVersionField()
     name = CICharField(max_length=255)
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
@@ -152,7 +161,8 @@ class FormSet(OrderableModel):
         return self.flex_form.get_form()
 
 
-class FlexFormField(OrderableModel):
+class FlexFormField(NaturalKeyModel, OrderableModel):
+    version = IntegerVersionField()
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
     name = CICharField(max_length=30, blank=True)
@@ -192,6 +202,11 @@ class FlexFormField(OrderableModel):
             field_type = self.field_type
             kwargs = self.advanced.copy()
             regex = self.regex
+
+            smart_attrs = kwargs.pop("smart", {}).copy()
+            smart_attrs["data-flex"] = self.name
+            kwargs.setdefault("smart_attrs", smart_attrs)
+
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
@@ -203,7 +218,13 @@ class FlexFormField(OrderableModel):
             kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
-        return field_type(**kwargs)
+        try:
+            tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
+            fld = tt(**kwargs)
+        except Exception as e:
+            logger.exception(e)
+            raise
+        return fld
 
     def clean(self):
         try:
@@ -218,9 +239,10 @@ class FlexFormField(OrderableModel):
             self.name = namify(self.name)
 
         super().save(force_insert, force_update, using, update_fields)
+        self.flex_form.get_form.cache_clear()
 
 
-class OptionSet(models.Model):
+class OptionSet(NaturalKeyModel, models.Model):
     version = IntegerVersionField()
     name = CICharField(max_length=100, unique=True)
     description = models.CharField(max_length=1000, blank=True, null=True)
@@ -298,7 +320,7 @@ def clean_choices(value):
         return list(zip(map(str.lower, value), value))
 
 
-class CustomFieldType(models.Model):
+class CustomFieldType(NaturalKeyModel, models.Model):
     name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[A-Z][a-zA-Z0-9_]*")])
     base_type = StrategyClassField(registry=field_registry, default=forms.CharField)
     attrs = models.JSONField(default=dict)
@@ -322,7 +344,7 @@ class CustomFieldType(models.Model):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
         cls = self.get_class()
-        if cls not in field_registry:
+        if fqn(cls) not in field_registry:
             field_registry.register(cls)
 
     def clean(self):
@@ -336,4 +358,4 @@ class CustomFieldType(models.Model):
     def get_class(self):
         attrs = self.attrs.copy()
         attrs["custom"] = self
-        return type(self.base_type)(self.name, (CustomFieldMixin, self.base_type), attrs)
+        return type(self.base_type)(underscore_to_camelcase(self.name), (CustomFieldMixin, self.base_type), attrs)
