@@ -15,7 +15,7 @@ variables:
   - name: Docker.repository
     value: "flex-registration"
   - name: buildDate
-    value: $[format('{0:yyyyMMddHHmmss}', pipeline.startTime)]
+    value: $[format('{0:yyyy}-{0:MM}-{0:dd} {0:HH}:{0:mm}}', pipeline.startTime)]
   - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
     - group: flex-registration-prod
     - name: Docker.registry
