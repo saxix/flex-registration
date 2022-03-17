@@ -6,23 +6,26 @@
         {{ formset.media }}
     {% endfor %}
 {% endblock head %}
-
-{% block body %}
+{% block header %}
     {% if user.is_staff %}
         <div class="fixed flex" style="background-color: black; color: white; width: 100%; z-index: 1000">
-        <div class="inline-flex flex-shrink">Version: {{ smart.version }}</div> - 
-        <div class="inline-flex flex-grow"> Build date: {{ smart.build_date }}</div>
-        <div class="inline-flex">
-            <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
-            <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> - 
-            {% for name, formset in formsets.items %}
-                <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> - 
-            {% endfor %}
-            <a target="admin" href="{% url "admin:index" %}">Admin</a>
-            &nbsp;&nbsp;&nbsp;
-        </div>
+            <div class="inline-flex flex-shrink">Version: {{ smart.version }}</div> - 
+            <div class="inline-flex flex-grow"> Build date: {{ smart.build_date }}</div>
+            <div class="inline-flex">
+                <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
+                <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> - 
+                {% for name, formset in formsets.items %}
+                    <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> - 
+                {% endfor %}
+                <a target="admin" href="{% url "admin:index" %}">Admin</a>
+                &nbsp;&nbsp;&nbsp;
+            </div>
         </div>
     {% endif %}
+    {{ block.super }}
+{% endblock header %}
+
+{% block body %}
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
             <div class="text-center mb-16">
