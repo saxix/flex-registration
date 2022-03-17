@@ -15,7 +15,7 @@ def parse_emails(value):
 
 DEFAULTS = {
     "DJANGO_ADMIN_URL": (str, "admin/"),
-    "DJANGO_ADMIN_TITLE": (str, "PRODUCTION"),
+    "DJANGO_ADMIN_TITLE": (str, "="),
     "AUTHENTICATION_BACKENDS": (list, []),
     "SECRET_KEY": (str, ""),
     "ADMINS": (parse_emails, ""),
@@ -25,7 +25,6 @@ DEFAULTS = {
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
     "ROOT_KEY": (str, uuid.uuid4().hex),
     "EMAIL_BACKEND": (str, "django.core.mail.backends.smtp.EmailBackend"),
-    # 'EMAIL_BACKEND': (str, 'mailer.backend.DbBackend'),
     "EMAIL_HOST": (str, ""),
     "EMAIL_HOST_USER": (str, ""),
     "EMAIL_HOST_PASSWORD": (str, ""),
@@ -44,9 +43,9 @@ DEFAULTS = {
     "SENTRY_DSN": (str, ""),
     "SENTRY_SECURITY_TOKEN": (str, ""),
     "SENTRY_SECURITY_TOKEN_HEADER": (str, "X-Sentry-Token"),
-    "SESSION_COOKIE_DOMAIN": (str, "bob.sosbob.com"),
+    "SESSION_COOKIE_DOMAIN": (str, "localhost"),
     "SESSION_COOKIE_SECURE": (bool, "false"),
-    "SESSION_COOKIE_NAME": (str, "bob_id"),
+    "SESSION_COOKIE_NAME": (str, "reg_id"),
     "SMART_ADMIN_BOOKMARKS": (parse_bookmarks, ""),
     "STATIC_ROOT": (str, "/tmp/static/"),
     "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
