@@ -260,10 +260,7 @@ LOGGING = {
 USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 # ------ Custom App
-CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-# CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 
-CONSTANCE_ADDITIONAL_FIELDS = {}
 
 DATE_INPUT_FORMATS = [
     "%Y-%m-%d",  # '2006-10-25'
@@ -279,20 +276,6 @@ DATE_INPUT_FORMATS = [
     "%d %B %Y",  # '25 October 2006'
     "%d %B, %Y",  # '25 October, 2006'
 ]
-
-CONSTANCE_CONFIG = OrderedDict(
-    {
-        "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
-        "HOME_TEMPLATE": ("home.html", "Default home.html", str),
-        "QRCODE": (False, "Enable QRCode generation", bool),
-        "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
-        "SMART_ADMIN_BOOKMARKS": (
-            env("SMART_ADMIN_BOOKMARKS"),
-            "",
-            str,
-        ),
-    }
-)
 
 MAX_OBSERVED = 1
 SENTRY_DSN = env("SENTRY_DSN")
@@ -316,6 +299,23 @@ if SENTRY_DSN:
         send_default_pii=True,
     )
 
+CONSTANCE_ADDITIONAL_FIELDS = {}
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+# CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
+CONSTANCE_CONFIG = OrderedDict(
+    {
+        "SMART_ADMIN_BOOKMARKS": (
+            "",
+            "",
+            str,
+        ),
+        "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
+        "HOME_TEMPLATE": ("home.html", "Default home.html", str),
+        "QRCODE": (False, "Enable QRCode generation", bool),
+        "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
+    }
+)
+
 SMART_ADMIN_SECTIONS = {
     "Registration": ["registration"],
     "Form Builder": ["core"],
@@ -326,6 +326,7 @@ SMART_ADMIN_SECTIONS = {
 }
 SMART_ADMIN_TITLE = "="
 SMART_ADMIN_HEADER = env("ADMIN_TITLE")
+SMART_ADMIN_BOOKMARKS = "smart_register.core.utils.get_bookmarks"
 
 SMART_ADMIN_PROFILE_LINK = True
 

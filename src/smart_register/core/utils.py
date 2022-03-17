@@ -4,11 +4,14 @@ import json
 import re
 import unicodedata
 
+from constance import config
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.template import loader
 from django.utils.functional import keep_lazy_text
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
 
@@ -100,3 +103,31 @@ def render(request, template_name, context=None, content_type=None, status=None,
             response.set_cookie(k, v)
 
     return response
+
+
+def clean(v):
+    return v.replace(r"\n", "").strip()
+
+
+def get_bookmarks(request):
+    quick_links = []
+    for entry in config.SMART_ADMIN_BOOKMARKS.split("\n"):
+        if entry := clean(entry):
+            try:
+                if entry == "--":
+                    quick_links.append(mark_safe("<li><hr/></li>"))
+                elif parts := entry.split(","):
+                    args = None
+                    if len(parts) == 1:
+                        args = parts[0], "viewlink", parts[0], parts[0]
+                    elif len(parts) == 2:
+                        args = parts[0], "viewlink", parts[1], parts[0]
+                    elif len(parts) == 3:
+                        args = parts[0], "viewlink", parts[1], parts[0]
+                    elif len(parts) == 4:
+                        args = parts.reverse()
+                    if args:
+                        quick_links.append(format_html('<li><a target="{}" class="{}" href="{}">{}</a></li>', *args))
+            except ValueError:
+                pass
+    return quick_links
