@@ -23,3 +23,9 @@ smart = {
         }
     }
 };
+
+(function ($) {
+    $(function () {
+        $('[data-visibility=hidden]').parents(".field-container").hide()
+    });
+})($);

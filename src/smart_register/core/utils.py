@@ -6,6 +6,8 @@ import unicodedata
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import HttpResponse
+from django.template import loader
 from django.utils.functional import keep_lazy_text
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
@@ -84,3 +86,17 @@ def underscore_to_camelcase(value):
             )
         )
     )
+
+
+def render(request, template_name, context=None, content_type=None, status=None, using=None, cookies=None):
+    """
+    Return a HttpResponse whose content is filled with the result of calling
+    django.template.loader.render_to_string() with the passed arguments.
+    """
+    content = loader.render_to_string(template_name, context, request, using=using)
+    response = HttpResponse(content, content_type, status)
+    if cookies:
+        for k, v in cookies.items():
+            response.set_cookie(k, v)
+
+    return response

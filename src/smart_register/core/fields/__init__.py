@@ -9,6 +9,7 @@ from .multi_checkbox import MultiCheckboxField
 from .picture import PictureField
 from .radio import RadioField, YesNoChoice, YesNoRadio
 from .select import AjaxSelectField, SelectField
+from .widgets.mixins import SmartFieldMixin
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
@@ -21,14 +22,3 @@ WIDGET_FOR_FORMFIELD_DEFAULTS = {
     YesNoChoice: {"widget": widgets.SmartSelectWidget},
     MultiCheckboxField: {"widget": widgets.MultiCheckboxWidget},
 }
-
-
-class SmartFieldMixin:
-    def __init__(self, *args, **kwargs) -> None:
-        self.smart_attrs = kwargs.pop("smart_attrs", {})
-        super().__init__(*args, **kwargs)
-
-    def widget_attrs(self, widget):
-        attrs = super().widget_attrs(widget)
-        attrs |= self.smart_attrs
-        return attrs

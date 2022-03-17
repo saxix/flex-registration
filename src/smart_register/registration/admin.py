@@ -124,10 +124,10 @@ class RecordAdmin(SmartModelAdmin):
         return render(request, "admin/registration/record/decrypt.html", ctx)
 
     def has_add_permission(self, request):
-        return is_root(request)
+        return is_root(request) or settings.DEBUG
 
     def has_delete_permission(self, request, obj=None):
-        return is_root(request)
+        return is_root(request) or settings.DEBUG
 
     def has_change_permission(self, request, obj=None):
-        return is_root(request)
+        return is_root(request) or settings.DEBUG

@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import tempfile
 from json import JSONDecodeError
 from pathlib import Path
@@ -8,13 +9,13 @@ import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
+from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
 from django.db.models import JSONField
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.urls import reverse
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
@@ -22,6 +23,9 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import ValidatorForm
 from .models import FlexForm, FlexFormField, FormSet, Validator, OptionSet, CustomFieldType
+from .utils import render
+
+logger = logging.getLogger(__name__)
 
 
 @register(Validator)
@@ -32,6 +36,11 @@ class ValidatorAdmin(SmartModelAdmin):
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
     list_display = ("name", "parent", "flex_form", "extra", "max_num", "min_num")
+
+
+FLEX_FIELD_DEFAULT_ATTRS = {
+    "smart": {"hint": "", "visible": False, "onchange": "", "description": ""},
+}
 
 
 class FormSetInline(OrderableAdmin, TabularInline):
@@ -58,6 +67,11 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     }
     ordering_field = "ordering"
     order = "ordering"
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial.setdefault("advanced", FLEX_FIELD_DEFAULT_ATTRS)
+        return initial
 
     @button()
     def test(self, request, pk):
@@ -87,7 +101,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
                 form = formClass()
             ctx["form"] = form
         except Exception as e:
-            raise
+            logger.exception(e)
             ctx["error"] = e
 
         return render(request, "admin/core/flexformfield/test.html", ctx)
@@ -113,12 +127,6 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
     ordering_field = "ordering"
     ordering_field_hide_input = True
 
-    # def get_readonly_fields(self, request, obj=None):
-    #     fields = list(super().get_readonly_fields(request, obj))
-    #     # if obj and obj.pk:
-    #     #     fields.append("name")
-    #     return fields
-
 
 class SyncForm(forms.Form):
     host = forms.URLField()
@@ -126,7 +134,6 @@ class SyncForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
 
 
-# https://uni-hope-ukr-sr-dev.azurefd.net/acdc/core/flexformfield/
 @register(FlexForm)
 class FlexFormAdmin(SmartModelAdmin):
     list_display = ("name", "validator", "used_by", "childs", "parents")
@@ -145,18 +152,24 @@ class FlexFormAdmin(SmartModelAdmin):
 
     @view(http_basic_auth=True, permission=lambda request, obj: request.user.is_superuser)
     def export(self, request):
-        buf = io.StringIO()
-        call_command("dumpdata", "core", stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
-        return JsonResponse(json.loads(buf.getvalue()), safe=False)
+        try:
+            buf = io.StringIO()
+            call_command("dumpdata", "core", stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
+            return JsonResponse(json.loads(buf.getvalue()), safe=False)
+        except Exception as e:
+            logger.exception(e)
+            return JsonResponse({}, status=400)
 
     @button(label="Import")
     def _import(self, request):
         ctx = self.get_common_context(request)
+        cookies = {}
         if request.method == "POST":
             form = SyncForm(request.POST)
             if form.is_valid():
                 try:
                     auth = HTTPBasicAuth(form.cleaned_data["username"], form.cleaned_data["password"])
+                    cookies = {"sync_host": form.cleaned_data["host"], "sync_username": form.cleaned_data["username"]}
                     url = f"{form.cleaned_data['host']}core/flexform/export/"
                     workdir = Path(".").absolute()
                     out = io.StringIO()
@@ -168,18 +181,24 @@ class FlexFormAdmin(SmartModelAdmin):
                             dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
                         ) as fdst:
                             fdst.write(res.content)
-                            call_command("loaddata", (workdir / fdst.name).absolute(), stdout=out)
+                            with disable_concurrency():
+                                fixture = (workdir / fdst.name).absolute()
+                                call_command("loaddata", fixture, stdout=out, verbosity=3)
                             message = out.getvalue()
                             self.message_user(request, message)
-
                     ctx["res"] = res
-                    # ctx['data'] = res.json
                 except (Exception, JSONDecodeError) as e:
+                    logger.exception(e)
                     self.message_error_to_user(request, e)
         else:
-            form = SyncForm(initial={"host": request.build_absolute_uri("/")})
+            form = SyncForm(
+                initial={
+                    "host": request.COOKIES.get("sync_host", ""),
+                    "username": request.COOKIES.get("sync_username", ""),
+                }
+            )
         ctx["form"] = form
-        return render(request, "admin/core/flexform/import.html", ctx)
+        return render(request, "admin/core/flexform/import.html", ctx, cookies=cookies)
 
 
 @register(OptionSet)

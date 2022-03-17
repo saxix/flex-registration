@@ -34,7 +34,7 @@
                 {{ dataset.intro|safe }}
             </div>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
-                {{ form.errors }}
+                {{ form.non_field_errors }}
                 <form class="w-full" method="post">
                     {% csrf_token %}
                     <div class="form-container">
@@ -42,7 +42,10 @@
                         <div class="mb-4 field-container">
                             <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
                                    for="{{ field.auto_id }}">{{ field.label }}</label>
+                            <div class="text-sm	">{{ field|smart:"description" }}</div>
+                            {{ field.errors }}
                             {{ field }}
+                            <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
                         </div>
                     {% endfor %}
 
@@ -64,8 +67,10 @@
                                                     <div class="mb-4 field-container">
                                                         <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
                                                                for="{{ field.auto_id }}">{{ field.label }}</label>
+                                                        <div class="text-sm	">{{ field|smart:"description" }}</div>
+                                                        {{ field.errors }}
                                                         {{ field }}
-                                                        <div class="text-xs	italic">{{ field.help_text }}</div>
+                                                        <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
                                                     </div>
                                                 {% endfor %}
 {#                                                {{ frm }}#}

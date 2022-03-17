@@ -205,8 +205,10 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
             smart_attrs = kwargs.pop("smart", {}).copy()
             smart_attrs["data-flex"] = self.name
-            kwargs.setdefault("smart_attrs", smart_attrs)
+            if not smart_attrs.get("visible", True):
+                smart_attrs["data-visibility"] = "hidden"
 
+            kwargs.setdefault("smart_attrs", smart_attrs.copy())
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
@@ -219,6 +221,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
         try:
+            kwargs.setdefault("flex_field", self)
             tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
             fld = tt(**kwargs)
         except Exception as e:
