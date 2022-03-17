@@ -91,7 +91,7 @@ stages:
               -DJANGO_ADMIN_TITLE $(DJANGO_ADMIN_TITLE)
               -ALLOWED_HOSTS $(ALLOWED_HOSTS)
               -SECRET_KEY $(SECRET_KEY)
-              -SENTRY_DSN $(SENTRY_DSN) 
+              -SENTRY_DSN $(SENTRY_DSN)
               -ADMIN_EMAIL $(ADMIN_EMAIL)
               -ADMIN_PASSWORD $(ADMIN_PASSWORD)
               -ROOT_TOKEN $(ROOT_TOKEN)
