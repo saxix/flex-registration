@@ -12,12 +12,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.defaultfilters import pluralize
-from django_regex.fields import RegexField
 from natural_keys import NaturalKeyModel
 from strategy_field.utils import fqn
 
+from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
-from .fields.strategy import StrategyClassField
 from .forms import CustomFieldMixin, FlexFormBaseForm
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import jsonfy, namify, underscore_to_camelcase
