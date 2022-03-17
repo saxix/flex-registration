@@ -8,8 +8,8 @@
 {% endblock head %}
 {% block header %}
     {% if user.is_staff %}
-        <div class="fixed flex" style="background-color: black; color: white; width: 100%; z-index: 1000">
-            <div class="inline-flex flex-shrink">Version: {{ smart.version }}</div> - 
+        <div class="fixed flex staff-toolbar">
+            <div class="inline-flex flex-shrink">&nbsp;&nbsp;&nbsp;Version: {{ smart.version }}</div> - 
             <div class="inline-flex flex-grow"> Build date: {{ smart.build_date }}</div>
             <div class="inline-flex">
                 <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
