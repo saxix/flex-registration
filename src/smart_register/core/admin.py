@@ -14,7 +14,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
-from django.core.signing import Signer
+from django.core.signing import Signer, BadSignature
 from django.db.models import JSONField
 from django.http import JsonResponse
 from django.urls import reverse
@@ -137,9 +137,11 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
 
 
 class SyncForm(forms.Form):
+    APPS = ("core", "registration")
     host = forms.URLField()
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
+    apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
     remember = forms.BooleanField(label="Remember me", required=False)
 
 
@@ -163,8 +165,9 @@ class FlexFormAdmin(SmartModelAdmin):
     @view(http_basic_auth=True, permission=lambda request, obj: request.user.is_superuser)
     def export(self, request):
         try:
+            apps = request.GET.get("apps", "").split(",")
             buf = io.StringIO()
-            call_command("dumpdata", "core", stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
+            call_command("dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
             return JsonResponse(json.loads(buf.getvalue()), safe=False)
         except Exception as e:
             logger.exception(e)
@@ -175,13 +178,16 @@ class FlexFormAdmin(SmartModelAdmin):
         return signer.sign_object(form.cleaned_data)
 
     def _get_saved_credentials(self, request):
-        signer = Signer(request.user.password)
-        obj = signer.unsign_object(request.COOKIES.get(self.SYNC_COOKIE, {}))
-        return obj
+        try:
+            signer = Signer(request.user.password)
+            obj: dict = signer.unsign_object(request.COOKIES.get(self.SYNC_COOKIE, {}))
+            return obj
+        except BadSignature:
+            return {}
 
     @button(label="Import")
     def _import(self, request):
-        ctx = self.get_common_context(request)
+        ctx = self.get_common_context(request, title="Import")
         cookies = {}
         if request.method == "POST":
             form = SyncForm(request.POST)
@@ -192,7 +198,7 @@ class FlexFormAdmin(SmartModelAdmin):
                         cookies = {self.SYNC_COOKIE: self._get_signed_cookie(request, form)}
                     else:
                         cookies = {self.SYNC_COOKIE: ""}
-                    url = f"{form.cleaned_data['host']}core/flexform/export/"
+                    url = f"{form.cleaned_data['host']}core/flexform/export/?apps={','.join(form.cleaned_data['apps'])}"
                     workdir = Path(".").absolute()
                     out = io.StringIO()
                     with requests.get(url, stream=True, auth=auth) as res:
