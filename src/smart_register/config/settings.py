@@ -67,6 +67,7 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
+    "smart_register.web.middlewares.SentryMiddleware",
     "smart_register.web.middlewares.MaintenanceMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",

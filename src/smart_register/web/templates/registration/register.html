@@ -1,4 +1,4 @@
-{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static %}
+{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static i18n %}
 {% block head %}
     <script src="{% static "jquery.formset.js" %}"></script>
     {{ form.media }}
@@ -7,7 +7,7 @@
     {% endfor %}
 {% endblock head %}
 {% block staff-toolbar %}
-    {{ block.super }}
+    {% include "_staff_toolbar.html" %}
 {% endblock staff-toolbar %}
 
 {% block body %}
@@ -29,7 +29,8 @@
                     {% for field in form %}
                         <div class="mb-4 field-container">
                             <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
-                                   for="{{ field.auto_id }}">{{ field.label }}</label>
+                                   for="{{ field.auto_id }}">{{ field.label }}
+                            </label>
                             <div class="text-sm	">{{ field|smart:"description" }}</div>
                             {{ field.errors }}
                             {{ field }}
@@ -57,14 +58,15 @@
                                                 {% for field in frm %}
                                                     <div class="mb-4 field-container">
                                                         <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
-                                                               for="{{ field.auto_id }}">{{ field.label }}</label>
+                                                               for="{{ field.auto_id }}">{{ field.label }}
+                                                            {% if field.field.required %}<span class="lowercase font-thin text-xs">({% trans "required" %})</span>{% endif %}
+                                                        </label>
                                                         <div class="text-sm	">{{ field|smart:"description" }}</div>
                                                         {{ field.errors }}
                                                         {{ field }}
                                                         <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
                                                     </div>
                                                 {% endfor %}
-{#                                                {{ frm }}#}
                                                 <div class="flex">
                                                     <div class="flex-auto "></div>
                                                     <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>

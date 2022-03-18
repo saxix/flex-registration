@@ -116,6 +116,8 @@ def get_bookmarks(request):
             try:
                 if entry == "--":
                     quick_links.append(mark_safe("<li><hr/></li>"))
+                elif entry.startswith("#"):
+                    quick_links.append(mark_safe(f"<li>{entry[1:]}</li>"))
                 elif parts := entry.split(","):
                     args = None
                     if len(parts) == 1:
