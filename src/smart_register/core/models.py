@@ -139,6 +139,9 @@ class FlexForm(NaturalKeyModel):
 class FormSet(NaturalKeyModel, OrderableModel):
     version = IntegerVersionField()
     name = CICharField(max_length=255)
+    title = models.CharField(max_length=300, blank=True, null=True)
+    description = models.TextField(max_length=2000, blank=True, null=True)
+
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)

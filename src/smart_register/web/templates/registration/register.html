@@ -6,25 +6,9 @@
         {{ formset.media }}
     {% endfor %}
 {% endblock head %}
-{% block header %}
-    {% if user.is_staff %}
-        <div class="fixed flex staff-toolbar">
-            <div class="inline-flex flex-shrink">&nbsp;&nbsp;&nbsp;Version: {{ smart.version|slice:':7'|join:'' }}</div> - 
-            <div class="inline-flex flex-shrink"> Build date: {{ smart.build_date }}</div> - 
-            <div class="inline-flex flex-grow"> {{ smart.debug }} {{ smart.env }}</div>
-            <div class="inline-flex">
-                <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
-                <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> - 
-                {% for name, formset in formsets.items %}
-                    <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> - 
-                {% endfor %}
-                <a target="admin" href="{% url "admin:index" %}">Admin</a>
-                &nbsp;&nbsp;&nbsp;
-            </div>
-        </div>
-    {% endif %}
+{% block staff-toolbar %}
     {{ block.super }}
-{% endblock header %}
+{% endblock staff-toolbar %}
 
 {% block body %}
     <div class="min-h-screen flex justify-center bg-gray-100">
@@ -59,7 +43,10 @@
                             <div class="w-full formset">
                                     <div>
                                         <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
-                                            {{ name }}
+                                            {{ formset.fs.title|default_if_none:""|safe }}
+                                        </div>
+                                        <div class="w-full mt-4 text-sm leading-7 text-gray-800  font-regular">
+                                            {{ formset.fs.description|default_if_none:""|safe }}
                                         </div>
                                     </div>
                                 <div class="flex flex-col">
