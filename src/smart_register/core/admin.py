@@ -71,9 +71,10 @@ class FormSetInline(OrderableAdmin, TabularInline):
 
 @register(FlexFormField)
 class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
-    list_display = ("ordering", "flex_form", "name", "field_type", "required", "validator")
+    list_display = ("ordering", "flex_form", "name", "field_type", "required", "enabled")
     list_filter = (("flex_form", AutoCompleteFilter),)
-    list_editable = ["ordering"]
+    list_editable = ["ordering", "required", "enabled"]
+    search_fields = ("name", "label")
 
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
