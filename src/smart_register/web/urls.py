@@ -1,11 +1,12 @@
 from django.urls import path
 
-from .views import OptionsListView
+from .views import OptionsListView, QRCodeView
 from .views import HomeView, RegisterCompleteView, RegisterView, MaintenanceView, ProbeView, QRVerify
 
 urlpatterns = [
     path("", HomeView.as_view(), name="index"),
     path("probe/", ProbeView.as_view(), name="probe"),
+    path("qrcode/", QRCodeView.as_view(), name="qrcode"),
     path("maintenance", MaintenanceView.as_view(), name="maintenance"),
     path("register/<int:pk>/", RegisterView.as_view(), name="register"),
     path("register/", RegisterView.as_view(), name="register-latest"),

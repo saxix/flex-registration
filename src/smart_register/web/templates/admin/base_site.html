@@ -5,6 +5,8 @@
     {% if enable_switch %} / {% smart_toggler %}{% endif %}
     {% if user.is_superuser %} / <a href="{{ sysinfo }}">System Info</a> {% endif %}
     {% if profile_link %} / <a href="{{ profile_link }}">Profile</a> {% endif %}
+    {% if profile_link %} / <a href="{% url "qrcode" %}">qrcode</a> {% endif %}
+
 {% endblock %}
 
 {% block branding %}
