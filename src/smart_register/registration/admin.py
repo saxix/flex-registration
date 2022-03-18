@@ -104,7 +104,7 @@ class RecordAdmin(SmartModelAdmin):
     list_filter = (("registration", AutoCompleteFilter),)
     change_form_template = None
 
-    @button()
+    @button(permission=is_root)
     def decrypt(self, request, pk):
         ctx = self.get_common_context(request, pk, title="To decrypt you need to provide Registration Private Key")
         if request.method == "POST":
