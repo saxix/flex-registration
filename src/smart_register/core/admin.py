@@ -224,6 +224,9 @@ class FlexFormAdmin(SmartModelAdmin):
                             with disable_concurrency():
                                 fixture = (workdir / fdst.name).absolute()
                                 call_command("loaddata", fixture, stdout=out, verbosity=3)
+                                for frm in FlexForm.objects.all():
+                                    frm.get_form.cache_clear()
+
                             message = out.getvalue()
                             self.message_user(request, message)
                     ctx["res"] = res
