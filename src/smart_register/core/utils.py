@@ -1,3 +1,4 @@
+import base64
 import datetime
 import decimal
 import json
@@ -64,8 +65,11 @@ class JSONEncoder(DjangoJSONEncoder):
             return list(o)
         elif isinstance(o, decimal.Decimal):
             return str(o)
+        elif isinstance(o, memoryview):
+            return base64.urlsafe_b64encode(o.tobytes())
         elif isinstance(o, bytes):
             return str(o, encoding="utf-8")
+            # return base64.encodebytes(o)
         else:
             return super().default(o)
 
