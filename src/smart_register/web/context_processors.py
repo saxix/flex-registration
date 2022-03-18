@@ -10,5 +10,6 @@ def smart(request):
             "version": os.environ.get("VERSION", ""),
             "debug": settings.DEBUG,
             "env": settings.SMART_ADMIN_HEADER,
+            "sentry_dsn": settings.SENTRY_DSN,
         }
     }

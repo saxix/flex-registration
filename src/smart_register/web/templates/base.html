@@ -16,10 +16,8 @@
     {% if smart.debug %}<link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
 
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
-    <script
-            src="https://browser.sentry-cdn.com/6.18.2/bundle.min.js"
-            integrity="sha384-hxcWlK1seT59Ftk+5StsgedF3GKBtJGRKWf6YgKV8FJzYpTJHgVc/IBzleXnfYDI"
-            crossorigin="anonymous"></script>
+    <script src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js" integrity="sha384-V+jCLoAVKKml0VanRLGJGAdKk+Lzo1kRFe079J0majdfeGabOd32KG/2adGnr4N0" crossorigin="anonymous"></script>
+
 
     {% block head %}
     {% endblock head %}
@@ -45,5 +43,12 @@
 {% block body %}
 {% endblock body %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
+<script>
+    Sentry.init({
+        dsn: "{{ smart.sentry_dsn }}",
+        release: "{{ smart.version }}",
+        tracesSampleRate: 1.0,
+    });
+</script>
 </body>
 </html>
