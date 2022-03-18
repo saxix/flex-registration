@@ -209,7 +209,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
             smart_attrs = kwargs.pop("smart", {}).copy()
             smart_attrs["data-flex"] = self.name
-            if smart_attrs.get("question", True):
+            if smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
             elif not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
