@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "jsoneditor",
     "captcha",
     "social_django",
+    "corsheaders",
     # ---
     "smart_register",
     "smart_register.web",
@@ -67,6 +68,8 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
+    "smart_register.web.middlewares.SentryMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "smart_register.web.middlewares.MaintenanceMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",
@@ -298,6 +301,9 @@ if SENTRY_DSN:
         release=smart_register.VERSION,
         send_default_pii=True,
     )
+CORS_ALLOWED_ORIGINS = [
+    "https://excubo.unicef.io",
+] + env("CORS_ALLOWED_ORIGINS")
 
 CONSTANCE_ADDITIONAL_FIELDS = {}
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
@@ -380,6 +386,8 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 # CAPTCHA_IMAGE_SIZE = 300,200
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
+
+
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
 
 

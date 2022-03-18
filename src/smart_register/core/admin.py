@@ -43,11 +43,16 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "parent", "flex_form", "extra", "max_num", "min_num")
+    list_display = ("name", "title", "parent", "flex_form", "extra", "max_num", "min_num")
+    search_fields = ("name", "title")
+    list_filter = (
+        ("parent", AutoCompleteFilter),
+        ("flex_form", AutoCompleteFilter),
+    )
 
 
 FLEX_FIELD_DEFAULT_ATTRS = {
-    "smart": {"hint": "", "visible": False, "onchange": "", "description": ""},
+    "smart": {"hint": "", "visible": True, "onchange": "", "description": ""},
 }
 
 
@@ -64,17 +69,32 @@ class FormSetInline(OrderableAdmin, TabularInline):
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
+class FlexFormFieldForm(forms.ModelForm):
+    class Meta:
+        model = FlexFormField
+        exclude = ()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # if self.instance and self.instance.pk:
+        self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
+
+
 @register(FlexFormField)
 class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
-    list_display = ("ordering", "flex_form", "name", "field_type", "required", "validator")
+    list_display = ("ordering", "flex_form", "name", "label", "_type", "required", "enabled")
     list_filter = (("flex_form", AutoCompleteFilter),)
-    list_editable = ["ordering"]
+    list_editable = ["ordering", "required", "enabled"]
+    search_fields = ("name", "label")
 
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
     ordering_field = "ordering"
     order = "ordering"
+
+    def _type(self, obj):
+        return obj.field_type.__name__
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
@@ -115,25 +135,17 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         return render(request, "admin/core/flexformfield/test.html", ctx)
 
 
-class FlexFormFieldForm(forms.ModelForm):
-    class Meta:
-        model = FlexFormField
-        exclude = ()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # if self.instance and self.instance.pk:
-        self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
-
-
 class FlexFormFieldInline(OrderableAdmin, TabularInline):
     model = FlexFormField
     form = FlexFormFieldForm
-    fields = ("ordering", "label", "name", "field_type", "required", "validator")
+    fields = ("ordering", "label", "name", "required", "enabled")
     show_change_link = True
     extra = 0
     ordering_field = "ordering"
     ordering_field_hide_input = True
+
+    def _type(self, obj):
+        return obj.field_type.__name__
 
 
 class SyncForm(forms.Form):
@@ -212,6 +224,9 @@ class FlexFormAdmin(SmartModelAdmin):
                             with disable_concurrency():
                                 fixture = (workdir / fdst.name).absolute()
                                 call_command("loaddata", fixture, stdout=out, verbosity=3)
+                                for frm in FlexForm.objects.all():
+                                    frm.get_form.cache_clear()
+
                             message = out.getvalue()
                             self.message_user(request, message)
                     ctx["res"] = res

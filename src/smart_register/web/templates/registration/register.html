@@ -1,30 +1,21 @@
-{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static %}
+{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static i18n %}
 {% block head %}
     <script src="{% static "jquery.formset.js" %}"></script>
-    {{ form.media }}
-    {% for name, formset in formsets.items %}
-        {{ formset.media }}
-    {% endfor %}
+    <script src="/static/jquery.formset.js"></script>
+    <script src="/static/smart.js"></script>
+
+    <link href="/static/select2/select2.min.css" type="text/css" media="all" rel="stylesheet">
+    <script src="/static/select2/select2.min.js"></script>
+    <script src="/static/select2/ajax_select.js"></script>
+
+    {#    {{ form.media }}#}
+    {#    {% for name, formset in formsets.items %}#}
+    {#        {{ formset.media }}#}
+    {#    {% endfor %}#}
 {% endblock head %}
-{% block header %}
-    {% if user.is_staff %}
-        <div class="fixed flex staff-toolbar">
-            <div class="inline-flex flex-shrink">&nbsp;&nbsp;&nbsp;Version: {{ smart.version|slice:':7'|join:'' }}</div> - 
-            <div class="inline-flex flex-shrink"> Build date: {{ smart.build_date }}</div> - 
-            <div class="inline-flex flex-grow"> {{ debug }}</div>
-            <div class="inline-flex">
-                <a target="mod" href="{% url "admin:registration_registration_change" dataset.pk %}">Edit Module</a> - 
-                <a target="frm"  href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Edit Form</a> - 
-                {% for name, formset in formsets.items %}
-                    <a target="name"  href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">Edit {{ name }}</a> - 
-                {% endfor %}
-                <a target="admin" href="{% url "admin:index" %}">Admin</a>
-                &nbsp;&nbsp;&nbsp;
-            </div>
-        </div>
-    {% endif %}
-    {{ block.super }}
-{% endblock header %}
+{% block staff-toolbar %}
+    {% include "_staff_toolbar.html" %}
+{% endblock staff-toolbar %}
 
 {% block body %}
     <div class="min-h-screen flex justify-center bg-gray-100">
@@ -42,42 +33,87 @@
                 <form class="w-full" method="post">
                     {% csrf_token %}
                     <div class="form-container">
-                    {% for field in form %}
-                        <div class="mb-4 field-container">
-                            <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
-                                   for="{{ field.auto_id }}">{{ field.label }}</label>
-                            <div class="text-sm	">{{ field|smart:"description" }}</div>
-                            {{ field.errors }}
-                            {{ field }}
-                            <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
-                        </div>
-                    {% endfor %}
+                        {% for field in form %}
+                            <fieldset>
+                                {% if user.is_staff %}
+                                    <span class="float-left staff-editor">
+                                                        <a target="_edit"
+                                                           href="{% url "admin:core_flexformfield_change" field.field.flex_field.pk %}">
+                                                        </a>
+                                                        </span>
+                                {% endif %}
+                                {% if field.field.flex_field.advanced.smart.question %}
+                                    <div>
+                                        <label for="question_{{ field.auto_id }}">
+                                            <input id="question_{{ field.auto_id }}"
+                                                   class="question-visibility"
+                                                   data-target="#field-container-{{ field.auto_id }}"
+                                                   type="checkbox"> {{ field.field.flex_field.advanced.smart.question }}
+                                        </label>
+                                    </div>
+                                {% endif %}
+                                <div class="mb-4 field-container">
+                                    <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
+                                           for="{{ field.auto_id }}">{{ field.label }}
+                                    </label>
+                                    <div class="text-sm	">{{ field|smart:"description" }}</div>
+                                    {{ field.errors }}
+                                    {{ field }}
+                                    <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
+                                </div>
+                            </fieldset>
+                        {% endfor %}
 
                     </div>
                     {% for name, formset in formsets.items %}
                         <div class="shadow-md rounded bg-gray-100 p-4">
                             <div class="w-full formset">
-                                    <div>
-                                        <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
-                                            {{ name }}
-                                        </div>
+                                <div>
+                                    <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
+                                        {{ formset.fs.title|default_if_none:""|safe }}
                                     </div>
+                                    <div class="w-full mt-4 text-sm leading-7 text-gray-800  font-regular">
+                                        {{ formset.fs.description|default_if_none:""|safe }}
+                                    </div>
+                                </div>
                                 <div class="flex flex-col">
                                     <div class="w-100 forms">
                                         {{ formset.management_form }}
                                         {% for frm in formset %}
                                             <div class="w-full my-5 p-3 border border-gray-400 form-container {{ formset.prefix }}">
                                                 {% for field in frm %}
-                                                    <div class="mb-4 field-container">
-                                                        <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
-                                                               for="{{ field.auto_id }}">{{ field.label }}</label>
-                                                        <div class="text-sm	">{{ field|smart:"description" }}</div>
-                                                        {{ field.errors }}
-                                                        {{ field }}
-                                                        <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
-                                                    </div>
+                                                    <fieldset>
+                                                        {% if user.is_staff %}
+                                                            <span class="float-left staff-editor">
+                                                        <a target="_edit"
+                                                           href="{% url "admin:core_flexformfield_change" field.field.flex_field.pk %}">
+                                                        </a>
+                                                        </span>
+                                                        {% endif %}
+                                                        {% if field.field.flex_field.advanced.smart.question %}
+                                                            <div>
+                                                                <label for="question_{{ field.auto_id }}">
+                                                                    <input id="question_{{ field.auto_id }}"
+                                                                           class="question-visibility"
+                                                                           data-target="#field-container-{{ field.auto_id }}"
+                                                                           type="checkbox"> {{ field.field.flex_field.advanced.smart.question }}
+                                                                </label>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div id="field-container-{{ field.auto_id }}"
+                                                             class="mb-4 field-container ">
+                                                            <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
+                                                                   for="{{ field.auto_id }}">{{ field.label }}
+                                                                {% if field.field.required %}
+                                                                    <span class="lowercase font-thin text-xs">({% trans "required" %})</span>{% endif %}
+                                                            </label>
+                                                            <div class="text-sm	">{{ field|smart:"description" }}</div>
+                                                            {{ field.errors }}
+                                                            {{ field }}
+                                                            <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
+                                                        </div>
+                                                    </fieldset>
                                                 {% endfor %}
-{#                                                {{ frm }}#}
                                                 <div class="flex">
                                                     <div class="flex-auto "></div>
                                                     <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>
@@ -90,9 +126,9 @@
                                 </div>
                             </div>
                         </div>
-{#                        <div type="form-template" id="{{ name }}-empty" class="hidden">#}
-{#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
-{#                        </div>#}
+                        {#                        <div type="form-template" id="{{ name }}-empty" class="hidden">#}
+                        {#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
+                        {#                        </div>#}
                     {% endfor %}
                     <div class="submit-row">
                         <input

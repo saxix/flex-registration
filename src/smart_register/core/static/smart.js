@@ -1,9 +1,10 @@
 smart = {
     showHideDependant: function (sender, target, value) {
         try {
+            var cmp = value.toLowerCase();
             var $form = $(sender).parents(".form-container");
             var $target = $form.find(target).parents(".field-container");
-            if ($(sender).val() == value) {
+            if ($(sender).val() == cmp) {
                 $target.show();
             } else {
                 $target.hide();
@@ -27,5 +28,13 @@ smart = {
 (function ($) {
     $(function () {
         $('[data-visibility=hidden]').parents(".field-container").hide()
+
+        $('.question-visibility').on("click", function(){
+            if ($(this).is(':checked')){
+                $($(this).data('target')).show();
+            }else{
+                $($(this).data('target')).hide();
+            }
+        })
     });
 })($);

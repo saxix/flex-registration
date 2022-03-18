@@ -10,6 +10,7 @@ from .picture import PictureField
 from .radio import RadioField, YesNoChoice, YesNoRadio
 from .select import AjaxSelectField, SelectField
 from .widgets.mixins import SmartFieldMixin
+from .label import LabelOnlyField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},

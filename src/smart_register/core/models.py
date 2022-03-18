@@ -119,7 +119,7 @@ class FlexForm(NaturalKeyModel):
     @functools.cache
     def get_form(self):
         fields = {}
-        for field in self.fields.select_related("validator").order_by("ordering"):
+        for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
             try:
                 fields[field.name] = field.get_instance()
             except TypeError:
@@ -139,6 +139,10 @@ class FlexForm(NaturalKeyModel):
 class FormSet(NaturalKeyModel, OrderableModel):
     version = IntegerVersionField()
     name = CICharField(max_length=255)
+    title = models.CharField(max_length=300, blank=True, null=True)
+    description = models.TextField(max_length=2000, blank=True, null=True)
+    enabled = models.BooleanField(default=True)
+
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)
@@ -168,6 +172,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
+    enabled = models.BooleanField(default=True)
     validator = models.ForeignKey(
         Validator, blank=True, null=True, limit_choices_to={"target": Validator.FIELD}, on_delete=models.PROTECT
     )
@@ -204,7 +209,9 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
             smart_attrs = kwargs.pop("smart", {}).copy()
             smart_attrs["data-flex"] = self.name
-            if not smart_attrs.get("visible", True):
+            if smart_attrs.get("question", ""):
+                smart_attrs["data-visibility"] = "hidden"
+            elif not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
