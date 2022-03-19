@@ -5,10 +5,21 @@
 body {
   font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;
   font-size: 10pt;
-}
 
+  header.header {
+    //position: fixed;
+    background-color: white;
+    width: 100%;
+    z-index: 900;
+    //margin-bottom: 30px;
+  }
+}
 .btn {
 
+}
+
+fieldset label {
+  cursor: pointer;
 }
 
 ul.errorlist {
@@ -17,7 +28,7 @@ ul.errorlist {
   margin: 0;
 
   li {
-    color: red;
+    color: #c90a0a;
   }
 }
 
@@ -27,11 +38,4 @@ ul.errorlist {
     &.save {
     }
   }
-}
-
-.staff-toolbar {
-  background-color: black;
-  color: white;
-  width: 100%;
-  z-index: 1000
 }

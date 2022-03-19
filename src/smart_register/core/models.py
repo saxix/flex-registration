@@ -203,7 +203,10 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         ordering = ["ordering"]
 
     def __str__(self):
-        return f"{self.name} {self.field_type}"
+        return f"{self.name} {self.field_type.__name__}"
+
+    def type_name(self):
+        return str(self.field_type.__name__)
 
     def get_instance(self):
         # if hasattr(self.field_type, "custom") and isinstance(self.field_type.custom, CustomFieldType):

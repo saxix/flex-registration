@@ -1,0 +1,9 @@
+<span class="float-left staff-editor staff-tooltip">
+<span class="tooltiptext">
+    {{ field.field.flex_field.type_name }}()
+    {{ field.field.flex_field.name }}
+</span>
+    <a target="_edit"
+       href="{% url "admin:core_flexformfield_change" field.field.flex_field.pk %}">
+    </a>
+</span>
