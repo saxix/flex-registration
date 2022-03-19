@@ -151,7 +151,7 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
 
 class SyncForm(forms.Form):
     APPS = ("core", "registration")
-    host = forms.URLField()
+    host = forms.CharField()
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
     apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
@@ -212,6 +212,9 @@ class FlexFormAdmin(SmartModelAdmin):
                     else:
                         cookies = {self.SYNC_COOKIE: ""}
                     url = f"{form.cleaned_data['host']}core/flexform/export/?apps={','.join(form.cleaned_data['apps'])}"
+                    if not url.startswith("http"):
+                        url = f"https://{url}"
+
                     workdir = Path(".").absolute()
                     out = io.StringIO()
                     with requests.get(url, stream=True, auth=auth) as res:
