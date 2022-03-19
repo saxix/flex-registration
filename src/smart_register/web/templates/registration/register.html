@@ -144,7 +144,7 @@
             $(function () {
                 var $target = $(".form-container.{{ formset.prefix }}");
                 var config = {
-                    formCssClass: "form-container",
+                    formCssClass: "form-container.{{ formset.prefix }}",
                     prefix: "{{ formset.prefix }}",
                     {#formTemplate: "#{{ name }}-empty",#}
                     deleteContainerClass: "{{ name }}-delete",
