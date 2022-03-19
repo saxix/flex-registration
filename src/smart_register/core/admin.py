@@ -139,14 +139,11 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
 class FlexFormFieldInline(OrderableAdmin, TabularInline):
     model = FlexFormField
     form = FlexFormFieldForm
-    fields = ("ordering", "label", "name", "required", "enabled")
+    fields = ("ordering", "label", "name", "required", "enabled", "field_type")
     show_change_link = True
     extra = 0
     ordering_field = "ordering"
     ordering_field_hide_input = True
-
-    def _type(self, obj):
-        return obj.field_type.__name__
 
 
 class SyncForm(forms.Form):
