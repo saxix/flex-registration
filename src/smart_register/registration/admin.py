@@ -22,10 +22,10 @@ class RegistrationResource(resources.ModelResource):
 
 @register(Registration)
 class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
-    search_fields = ("name",)
+    search_fields = ("name", "title")
     date_hierarchy = "start"
     list_filter = ("active",)
-    list_display = ("name", "start", "end", "active", "locale", "secure")
+    list_display = ("name", "title", "slug", "active", "locale", "secure", "active")
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)
@@ -48,14 +48,16 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
 
     @link(html_attrs={"class": "aeb-green "})
     def _view_on_site(self, button):
-        button.href = reverse("register", args=[button.original.pk])
-        button.html_attrs["target"] = f"_{button.original.pk}"
+        if button.original:
+            button.href = reverse("register", args=[button.original.pk])
+            button.html_attrs["target"] = f"_{button.original.pk}"
 
     @link(html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
-        base = reverse("admin:registration_record_changelist")
-        button.href = f"{base}?registration__exact={button.original.pk}"
-        button.html_attrs["target"] = f"_{button.original.pk}"
+        if button.original:
+            base = reverse("admin:registration_record_changelist")
+            button.href = f"{base}?registration__exact={button.original.pk}"
+            button.html_attrs["target"] = f"_{button.original.pk}"
 
     @view()
     def removekey(self, request, pk):

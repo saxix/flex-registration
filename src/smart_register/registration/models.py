@@ -4,6 +4,7 @@ from Crypto.PublicKey import RSA
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
+from django.utils.text import slugify
 
 from smart_register.core.crypto import crypt, decrypt
 from smart_register.core.models import FlexForm
@@ -12,6 +13,9 @@ from smart_register.core.utils import safe_json
 
 class Registration(models.Model):
     name = CICharField(max_length=255, unique=True)
+    title = models.CharField(max_length=500, blank=True, null=True)
+    slug = models.SlugField(max_length=500, blank=True, null=True)
+
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
     start = models.DateField(auto_now_add=True)
     end = models.DateField(blank=True, null=True)
@@ -31,6 +35,10 @@ class Registration(models.Model):
         return self.name
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        if not self.title:
+            self.title = self.name
         super().save(force_insert, force_update, using, update_fields)
 
     def setup_encryption_keys(self):

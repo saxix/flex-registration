@@ -4,6 +4,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from smart_register.core.utils import get_qrcode
+from smart_register.registration.models import Registration
 
 
 class HomeView(TemplateView):
@@ -11,6 +12,12 @@ class HomeView(TemplateView):
 
     def get_template_names(self):
         return [config.HOME_TEMPLATE, self.template_name]
+
+    def get_context_data(self, **kwargs):
+        kwargs["registrations"] = Registration.objects.filter(
+            active=True, slug__in=config.HOME_PAGE_REGISTRATIONS.split(",")
+        )
+        return super().get_context_data(**kwargs)
 
 
 class QRCodeView(TemplateView):

@@ -20,8 +20,14 @@
                         0 and 2 years of age and provide cash transfer via bank account.
                     </li>
                 </ul>
-                <a href="{% url "register-latest" %}"
-                   class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-4xl">Registration</a>
+                <div class="flex justify-center space-x-2 m-10">
+                    {% for reg in registrations %}
+                        <a href="{% url "register" reg.slug %}"
+                           class="flex text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-4xl">
+                            {{ reg.title }}
+                        </a>
+                    {% endfor %}
+                </div>
             </div>
             <div class="lg:max-w-lg flex-col justify-center flex md:w-4/5 lg:w-full w-full">
                 <img class="object-cover object-center rounded" alt="hero" src="{% static "unicef_logo.jpeg" %}">

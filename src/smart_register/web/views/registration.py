@@ -53,8 +53,8 @@ class RegisterView(FormView):
             filters["active"] = True
         base = Registration.objects.select_related("flex_form")
         try:
-            if "pk" in self.kwargs:
-                return base.get(id=self.kwargs["pk"], **filters)
+            if "slug" in self.kwargs:
+                return base.get(slug=self.kwargs["slug"], **filters)
             else:
                 return base.filter(**filters).latest()
         except Registration.DoesNotExist:  # pragma: no cover
