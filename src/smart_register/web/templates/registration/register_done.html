@@ -12,10 +12,10 @@ HOPE-{{ record.timestamp.year }}{{ record.timestamp.month }}{{ record.timestamp.
             <img width="300" height="300" src="data:image/png;base64,{{ qrcode }}" alt="Red dot"/>
         </div>
         {% endif %}
-        <div class="text-center mt-10">
-            <a href="{% url "register" record.registration.pk %}"
-               class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">Start
-                New Registration</a>
-        </div>
+{#        <div class="text-center mt-10">#}
+{#            <a href="{% url "register" record.registration.pk %}"#}
+{#               class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">#}
+{#                Start New Registration</a>#}
+{#        </div>#}
     </div>
 {% endblock body %}
