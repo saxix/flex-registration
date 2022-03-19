@@ -1,0 +1,26 @@
+{% load i18n smart_register %}<fieldset class="{{ field.name }}">
+    {% if user.is_staff %}
+        {% include "registration/_staff_edit.html" %}
+    {% endif %}
+    {% if field.field.flex_field.advanced.smart.question %}
+        <div>
+            <label for="question_{{ field.auto_id }}" class="cursor-pointer">
+                <input id="question_{{ field.auto_id }}"
+                       class="question-visibility"
+                       data-target="field-container-{{ field.name }}"
+                       type="checkbox"> {{ field.field.flex_field.advanced.smart.question }}
+            </label>
+        </div>
+    {% endif %}
+    <div class="mb-4 field-container field-container-{{ field.name }}">
+        <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
+               for="{{ field.auto_id }}">{{ field.label }}
+            {% if field.field.required %}
+                <span class="lowercase font-thin text-xs">({% trans "required" %})</span>{% endif %}
+        </label>
+        <div class="text-sm	">{{ field|smart:"description" }}</div>
+        {{ field.errors }}
+        {{ field }}
+        <div class="text-xs	italic">{{ field|smart:"hint" }}</div>
+    </div>
+</fieldset>
