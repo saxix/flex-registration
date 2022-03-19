@@ -1,7 +1,7 @@
 from hashlib import md5
 
 from constance import config
-from django.forms import formset_factory
+from django.forms import formset_factory, forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import get_language_info
@@ -84,8 +84,13 @@ class RegisterView(FormView):
             kwargs["formsets"] = self.get_formsets()
         kwargs["language"] = get_language_info(self.registration.locale)
         kwargs["POST"] = dict(self.request.POST)
-
-        return super().get_context_data(dataset=self.registration, **kwargs)
+        ctx = super().get_context_data(dataset=self.registration, **kwargs)
+        m = forms.Media()
+        m += ctx["form"].media
+        for __, f in ctx["formsets"].items():
+            m += f.media
+        ctx["media"] = m
+        return ctx
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
