@@ -2,8 +2,8 @@
 {% block head %}
 {#    <link href="{% static "datetimepicker/datepicker.css" %}" type="text/css" media="all" rel="stylesheet">#}
 {#    <link href="{% static "select2/select2.min.css" %}" type="text/css" media="all" rel="stylesheet">#}
-{##}
-{#    <script src="{% static "jquery.formset.js" %}"></script>#}
+
+    <script src="{% static "jquery.formset.js" %}"></script>
 {#    <script src="{% static "select2/select2.min.js" %}"></script>#}
 {#    <script src="{% static "select2/ajax_select.js" %}"></script>#}
 {#    <script src="{% static "datetimepicker/datepicker.js" %}"></script>#}
@@ -80,7 +80,7 @@
                                         {% for frm in formset %}
                                             <div class="w-full my-5 p-3 border border-gray-400 form-container {{ formset.prefix }}">
                                                 {% for field in frm %}
-                                                    <fieldset>
+                                                    <fieldset class="{{ field.name }}">
                                                         {% if user.is_staff %}
                                                             <span class="float-left staff-editor">
                                                         <a target="_edit"
@@ -93,13 +93,12 @@
                                                                 <label for="question_{{ field.auto_id }}">
                                                                     <input id="question_{{ field.auto_id }}"
                                                                            class="question-visibility"
-                                                                           data-target="#field-container-{{ field.auto_id }}"
+                                                                           data-target="field-container-{{ field.name }}"
                                                                            type="checkbox"> {{ field.field.flex_field.advanced.smart.question }}
                                                                 </label>
                                                             </div>
                                                         {% endif %}
-                                                        <div id="field-container-{{ field.auto_id }}"
-                                                             class="mb-4 field-container ">
+                                                        <div class="mb-4 field-container field-container-{{ field.name }}">
                                                             <label class="block uppercase tracking-wide text-gray-700 font-bold mb-0"
                                                                    for="{{ field.auto_id }}">{{ field.label }}
                                                                 {% if field.field.required %}
@@ -154,6 +153,14 @@
                     deleteCssClass: "delete-button bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",
                     added: function (row) {
                         $(row).find(".vDateField").each(function (i) {
+
+                        });
+                        $(row).find(".question-visibility").each(function (i, e) {
+                            console.log(11111);
+                            $(e).on("click", function (){
+                                console.log(33333333, this);
+                                smart.handleQuestion(this);
+                            })
 
                         });
                     }
