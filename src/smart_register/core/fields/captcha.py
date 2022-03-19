@@ -3,7 +3,7 @@ from captcha.fields import CaptchaField
 from captcha.models import CaptchaStore
 from django.core.exceptions import ImproperlyConfigured
 from django.forms.widgets import HiddenInput, MultiWidget
-from django.urls import reverse, NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 
 from smart_register.core.fields.widgets import SmartTextWidget
 

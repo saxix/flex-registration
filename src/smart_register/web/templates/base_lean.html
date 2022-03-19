@@ -2,17 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="version" content="{{ smart.version|slice:':7'|join:'' }}">
+    <meta name="release" content="{{ smart.version }}">
+    <meta name="date" content="{{ smart.build_date }}">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Registration</title>
+
     <link rel="stylesheet" href="{% static "base.css" %}">
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    {% if smart.debug %}<link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
+
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     {% block head %}
     {% endblock head %}
 </head>
 <body class="min-h-screen">
+{% block staff-toolbar %}{% include "_env_header.html" %}{% endblock %}
+
 {% block header %}
 <header class="text-gray-700 body-font border-b border-gray-200">
 
@@ -20,5 +28,6 @@
 {% endblock %}
 {% block body %}
 {% endblock body %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
 </body>
 </html>

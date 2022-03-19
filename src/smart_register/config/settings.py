@@ -27,7 +27,7 @@ DEBUG = env("DEBUG")
 DEBUG_PROPAGATE_EXCEPTIONS = env("DEBUG_PROPAGATE_EXCEPTIONS")
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
-ADMIN_URL = env("ADMIN_URL")
+DJANGO_ADMIN_URL = env("DJANGO_ADMIN_URL")
 
 # Application definition
 SITE_ID = 1
@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "jsoneditor",
     "captcha",
     "social_django",
+    "corsheaders",
     # ---
     "smart_register",
     "smart_register.web",
@@ -67,6 +68,8 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
+    "smart_register.web.middlewares.SentryMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "smart_register.web.middlewares.MaintenanceMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",
@@ -260,10 +263,7 @@ LOGGING = {
 USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 # ------ Custom App
-CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-# CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 
-CONSTANCE_ADDITIONAL_FIELDS = {}
 
 DATE_INPUT_FORMATS = [
     "%Y-%m-%d",  # '2006-10-25'
@@ -279,20 +279,6 @@ DATE_INPUT_FORMATS = [
     "%d %B %Y",  # '25 October 2006'
     "%d %B, %Y",  # '25 October, 2006'
 ]
-
-CONSTANCE_CONFIG = OrderedDict(
-    {
-        "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
-        "HOME_TEMPLATE": ("home.html", "Default home.html", str),
-        "QRCODE": (False, "Enable QRCode generation", bool),
-        "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
-        "SMART_ADMIN_BOOKMARKS": (
-            env("SMART_ADMIN_BOOKMARKS"),
-            "",
-            str,
-        ),
-    }
-)
 
 MAX_OBSERVED = 1
 SENTRY_DSN = env("SENTRY_DSN")
@@ -315,6 +301,26 @@ if SENTRY_DSN:
         release=smart_register.VERSION,
         send_default_pii=True,
     )
+CORS_ALLOWED_ORIGINS = [
+    "https://excubo.unicef.io",
+] + env("CORS_ALLOWED_ORIGINS")
+
+CONSTANCE_ADDITIONAL_FIELDS = {}
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+# CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
+CONSTANCE_CONFIG = OrderedDict(
+    {
+        "SMART_ADMIN_BOOKMARKS": (
+            "",
+            "",
+            str,
+        ),
+        "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
+        "HOME_TEMPLATE": ("home.html", "Default home.html", str),
+        "QRCODE": (False, "Enable QRCode generation", bool),
+        "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
+    }
+)
 
 SMART_ADMIN_SECTIONS = {
     "Registration": ["registration"],
@@ -325,7 +331,8 @@ SMART_ADMIN_SECTIONS = {
     "_hidden_": [],
 }
 SMART_ADMIN_TITLE = "="
-SMART_ADMIN_HEADER = "="
+SMART_ADMIN_HEADER = env("DJANGO_ADMIN_TITLE")
+SMART_ADMIN_BOOKMARKS = "smart_register.core.utils.get_bookmarks"
 
 SMART_ADMIN_PROFILE_LINK = True
 
@@ -379,6 +386,8 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 # CAPTCHA_IMAGE_SIZE = 300,200
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
+
+
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
 
 
@@ -464,4 +473,4 @@ SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 # fix admin name
 LOGIN_URL = "/login/azuread-tenant-oauth2"
-LOGIN_REDIRECT_URL = ADMIN_URL
+LOGIN_REDIRECT_URL = DJANGO_ADMIN_URL

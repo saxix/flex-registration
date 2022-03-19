@@ -10,11 +10,13 @@ body {
 .btn {
 
 }
-ul.errorlist{
+
+ul.errorlist {
   list-style-type: none;
   padding: 0;
   margin: 0;
-  li{
+
+  li {
     color: red;
   }
 }
@@ -25,4 +27,11 @@ ul.errorlist{
     &.save {
     }
   }
+}
+
+.staff-toolbar {
+  background-color: black;
+  color: white;
+  width: 100%;
+  z-index: 1000
 }

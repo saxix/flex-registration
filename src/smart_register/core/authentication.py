@@ -5,7 +5,6 @@ from social_core.exceptions import InvalidEmail
 from social_core.pipeline import social_auth
 from social_core.pipeline import user as social_core_user
 
-
 logger = logging.getLogger(__name__)
 
 

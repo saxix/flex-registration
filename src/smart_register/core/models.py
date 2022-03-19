@@ -1,6 +1,7 @@
 import functools
 import logging
 from datetime import date, datetime, time
+from json import JSONDecodeError
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
@@ -12,12 +13,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.defaultfilters import pluralize
-from django_regex.fields import RegexField
 from natural_keys import NaturalKeyModel
 from strategy_field.utils import fqn
 
+from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
-from .fields.strategy import StrategyClassField
 from .forms import CustomFieldMixin, FlexFormBaseForm
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import jsonfy, namify, underscore_to_camelcase
@@ -46,17 +46,33 @@ class Validator(NaturalKeyModel):
             return jsonfy(value)
         return value
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+        for frm in self.flexform_set.all():
+            frm.get_form.cache_clear()
+
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
         ctx = MiniRacer()
-        ctx.eval(f"var value = {jsonpickle.encode(value)};")
-        ret = ctx.eval(self.code)
         try:
-            ret = jsonpickle.decode(ret)
-        except TypeError:
-            pass
-        if not ret:
+            ctx.eval(f"var value = {jsonpickle.encode(value)};")
+            result = ctx.eval(self.code)
+            if result is None:
+                ret = False
+            else:
+                try:
+                    ret = jsonpickle.decode(result)
+                except (JSONDecodeError, TypeError):
+                    ret = result
+            if isinstance(ret, (str, dict)):
+                raise ValidationError(ret)
+            elif isinstance(ret, bool) and not ret:
+                raise ValidationError(self.message)
+        except ValidationError:
+            raise
+        except Exception as e:
+            logger.exception(e)
             raise ValidationError(self.message)
 
 
@@ -120,7 +136,7 @@ class FlexForm(NaturalKeyModel):
     @functools.cache
     def get_form(self):
         fields = {}
-        for field in self.fields.select_related("validator").order_by("ordering"):
+        for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
             try:
                 fields[field.name] = field.get_instance()
             except TypeError:
@@ -140,6 +156,10 @@ class FlexForm(NaturalKeyModel):
 class FormSet(NaturalKeyModel, OrderableModel):
     version = IntegerVersionField()
     name = CICharField(max_length=255)
+    title = models.CharField(max_length=300, blank=True, null=True)
+    description = models.TextField(max_length=2000, blank=True, null=True)
+    enabled = models.BooleanField(default=True)
+
     parent = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="formsets")
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE)
     extra = models.IntegerField(default=0, blank=False, null=False)
@@ -169,6 +189,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
+    enabled = models.BooleanField(default=True)
     validator = models.ForeignKey(
         Validator, blank=True, null=True, limit_choices_to={"target": Validator.FIELD}, on_delete=models.PROTECT
     )
@@ -205,8 +226,12 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
             smart_attrs = kwargs.pop("smart", {}).copy()
             smart_attrs["data-flex"] = self.name
-            kwargs.setdefault("smart_attrs", smart_attrs)
+            if smart_attrs.get("question", ""):
+                smart_attrs["data-visibility"] = "hidden"
+            elif not smart_attrs.get("visible", True):
+                smart_attrs["data-visibility"] = "hidden"
 
+            kwargs.setdefault("smart_attrs", smart_attrs.copy())
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
@@ -219,6 +244,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
         try:
+            kwargs.setdefault("flex_field", self)
             tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
             fld = tt(**kwargs)
         except Exception as e:

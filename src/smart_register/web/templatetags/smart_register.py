@@ -44,3 +44,8 @@ def dump_list(value):
 @register.inclusion_tag("dump/dict.html")
 def dump_dict(value):
     return {"value": value}
+
+
+@register.filter(name="smart")
+def smart_attr(field, attr):
+    return field.field.flex_field.advanced.get("smart", {}).get(attr, "")

@@ -2,17 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="version" content="{{ smart.version|slice:':7'|join:'' }}">
+    <meta name="release" content="{{ smart.version }}">
+    <meta name="date" content="{{ smart.build_date }}">
+
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Registration</title>
+
     <link rel="stylesheet" href="{% static "base.css" %}">
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    {% if smart.debug %}<link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
+
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+    <script src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js" integrity="sha384-V+jCLoAVKKml0VanRLGJGAdKk+Lzo1kRFe079J0majdfeGabOd32KG/2adGnr4N0" crossorigin="anonymous"></script>
+
+
     {% block head %}
     {% endblock head %}
 </head>
 <body class="min-h-screen">
+{% block staff-toolbar %}{% include "_env_header.html" %}{% endblock %}
 {% block header %}
 <header class="text-gray-700 body-font border-b border-gray-200">
    <div class="container mx-auto flex flex-wrap p-5 md:flex-row items-center">
@@ -31,5 +42,13 @@
 {% endblock %}
 {% block body %}
 {% endblock body %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+<script>
+    Sentry.init({
+        dsn: "{{ smart.sentry_dsn }}",
+        release: "{{ smart.version }}",
+        tracesSampleRate: 1.0,
+    });
+</script>
 </body>
 </html>

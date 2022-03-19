@@ -1,18 +1,10 @@
-import json
+import base64
 
 import pytest
 from Crypto.PublicKey import RSA
+from django.urls import reverse
 
-from smart_register.core.crypto import Crypter, crypt, decrypt
-
-LANGUAGES = {
-    "english": "first",
-    "ukrainian": "АаБбВвГгҐґДдЕеЄєЖжЗзИиІіЇїЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЬьЮюЯя",
-    "chinese": "姓名",
-    "japanese": "ファーストネーム",
-    "arabic": "الاسم الأول",
-    "BIG": "АаБбВвГгҐґДдЕеЄєЖжЗзИиІіЇїЙйКкЛлМмНнОоПпРрСсТтУуФфХхЦцЧчШшЩщЬьЮюЯя" * 1024,
-}
+from smart_register.core.crypto import decrypt
 
 PUBLIC = b"""-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxPyACSP38j/kB9jR8QPZ
@@ -80,34 +72,27 @@ def public_pem(key) -> str:
     return key.publickey().export_key().decode()
 
 
-@pytest.mark.parametrize("data", LANGUAGES.values(), ids=LANGUAGES.keys())
-def test_crypt(data, public_pem, private_pem):
-    encrypted = crypt(data, public_pem)
-    assert type(encrypted) == bytes
-    assert decrypt(encrypted, private_pem) == data
+@pytest.mark.django_db
+def test_api(django_app, registration, monkeypatch):
+    url = reverse("register", args=[registration.pk])
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["first_name"] = "first_name"
+    res.form["last_name"] = "f"
+    res = res.form.submit()
+    res.form["first_name"] = "first"
+    res.form["last_name"] = "last"
+    res = res.form.submit().follow()
+    assert res.context["record"].pk
+    api_url = reverse("api", args=[registration.pk, 1, 999999])
+    res = django_app.get(api_url, expect_errors=True)
 
+    assert res.status_code == 401
+    monkeypatch.setattr("smart_register.web.views.api.handle_basic_auth", lambda x: True)
 
-@pytest.mark.parametrize("data", [LANGUAGES], ids=["json"])
-def test_crypt_complex(data, public_pem, private_pem):
-    dumped = json.dumps(data)
-    encrypted = crypt(dumped, public_pem)
-    decrypted = decrypt(encrypted, private_pem)
-    assert decrypted == dumped
-    assert json.loads(decrypted) == data
-
-
-@pytest.mark.parametrize("data", [LANGUAGES], ids=["json"])
-def test_crypt_field(data, registration):
-    record = registration.add_record(json.dumps(data))
-    decrypted = record.decrypt(registration._private_pem)
-    assert decrypted == data
-
-
-def test_crypter1():
-    c = Crypter()
-    assert c.decrypt(c.crypt("AAAA")) == "AAAA"
-
-
-def test_crypter2():
-    c = Crypter(PUBLIC.decode(), PRIVATE.decode())
-    assert c.decrypt(c.crypt("AAAA")) == "AAAA"
+    res = django_app.get(api_url)
+    records = res.json["data"]
+    for r in records:
+        storage = r["storage"]
+        data = base64.urlsafe_b64decode(storage)
+        decrypt(data, registration._private_pem)

@@ -1,19 +1,18 @@
-from admin_extra_buttons.decorators import view, link, button
+from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin import register
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from import_export import resources
-
-from django.contrib.admin import register
 from import_export.admin import ImportExportMixin
 from smart_admin.modeladmin import SmartModelAdmin
 
-from .models import Registration, Record
 from ..core.utils import is_root
+from .models import Record, Registration
 
 
 class RegistrationResource(resources.ModelResource):
@@ -104,7 +103,7 @@ class RecordAdmin(SmartModelAdmin):
     list_filter = (("registration", AutoCompleteFilter),)
     change_form_template = None
 
-    @button()
+    @button(permission=is_root)
     def decrypt(self, request, pk):
         ctx = self.get_common_context(request, pk, title="To decrypt you need to provide Registration Private Key")
         if request.method == "POST":
@@ -124,10 +123,10 @@ class RecordAdmin(SmartModelAdmin):
         return render(request, "admin/registration/record/decrypt.html", ctx)
 
     def has_add_permission(self, request):
-        return is_root(request)
+        return is_root(request) or settings.DEBUG
 
     def has_delete_permission(self, request, obj=None):
-        return is_root(request)
+        return is_root(request) or settings.DEBUG
 
     def has_change_permission(self, request, obj=None):
-        return is_root(request)
+        return is_root(request) or settings.DEBUG

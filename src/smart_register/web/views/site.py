@@ -1,7 +1,9 @@
 from constance import config
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views import View
 from django.views.generic import TemplateView
+
+from smart_register.core.utils import get_qrcode
 
 
 class HomeView(TemplateView):
@@ -9,6 +11,15 @@ class HomeView(TemplateView):
 
     def get_template_names(self):
         return [config.HOME_TEMPLATE, self.template_name]
+
+
+class QRCodeView(TemplateView):
+    template_name = "qrcode.html"
+
+    def get_context_data(self, **kwargs):
+        url = self.request.build_absolute_uri("/")
+        qrcode = get_qrcode(url)
+        return super().get_context_data(**kwargs, qrcode=qrcode, url=url)
 
 
 class ProbeView(View):

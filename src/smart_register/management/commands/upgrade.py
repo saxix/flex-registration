@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 import djclick as click
-from django.core.management import call_command, CommandError
+from django.core.management import CommandError, call_command
 
 logger = logging.getLogger(__name__)
 
