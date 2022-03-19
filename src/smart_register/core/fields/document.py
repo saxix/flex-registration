@@ -1,7 +1,7 @@
 from django import forms
+from django.utils.translation import gettext as _
 
 from .widgets import SmartTextWidget
-from django.utils.translation import gettext as _
 
 
 class DocumentCountryInput(SmartTextWidget):

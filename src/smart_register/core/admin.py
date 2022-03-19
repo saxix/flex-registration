@@ -14,7 +14,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
-from django.core.signing import Signer, BadSignature
+from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
 from django.http import JsonResponse
 from django.urls import reverse
@@ -43,8 +43,9 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "title", "parent", "flex_form", "extra", "max_num", "min_num")
+    list_display = ("name", "title", "parent", "flex_form", "enabled", "max_num", "min_num")
     search_fields = ("name", "title")
+    list_editable = ("enabled",)
     list_filter = (
         ("parent", AutoCompleteFilter),
         ("flex_form", AutoCompleteFilter),

@@ -1,6 +1,7 @@
 import functools
 import logging
 from datetime import date, datetime, time
+from json import JSONDecodeError
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
@@ -45,17 +46,33 @@ class Validator(NaturalKeyModel):
             return jsonfy(value)
         return value
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
+        for frm in self.flexform_set.all():
+            frm.get_form.cache_clear()
+
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
         ctx = MiniRacer()
-        ctx.eval(f"var value = {jsonpickle.encode(value)};")
-        ret = ctx.eval(self.code)
         try:
-            ret = jsonpickle.decode(ret)
-        except TypeError:
-            pass
-        if not ret:
+            ctx.eval(f"var value = {jsonpickle.encode(value)};")
+            result = ctx.eval(self.code)
+            if result is None:
+                ret = False
+            else:
+                try:
+                    ret = jsonpickle.decode(result)
+                except (JSONDecodeError, TypeError):
+                    ret = result
+            if isinstance(ret, (str, dict)):
+                raise ValidationError(ret)
+            elif isinstance(ret, bool) and not ret:
+                raise ValidationError(self.message)
+        except ValidationError:
+            raise
+        except Exception as e:
+            logger.exception(e)
             raise ValidationError(self.message)
 
 

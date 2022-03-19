@@ -1,10 +1,13 @@
 import base64
 import datetime
 import decimal
+import io
 import json
 import re
 import unicodedata
+from pathlib import Path
 
+import qrcode
 from constance import config
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
@@ -137,3 +140,26 @@ def get_bookmarks(request):
             except ValueError:
                 pass
     return quick_links
+
+
+def get_qrcode(content):
+    logo_link = Path(settings.BASE_DIR) / "web/static/unicef_logo.jpeg"
+    from PIL import Image
+
+    logo = Image.open(logo_link)
+    basewidth = 100
+    wpercent = basewidth / float(logo.size[0])
+    hsize = int((float(logo.size[1]) * float(wpercent)))
+    logo = logo.resize((basewidth, hsize), Image.ANTIALIAS)
+    QRcode = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
+    QRcode.add_data(content)
+    QRcode.make()
+    QRimg = QRcode.make_image(fill_color="black", back_color="white").convert("RGB")
+
+    # set size of QR code
+    pos = ((QRimg.size[0] - logo.size[0]) // 2, (QRimg.size[1] - logo.size[1]) // 2)
+    QRimg.paste(logo, pos)
+    buff = io.BytesIO()
+    # save the QR code generated
+    QRimg.save(buff, format="PNG")
+    return base64.b64encode(buff.getvalue()).decode()

@@ -1,19 +1,18 @@
-from admin_extra_buttons.decorators import view, link, button
+from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin import register
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from import_export import resources
-
-from django.contrib.admin import register
 from import_export.admin import ImportExportMixin
 from smart_admin.modeladmin import SmartModelAdmin
 
-from .models import Registration, Record
 from ..core.utils import is_root
+from .models import Record, Registration
 
 
 class RegistrationResource(resources.ModelResource):

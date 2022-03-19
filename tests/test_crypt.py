@@ -3,7 +3,7 @@ import json
 import pytest
 from Crypto.PublicKey import RSA
 
-from smart_register.core.crypto import crypt, decrypt, Crypter
+from smart_register.core.crypto import Crypter, crypt, decrypt
 
 LANGUAGES = {
     "english": "first",

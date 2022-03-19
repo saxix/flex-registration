@@ -5,12 +5,12 @@ from .captcha import SmartCaptchaField
 from .custom import CustomField
 from .document import DocumentField
 from .gis import LocationField
+from .label import LabelOnlyField
 from .multi_checkbox import MultiCheckboxField
 from .picture import PictureField
 from .radio import RadioField, YesNoChoice, YesNoRadio
 from .select import AjaxSelectField, SelectField
 from .widgets.mixins import SmartFieldMixin
-from .label import LabelOnlyField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
