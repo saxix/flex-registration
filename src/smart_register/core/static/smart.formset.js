@@ -17,7 +17,6 @@ var DEFAULT = {
         });
     }
 };
-
 var configureFormsets = function (configs){
     configs.forEach(function (c){
         var config = {};
