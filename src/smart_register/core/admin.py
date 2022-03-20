@@ -52,11 +52,6 @@ class FormSetAdmin(SmartModelAdmin):
     )
 
 
-FLEX_FIELD_DEFAULT_ATTRS = {
-    "smart": {"hint": "", "visible": True, "onchange": "", "description": ""},
-}
-
-
 class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
     fk_name = "parent"
@@ -90,6 +85,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
 
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
+        # RegexField: {"widget": RegexEditor}
     }
     ordering_field = "ordering"
     order = "ordering"
@@ -99,7 +95,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
-        initial.setdefault("advanced", FLEX_FIELD_DEFAULT_ATTRS)
+        initial.setdefault("advanced", FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
         return initial
 
     @button()

@@ -1,6 +1,6 @@
-{% load i18n smart_register %}<fieldset class="{{ field.name }}">
+{% load i18n smart_register %}<fieldset class="{{ field.name }} {{ field|smart:"fieldset" }}">
     {% if user.is_staff %}
-        {% include "registration/_staff_edit.html" %}
+        {% include "registration/_staff_edit_field.html" %}
     {% endif %}
     {% if field.field.flex_field.advanced.smart.question %}
         <div>

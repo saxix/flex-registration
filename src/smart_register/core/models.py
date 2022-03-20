@@ -12,15 +12,16 @@ from django.core.cache import caches
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.template.defaultfilters import pluralize
+from django.forms import formset_factory
+from django.template.defaultfilters import pluralize, slugify
 from natural_keys import NaturalKeyModel
 from strategy_field.utils import fqn
 
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
-from .forms import CustomFieldMixin, FlexFormBaseForm
+from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import jsonfy, namify, underscore_to_camelcase
+from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +155,17 @@ class FlexForm(NaturalKeyModel):
 
 
 class FormSet(NaturalKeyModel, OrderableModel):
+    FORMSET_DEFAULT_ATTRS = {
+        "smart": {
+            "widget": {
+                "addText": None,
+                "addCssClass": None,
+                "deleteText": None,
+                "deleteCssClass": None,
+                "keepFieldValues": "",
+            }
+        }
+    }
     version = IntegerVersionField()
     name = CICharField(max_length=255)
     title = models.CharField(max_length=300, blank=True, null=True)
@@ -168,6 +180,8 @@ class FormSet(NaturalKeyModel, OrderableModel):
 
     dynamic = models.BooleanField(default=True)
 
+    advanced = models.JSONField(default=dict, blank=True)
+
     class Meta:
         verbose_name = "FormSet"
         verbose_name_plural = "FormSets"
@@ -180,8 +194,37 @@ class FormSet(NaturalKeyModel, OrderableModel):
     def get_form(self):
         return self.flex_form.get_form()
 
+    def save(self, *args, **kwargs):
+        self.name = slugify(self.name)
+        dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
+        super().save(*args, **kwargs)
+
+    def get_formset(self):
+        formSet = formset_factory(
+            self.get_form(),
+            formset=SmartBaseFormSet,
+            extra=self.extra,
+            min_num=self.min_num,
+            absolute_max=self.max_num,
+            max_num=self.max_num,
+        )
+        formSet.fs = self
+        formSet.required = self.min_num > 0
+        return formSet
+
 
 class FlexFormField(NaturalKeyModel, OrderableModel):
+    FLEX_FIELD_DEFAULT_ATTRS = {
+        "smart": {
+            "hint": "",
+            "visible": True,
+            "onchange": "",
+            "question": "",
+            "description": "",
+            "fieldset": "",
+        },
+    }
+
     version = IntegerVersionField()
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
@@ -267,6 +310,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         else:
             self.name = namify(self.name)
 
+        dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
         self.flex_form.get_form.cache_clear()
 
