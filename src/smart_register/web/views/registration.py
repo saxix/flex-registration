@@ -1,7 +1,7 @@
 from hashlib import md5
 
 from constance import config
-from django.forms import formset_factory, forms
+from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import get_language_info
@@ -71,12 +71,7 @@ class RegisterView(FormView):
         attrs = self.get_form_kwargs().copy()
         attrs.pop("prefix")
         for fs in self.registration.flex_form.formsets.filter(enabled=True):
-            formSet = formset_factory(
-                fs.get_form(), extra=fs.extra, min_num=fs.min_num, absolute_max=fs.max_num, max_num=fs.max_num
-            )
-            formSet.fs = fs
-            formSet.required = fs.min_num > 0
-            formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
+            formsets[fs.name] = fs.get_formset()(prefix=f"{fs.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):

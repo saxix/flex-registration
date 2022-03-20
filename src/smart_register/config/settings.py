@@ -445,8 +445,8 @@ SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
     "last_name",
     "email",
 ]
-SOCIAL_AUTH_POSTGRES_JSONFIELD = True
-
+# SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     "smart_register.core.authentication.social_details",
     "social_core.pipeline.social_auth.social_uid",

@@ -8,10 +8,17 @@ from django.utils.text import slugify
 
 from smart_register.core.crypto import crypt, decrypt
 from smart_register.core.models import FlexForm
-from smart_register.core.utils import safe_json
+from smart_register.core.utils import dict_setdefault, safe_json
 
 
 class Registration(models.Model):
+    ADVANCED_DEFAULT_ATTRS = {
+        "smart": {
+            "buttons": {
+                "link": {"widget": {"attrs": {}}},
+            }
+        }
+    }
     name = CICharField(max_length=255, unique=True)
     title = models.CharField(max_length=500, blank=True, null=True)
     slug = models.SlugField(max_length=500, blank=True, null=True)
@@ -27,6 +34,7 @@ class Registration(models.Model):
         blank=True,
         null=True,
     )
+    advanced = models.JSONField(default=dict)
 
     class Meta:
         get_latest_by = "start"
@@ -39,6 +47,7 @@ class Registration(models.Model):
             self.slug = slugify(self.name)
         if not self.title:
             self.title = self.name
+        dict_setdefault(self.advanced, self.ADVANCED_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
 
     def setup_encryption_keys(self):

@@ -49,8 +49,8 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     @link(html_attrs={"class": "aeb-green "})
     def _view_on_site(self, button):
         if button.original:
-            button.href = reverse("register", args=[button.original.pk])
-            button.html_attrs["target"] = f"_{button.original.pk}"
+            button.href = reverse("register", args=[button.original.slug])
+            button.html_attrs["target"] = f"_{button.original.slug}"
 
     @link(html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):

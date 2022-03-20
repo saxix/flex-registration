@@ -1,4 +1,4 @@
-{% extends config.BASE_TEMPLATE %}{% load static %}
+{% extends config.BASE_TEMPLATE %}{% load static smart_register%}
 {% block body %}
     <section class="text-gray-700 body-font">
         <div class="container mx-auto flex px-5 py-6 lg:py-24 flex-col-reverse lg:flex-row items-center">
@@ -22,10 +22,7 @@
                 </ul>
                 <div class="flex justify-center space-x-2 m-10">
                     {% for reg in registrations %}
-                        <a href="{% url "register" reg.slug %}"
-                           class="flex text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-4xl">
-                            {{ reg.title }}
-                        </a>
+                        {% link reg %}
                     {% endfor %}
                 </div>
             </div>

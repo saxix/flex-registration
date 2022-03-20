@@ -19,6 +19,8 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
 
+UNDEFINED = object()
+
 
 def is_root(request, *args, **kwargs):
     return request.user.is_superuser and request.headers.get("x-root-token") == settings.ROOT_TOKEN
@@ -163,3 +165,23 @@ def get_qrcode(content):
     # save the QR code generated
     QRimg.save(buff, format="PNG")
     return base64.b64encode(buff.getvalue()).decode()
+
+
+def dict_setdefault(source: dict, d: dict):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            source.setdefault(k, v)
+            dict_setdefault(source[k], v)
+        else:
+            source.setdefault(k, v)
+    return source
+
+
+def dict_get_nested(obj: dict, path):
+    parts = path.split(".")
+    current = obj
+    for p in parts:
+        if p not in current:
+            current[p] = {}
+        current = current[p]
+    return current
