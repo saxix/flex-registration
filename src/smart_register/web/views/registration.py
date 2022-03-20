@@ -4,6 +4,7 @@ from constance import config
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
+from django.utils import translation
 from django.utils.translation import get_language_info
 from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
@@ -75,6 +76,7 @@ class RegisterView(FormView):
         return formsets
 
     def get_context_data(self, **kwargs):
+        translation.activate(self.registration.locale)
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
         kwargs["language"] = get_language_info(self.registration.locale)

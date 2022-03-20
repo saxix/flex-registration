@@ -3,8 +3,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"
             integrity="sha512-wT7uPE7tOP6w4o28u1DN775jYjHQApdBnib5Pho4RB0Pgd9y7eSkAV1BTqQydupYDB9GBhTcQQzyNMPMV3cAew=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="{% static "jquery.formset.js" %}"></script>
-    <script src="{% static "fs.js" %}"></script>
+    {#    <script src="{% static "jquery.formset.js" %}"></script>#}
+    {#    <script src="{% static "fs.js" %}"></script>#}
     {{ media }}
 {% endblock head %}
 {% block staff-toolbar %}
@@ -31,12 +31,16 @@
                                 {% if user.is_staff %}
                                     {% include "registration/_staff_edit_formset.html" %}
                                 {% endif %}
-                                <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
-                                    {{ formset.fs.title|default_if_none:""|safe }}
-                                </div>
+                                {% if formset.fs.title %}
+                                    <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
+                                        {{ formset.fs.title|safe }}
+                                    </div>
+                                {% endif %}
+                                {% if formset.fs.description %}
                                 <div class="w-full mt-4 text-sm leading-7 text-gray-800  font-regular">
-                                    {{ formset.fs.description|default_if_none:""|safe }}
+                                    {{ formset.fs.description|safe }}
                                 </div>
+                                {% endif %}
                                 <div class="flex flex-col">
                                     <div class="w-100 forms">
                                         {{ formset.management_form }}
@@ -46,11 +50,11 @@
                                                     {% include "registration/_staff_edit_form.html" %}
                                                 {% endif %}
                                                 {% for field in form %}
-                                                    {% include "registration/_fieldset.html" %}
+                                                    {% include "registration/_fieldset.html" with counter=forloop.counter %}
                                                 {% endfor %}
                                                 <div class="flex">
                                                     <div class="flex-auto "></div>
-                                                    <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>
+                                                    <div class="{{ name }}-delete grow-0"></div>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -88,5 +92,7 @@
             </div>
         </div>
     </div>
-    <script>$(function () {configureFormsets(formsetConfig);});</script>
+    <script>$(function () {
+        configureFormsets(formsetConfig);
+    });</script>
 {% endblock body %}

@@ -67,3 +67,9 @@ reset-migrations: ## reset django migrations
 	./manage.py makemigrations
 	./manage.py makemigrations --check
 	./manage.py upgrade --no-input
+
+i18n:  ## i18n support
+	cd src && django-admin makemessages --all --settings=sos.config.settings -d djangojs --pythonpath=. --ignore=~*
+	cd src && django-admin makemessages --all --settings=sos.config.settings --pythonpath=. --ignore=~*
+	cd src && django-admin compilemessages --settings=sos.config.settings --pythonpath=. --ignore=~*
+	git commit -m "Update translations"

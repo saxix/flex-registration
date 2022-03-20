@@ -162,6 +162,8 @@ LANGUAGES = (
     # ('ta-ta', 'தமிழ்'),  # Tamil
     # ('hi-hi', 'हिंदी'),  # Hindi
 )
+LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
+
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
 # SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN')
 SESSION_COOKIE_SAMESITE = "Lax"

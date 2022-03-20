@@ -10,7 +10,7 @@
         <span class="flex-grow block inline-flex">
             {{ smart.env }}
         </span>
-        <div class="inline-flex">
+        <div class="hidden md:inline-flex ">
             <span>Edit: </span>
             <a target="_edit" href="{% url "admin:registration_registration_change" dataset.pk %}">Module</a>
             <a target="_edit" href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Form</a>
@@ -19,8 +19,8 @@
                    href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">{{ name }}</a>
             {% endfor %}
             <a target="_edit" href="{% url "admin:index" %}">Admin</a>
-            <input id="staff-editor" type="checkbox" class="mt-1 cursor-pointer">
         </div>
+        <input id="staff-editor" type="checkbox" class="ml-2 mt-1 cursor-pointer">
     </div>
     <script>
         (function ($) {
