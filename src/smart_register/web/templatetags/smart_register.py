@@ -58,7 +58,7 @@ def smart_attr(field, attr):
 
 @register.simple_tag()
 def formset_config(formset):
-    return formset.fs.advanced.get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
+    return formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
 
 
 @register.filter(name="lookup")

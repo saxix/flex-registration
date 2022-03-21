@@ -79,7 +79,7 @@
                                 addText: "{{ config.addText|default_if_none:"add another" }}",
                                 addCssClass: "add-button {{ config.addCssClass|default_if_none:"bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" }}",
                                 deleteText: "{{ config.deleteText|default_if_none:"remove" }}",
-                                deleteCssClass: "add-button {{ config.deleteCssClass|default_if_none:"bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" }}",
+                                deleteCssClass: "delete-button {{ config.deleteCssClass|default_if_none:"bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" }}",
                                 keepFieldValues: "{{ config.keepFieldValues|default:"" }}"
                             });
                         </script>

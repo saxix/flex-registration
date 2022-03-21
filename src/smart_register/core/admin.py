@@ -50,6 +50,10 @@ class FormSetAdmin(SmartModelAdmin):
         ("parent", AutoCompleteFilter),
         ("flex_form", AutoCompleteFilter),
     )
+    formfield_overrides = {
+        JSONField: {"widget": JSONEditor},
+        # RegexField: {"widget": RegexEditor}
+    }
 
 
 class FormSetInline(OrderableAdmin, TabularInline):
