@@ -1,3 +1,5 @@
+import logging
+
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
@@ -13,6 +15,8 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.utils import is_root
 from .models import Record, Registration
+
+logger = logging.getLogger(__name__)
 
 
 class RegistrationResource(resources.ModelResource):
@@ -52,8 +56,8 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             if button.original:
                 button.href = reverse("register", args=[button.original.slug])
                 button.html_attrs["target"] = f"_{button.original.slug}"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception(e)
 
     @link(html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
@@ -62,8 +66,8 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 base = reverse("admin:registration_record_changelist")
                 button.href = f"{base}?registration__exact={button.original.pk}"
                 button.html_attrs["target"] = f"_{button.original.pk}"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception(e)
 
     @view()
     def removekey(self, request, pk):
