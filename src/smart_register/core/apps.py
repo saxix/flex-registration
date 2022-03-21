@@ -6,8 +6,8 @@ class Config(AppConfig):
     name = "smart_register.core"
 
     def ready(self):
-        from smart_register.core.registry import field_registry
         from smart_register.core.models import CustomFieldType
+        from smart_register.core.registry import field_registry
 
         try:
             for field in CustomFieldType.objects.all():

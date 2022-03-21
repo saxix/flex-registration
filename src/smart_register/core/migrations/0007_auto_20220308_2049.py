@@ -2,9 +2,10 @@
 
 import django.contrib.postgres.fields.citext
 import django.core.validators
-from django.db import migrations
-import smart_register.core.forms
 import strategy_field.fields
+from django.db import migrations
+
+import smart_register.core.forms
 
 
 class Migration(migrations.Migration):

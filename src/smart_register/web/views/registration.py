@@ -1,19 +1,15 @@
-import base64
-import io
 from hashlib import md5
-from pathlib import Path
 
-import qrcode
 from constance import config
-from django.conf import settings
-from django.forms import formset_factory
+from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
+from django.utils import translation
 from django.utils.translation import get_language_info
 from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
-from PIL import Image
 
+from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Record, Registration
 
 
@@ -35,26 +31,9 @@ class RegisterCompleteView(TemplateView):
     template_name = "registration/register_done.html"
 
     def get_qrcode(self, record):
-        logo_link = Path(settings.BASE_DIR) / "web/static/unicef_logo.jpeg"
-        logo = Image.open(logo_link)
-        basewidth = 100
-        wpercent = basewidth / float(logo.size[0])
-        hsize = int((float(logo.size[1]) * float(wpercent)))
-        logo = logo.resize((basewidth, hsize), Image.ANTIALIAS)
-        QRcode = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
         h = md5(record.storage).hexdigest()
         url = self.request.build_absolute_uri(f"/register/qr/{record.pk}/{h}")
-        QRcode.add_data(url)
-        QRcode.make()
-        QRimg = QRcode.make_image(fill_color="black", back_color="white").convert("RGB")
-
-        # set size of QR code
-        pos = ((QRimg.size[0] - logo.size[0]) // 2, (QRimg.size[1] - logo.size[1]) // 2)
-        QRimg.paste(logo, pos)
-        buff = io.BytesIO()
-        # save the QR code generated
-        QRimg.save(buff, format="PNG")
-        return base64.b64encode(buff.getvalue()).decode(), url
+        return get_qrcode(url), url
 
     def get_context_data(self, **kwargs):
         record = Record.objects.get(registration__id=self.kwargs["pk"], id=self.kwargs["rec"])
@@ -73,12 +52,10 @@ class RegisterView(FormView):
         filters = {}
         if not self.request.user.is_staff:
             filters["active"] = True
+
         base = Registration.objects.select_related("flex_form")
         try:
-            if "pk" in self.kwargs:
-                return base.get(id=self.kwargs["pk"], **filters)
-            else:
-                return base.filter(**filters).latest()
+            return base.get(slug=self.kwargs["slug"], locale=self.kwargs["locale"], **filters)
         except Registration.DoesNotExist:  # pragma: no cover
             raise Http404
 
@@ -92,23 +69,30 @@ class RegisterView(FormView):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop("prefix")
-        for fs in self.registration.flex_form.formsets.all():
-            formSet = formset_factory(
-                fs.get_form(), extra=fs.extra, min_num=fs.min_num, absolute_max=fs.max_num, max_num=fs.max_num
-            )
-            formSet.fs = fs
-            formSet.required = fs.min_num > 0
-            formsets[fs.name] = formSet(prefix=f"{fs.name}", **attrs)
+        for fs in self.registration.flex_form.formsets.filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()(prefix=f"{fs.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
         kwargs["language"] = get_language_info(self.registration.locale)
-        kwargs["POST"] = dict(self.request.POST)
+        kwargs["locale"] = self.registration.locale
+        kwargs["dataset"] = self.registration
 
-        return super().get_context_data(dataset=self.registration, **kwargs)
+        ctx = super().get_context_data(**kwargs)
+        m = forms.Media()
+        m += ctx["form"].media
+        for __, f in ctx["formsets"].items():
+            m += f.media
+        ctx["media"] = m
+        return ctx
 
+    def get(self, request, *args, **kwargs):
+        translation.activate(self.registration.locale)
+        return self.render_to_response(self.get_context_data())
+
+    #
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         formsets = self.get_formsets()

@@ -5,6 +5,7 @@ include =
 omit =
     src/smart_register/core/backends.py
     src/smart_register/management/commands/*
+    src/smart_register/core/authentication.py
 
 [report]
 # Regexes for lines to exclude from consideration

@@ -1,6 +1,8 @@
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.forms import BaseFormSet
+from django.templatetags.static import static
 
 from .fields.widgets import PythonEditor
 
@@ -37,3 +39,16 @@ class FlexFormBaseForm(forms.Form):
             except Exception as e:
                 raise ValidationError(e)
         return cleaned_data
+
+
+class SmartBaseFormSet(BaseFormSet):
+    @property
+    def media(self):
+        extra = "" if settings.DEBUG else ".min"
+        base = super().media
+        return base + forms.Media(
+            js=[
+                static("jquery.formset%s.js" % extra),
+                static("smart.formset%s.js" % extra),
+            ]
+        )

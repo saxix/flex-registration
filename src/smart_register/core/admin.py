@@ -14,7 +14,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
-from django.core.signing import Signer, BadSignature
+from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
 from django.http import JsonResponse
 from django.urls import reverse
@@ -43,17 +43,13 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "title", "parent", "flex_form", "extra", "max_num", "min_num")
+    list_display = ("name", "title", "parent", "flex_form", "enabled", "max_num", "min_num")
     search_fields = ("name", "title")
+    list_editable = ("enabled",)
     list_filter = (
         ("parent", AutoCompleteFilter),
         ("flex_form", AutoCompleteFilter),
     )
-
-
-FLEX_FIELD_DEFAULT_ATTRS = {
-    "smart": {"hint": "", "visible": True, "onchange": "", "description": ""},
-}
 
 
 class FormSetInline(OrderableAdmin, TabularInline):
@@ -89,6 +85,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
 
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
+        # RegexField: {"widget": RegexEditor}
     }
     ordering_field = "ordering"
     order = "ordering"
@@ -98,7 +95,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
-        initial.setdefault("advanced", FLEX_FIELD_DEFAULT_ATTRS)
+        initial.setdefault("advanced", FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
         return initial
 
     @button()
@@ -138,19 +135,16 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
 class FlexFormFieldInline(OrderableAdmin, TabularInline):
     model = FlexFormField
     form = FlexFormFieldForm
-    fields = ("ordering", "label", "name", "required", "enabled")
+    fields = ("ordering", "label", "name", "required", "enabled", "field_type")
     show_change_link = True
     extra = 0
     ordering_field = "ordering"
     ordering_field_hide_input = True
 
-    def _type(self, obj):
-        return obj.field_type.__name__
-
 
 class SyncForm(forms.Form):
     APPS = ("core", "registration")
-    host = forms.URLField()
+    host = forms.CharField()
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
     apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
@@ -211,6 +205,9 @@ class FlexFormAdmin(SmartModelAdmin):
                     else:
                         cookies = {self.SYNC_COOKIE: ""}
                     url = f"{form.cleaned_data['host']}core/flexform/export/?apps={','.join(form.cleaned_data['apps'])}"
+                    if not url.startswith("http"):
+                        url = f"https://{url}"
+
                     workdir = Path(".").absolute()
                     out = io.StringIO()
                     with requests.get(url, stream=True, auth=auth) as res:

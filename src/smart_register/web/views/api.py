@@ -1,6 +1,6 @@
 from admin_extra_buttons.utils import handle_basic_auth
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic.list import ListView
 

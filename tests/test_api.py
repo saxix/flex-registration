@@ -50,7 +50,7 @@ def registration(simple_form):
     from smart_register.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
-        name="registration #1", defaults={"flex_form": simple_form, "active": True}
+        locale="en-us", name="registration #1", defaults={"flex_form": simple_form, "active": True}
     )
     priv, pub = reg.setup_encryption_keys()
     reg._private_pem = priv
@@ -74,7 +74,7 @@ def public_pem(key) -> str:
 
 @pytest.mark.django_db
 def test_api(django_app, registration, monkeypatch):
-    url = reverse("register", args=[registration.pk])
+    url = reverse("register", args=[registration.locale, registration.slug])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"

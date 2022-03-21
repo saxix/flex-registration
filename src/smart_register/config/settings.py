@@ -71,6 +71,7 @@ MIDDLEWARE = [
     "smart_register.web.middlewares.SentryMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "smart_register.web.middlewares.MaintenanceMiddleware",
+    "smart_register.web.middlewares.LocaleMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -151,7 +152,7 @@ LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
     ("en-us", "English"),
     ("pl-pl", "Polskie"),
-    ("uk-UA", "український")
+    ("uk-ua", "український")
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),
@@ -162,6 +163,8 @@ LANGUAGES = (
     # ('ta-ta', 'தமிழ்'),  # Tamil
     # ('hi-hi', 'हिंदी'),  # Hindi
 )
+LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
+
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
 # SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN')
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -205,6 +208,8 @@ AUTHENTICATION_BACKENDS = [
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_COOKIE_SECURE = False
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
 EMAIL_DEFAULT_FROM = env("EMAIL_FROM_EMAIL")
@@ -235,32 +240,30 @@ LOGGING = {
     },
     "": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": env("LOG_LEVEL"),
     },
     "environ": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": env("LOG_LEVEL"),
         "propagate": False,
     },
     "flags": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": env("LOG_LEVEL"),
     },
     "django": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": env("LOG_LEVEL"),
     },
     "social_core": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": env("LOG_LEVEL"),
     },
     "smart_register": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": env("LOG_LEVEL"),
     },
 }
-
-USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 # ------ Custom App
 
@@ -310,6 +313,7 @@ CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 # CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 CONSTANCE_CONFIG = OrderedDict(
     {
+        "HOME_PAGE_REGISTRATIONS": ("", "", str),
         "SMART_ADMIN_BOOKMARKS": (
             "",
             "",
@@ -317,7 +321,8 @@ CONSTANCE_CONFIG = OrderedDict(
         ),
         "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
         "HOME_TEMPLATE": ("home.html", "Default home.html", str),
-        "QRCODE": (False, "Enable QRCode generation", bool),
+        "QRCODE": (True, "Enable QRCode generation", bool),
+        "SHOW_REGISTER_ANOTHER": (True, "Enable QRCode generation", bool),
         "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
     }
 )
@@ -444,8 +449,8 @@ SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
     "last_name",
     "email",
 ]
-SOCIAL_AUTH_POSTGRES_JSONFIELD = True
-
+# SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     "smart_register.core.authentication.social_details",
     "social_core.pipeline.social_auth.social_uid",

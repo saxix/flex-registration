@@ -5,9 +5,8 @@ import logging
 import djclick as click
 from django.db.transaction import atomic
 
-from smart_register.core.models import FlexForm, OptionSet
 from smart_register.core import registry
-from smart_register.core.models import CustomFieldType
+from smart_register.core.models import CustomFieldType, FlexForm, OptionSet
 from smart_register.core.registry import field_registry
 from smart_register.registration.models import Registration
 

@@ -1,19 +1,26 @@
-from admin_extra_buttons.decorators import view, link, button
+import logging
+
+from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin import register
+from django.db.models import JSONField
+from django.db.transaction import atomic
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from import_export import resources
-
-from django.contrib.admin import register
 from import_export.admin import ImportExportMixin
+from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
-from .models import Registration, Record
-from ..core.utils import is_root
+from .forms import CloneForm
+from ..core.utils import is_root, clone_model, clone_form
+from .models import Record, Registration
+
+logger = logging.getLogger(__name__)
 
 
 class RegistrationResource(resources.ModelResource):
@@ -23,14 +30,17 @@ class RegistrationResource(resources.ModelResource):
 
 @register(Registration)
 class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
-    search_fields = ("name",)
+    search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
-    list_display = ("name", "start", "end", "active", "locale", "secure")
+    list_display = ("name", "title", "slug", "locale", "secure", "active")
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)
     save_as = True
+    formfield_overrides = {
+        JSONField: {"widget": JSONEditor},
+    }
 
     def secure(self, obj):
         return bool(obj.public_key)
@@ -47,16 +57,73 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             ]
         )
 
+    @button()
+    def create_translation(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Generate Translation",
+        )
+        instance: Registration = ctx["original"]
+        if request.method == "POST":
+            form = CloneForm(request.POST, instance=instance)
+            if form.is_valid():
+                try:
+                    with atomic():
+                        created = []
+                        locale = form.cleaned_data["locale"]
+                        base_form = instance.flex_form
+                        cloned = clone_form(base_form, name=f"{base_form.name} {locale}")
+                        for fs in base_form.formsets.all():
+                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} {locale}")
+                            fs = clone_model(
+                                fs,
+                                parent=cloned,
+                                flex_form=o,
+                            )
+
+                        reg = clone_model(
+                            instance,
+                            name=f"{instance.name} {locale}",
+                            flex_form=cloned,
+                            active=False,
+                            locale=locale,
+                            public_key=None,
+                        )
+                        created.append(fs)
+
+                        ctx["cloned"] = reg
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+
+            else:
+                self.message_user(request, "----")
+                ctx["form"] = form
+        else:
+            form = CloneForm(instance=ctx["original"])
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/clone.html", ctx)
+
     @link(html_attrs={"class": "aeb-green "})
     def _view_on_site(self, button):
-        button.href = reverse("register", args=[button.original.pk])
-        button.html_attrs["target"] = f"_{button.original.pk}"
+        try:
+            if button.original:
+                button.href = reverse("register", args=[button.original.locale, button.original.slug])
+                button.html_attrs["target"] = f"_{button.original.slug}"
+        except Exception as e:
+            logger.exception(e)
 
     @link(html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
-        base = reverse("admin:registration_record_changelist")
-        button.href = f"{base}?registration__exact={button.original.pk}"
-        button.html_attrs["target"] = f"_{button.original.pk}"
+        try:
+            if button.original:
+                base = reverse("admin:registration_record_changelist")
+                button.href = f"{base}?registration__exact={button.original.pk}"
+                button.html_attrs["target"] = f"_{button.original.pk}"
+        except Exception as e:
+            logger.exception(e)
 
     @view()
     def removekey(self, request, pk):

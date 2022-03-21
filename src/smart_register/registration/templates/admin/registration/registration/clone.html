@@ -1,0 +1,28 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% block action-content %}
+    {% if form %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.errors }}
+            <table>
+                {{ form }}
+            </table>
+            <input type="submit" value="Create">
+        </form>
+    {% else %}
+        <h1>{{ cloned }}</h1>
+
+        <table>
+            <tr>
+                <th>Form</th>
+                <td>{{ cloned.flex_form }}</td>
+            </tr>
+            {% for fs in cloned.flex_form.formsets.all %}
+                <tr>
+                    <th>{{ fs.name }}</th>
+                    <td>{{ fs.flex_form }}</td>
+                </tr>
+            {% endfor  %}
+        </table>
+    {% endif %}
+{% endblock action-content %}

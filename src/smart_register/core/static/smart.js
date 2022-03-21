@@ -22,19 +22,27 @@ smart = {
         } catch (error) {
             console.error(error);
         }
+    },
+    handleQuestion: function (e) {
+        var $container = $(e).parents("fieldset").find(".field-container");
+        if ($(e).is(":checked")) {
+            $container.show();
+        } else {
+            $container.hide();
+        }
     }
 };
 
 (function ($) {
     $(function () {
-        $('[data-visibility=hidden]').parents(".field-container").hide()
+        $("[data-visibility=hidden]").parents(".field-container").hide();
 
-        $('.question-visibility').on("click", function(){
-            if ($(this).is(':checked')){
-                $($(this).data('target')).show();
-            }else{
-                $($(this).data('target')).hide();
-            }
-        })
+        $(".question-visibility").on("click", function () {
+            smart.handleQuestion(this);
+        });
+        $(".question-visibility.error").each(function (i, e){
+            var $container = $(e).parents("fieldset").find(".field-container");
+            $container.show();
+        });
     });
 })($);

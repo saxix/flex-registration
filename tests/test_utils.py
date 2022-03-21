@@ -1,6 +1,6 @@
 import pytest
 
-from smart_register.core.utils import underscore_to_camelcase, namify
+from smart_register.core.utils import namify, underscore_to_camelcase
 
 
 @pytest.mark.parametrize("v", ["underscore_to_camelcase", "underscore to camelcase", "underscore__to_camelcase"])
