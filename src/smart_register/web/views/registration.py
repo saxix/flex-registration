@@ -52,12 +52,10 @@ class RegisterView(FormView):
         filters = {}
         if not self.request.user.is_staff:
             filters["active"] = True
+
         base = Registration.objects.select_related("flex_form")
         try:
-            if "slug" in self.kwargs:
-                return base.get(slug=self.kwargs["slug"], **filters)
-            else:
-                return base.filter(**filters).latest()
+            return base.get(slug=self.kwargs["slug"], locale=self.kwargs["locale"], **filters)
         except Registration.DoesNotExist:  # pragma: no cover
             raise Http404
 
@@ -76,12 +74,13 @@ class RegisterView(FormView):
         return formsets
 
     def get_context_data(self, **kwargs):
-        translation.activate(self.registration.locale)
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
         kwargs["language"] = get_language_info(self.registration.locale)
-        kwargs["POST"] = dict(self.request.POST)
-        ctx = super().get_context_data(dataset=self.registration, **kwargs)
+        kwargs["locale"] = self.registration.locale
+        kwargs["dataset"] = self.registration
+
+        ctx = super().get_context_data(**kwargs)
         m = forms.Media()
         m += ctx["form"].media
         for __, f in ctx["formsets"].items():
@@ -89,6 +88,11 @@ class RegisterView(FormView):
         ctx["media"] = m
         return ctx
 
+    def get(self, request, *args, **kwargs):
+        translation.activate(self.registration.locale)
+        return self.render_to_response(self.get_context_data())
+
+    #
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         formsets = self.get_formsets()

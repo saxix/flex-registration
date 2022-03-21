@@ -71,6 +71,7 @@ MIDDLEWARE = [
     "smart_register.web.middlewares.SentryMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "smart_register.web.middlewares.MaintenanceMiddleware",
+    "smart_register.web.middlewares.LocaleMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -151,7 +152,7 @@ LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
     ("en-us", "English"),
     ("pl-pl", "Polskie"),
-    ("uk-UA", "український")
+    ("uk-ua", "український")
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),

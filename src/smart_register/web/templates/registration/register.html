@@ -3,8 +3,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"
             integrity="sha512-wT7uPE7tOP6w4o28u1DN775jYjHQApdBnib5Pho4RB0Pgd9y7eSkAV1BTqQydupYDB9GBhTcQQzyNMPMV3cAew=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    {#    <script src="{% static "jquery.formset.js" %}"></script>#}
-    {#    <script src="{% static "fs.js" %}"></script>#}
     {{ media }}
 {% endblock head %}
 {% block staff-toolbar %}
@@ -15,8 +13,6 @@
     <script>var formsetConfig = [];</script>
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
-            <div class="text-center mb-16">
-            </div>
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">{{ dataset.intro|safe }}</div>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
                 {{ form.non_field_errors }}
@@ -37,9 +33,9 @@
                                     </div>
                                 {% endif %}
                                 {% if formset.fs.description %}
-                                <div class="w-full mt-4 text-sm leading-7 text-gray-800  font-regular">
-                                    {{ formset.fs.description|safe }}
-                                </div>
+                                    <div class="w-full mt-4 text-sm leading-7 text-gray-800  font-regular">
+                                        {{ formset.fs.description|safe }}
+                                    </div>
                                 {% endif %}
                                 <div class="flex flex-col">
                                     <div class="w-100 forms">

@@ -34,10 +34,11 @@ class Registration(models.Model):
         blank=True,
         null=True,
     )
-    advanced = models.JSONField(default=dict)
+    advanced = models.JSONField(default=dict, blank=True)
 
     class Meta:
         get_latest_by = "start"
+        unique_together = (("name", "locale"),)
 
     def __str__(self):
         return self.name
@@ -49,6 +50,9 @@ class Registration(models.Model):
             self.title = self.name
         dict_setdefault(self.advanced, self.ADVANCED_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
+
+    def translations(self):
+        return Registration.objects.filter(slug=self.slug, active=True)
 
     def setup_encryption_keys(self):
         key = RSA.generate(2048)

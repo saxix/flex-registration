@@ -1,4 +1,5 @@
 from django.template import Library, Node
+from django.urls import reverse
 
 from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
@@ -79,6 +80,7 @@ def link(registration):
             "focus:outline-none hover:bg-indigo-600 rounded "
             "text-center text-4xl"
         )
+    widget["attrs"]["href"] = reverse("register", args=[registration.locale, registration.slug])
     return {
         "reg": registration,
         "widget": widget,

@@ -69,7 +69,7 @@ reset-migrations: ## reset django migrations
 	./manage.py upgrade --no-input
 
 i18n:  ## i18n support
-	cd src && django-admin makemessages --all --settings=sos.config.settings -d djangojs --pythonpath=. --ignore=~*
-	cd src && django-admin makemessages --all --settings=sos.config.settings --pythonpath=. --ignore=~*
-	cd src && django-admin compilemessages --settings=sos.config.settings --pythonpath=. --ignore=~*
+	cd src && django-admin makemessages --all --settings=smart_register.config.settings -d djangojs --pythonpath=. --ignore=~*
+	cd src && django-admin makemessages --all --settings=smart_register.config.settings --pythonpath=. --ignore=~*
+	cd src && django-admin compilemessages --settings=smart_register.config.settings --pythonpath=. --ignore=~*
 	git commit -m "Update translations"
