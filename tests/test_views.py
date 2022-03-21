@@ -15,7 +15,7 @@ def simple_registration(simple_form):
     from smart_register.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
-        name="registration #1", defaults={"flex_form": simple_form, "active": True}
+        locale="en-us", name="registration #1", defaults={"flex_form": simple_form, "active": True}
     )
     return reg
 
@@ -25,7 +25,7 @@ def encrypted_registration(simple_form):
     from smart_register.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
-        name="registration #1", defaults={"flex_form": simple_form, "active": True}
+        locale="en-us", name="registration #1", defaults={"flex_form": simple_form, "active": True}
     )
     priv, pub = reg.setup_encryption_keys()
     reg._private_pem = priv
@@ -37,7 +37,7 @@ def complex_registration(complex_form):
     from smart_register.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
-        name="registration #2", defaults={"flex_form": complex_form, "active": True}
+        locale="en-us", name="registration #2", defaults={"flex_form": complex_form, "active": True}
     )
     return reg
 
