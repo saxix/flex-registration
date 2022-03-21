@@ -4,4 +4,5 @@
         <div class="inline-flex flex-shrink"> Build date: {{ smart.build_date }}</div> - 
         <div class="inline-flex flex-grow"> {{ smart.env }}</div>
     </div>
+    <a target="_edit" href="{% url "admin:index" %}">Admin</a>
 {% endif %}

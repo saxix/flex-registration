@@ -238,11 +238,11 @@ LOGGING = {
     },
     "": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": "DEBUG",
     },
     "environ": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": "DEBUG",
         "propagate": False,
     },
     "flags": {
@@ -251,7 +251,7 @@ LOGGING = {
     },
     "django": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": "DEBUG",
     },
     "social_core": {
         "handlers": ["console"],
@@ -259,7 +259,7 @@ LOGGING = {
     },
     "smart_register": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": "DEBUG",
     },
 }
 
