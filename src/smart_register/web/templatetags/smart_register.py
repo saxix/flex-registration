@@ -75,8 +75,9 @@ def link(registration):
     attrs = dict_get_nested(widget, "attrs")
 
     if "class" not in attrs:
+        widget["attrs"]["style"] = "background-color:#01ADF1;"
         widget["attrs"]["class"] = (
-            "flex text-white bg-indigo-500 border-0 py-4 px-8 "
+            "flex text-white border-0 py-4 px-8 "
             "focus:outline-none hover:bg-indigo-600 rounded "
             "text-center text-4xl"
         )
