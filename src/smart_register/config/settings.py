@@ -208,6 +208,8 @@ AUTHENTICATION_BACKENDS = [
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_COOKIE_SECURE = False
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
 EMAIL_DEFAULT_FROM = env("EMAIL_FROM_EMAIL")
@@ -238,32 +240,30 @@ LOGGING = {
     },
     "": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": env("LOG_LEVEL"),
     },
     "environ": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": env("LOG_LEVEL"),
         "propagate": False,
     },
     "flags": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": env("LOG_LEVEL"),
     },
     "django": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": env("LOG_LEVEL"),
     },
     "social_core": {
         "handlers": ["console"],
-        "level": "ERROR",
+        "level": env("LOG_LEVEL"),
     },
     "smart_register": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": env("LOG_LEVEL"),
     },
 }
-
-USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 # ------ Custom App
 

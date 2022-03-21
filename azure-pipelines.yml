@@ -96,4 +96,5 @@ stages:
               -ADMIN_PASSWORD $(ADMIN_PASSWORD)
               -ROOT_TOKEN $(ROOT_TOKEN)
               -DEBUG $(DEBUG)
+              -USE_X_FORWARDED_HOST $(USE_X_FORWARDED_HOST)
               "
