@@ -22,10 +22,10 @@ class RegistrationResource(resources.ModelResource):
 
 @register(Registration)
 class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
-    search_fields = ("name", "title")
+    search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
-    list_display = ("name", "title", "slug", "active", "locale", "secure", "active")
+    list_display = ("name", "title", "slug", "locale", "active", "secure", "active")
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)

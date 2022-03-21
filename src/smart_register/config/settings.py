@@ -71,6 +71,7 @@ MIDDLEWARE = [
     "smart_register.web.middlewares.SentryMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "smart_register.web.middlewares.MaintenanceMiddleware",
+    "smart_register.web.middlewares.LocaleMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -151,7 +152,7 @@ LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
     ("en-us", "English"),
     ("pl-pl", "Polskie"),
-    ("uk-UA", "український")
+    ("uk-ua", "український")
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),
@@ -162,6 +163,8 @@ LANGUAGES = (
     # ('ta-ta', 'தமிழ்'),  # Tamil
     # ('hi-hi', 'हिंदी'),  # Hindi
 )
+LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
+
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
 # SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN')
 SESSION_COOKIE_SAMESITE = "Lax"
