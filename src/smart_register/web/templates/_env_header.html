@@ -1,8 +1,11 @@
 {% if smart.debug %}
     <div class="fixed flex staff-toolbar">
-        <div class="inline-flex flex-shrink">&nbsp;&nbsp;&nbsp;Version: {{ smart.version|slice:':7'|join:'' }}</div> - 
-        <div class="inline-flex flex-shrink"> Build date: {{ smart.build_date }}</div> - 
+        <div class="inline-flex flex-shrink">&nbsp;&nbsp;&nbsp;Version: {{ smart.version|slice:':7'|join:'' }}</div>
+{#         - #}
+        <div class="inline-flex flex-shrink"> Build date: {{ smart.build_date }}</div>
+{#         - #}
         <div class="inline-flex flex-grow"> {{ smart.env }}</div>
+        <div class="inline-flex flex-shrink">
+            <a target="_edit" href="{% url "admin:index" %}">Admin</a></div>
     </div>
-    <a target="_edit" href="{% url "admin:index" %}">Admin</a>
 {% endif %}

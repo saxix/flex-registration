@@ -4,7 +4,7 @@
   color: white;
   z-index: 1000;
 }
-.staff-toolbar flex-shrink::after {
+.staff-toolbar .flex-shrink::after {
   content: "|";
   padding-left: 5px;
   padding-right: 5px;
