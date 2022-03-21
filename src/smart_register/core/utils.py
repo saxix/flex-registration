@@ -185,3 +185,21 @@ def dict_get_nested(obj: dict, path):
             current[p] = {}
         current = current[p]
     return current
+
+
+def clone_model(obj, **kwargs):
+    obj = obj.__class__.objects.get(pk=obj.pk)
+    obj.pk = None
+    for k, v in kwargs.items():
+        setattr(obj, k, v)
+    obj.save()
+    return obj
+
+
+def clone_form(instance, **kwargs):
+    cloned = clone_model(instance, **kwargs)
+    for field in instance.fields.all():
+        field.pk = None
+        field.flex_form = cloned
+        field.save()
+    return cloned
