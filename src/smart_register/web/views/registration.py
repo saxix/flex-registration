@@ -135,4 +135,6 @@ class RegisterView(FormView):
 
     def form_invalid(self, form, formsets):
         """If the form is invalid, render the invalid form."""
-        return self.render_to_response(self.get_context_data(form=form, errors=self.errors, formsets=formsets))
+        return self.render_to_response(
+            self.get_context_data(form=form, invalid=True, errors=self.errors, formsets=formsets)
+        )
