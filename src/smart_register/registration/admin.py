@@ -16,8 +16,8 @@ from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
+from ..core.utils import clone_form, clone_model, is_root
 from .forms import CloneForm
-from ..core.utils import is_root, clone_model, clone_form
 from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
@@ -189,6 +189,9 @@ class RecordAdmin(SmartModelAdmin):
 
         ctx["form"] = form
         return render(request, "admin/registration/record/decrypt.html", ctx)
+
+    def has_view_permission(self, request, obj=None):
+        return is_root(request) or settings.DEBUG
 
     def has_add_permission(self, request):
         return is_root(request) or settings.DEBUG
