@@ -33,7 +33,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
-    list_display = ("name", "title", "slug", "locale", "secure", "active")
+    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator")
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)
