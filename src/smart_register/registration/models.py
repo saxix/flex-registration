@@ -29,6 +29,7 @@ class Registration(models.Model):
     active = models.BooleanField(default=False)
     locale = models.CharField(max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE)
     intro = models.TextField(blank=True, null=True)
+    footer = models.TextField(blank=True, null=True)
     validator = models.ForeignKey(
         Validator, limit_choices_to={"target": Validator.MODULE}, blank=True, null=True, on_delete=models.SET_NULL
     )
