@@ -4,6 +4,7 @@ from datetime import date, datetime, time
 from json import JSONDecodeError
 
 import jsonpickle
+import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
 from django import forms
@@ -15,6 +16,7 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from natural_keys import NaturalKeyModel
+from py_mini_racer.py_mini_racer import JSParseException
 from strategy_field.utils import fqn
 
 from .compat import RegexField, StrategyClassField
@@ -67,13 +69,14 @@ class Validator(NaturalKeyModel):
         for frm in self.flexformfield_set.all():
             frm.get_instance.cache_clear()
 
-    def validate(self, value, code=None):
+    def validate(self, value):
         from py_mini_racer import MiniRacer
 
         ctx = MiniRacer()
+        sentry_sdk.set_tag("validator", self.pk)
         try:
             ctx.eval(f"var value = {jsonpickle.encode(value)};")
-            result = ctx.eval(code or self.code)
+            result = ctx.eval(self.code)
             if result is None:
                 ret = False
             else:
@@ -87,6 +90,8 @@ class Validator(NaturalKeyModel):
                 raise ValidationError(self.message)
         except ValidationError:
             raise
+        except JSParseException as e:
+            logger.exception(e)
         except Exception as e:
             logger.exception(e)
             raise

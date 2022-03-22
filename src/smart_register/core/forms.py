@@ -10,15 +10,15 @@ from .fields.widgets import PythonEditor
 class ValidatorForm(forms.ModelForm):
     code = forms.CharField(widget=PythonEditor)
 
-    def clean_code(self):
-        code = self.cleaned_data["code"]
-        try:
-            self.instance.validate({}, code=code)
-        except ValidationError:
-            pass
-        except Exception as e:
-            raise ValidationError(str(e))
-        return self.cleaned_data["code"]
+    # def clean_code(self):
+    #     code = self.cleaned_data["code"]
+    #     try:
+    #         self.instance.validate({}, code=code)
+    #     except ValidationError:
+    #         pass
+    #     except Exception as e:
+    #         raise ValidationError(str(e))
+    #     return self.cleaned_data["code"]
 
 
 class CustomFieldMixin:
