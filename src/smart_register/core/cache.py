@@ -37,4 +37,5 @@ def cache_form(f):
 
         return cache[key]
 
+    _inner.cache_clear = lambda: True
     return _inner
