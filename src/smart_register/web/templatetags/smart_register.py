@@ -76,11 +76,7 @@ def link(registration):
 
     if "class" not in attrs:
         widget["attrs"]["style"] = "background-color:#01ADF1;"
-        widget["attrs"]["class"] = (
-            "flex text-white border-0 py-4 px-8 "
-            "focus:outline-none hover:bg-indigo-600 rounded "
-            "text-center text-4xl"
-        )
+        widget["attrs"]["class"] = "text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
     widget["attrs"]["href"] = reverse("register", args=[registration.locale, registration.slug])
     return {
         "reg": registration,
