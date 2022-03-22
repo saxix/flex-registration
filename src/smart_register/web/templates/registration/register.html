@@ -13,7 +13,7 @@
     <script>var formsetConfig = [];</script>
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
-            {% if form.errors %}
+            {% if errors %}
                 <div class="w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
                     {% trans "please fix the errors below" %}
                 </div>
@@ -28,6 +28,7 @@
                         {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
                     </div>
                     {% for name, formset in formsets.items %}
+                        {{ formset.non_form_errors }}
                         <div class="shadow-md rounded bg-gray-100 p-4">
                             <div class="w-full formset">
                                 {% if user.is_staff %}

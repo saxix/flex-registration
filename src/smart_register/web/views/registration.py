@@ -97,9 +97,14 @@ class RegisterView(FormView):
         form = self.get_form()
         formsets = self.get_formsets()
         is_valid = True
+        all_data = {}
         for fs in formsets.values():
+            is_valid = is_valid and fs.is_valid()
+            all_data[fs.fs.name] = []
             for f in fs:
                 is_valid = is_valid and f.is_valid()
+                all_data[fs.fs.name].append(f.cleaned_data)
+
         if form.is_valid() and is_valid:
             return self.form_valid(form, formsets)
         else:
@@ -118,4 +123,4 @@ class RegisterView(FormView):
 
     def form_invalid(self, form, formsets):
         """If the form is invalid, render the invalid form."""
-        return self.render_to_response(self.get_context_data(form=form, formsets=formsets))
+        return self.render_to_response(self.get_context_data(form=form, errors=True, formsets=formsets))

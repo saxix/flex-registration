@@ -31,10 +31,21 @@ cache = caches["default"]
 class Validator(NaturalKeyModel):
     FORM = "form"
     FIELD = "field"
+    MODULE = "module"
+    FORMSET = "formset"
+
     name = CICharField(max_length=255, unique=True)
     message = models.CharField(max_length=255)
     code = models.TextField(blank=True, null=True)
-    target = models.CharField(max_length=5, choices=((FORM, "Form"), (FIELD, "Field")))
+    target = models.CharField(
+        max_length=10,
+        choices=(
+            (FORM, "Form"),
+            (FIELD, "Field"),
+            (FORMSET, "Formset"),
+            (MODULE, "Module"),
+        ),
+    )
 
     def __str__(self):
         return self.name
@@ -51,14 +62,18 @@ class Validator(NaturalKeyModel):
         super().save(force_insert, force_update, using, update_fields)
         for frm in self.flexform_set.all():
             frm.get_form.cache_clear()
+        for frm in self.formset_set.all():
+            frm.flex_form.get_form.cache_clear()
+        for frm in self.flexformfield_set.all():
+            frm.get_instance.cache_clear()
 
-    def validate(self, value):
+    def validate(self, value, code=None):
         from py_mini_racer import MiniRacer
 
         ctx = MiniRacer()
         try:
             ctx.eval(f"var value = {jsonpickle.encode(value)};")
-            result = ctx.eval(self.code)
+            result = ctx.eval(code or self.code)
             if result is None:
                 ret = False
             else:
@@ -74,7 +89,7 @@ class Validator(NaturalKeyModel):
             raise
         except Exception as e:
             logger.exception(e)
-            raise ValidationError(self.message)
+            raise
 
 
 def get_validators(field):
@@ -179,6 +194,9 @@ class FormSet(NaturalKeyModel, OrderableModel):
     min_num = models.IntegerField(default=0, blank=False, null=False)
 
     dynamic = models.BooleanField(default=True)
+    validator = models.ForeignKey(
+        Validator, blank=True, null=True, limit_choices_to={"target": Validator.FORMSET}, on_delete=models.SET_NULL
+    )
 
     advanced = models.JSONField(default=dict, blank=True)
 

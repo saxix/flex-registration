@@ -10,6 +10,16 @@ from .fields.widgets import PythonEditor
 class ValidatorForm(forms.ModelForm):
     code = forms.CharField(widget=PythonEditor)
 
+    def clean_code(self):
+        code = self.cleaned_data["code"]
+        try:
+            self.instance.validate({}, code=code)
+        except ValidationError:
+            pass
+        except Exception as e:
+            raise ValidationError(str(e))
+        return self.cleaned_data["code"]
+
 
 class CustomFieldMixin:
     custom = None
@@ -42,6 +52,21 @@ class FlexFormBaseForm(forms.Form):
 
 
 class SmartBaseFormSet(BaseFormSet):
+    def non_form_errors(self):
+        return super().non_form_errors()
+
+    def clean(self):
+        if self.fs.validator:
+            data = {
+                "total_form_count": self.total_form_count(),
+                "errors": self._errors,
+                "non_form_errors": self._non_form_errors,
+            }
+            try:
+                self.fs.validator.validate(data)
+            except ValidationError as e:
+                raise ValidationError([e.error_dict])
+
     @property
     def media(self):
         extra = "" if settings.DEBUG else ".min"
