@@ -8,6 +8,20 @@ body header.header {
   z-index: 900;
 }
 
+.alert-message {
+  background-color: #ff9898;
+}
+
+span.required {
+  color: #c90a0a;
+}
+
+ul.errorlist li {
+  background-color: #ff9898;
+  color: black !important;
+  padding: 2px !important;
+}
+
 fieldset label {
   cursor: pointer;
 }

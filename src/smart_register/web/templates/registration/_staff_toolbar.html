@@ -1,14 +1,14 @@
 {% load static %}{% if user.is_staff %}
     <div class="fixed flex staff-toolbar">
         <div class="flex-shrink block hidden lg:inline-flex">
-            Version: {{ smart.version|slice:':7'|join:'' }}
+            Version: {{ project.version|slice:':7'|join:'' }}
         </div>
         <div class="flex-shrink block hidden lg:inline-flex">
-            Build date: {{ smart.build_date }}
+            Build date: {{ project.build_date }}
         </div>
 
         <span class="flex-grow block inline-flex">
-            {{ smart.env }}
+            {{ project.env }}
         </span>
         <div class="hidden md:inline-flex ">
             <span>Edit: </span>

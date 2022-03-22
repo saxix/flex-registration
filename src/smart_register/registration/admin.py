@@ -16,8 +16,8 @@ from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
+from ..core.utils import clone_form, clone_model, is_root
 from .forms import CloneForm
-from ..core.utils import is_root, clone_model, clone_form
 from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
-    list_display = ("name", "title", "slug", "locale", "secure", "active")
+    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator")
     exclude = ("public_key",)
     change_form_template = None
     autocomplete_fields = ("flex_form",)
@@ -189,6 +189,9 @@ class RecordAdmin(SmartModelAdmin):
 
         ctx["form"] = form
         return render(request, "admin/registration/record/decrypt.html", ctx)
+
+    def has_view_permission(self, request, obj=None):
+        return is_root(request) or settings.DEBUG
 
     def has_add_permission(self, request):
         return is_root(request) or settings.DEBUG

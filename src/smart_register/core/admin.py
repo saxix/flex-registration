@@ -43,13 +43,17 @@ class ValidatorAdmin(SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "title", "parent", "flex_form", "enabled", "max_num", "min_num")
+    list_display = ("name", "title", "parent", "flex_form", "enabled", "validator", "min_num")
     search_fields = ("name", "title")
     list_editable = ("enabled",)
     list_filter = (
         ("parent", AutoCompleteFilter),
         ("flex_form", AutoCompleteFilter),
     )
+    formfield_overrides = {
+        JSONField: {"widget": JSONEditor},
+        # RegexField: {"widget": RegexEditor}
+    }
 
 
 class FormSetInline(OrderableAdmin, TabularInline):

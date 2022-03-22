@@ -30,6 +30,9 @@ smart = {
         } else {
             $container.hide();
         }
+    },
+    updateDeleteLabel: function (sender, label){
+        $(sender).parents('.form-container').find('.delete-button').text(label + $(sender).val());
     }
 };
 

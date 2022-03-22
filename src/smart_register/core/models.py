@@ -1,9 +1,9 @@
-import functools
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
 
 import jsonpickle
+import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
 from django import forms
@@ -15,8 +15,10 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from natural_keys import NaturalKeyModel
+from py_mini_racer.py_mini_racer import JSParseException
 from strategy_field.utils import fqn
 
+from .cache import cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
@@ -31,10 +33,21 @@ cache = caches["default"]
 class Validator(NaturalKeyModel):
     FORM = "form"
     FIELD = "field"
+    MODULE = "module"
+    FORMSET = "formset"
+
     name = CICharField(max_length=255, unique=True)
     message = models.CharField(max_length=255)
     code = models.TextField(blank=True, null=True)
-    target = models.CharField(max_length=5, choices=((FORM, "Form"), (FIELD, "Field")))
+    target = models.CharField(
+        max_length=10,
+        choices=(
+            (FORM, "Form"),
+            (FIELD, "Field"),
+            (FORMSET, "Formset"),
+            (MODULE, "Module"),
+        ),
+    )
 
     def __str__(self):
         return self.name
@@ -51,11 +64,16 @@ class Validator(NaturalKeyModel):
         super().save(force_insert, force_update, using, update_fields)
         for frm in self.flexform_set.all():
             frm.get_form.cache_clear()
+        for frm in self.formset_set.all():
+            frm.flex_form.get_form.cache_clear()
+        for frm in self.flexformfield_set.all():
+            frm.get_instance.cache_clear()
 
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
         ctx = MiniRacer()
+        sentry_sdk.set_tag("validator", self.pk)
         try:
             ctx.eval(f"var value = {jsonpickle.encode(value)};")
             result = ctx.eval(self.code)
@@ -72,9 +90,11 @@ class Validator(NaturalKeyModel):
                 raise ValidationError(self.message)
         except ValidationError:
             raise
+        except JSParseException as e:
+            logger.exception(e)
         except Exception as e:
             logger.exception(e)
-            raise ValidationError(self.message)
+            raise
 
 
 def get_validators(field):
@@ -134,7 +154,7 @@ class FlexForm(NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @functools.cache
+    @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
@@ -179,6 +199,9 @@ class FormSet(NaturalKeyModel, OrderableModel):
     min_num = models.IntegerField(default=0, blank=False, null=False)
 
     dynamic = models.BooleanField(default=True)
+    validator = models.ForeignKey(
+        Validator, blank=True, null=True, limit_choices_to={"target": Validator.FORMSET}, on_delete=models.SET_NULL
+    )
 
     advanced = models.JSONField(default=dict, blank=True)
 

@@ -69,7 +69,7 @@ def test_form_fail_custom_message(code):
     [
         "var error = (value.last_name.length==3) ? true: false; error",
         '(value.last_name.length==3) ? "": false',
-        'throw Error("Not Valid")',
+        # 'throw Error("Not Valid")',
     ],
 )
 def test_form_fail_default_message(code):

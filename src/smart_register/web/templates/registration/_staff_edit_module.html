@@ -1,0 +1,10 @@
+<span class="staff-editor staff-tooltip">
+    <span class="tooltiptext text-lower">
+        <p>Module:</p>
+        <p>{{ dataset.name }}</p>
+        <p>{{ dataset.locale }}</p>
+    </span>
+    <a target="_edit" class="module"
+       href="{% url "admin:registration_registration_change" dataset.pk %}">
+    </a>
+</span>

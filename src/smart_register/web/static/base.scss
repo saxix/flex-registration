@@ -1,4 +1,5 @@
 $base-color: #0da7e6;
+$color-error: #ff9898;
 
 * {
 
@@ -16,8 +17,25 @@ body {
     //margin-bottom: 30px;
   }
 }
+
 .btn {
 
+}
+
+.alert-message {
+  background-color: $color-error;
+}
+
+span.required {
+  color: #c90a0a;
+}
+
+ul.errorlist {
+  li {
+    background-color: $color-error;
+    color: black !important;
+    padding: 2px !important;
+  }
 }
 
 fieldset label {
