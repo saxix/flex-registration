@@ -1,4 +1,3 @@
-import functools
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
@@ -19,6 +18,7 @@ from natural_keys import NaturalKeyModel
 from py_mini_racer.py_mini_racer import JSParseException
 from strategy_field.utils import fqn
 
+from .cache import cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
@@ -154,7 +154,7 @@ class FlexForm(NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @functools.cache
+    @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
