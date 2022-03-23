@@ -1,9 +1,14 @@
+import logging
+
 from constance import config
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views import View
 from django.views.generic import TemplateView
 
 from smart_register.core.utils import get_qrcode
+from smart_register.registration.models import Registration
+
+logger = logging.getLogger(__name__)
 
 
 class HomeView(TemplateView):
@@ -11,6 +16,17 @@ class HomeView(TemplateView):
 
     def get_template_names(self):
         return [config.HOME_TEMPLATE, self.template_name]
+
+    def get_context_data(self, **kwargs):
+        selection = config.HOME_PAGE_REGISTRATIONS.split(";")
+        buttons = []
+        for sel in selection:
+            try:
+                slug, locale = sel.split(",")
+                buttons.append(Registration.objects.get(active=True, slug=slug, locale=locale))
+            except Exception as e:
+                logger.exception(e)
+        return super().get_context_data(buttons=buttons, **kwargs)
 
 
 class QRCodeView(TemplateView):

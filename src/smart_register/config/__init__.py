@@ -24,6 +24,7 @@ DEFAULTS = {
     "DATABASE_URL": (str, "psql://postgres:@postgres:5432/smart_register"),
     "DEBUG": (bool, False),
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
+    "LOG_LEVEL": (str, "ERROR"),
     "ROOT_KEY": (str, uuid.uuid4().hex),
     "EMAIL_BACKEND": (str, "django.core.mail.backends.smtp.EmailBackend"),
     "EMAIL_HOST": (str, ""),

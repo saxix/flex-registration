@@ -1,9 +1,9 @@
-import functools
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
 
 import jsonpickle
+import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
 from django import forms
@@ -12,15 +12,18 @@ from django.core.cache import caches
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.template.defaultfilters import pluralize
+from django.forms import formset_factory
+from django.template.defaultfilters import pluralize, slugify
 from natural_keys import NaturalKeyModel
+from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
+from .cache import cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
-from .forms import CustomFieldMixin, FlexFormBaseForm
+from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import jsonfy, namify, underscore_to_camelcase
+from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +33,22 @@ cache = caches["default"]
 class Validator(NaturalKeyModel):
     FORM = "form"
     FIELD = "field"
+    MODULE = "module"
+    FORMSET = "formset"
+
     name = CICharField(max_length=255, unique=True)
     message = models.CharField(max_length=255)
     code = models.TextField(blank=True, null=True)
-    target = models.CharField(max_length=5, choices=((FORM, "Form"), (FIELD, "Field")))
+    target = models.CharField(
+        max_length=10,
+        choices=(
+            (FORM, "Form"),
+            (FIELD, "Field"),
+            (FORMSET, "Formset"),
+            (MODULE, "Module"),
+        ),
+    )
+    trace = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -50,30 +65,47 @@ class Validator(NaturalKeyModel):
         super().save(force_insert, force_update, using, update_fields)
         for frm in self.flexform_set.all():
             frm.get_form.cache_clear()
+        for frm in self.formset_set.all():
+            frm.flex_form.get_form.cache_clear()
+        for frm in self.flexformfield_set.all():
+            frm.get_instance.cache_clear()
 
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        ctx = MiniRacer()
-        try:
-            ctx.eval(f"var value = {jsonpickle.encode(value)};")
-            result = ctx.eval(self.code)
-            if result is None:
-                ret = False
-            else:
-                try:
-                    ret = jsonpickle.decode(result)
-                except (JSONDecodeError, TypeError):
-                    ret = result
-            if isinstance(ret, (str, dict)):
-                raise ValidationError(ret)
-            elif isinstance(ret, bool) and not ret:
-                raise ValidationError(self.message)
-        except ValidationError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            raise ValidationError(self.message)
+        with sentry_sdk.push_scope() as scope:
+            scope.set_extra("value", value)
+            scope.set_extra("code", self.code)
+            scope.set_extra("target", self.target)
+            scope.set_tag("validator", self.pk)
+
+            ctx = MiniRacer()
+            try:
+                ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
+                result = ctx.eval(self.code)
+                scope.set_tag("result", result)
+                if result is None:
+                    ret = False
+                else:
+                    try:
+                        ret = jsonpickle.decode(result)
+                    except (JSONDecodeError, TypeError):
+                        ret = result
+                if isinstance(ret, (str, dict)):
+                    raise ValidationError(ret)
+                elif isinstance(ret, bool) and not ret:
+                    raise ValidationError(self.message)
+            except ValidationError as e:
+                if self.trace:
+                    logger.exception(e)
+                raise
+            except MiniRacerBaseException as e:
+                logger.exception(e)
+            except Exception as e:
+                logger.exception(e)
+                raise
+        if self.trace:
+            sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
 
 
 def get_validators(field):
@@ -133,7 +165,7 @@ class FlexForm(NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @functools.cache
+    @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
@@ -154,6 +186,17 @@ class FlexForm(NaturalKeyModel):
 
 
 class FormSet(NaturalKeyModel, OrderableModel):
+    FORMSET_DEFAULT_ATTRS = {
+        "smart": {
+            "widget": {
+                "addText": None,
+                "addCssClass": None,
+                "deleteText": None,
+                "deleteCssClass": None,
+                "keepFieldValues": "",
+            }
+        }
+    }
     version = IntegerVersionField()
     name = CICharField(max_length=255)
     title = models.CharField(max_length=300, blank=True, null=True)
@@ -167,6 +210,11 @@ class FormSet(NaturalKeyModel, OrderableModel):
     min_num = models.IntegerField(default=0, blank=False, null=False)
 
     dynamic = models.BooleanField(default=True)
+    validator = models.ForeignKey(
+        Validator, blank=True, null=True, limit_choices_to={"target": Validator.FORMSET}, on_delete=models.SET_NULL
+    )
+
+    advanced = models.JSONField(default=dict, blank=True)
 
     class Meta:
         verbose_name = "FormSet"
@@ -180,12 +228,41 @@ class FormSet(NaturalKeyModel, OrderableModel):
     def get_form(self):
         return self.flex_form.get_form()
 
+    def save(self, *args, **kwargs):
+        self.name = slugify(self.name)
+        dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
+        super().save(*args, **kwargs)
+
+    def get_formset(self):
+        formSet = formset_factory(
+            self.get_form(),
+            formset=SmartBaseFormSet,
+            extra=self.extra,
+            min_num=self.min_num,
+            absolute_max=self.max_num,
+            max_num=self.max_num,
+        )
+        formSet.fs = self
+        formSet.required = self.min_num > 0
+        return formSet
+
 
 class FlexFormField(NaturalKeyModel, OrderableModel):
+    FLEX_FIELD_DEFAULT_ATTRS = {
+        "smart": {
+            "hint": "",
+            "visible": True,
+            "onchange": "",
+            "question": "",
+            "description": "",
+            "fieldset": "",
+        },
+    }
+
     version = IntegerVersionField()
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
-    name = CICharField(max_length=30, blank=True)
+    name = CICharField(max_length=100, blank=True)
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
@@ -203,7 +280,10 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         ordering = ["ordering"]
 
     def __str__(self):
-        return f"{self.name} {self.field_type}"
+        return f"{self.name} {self.field_type.__name__}"
+
+    def type_name(self):
+        return str(self.field_type.__name__)
 
     def get_instance(self):
         # if hasattr(self.field_type, "custom") and isinstance(self.field_type.custom, CustomFieldType):
@@ -260,10 +340,11 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.name:
-            self.name = namify(self.label)
+            self.name = namify(self.label)[:100]
         else:
-            self.name = namify(self.name)
+            self.name = namify(self.name)[:100]
 
+        dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
         self.flex_form.get_form.cache_clear()
 

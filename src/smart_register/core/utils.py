@@ -19,6 +19,8 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
 
+UNDEFINED = object()
+
 
 def is_root(request, *args, **kwargs):
     return request.user.is_superuser and request.headers.get("x-root-token") == settings.ROOT_TOKEN
@@ -163,3 +165,62 @@ def get_qrcode(content):
     # save the QR code generated
     QRimg.save(buff, format="PNG")
     return base64.b64encode(buff.getvalue()).decode()
+
+
+def dict_setdefault(source: dict, d: dict):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            source.setdefault(k, v)
+            dict_setdefault(source[k], v)
+        else:
+            source.setdefault(k, v)
+    return source
+
+
+def dict_get_nested(obj: dict, path):
+    parts = path.split(".")
+    current = obj
+    for p in parts:
+        if p not in current:
+            current[p] = {}
+        current = current[p]
+    return current
+
+
+def clone_model(obj, **kwargs):
+    obj = obj.__class__.objects.get(pk=obj.pk)
+    obj.pk = None
+    for k, v in kwargs.items():
+        setattr(obj, k, v)
+    obj.save()
+    return obj
+
+
+def clone_form(instance, **kwargs):
+    cloned = clone_model(instance, **kwargs)
+    for field in instance.fields.all():
+        field.pk = None
+        field.flex_form = cloned
+        field.save()
+    return cloned
+
+
+def get_client_ip(request):
+    """
+    type: (WSGIRequest) -> Optional[Any]
+    Naively yank the first IP address in an X-Forwarded-For header
+    and assume this is correct.
+
+    Note: Don't use this in security sensitive situations since this
+    value may be forged from a client.
+    """
+    if request:
+        for x in [
+            "HTTP_X_ORIGINAL_FORWARDED_FOR",
+            "HTTP_X_FORWARDED_FOR",
+            "HTTP_X_REAL_IP",
+            "REMOTE_ADDR",
+        ]:
+            ip = request.META.get(x)
+            if ip:
+                return ip.split(",")[0].strip()

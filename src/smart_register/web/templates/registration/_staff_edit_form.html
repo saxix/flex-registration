@@ -1,0 +1,10 @@
+<span class="staff-editor staff-tooltip">
+<span class="tooltiptext text-lower">
+    <p>FlexForm:</p>
+    <p>{{ form.flex_form.name }}</p>
+    <p>{{ formset.fs.title|default_if_none:"<no title set>" }}</p>
+</span>
+    <a target="_edit" class="form"
+       href="{% url "admin:core_flexform_change" form.flex_form.pk %}">
+    </a>
+</span>

@@ -1,12 +1,13 @@
-{% extends config.BASE_TEMPLATE %}{% load static %}
+{% extends config.BASE_TEMPLATE %}{% load static smart_register%}
+{% block header %}{% endblock %}
 {% block body %}
     <section class="text-gray-700 body-font">
-        <div class="container mx-auto flex px-5 py-6 lg:py-24 flex-col-reverse lg:flex-row items-center">
+        <div class="container mx-auto flex px-5 py-6 lg:py-24 flex-col-reverse lg:flex-row tems-center">
             <div class="lg:flex-grow w-full lg:w-1/2 lg:pr-24 lg:pr-16 flex flex-col md:items-start sm:text-center lg:text-left text-center mb-16 md:mb-0 items-center ">
                 <div class="title-font text-2xl mb-4 font-medium text-gray-900">
                     Humanitarian Assistance to Families with Children
                 </div>
-                <ul>
+                <ul class="text-justify ">
                     <li>Welcome, this page is meant to help UNICEF and its humanitarian partners to register families
                         with children in Ukraine who need humanitarian assistance inside Ukraine as a result of the war.
                     </li>
@@ -16,15 +17,30 @@
                     <li>Participating in this survey does not mean that you are entitled to assistance. UNICEF and
                         humanitarian partners will analyze the data for possible eligibility.
                     </li>
-                    <li>UNICEF will prioritize large families (three children and more) with at least one child between
-                        0 and 2 years of age and provide cash transfer via bank account.
+                    <li>
+                        <ul class="list-disc list-inside">Currently UNICEF will assist
+
+                            <li>large families, with three children or more and at least one of them below two years of age.</li>
+                            <li>Single headed families with at least two children regardless of age</li>
+                        As UNICEF receives more funds from its donors the criteria may be broaden. UNICEF encourages all families with children who consider themselves in need of cash assistance to register.
+                        </ul>
                     </li>
                 </ul>
-                <a href="{% url "register-latest" %}"
-                   class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-4xl">Registration</a>
+                <div class="my-5 font-bold text-justify">
+                    Upon clicking Consent and Register you agree that your personal data will be stored by
+                    UNICEF and will be shared with private sector partners for payment,
+                    Ministry of Social Protection of Ukraine and humanitarian partners to avoid multiple
+                    assistance streams.
+                </div>
+                <div class="flex space-x-2 m-5 px-10">
+                    {% for reg in buttons %}
+                        {% link reg %}
+                    {% endfor %}
+                </div>
             </div>
-            <div class="lg:max-w-lg flex-col justify-center flex md:w-4/5 lg:w-full w-full">
-                <img class="object-cover object-center rounded" alt="hero" src="{% static "unicef_logo.jpeg" %}">
+{#            <div class="lg:max-w-lg flex-col justify-center sm:flex w-4/5 w-full w-full">#}
+            <div class="m-auto w-1/4 flex-col">
+                <img class="object-cover self-center object-center rounded" src="{% static "unicef_ukraine_logo.jpg" %}">
             </div>
         </div>
     </section>
