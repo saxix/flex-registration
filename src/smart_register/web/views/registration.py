@@ -94,7 +94,6 @@ class RegisterView(FormView):
         return self.render_to_response(self.get_context_data())
 
     def validate(self, cleaned_data):
-        self.errors = []
         if self.registration.validator:
             try:
                 self.registration.validator.validate(cleaned_data)
@@ -104,18 +103,18 @@ class RegisterView(FormView):
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         formsets = self.get_formsets()
+        self.errors = []
         is_valid = True
         all_cleaned_data = {}
 
         for fs in formsets.values():
-            is_valid = is_valid and fs.is_valid()
-            all_cleaned_data[fs.fs.name] = []
-            for f in fs:
-                is_valid = is_valid and f.is_valid()
-                if hasattr(f, "cleaned_data"):
-                    all_cleaned_data[fs.fs.name].append(f.cleaned_data)
+            if fs.is_valid():
+                all_cleaned_data[fs.fs.name] = fs.cleaned_data
+            else:
+                is_valid = False
 
-        self.validate(all_cleaned_data)
+        if is_valid:
+            self.validate(all_cleaned_data)
 
         if form.is_valid() and is_valid:
             return self.form_valid(form, formsets)

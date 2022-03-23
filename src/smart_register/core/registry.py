@@ -23,6 +23,14 @@ def import_custom_field(value, exc):
 
 
 class FieldRegistry(Registry):
+    def get_name(self, entry):
+        return entry.__name__
+
+    def as_choices(self):
+        if not self._choices:
+            self._choices = sorted([(fqn(klass), self.get_name(klass)) for klass in self], key=lambda e: e[1])
+        return self._choices
+
     def __contains__(self, y):
         if isinstance(y, str):
             return y in [fqn(s) for s in self]

@@ -15,7 +15,7 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from natural_keys import NaturalKeyModel
-from py_mini_racer.py_mini_racer import JSParseException
+from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
 from .cache import cache_form
@@ -48,6 +48,7 @@ class Validator(NaturalKeyModel):
             (MODULE, "Module"),
         ),
     )
+    trace = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -72,29 +73,39 @@ class Validator(NaturalKeyModel):
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        ctx = MiniRacer()
-        sentry_sdk.set_tag("validator", self.pk)
-        try:
-            ctx.eval(f"var value = {jsonpickle.encode(value)};")
-            result = ctx.eval(self.code)
-            if result is None:
-                ret = False
-            else:
-                try:
-                    ret = jsonpickle.decode(result)
-                except (JSONDecodeError, TypeError):
-                    ret = result
-            if isinstance(ret, (str, dict)):
-                raise ValidationError(ret)
-            elif isinstance(ret, bool) and not ret:
-                raise ValidationError(self.message)
-        except ValidationError:
-            raise
-        except JSParseException as e:
-            logger.exception(e)
-        except Exception as e:
-            logger.exception(e)
-            raise
+        with sentry_sdk.push_scope() as scope:
+            scope.set_extra("value", value)
+            scope.set_extra("code", self.code)
+            scope.set_extra("target", self.target)
+            scope.set_tag("validator", self.pk)
+
+            ctx = MiniRacer()
+            try:
+                ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
+                result = ctx.eval(self.code)
+                scope.set_tag("result", result)
+                if result is None:
+                    ret = False
+                else:
+                    try:
+                        ret = jsonpickle.decode(result)
+                    except (JSONDecodeError, TypeError):
+                        ret = result
+                if isinstance(ret, (str, dict)):
+                    raise ValidationError(ret)
+                elif isinstance(ret, bool) and not ret:
+                    raise ValidationError(self.message)
+            except ValidationError as e:
+                if self.trace:
+                    logger.exception(e)
+                raise
+            except MiniRacerBaseException as e:
+                logger.exception(e)
+            except Exception as e:
+                logger.exception(e)
+                raise
+        if self.trace:
+            sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
 
 
 def get_validators(field):
@@ -251,7 +262,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
     version = IntegerVersionField()
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
-    name = CICharField(max_length=30, blank=True)
+    name = CICharField(max_length=100, blank=True)
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
@@ -329,9 +340,9 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.name:
-            self.name = namify(self.label)
+            self.name = namify(self.label)[:100]
         else:
-            self.name = namify(self.name)
+            self.name = namify(self.name)[:100]
 
         dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
