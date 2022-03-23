@@ -40,7 +40,7 @@ class MaintenanceMiddleware:
         """
         if config.MAINTENANCE_MODE:
             url = reverse("maintenance")
-            if not url == request.path and settings.ADMIN_URL not in request.path:
+            if not url == request.path and settings.DJANGO_ADMIN_URL not in request.path:
                 return HttpResponseRedirect(url)
 
         return self.get_response(request)
