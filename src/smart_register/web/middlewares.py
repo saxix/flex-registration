@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.utils import translation
 from sentry_sdk import configure_scope
 
+from smart_register.state import state
+
 
 class SentryMiddleware:
     def __init__(self, get_response):
@@ -42,3 +44,35 @@ class MaintenanceMiddleware:
                 return HttpResponseRedirect(url)
 
         return self.get_response(request)
+
+
+class SecurityHeadersMiddleware(object):
+    """
+    Ensure that we have proper security headers set
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if "X-Frame-Options" not in response:
+            response["X-Frame-Options"] = "deny"
+        if "X-Content-Type-Options" not in response:
+            response["X-Content-Type-Options"] = "nosniff"
+        if "X-XSS-Protection" not in response:
+            response["X-XSS-Protection"] = "1; mode=block"
+        return response
+
+
+class ThreadLocalMiddleware:
+    """Middleware that puts the request object in thread local storage."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        state.request = request
+        ret = self.get_response(request)
+        state.request = None
+        return ret

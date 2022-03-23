@@ -13,7 +13,7 @@
     <script>var formsetConfig = [];</script>
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
-            {% if errors %}
+            {% if invalid %}
                 <div class="mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
                     {% trans "please fix the errors below" %}
                 </div>
@@ -31,6 +31,9 @@
             </div>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
+                {% if user.is_staff %}
+                    {% include "registration/_staff_edit_form.html" %}
+                {% endif %}
                 <form class="w-full" method="post">
                     {% csrf_token %}
                     <div class="form-container">

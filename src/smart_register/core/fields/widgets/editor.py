@@ -7,6 +7,7 @@ class PythonEditor(forms.Textarea):
 
     def __init__(self, *args, **kwargs):
         theme = kwargs.pop("theme", "midnight")
+        self.toolbar = kwargs.pop("toolbar", True)
         super().__init__(*args, **kwargs)
         self.attrs["class"] = "python-editor"
         self.attrs["theme"] = theme
@@ -21,6 +22,8 @@ class PythonEditor(forms.Textarea):
             )
         }
         js = (
+            "/static/admin/js/vendor/jquery/jquery.js",
+            "/static/admin/js/jquery.init.js",
             static("codemirror/codemirror.js"),
             static("codemirror/javascript.js"),
             static("codemirror/fullscreen.js"),
