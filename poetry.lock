@@ -303,6 +303,21 @@ dev = ["check-manifest", "django-environ", "factory-boy", "flake8", "isort", "pd
 test = ["check-manifest", "django-environ", "factory-boy", "flake8", "isort", "pdbpp", "psycopg2 (==2.8.6)", "pytest", "pytest-cov", "pytest-django", "pytest-echo", "pytest-pythonpath", "pytest-selenium", "tox"]
 
 [[package]]
+name = "django-bitfield"
+version = "2.1.0"
+description = "BitField in Django"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+Django = ">=1.10.8"
+six = "*"
+
+[package.extras]
+tests = ["flake8", "mysqlclient", "psycopg2 (>=2.3)", "pytest-django"]
+
+[[package]]
 name = "django-click"
 version = "2.3.0"
 description = "Build Django management commands using the click CLI package."
@@ -709,6 +724,14 @@ python-versions = ">=3.6"
 name = "html-json-forms"
 version = "1.1.1"
 description = "Implementation of the HTML JSON Forms spec for use with the Django REST Framework."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "htmlmin"
+version = "0.1.12"
+description = "An HTML Minifier"
 category = "main"
 optional = false
 python-versions = "*"
@@ -1941,7 +1964,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e05fc72d9248441492849d7abfcb4e2529646fe304faa03a018ef832b9e1a9a0"
+content-hash = "29250d03c7a0cce63aa273ccff12ba149aa75806aa030bb9575e961d1fdb3197"
 
 [metadata.files]
 appnope = [
@@ -2171,6 +2194,10 @@ django-adminactions = [
 django-adminfilters = [
     {file = "django-adminfilters-2.0.1.tar.gz", hash = "sha256:fe3f13a8b2ee268d132bbc1d28e6843a7c763671027588812c95760d7079ceef"},
 ]
+django-bitfield = [
+    {file = "django-bitfield-2.1.0.tar.gz", hash = "sha256:a55859fd16ce4269d5ceed3e20cf8fc3c2df866f0a78b90c60a19a0e76aa5fd8"},
+    {file = "django_bitfield-2.1.0-py2.py3-none-any.whl", hash = "sha256:158f1056e22cce450d0a49633ea77bfd84b85a2294b1ef03faa775a485f4065d"},
+]
 django-click = [
     {file = "django-click-2.3.0.tar.gz", hash = "sha256:bffb0d10c3f3dfe3f5b116ce902c7a7a9aa4e9c046de95259dc044462eb746b4"},
     {file = "django_click-2.3.0-py2.py3-none-any.whl", hash = "sha256:b862d6b2424edba564968834c8570e39db8142babaa843fa791a4958a2dabb54"},
@@ -2382,6 +2409,9 @@ h11 = [
 html-json-forms = [
     {file = "html-json-forms-1.1.1.tar.gz", hash = "sha256:16dc413dc858fcc53602ad509c1aef735534838e1bae888bf429e210a9c48f6b"},
     {file = "html_json_forms-1.1.1-py3-none-any.whl", hash = "sha256:51e7e9088bc88e324027144ca25d8bcdd37da28f311a8436bfd88944138ed409"},
+]
+htmlmin = [
+    {file = "htmlmin-0.1.12.tar.gz", hash = "sha256:50c1ef4630374a5d723900096a961cff426dff46b48f34d194a81bbe14eca178"},
 ]
 identify = [
     {file = "identify-2.4.12-py2.py3-none-any.whl", hash = "sha256:5f06b14366bd1facb88b00540a1de05b69b310cbc2654db3c7e07fa3a4339323"},

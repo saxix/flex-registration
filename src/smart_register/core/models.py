@@ -61,15 +61,6 @@ class Validator(NaturalKeyModel):
             return jsonfy(value)
         return value
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super().save(force_insert, force_update, using, update_fields)
-        for frm in self.flexform_set.all():
-            frm.get_form.cache_clear()
-        for frm in self.formset_set.all():
-            frm.flex_form.get_form.cache_clear()
-        for frm in self.flexformfield_set.all():
-            frm.get_instance.cache_clear()
-
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
