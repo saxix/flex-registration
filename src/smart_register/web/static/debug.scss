@@ -1,0 +1,19 @@
+$dev-color: #a3e388;
+
+.staff-toolbar{
+  background-color: $dev-color;
+  color: #2c2c2c;
+}
+
+//# ADMIN
+#container {
+  #header {
+    background-color: $dev-color;
+    *{
+      color: black;
+    }
+    #user-tools *{
+      color: black;
+    }
+  }
+}

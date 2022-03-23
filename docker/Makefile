@@ -47,19 +47,6 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-build-base:
-	cd .. && docker build \
-			${BUILD_OPTIONS} \
-			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE} \
-			-f docker/${DOCKERFILE}.base .
-	#cd .. && git tag base-${BASE}
-	docker tag ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE} ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:latest
-ifeq ($(PUSH_BASE), 1)
-	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:${BASE}
-	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}/base:latest
-endif
-	docker images | grep "${DOCKER_IMAGE_NAME}/base" | grep ${BASE}
-
 check:
 	@[ -z "`git status --porcelain`" ] || ( git status ; echo "Uncommited changes"; exit 1 )
 	export IMAGE_EXISTS=`curl --silent --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" https://gitlab.com/api/v4/projects/22122245/registry/repositories/1473455/tags/${VERSION} | jq '.location'`
@@ -68,15 +55,10 @@ check:
 
 .build:
 	cd .. && docker build \
-			--build-arg BASE_IMAGE="${BASE}" \
-			--build-arg DEVELOP=${DEVELOP} \
 			--build-arg VERSION=${VERSION} \
 			--build-arg BUILD_DATE=${BUILD_DATE} \
-			--build-arg GITHUB_API_TOKEN=${GITLAB_API_TOKEN} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			-f docker/${DOCKERFILE} .
-	git tag $VERSION
-	git push --tags
 	docker images | grep "${DOCKER_IMAGE_NAME}" | grep ${VERSION}
 
 build: check .build
@@ -89,39 +71,16 @@ build: check .build
 	cd .. && docker run \
 	 		--rm \
 	 		--name=${CONTAINER_NAME} \
-			-p 8000:8000 \
-			-p 8001:8001 \
+			-p 8000:80 \
+			-e AUTHENTICATION_BACKENDS=\
 			-e ADMIN_EMAIL="${ADMIN_EMAIL}" \
 			-e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
-			-e ADMIN_USERNAME="${ADMIN_USERNAME}" \
 			-e ADMINS="" \
 			-e ALLOWED_HOSTS="*" \
-			-e CHANNEL_URLS="${CHANNEL_URLS}" \
-			-e CELERY_BROKER_URL="${CELERY_BROKER_URL}" \
-			-e ASGI_SERVER="${ASGI_SERVER}" \
 			-e DATABASE_URL="${DATABASE_URL}" \
 			-e DEBUG="0" \
-			-e DEV_FOOTER_INFO="${DEV_FOOTER_INFO}" \
-			-e DJANGO_SETTINGS_MODULE="sos.config.settings" \
-			-e GOOGLE_ANALYTICS_GTAG_PROPERTY_ID=${GOOGLE_ANALYTICS_GTAG_PROPERTY_ID} \
-			-e REDIS_URL="${REDIS_URL}" \
-			-e SECRET_KEY="${SECRET_KEY}" \
-			-e FERNET_KEYS="${FERNET_KEYS}" \
-			-e CACHE_DEFAULT="${CACHE_DEFAULT}" \
-			-e CACHE_CHAT="${CACHE_CHAT}" \
+			-e DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
-			-e SOCIAL_AUTH_GOOGLE_OAUTH_KEY="${SOCIAL_AUTH_GOOGLE_OAUTH_KEY}" \
-			-e SOCIAL_AUTH_GOOGLE_OAUTH_SECRET="${SOCIAL_AUTH_GOOGLE_OAUTH_SECRET}" \
-			-e SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS=${SOCIAL_AUTH_GOOGLE_OAUTH2_WHITELISTED_DOMAINS} \
-			-e STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY} \
-			-e STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY} \
-			-e STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET} \
-			-e TWILIO_ACCOUNT_SID=${TWILIO_SID} \
-			-e TWILIO_TOKEN=${TWILIO_TOKEN} \
-			-e TWILIO_SERVICE= \
-			-e STATIC_ROOT=/var/sos/static/ \
-			-e STATICFILES_STORAGE="sos.web.storage.ForgivingManifestStaticFilesStorage"\
-			-v '${PWD}/../.build/docker/var/:/var/sos/' \
 			${RUN_OPTIONS} \
 			${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			${CMD}
@@ -135,7 +94,7 @@ release: .docker-login ## relase version $VERSION
 	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${VERSION}
 
 run:  ## run image locally
-	$(MAKE) .run
+	CMD="" $(MAKE) .run
 
 test:  ## test docker image
 	CMD='sh -c "whoami && django-admin collectstatic --no-input -v 3 && django-admin check --deploy"' \

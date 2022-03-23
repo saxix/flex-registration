@@ -2,6 +2,29 @@ body {
   font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;
   font-size: 10pt;
 }
+body header.header {
+  background-color: white;
+  width: 100%;
+  z-index: 900;
+}
+
+.alert-message {
+  background-color: #ff9898;
+}
+
+span.required {
+  color: #c90a0a;
+}
+
+ul.errorlist li {
+  background-color: #ff9898;
+  color: black !important;
+  padding: 2px !important;
+}
+
+fieldset label {
+  cursor: pointer;
+}
 
 ul.errorlist {
   list-style-type: none;
@@ -9,7 +32,7 @@ ul.errorlist {
   margin: 0;
 }
 ul.errorlist li {
-  color: red;
+  color: #c90a0a;
 }
 
 /*# sourceMappingURL=base.css.map */

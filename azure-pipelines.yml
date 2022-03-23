@@ -3,38 +3,68 @@ trigger:
   branches:
     include:
     - develop
-    - staging
     - master
     - ops/*
-  paths:
-    exclude:
-    -  docs/*
 pr: none
 resources:
   - repo: self
 
 variables:
-  # ========================================================================
-  #                          Mandatory variables 
-  # ========================================================================
-  Docker.filePath: "**/docker/Dockerfile.local"
-  Docker.repository: "flex-registration"
-  Docker.registry: "unihopeukrsrdev"
-  azureSubscription: "uni-hope-ukr-sr-dev"
+  - name: Docker.filePath
+    value: "**/docker/Dockerfile"
+  - name: Docker.repository
+    value: "flex-registration"
+  - name: buildDate
+    value: $[format('{0:yyyy}-{0:MM}-{0:dd} {0:HH}:{0:mm}', pipeline.startTime)]
+  - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+    - group: flex-registration-prod
+    - name: Docker.registry
+      value: "unihopeukrsr"
+    - name: azureSubscription
+      value: "UNI_WEBS rs-uni-hope-ukr-sr"
+    - name: appName
+      value: "uni-hope-ukr-sr"
+  - ${{ else }}:
+    - group: flex-registration-dev
+    - name: Docker.registry
+      value: "unihopeukrsrdev"
+    - name: azureSubscription
+      value: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
+    - name: appName
+      value: "uni-hope-ukr-sr-dev"
 
 stages:
   - stage: build_and_push
-    displayName: BUILD and PUSH
+    displayName: BUILD and PUSH $(Build.SourceBranchName)
     jobs:
       - job: build_push_backend
         pool:
           vmImage: ubuntu-latest
-        displayName: "[APP]"
+        displayName: "Build and Push"
         steps:
           - task: Docker@2
-            displayName: Build&Push
             inputs:
-              command: buildAndPush
+              containerRegistry: '$(Docker.registry)'
+              command: 'login'
+          - script: "docker pull $(Docker.registry).azurecr.io/$(Docker.repository):latest"
+            displayName: Pull latest for layer caching
+            continueOnError: true # for first build, no cache
+          - task: Docker@2
+            displayName: Build
+            inputs:
+              command: build
+              dockerfile: $(Docker.filePath)
+              repository: $(Docker.repository)
+              buildContext: "**/.."
+              arguments: '--build-arg VERSION=$(Build.SourceVersion) --build-arg BUILD_DATE="$(buildDate)" --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
+              tags: |
+                $(Build.BuildId)
+                $(Build.SourceVersion)
+                latest
+          - task: Docker@2
+            displayName: Push
+            inputs:
+              command: Push
               buildContext: "**/.."
               dockerfile: $(Docker.filePath)
               repository: $(Docker.repository)
@@ -42,6 +72,7 @@ stages:
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
+                latest
   - stage: deploy
     displayName: Deploy
     jobs:
@@ -53,14 +84,17 @@ stages:
           - task: AzureWebAppContainer@1
             displayName: Azure Web App on Container Deploy
             inputs:
-              appName: webappforcontainers
+              appName: $(appName)
               azureSubscription: $(azureSubscription)
               imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
-              appSettings: |
-                -PYTHONPATH $(PYTHONPATH)
-                -ALLOWED_HOSTS $(ALLOWED_HOSTS)
-                -AUTHENTICATION_BACKENDS $(AUTHENTICATION_BACKENDS)
-                -SECRET_KEY $(SECRET_KEY)
-                -ADMIN_EMAIL $(ADMIN_EMAIL)
-                -ADMIN_PASSWORD $(ADMIN_PASSWORD)
-                -DEBUG $(DEBUG)
+              appSettings: "-DJANGO_ADMIN_URL $(DJANGO_ADMIN_URL)
+              -DJANGO_ADMIN_TITLE $(DJANGO_ADMIN_TITLE)
+              -ALLOWED_HOSTS $(ALLOWED_HOSTS)
+              -SECRET_KEY $(SECRET_KEY)
+              -SENTRY_DSN $(SENTRY_DSN)
+              -ADMIN_EMAIL $(ADMIN_EMAIL)
+              -ADMIN_PASSWORD $(ADMIN_PASSWORD)
+              -ROOT_TOKEN $(ROOT_TOKEN)
+              -DEBUG $(DEBUG)
+              -USE_X_FORWARDED_HOST $(USE_X_FORWARDED_HOST)
+              "

@@ -1,6 +1,7 @@
 on:
   push:
     branches: ['release']
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}

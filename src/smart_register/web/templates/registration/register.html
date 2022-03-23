@@ -1,97 +1,117 @@
-{% extends "base.html" %}{% load smart_register l10n static %}
+{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static i18n %}
 {% block head %}
-    <script src="{% static "jquery.formset.js" %}"></script>
-    {{ form.media }}
-    {% for name, formset in formsets.items %}
-        {{ formset.media }}
-    {% endfor %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"
+            integrity="sha512-wT7uPE7tOP6w4o28u1DN775jYjHQApdBnib5Pho4RB0Pgd9y7eSkAV1BTqQydupYDB9GBhTcQQzyNMPMV3cAew=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    {{ media }}
 {% endblock head %}
+{% block staff-toolbar %}
+    {% include "registration/_staff_toolbar.html" %}
+{% endblock staff-toolbar %}
 
 {% block body %}
+    <script>var formsetConfig = [];</script>
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
-            <div class="text-center mb-16">
-                <h3 class="pt-8 text-indigo-600 text-4xl leading-normal font-extrabold tracking-tight text-gray-900">
-                    {{ dataset.name }}
-                </h3>
-            </div>
+            {% if invalid %}
+                <div class="mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
+                    {% trans "please fix the errors below" %}
+                </div>
+                <ul class="block errorlist">{% for e in errors %}
+                    {% for msg in e %}
+                        <li>{{ msg }}</li>
+                    {% endfor %}
+                {% endfor %}</ul>
+            {% endif %}
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
+                {% if user.is_staff %}
+                    {% include "registration/_staff_edit_module.html" %}
+                {% endif %}
                 {{ dataset.intro|safe }}
             </div>
-            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" method="post">
-                {{ form.errors }}
+            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                {{ form.non_field_errors }}
+                {% if user.is_staff %}
+                    {% include "registration/_staff_edit_form.html" %}
+                {% endif %}
                 <form class="w-full" method="post">
                     {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-4">
-                            <label class="block uppercase tracking-wide text-gray-700 font-bold mb-2"
-                                   for="{{ field.auto_id }}">{{ field.label }}</label>
-                            {{ field }}
-                        </div>
-                    {% endfor %}
+                    <div class="form-container">
+                        {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
+                    </div>
                     {% for name, formset in formsets.items %}
+                        {{ formset.non_form_errors }}
                         <div class="shadow-md rounded bg-gray-100 p-4">
                             <div class="w-full formset">
-                                    <div>
-                                        <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
-                                            {{ name }}
-                                        </div>
+                                {% if user.is_staff %}
+                                    {% include "registration/_staff_edit_formset.html" %}
+                                {% endif %}
+                                {% if formset.fs.title %}
+                                    <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular uppercase text-center title">
+                                        {{ formset.fs.title|safe }}
                                     </div>
+                                {% endif %}
+                                {% if formset.fs.description %}
+                                    <div class="w-full mt-4 text-sm leading-7 text-gray-800  font-regular">
+                                        {{ formset.fs.description|safe }}
+                                    </div>
+                                {% endif %}
                                 <div class="flex flex-col">
                                     <div class="w-100 forms">
                                         {{ formset.management_form }}
-                                        {% for frm in formset %}
-
+                                        {% for form in formset %}
                                             <div class="w-full my-5 p-3 border border-gray-400 form-container {{ formset.prefix }}">
-                                                {{ frm }}
+                                                {% if user.is_staff %}
+                                                    {% include "registration/_staff_edit_form.html" %}
+                                                {% endif %}
+                                                {% for field in form %}
+                                                    {% include "registration/_fieldset.html" with counter=forloop.counter %}
+                                                {% endfor %}
                                                 <div class="flex">
-                                            <div class="flex-auto "></div>
-                                            <div class="{{ name }}-delete grow-0  py-4 my-2 "></div>
+                                                    <div class="flex-auto "></div>
+                                                    <div class="{{ name }}-delete grow-0"></div>
                                                 </div>
                                             </div>
                                         {% endfor %}
                                         <div class="{{ name }}-add"></div>
-
                                     </div>
                                 </div>
                             </div>
                         </div>
-{#                        <div type="form-template" id="{{ name }}-empty" class="hidden">#}
-{#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
-{#                        </div>#}
+                        {#                        <div type="form-template" id="{{ name }}-empty" class="hidden">#}
+                        {#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
+                        {#                        </div>#}
+
+                        <script>
+                            {% formset_config formset as config %}
+                            formsetConfig.push({
+                                formCssClass: "form-container.{{ formset.prefix }}",
+                                prefix: "{{ formset.prefix }}",
+                                deleteContainerClass: "{{ name }}-delete",
+                                addContainerClass: "{{ name }}-add",
+                                addText: "{{ config.addText|default_if_none:"add another" }}",
+                                addCssClass: "add-button {{ config.addCssClass|default_if_none:"bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" }}",
+                                deleteText: "{{ config.deleteText|default_if_none:"remove" }}",
+                                deleteCssClass: "delete-button {{ config.deleteCssClass|default_if_none:"bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" }}",
+                                keepFieldValues: "{{ config.keepFieldValues|default:"" }}"
+                            });
+                        </script>
                     {% endfor %}
                     <div class="submit-row">
-                        <input
-                                type="submit"
-                                class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                value="Save"
+                        <input type="submit"
+                               class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                               value="Save"
                         />
                     </div>
                 </form>
             </div>
+            <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
+                {{ dataset.footer|safe }}
+            </div>
+
         </div>
     </div>
-    <script>
-
-        {% for name, formset in formsets.items %}
-            $(function () {
-                var $target = $(".form-container.{{ formset.prefix }}");
-                var config = {
-                    formCssClass: "form-container",
-                    prefix: "{{ formset.prefix }}",
-                    {#formTemplate: "#{{ name }}-empty",#}
-                    deleteContainerClass: "{{ name }}-delete",
-                    {#addContainerClass: "add-container",#}
-                    addCssClass: "add-button bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow",
-                    deleteCssClass: "delete-button bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow",
-                    added: function (row) {
-                        $(row).find(".vDateField").each(function (i) {
-
-                        });
-                    }
-                };
-                $target.formset(config);
-            });
-        {% endfor %}
-    </script>
+    <script>$(function () {
+        configureFormsets(formsetConfig);
+    });</script>
 {% endblock body %}

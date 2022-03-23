@@ -6,11 +6,13 @@
     }
 </style>
 <div id="{{ widget.attrs.id }}_container">
+{% if widget.toolbar %}
 <div style="margin:10px;">
     <a id="undo" class="button toolbutton" href="javascript:false"> undo </a>
     <a id="redo" class="button toolbutton" href="javascript:false"> redo </a>
     <a id="expand" data-action="expand()" class="button toolbutton" href="javascript:false"> fullscreen </a>
 </div>
+{% endif %}
 <textarea name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
 {% if widget.value %}{{ widget.value }}{% endif %}</textarea>
 </div>

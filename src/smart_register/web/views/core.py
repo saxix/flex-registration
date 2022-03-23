@@ -8,9 +8,12 @@ from smart_register.core.models import OptionSet
 def filter_optionset(obj, request):
     term = request.GET.get("q")
     parent = request.GET.get("parent")
+    pk = request.GET.get("pk")
 
     def _filter(record):
         valid = True
+        if pk:
+            valid = valid and record["pk"].lower() == pk.lower()
         if term:
             valid = valid and record["label"].lower().startswith(term.lower())
         if parent:

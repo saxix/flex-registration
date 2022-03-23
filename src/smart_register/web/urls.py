@@ -1,13 +1,30 @@
 from django.urls import path
 
-from .views import OptionsListView
-from .views import HomeView, RegisterCompleView, RegisterView
+from .views import (
+    HomeView,
+    MaintenanceView,
+    OptionsListView,
+    ProbeView,
+    QRCodeView,
+    QRVerify,
+    RegisterCompleteView,
+    RegisterView,
+    RegistrationDataApi,
+)
 
 urlpatterns = [
     path("", HomeView.as_view(), name="index"),
-    path("register/<int:pk>/", RegisterView.as_view(), name="register"),
-    path("register/", RegisterView.as_view(), name="register-latest"),
-    path("register/complete/", RegisterCompleView.as_view(), name="register-done"),
+    path("probe/", ProbeView.as_view(), name="probe"),
+    path("qrcode/", QRCodeView.as_view(), name="qrcode"),
+    path("maintenance", MaintenanceView.as_view(), name="maintenance"),
+    path("register/<str:locale>/<slug:slug>/", RegisterView.as_view(), name="register"),
+    # path("register/<str:locale>/", RegisterView.as_view(), name="register"),
+    # path("register/", RegisterView.as_view(), name="register2"),
+    # path("register/<slug:slug>/", RegisterView.as_view(), name="register"),
+    # path("register/", RegisterView.as_view(), name="register-latest"),
+    path("register/complete/", RegisterCompleteView.as_view(), name="register-done"),
+    path("register/complete/<int:pk>/<int:rec>/", RegisterCompleteView.as_view(), name="register-done"),
+    path("register/qr/<int:pk>/<str:hash>/", QRVerify.as_view(), name="register-verify"),
     path("options/<slug:name>/", OptionsListView.as_view(), name="optionset"),
-    path("register/complete/<int:pk>/<int:rec>/", RegisterCompleView.as_view(), name="register-done"),
+    path("api/data/<int:pk>/<int:start>/<int:end>/", RegistrationDataApi.as_view(), name="api"),
 ]

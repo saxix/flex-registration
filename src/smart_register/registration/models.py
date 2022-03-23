@@ -1,42 +1,62 @@
 import json
 
 from Crypto.PublicKey import RSA
-from cryptography.hazmat.primitives import serialization
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
+from django.utils.text import slugify
 
 from smart_register.core.crypto import crypt, decrypt
-from smart_register.core.models import FlexForm
-from smart_register.core.utils import safe_json
+from smart_register.core.models import FlexForm, Validator
+from smart_register.core.utils import dict_setdefault, safe_json
 
 
 class Registration(models.Model):
+    ADVANCED_DEFAULT_ATTRS = {
+        "smart": {
+            "buttons": {
+                "link": {"widget": {"attrs": {}}},
+            }
+        }
+    }
     name = CICharField(max_length=255, unique=True)
+    title = models.CharField(max_length=500, blank=True, null=True)
+    slug = models.SlugField(max_length=500, blank=True, null=True)
+
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
     start = models.DateField(auto_now_add=True)
     end = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=False)
     locale = models.CharField(max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE)
     intro = models.TextField(blank=True, null=True)
+    footer = models.TextField(blank=True, null=True)
+    validator = models.ForeignKey(
+        Validator, limit_choices_to={"target": Validator.MODULE}, blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     public_key = models.TextField(
         blank=True,
         null=True,
     )
+    advanced = models.JSONField(default=dict, blank=True)
 
-    # public_key2 = models.BinaryField(
-    #     blank=True,
-    #     null=True,
-    # )
     class Meta:
         get_latest_by = "start"
+        unique_together = (("name", "locale"),)
 
     def __str__(self):
         return self.name
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        if not self.title:
+            self.title = self.name
+        dict_setdefault(self.advanced, self.ADVANCED_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
+
+    def translations(self):
+        return Registration.objects.filter(slug=self.slug, active=True)
 
     def setup_encryption_keys(self):
         key = RSA.generate(2048)
@@ -45,25 +65,6 @@ class Registration(models.Model):
 
         self.public_key: str = public_pem.decode()
         self.public_key2 = public_pem
-        self.save()
-        return private_pem, public_pem
-
-    def setup_encryption_keys2(self):
-        from cryptography.hazmat.backends import default_backend
-        from cryptography.hazmat.primitives.asymmetric import rsa
-
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=1024, backend=default_backend())
-        public_key = private_key.public_key()
-
-        private_pem = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
-        public_pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-        self.public_key = public_pem.decode()
         self.save()
         return private_pem, public_pem
 
@@ -83,7 +84,6 @@ class Registration(models.Model):
 class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     timestamp = models.DateField(auto_now_add=True)
-    # data = models.JSONField(default=dict)
     storage = models.BinaryField(null=True, blank=True)
 
     def decrypt(self, private_key):
@@ -92,6 +92,6 @@ class Record(models.Model):
     @property
     def data(self):
         if self.registration.public_key:
-            return {"error": "Cannot access encrypted data"}
+            return {"Forbidden": "Cannot access encrypted data"}
         else:
             return json.loads(self.storage.tobytes().decode())

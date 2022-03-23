@@ -1,0 +1,62 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% block extrahead %}
+    {{ block.super }}
+    {{ form.media }}
+{% endblock %}
+{% block action-content %}
+    <pre id="messages">
+
+    </pre>
+    <form method="post">
+        {% csrf_token %}
+        <table width="100%">
+            <tr>
+                <td colspan="2">
+                    {{ form.code }}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{ form.input }}
+                </td>
+                <td style="width: 400px">
+                    <div id="finalCode" style="width: 100%"></div>
+                </td>
+            </tr>
+        </table>
+        <input type="submit">
+    </form>
+{% endblock action-content %}
+{% block document_ready %}
+    {{ block.super }}
+    <script>
+        (function ($) {
+            $(document).ready(function () {
+                let editor = $("#id_code").data("CodeMirror");
+                let input = $("#id_input").data("CodeMirror");
+                let $finalCode = $("#finalCode");
+                let $messages =  $('#messages');
+                let updateSource = function () {
+                    let code = editor.getValue();
+                    let param = input.getValue();
+                    let source = "var value=" + param + ";" + code;
+                    $finalCode.text(source);
+                    run(source);
+                };
+                let run = function (c) {
+                    try {
+                        $messages.text("");
+                        let ret = eval(c);
+                        $messages.text(ret);
+                    } catch (error) {
+                        $messages.text(error)
+                        console.error(error);
+                    }
+                };
+                editor.on("change", updateSource);
+                input.on("change", updateSource);
+                updateSource();
+            });
+        })(django.jQuery);
+    </script>
+{% endblock %}
