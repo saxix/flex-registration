@@ -3,6 +3,7 @@ from hashlib import md5
 from constance import config
 from django.core.exceptions import ValidationError
 from django.forms import forms
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
@@ -128,6 +129,16 @@ class RegisterView(FormView):
             for f in fs:
                 data[name].append(f.cleaned_data)
 
+        def parse_field(field):
+            if isinstance(field, InMemoryUploadedFile):
+                return str(field.read())
+            elif isinstance(field, dict):
+                return {item[0]: parse_field(item[1]) for item in field.items()}
+            elif isinstance(field, list):
+                return [parse_field(item) for item in field]
+            return field
+
+        data = {field_name: parse_field(field) for field_name, field in data.items()}
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)
