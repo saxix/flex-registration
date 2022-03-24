@@ -111,5 +111,10 @@
 
         </div>
     </div>
-    <script>$(function () { configureFormsets(formsetConfig);});</script>
+    <script>
+        $(function () {
+            configureFormsets(formsetConfig);
+            $("input:checked[onchange]").trigger("change");
+        });
+    </script>
 {% endblock body %}
