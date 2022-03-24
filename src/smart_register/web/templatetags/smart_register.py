@@ -1,5 +1,7 @@
+import markdown as md
 from django.template import Library, Node
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
@@ -82,3 +84,15 @@ def link(registration):
         "reg": registration,
         "widget": widget,
     }
+
+
+@register.filter()
+def markdown(value):
+    p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
+    return mark_safe(p)
+
+
+@register.filter(name="md")
+def _md(value):
+    p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
+    return mark_safe(p.replace("<p>", "").replace("</p>", ""))

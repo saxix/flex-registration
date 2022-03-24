@@ -4,6 +4,25 @@ $color-error: #ff9898;
 * {
 
 }
+//<h1 class="text-xl my-2"
+// <ul class="list-disc">
+.intro{
+  h1 {
+    font-size: larger;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+  ul{
+    li{
+      list-style-type: disc;
+      list-style-position: outside;
+      li{
+        list-style-type: circle;
+        list-style-position: inside;
+      }
+    }
+  }
+}
 
 body {
   font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;

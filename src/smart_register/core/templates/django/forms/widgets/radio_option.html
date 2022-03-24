@@ -1,4 +1,4 @@
-{% if widget.wrap_label %}
+{% load smart_register %}{% if widget.wrap_label %}
     <label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
 {% endif %}
 <input
@@ -6,5 +6,4 @@
         name="{{ widget.name }}"
         {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
         {% include "django/forms/widgets/attrs.html" %}
->
-{% if widget.wrap_label %} {{ widget.label|safe }}</label>{% endif %}
+>{% if widget.wrap_label %} {{ widget.label|md }}</label>{% endif %}
