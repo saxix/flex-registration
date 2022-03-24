@@ -228,6 +228,12 @@ class FlexFormAdmin(SmartModelAdmin):
     def parents(self, obj):
         return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
 
+    @button(html_attrs={"class": "aeb-danger"})
+    def invalidate_cache(self, request):
+        from .cache import cache
+
+        cache.clear()
+
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk)

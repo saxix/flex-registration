@@ -46,6 +46,7 @@ natural-keys = "^2.0.0"
 django-cors-headers = "^3.11.0"
 htmlmin = "^0.1.12"
 django-bitfield = "^2.1.0"
+Markdown = "^3.3.6"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"

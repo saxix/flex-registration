@@ -11,7 +11,7 @@
     {% if user.is_superuser %} / <a href="{{ sysinfo }}">System Info</a> {% endif %}
     {% if profile_link %} / <a href="{{ profile_link }}">Profile</a> {% endif %}
     {% if profile_link %} / <a href="{% url "qrcode" %}">qrcode</a> {% endif %}
-    {{ project.version }}/{{ project.build_date }}
+    {{ project.version|slice:':7'|join:'' }} / {{ project.build_date }}
 {% endblock %}
 
 {% block branding %}

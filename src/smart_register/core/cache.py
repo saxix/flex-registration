@@ -20,6 +20,10 @@ class Cache(OrderedDict):
             while len(self) > self.size_limit:
                 self.popitem(last=False)
 
+    def clear(self):
+        while len(self) > 0:
+            self.popitem(last=False)
+
 
 cache = Cache(size=100)
 

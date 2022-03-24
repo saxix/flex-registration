@@ -27,7 +27,9 @@
                 {% if user.is_staff %}
                     {% include "registration/_staff_edit_module.html" %}
                 {% endif %}
-                {{ dataset.intro|safe }}
+                <div class="intro">
+                    {{ dataset.intro|markdown }}
+                </div>
             </div>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
@@ -106,7 +108,7 @@
                 </form>
             </div>
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
-                {{ dataset.footer|safe }}
+                {{ dataset.footer|markdown }}
             </div>
 
         </div>
