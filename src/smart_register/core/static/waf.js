@@ -17,7 +17,7 @@ waf = {
     },
     encode: function ($TARGETS) {
         $TARGETS.each(function (i, field) {
-            field.value = encodeURIComponent(field.value);
+            field.value = waf._aa(field.value);
         });
     },
     encodeAdvanced: function () {
@@ -47,6 +47,6 @@ waf = {
     $(function () {
         $TARGETS = $("textarea:not('[name=advanced]')");
         waf.enable($TARGETS);
-        waf.decode($TARGETS);
+        // waf.decode($TARGETS);
     });
 })(django.jQuery);

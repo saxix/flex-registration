@@ -25,15 +25,6 @@
 
 {% block nav-global %}{% endblock %}
 {% block footer %}
-
     {{ block.super }}
-    <script src="{% static "waf.js" %}"></script>
-    <script>
-        {#console.log(22222222, django.jQuery);#}
-        {#(function ($) {#}
-        {#    console.log(11111, $);#}
-        {#    waf.enable();#}
-        {# } )(django.jQuery);#}
-
-    </script>
+{#    <script src="{% static "waf.js" %}"></script>#}
 {% endblock %}
