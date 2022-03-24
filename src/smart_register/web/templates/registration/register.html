@@ -27,7 +27,7 @@
                 {% if user.is_staff %}
                     {% include "registration/_staff_edit_module.html" %}
                 {% endif %}
-                {{ dataset.intro|escape }}
+                {{ dataset.intro|safe }}
             </div>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
