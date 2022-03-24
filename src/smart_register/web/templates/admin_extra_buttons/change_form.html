@@ -1,0 +1,22 @@
+{% extends "admin/change_form.html" %}{% load i18n static admin_list admin_urls %}
+{% block object-tools-items %}
+    {{ block.super }}
+    {% include "admin_extra_buttons/includes/change_form_buttons.html" %}
+{% endblock %}
+{% block footer %}
+    {{ block.super }}
+{#    <script>#}
+{#        (function ($) {#}
+{#            var $TARGETS = $("textarea:not('[name=advanced]')");#}
+{#            $TARGETS.each(function (i, field) {#}
+{#                field.value = decodeURIComponent(field.value);#}
+{#            });#}
+{##}
+{#            $("form").submit(function (e) {#}
+{#                $TARGETS.each(function (i, field) {#}
+{#                    field.value = encodeURIComponent(field.value);#}
+{#                });#}
+{#            });#}
+{#        })(django.jQuery);#}
+{#    </script>#}
+{% endblock %}
