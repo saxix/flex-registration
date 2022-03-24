@@ -16,5 +16,8 @@ class SmartFieldMixin:
 
     def widget_attrs(self, widget):
         attrs = super().widget_attrs(widget)
-        attrs |= self.smart_attrs
+        for k, v in self.smart_attrs.items():
+            if k.startswith("data-") or k.startswith("on"):
+                attrs[k] = v
+        # attrs |= self.smart_attrs
         return attrs

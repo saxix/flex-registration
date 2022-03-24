@@ -24,3 +24,7 @@
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+{% block footer %}
+    {{ block.super }}
+{#    <script src="{% static "waf.js" %}"></script>#}
+{% endblock %}

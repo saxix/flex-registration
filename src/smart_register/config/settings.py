@@ -82,6 +82,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "smart_register.web.middlewares.HtmlMinMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -310,7 +311,12 @@ CORS_ALLOWED_ORIGINS = [
     "https://excubo.unicef.io",
 ] + env("CORS_ALLOWED_ORIGINS")
 
-CONSTANCE_ADDITIONAL_FIELDS = {}
+CONSTANCE_ADDITIONAL_FIELDS = {
+    "html_minify_select": [
+        "bitfield.forms.BitFormField",
+        {"initial": 0, "required": False, "choices": (("html", "HTML"), ("line", "NEWLINE"), ("space", "SPACES"))},
+    ],
+}
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 # CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 CONSTANCE_CONFIG = OrderedDict(
@@ -321,6 +327,8 @@ CONSTANCE_CONFIG = OrderedDict(
             "",
             str,
         ),
+        "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
+        "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
         "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
         "HOME_TEMPLATE": ("home.html", "Default home.html", str),
         "QRCODE": (True, "Enable QRCode generation", bool),

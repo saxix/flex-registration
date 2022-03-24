@@ -228,6 +228,19 @@ class FlexFormAdmin(SmartModelAdmin):
     def parents(self, obj):
         return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
 
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        form_class = self.object.get_form()
+        if request.method == "POST":
+            form = form_class(request.POST)
+            if form.is_valid():
+                self.message_user(request, "Form in valid")
+        else:
+            form = form_class()
+        ctx["form"] = form
+        return render(request, "admin/core/flexform/test.html", ctx)
+
     @view(http_basic_auth=True, permission=lambda request, obj: request.user.is_superuser)
     def export(self, request):
         try:
