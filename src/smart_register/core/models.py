@@ -4,6 +4,7 @@ from json import JSONDecodeError
 
 import jsonpickle
 import sentry_sdk
+from constance import config
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
 from django import forms
@@ -14,6 +15,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
+from django.urls import reverse
 from natural_keys import NaturalKeyModel
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
@@ -347,7 +349,7 @@ class OptionSet(NaturalKeyModel, models.Model):
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
     columns = models.CharField(
-        max_length=20, default="label", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
+        max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
 
     def clean(self):
@@ -360,34 +362,35 @@ class OptionSet(NaturalKeyModel, models.Model):
     def get_cache_key(self, cols=None):
         return f"options-{self.pk}-{self.name}-{cols}-{self.version}"
 
-    def get_data(self, columns=None):
-        value = cache.get(self.get_cache_key(columns), version=self.version)
-        config = {
-            "parent": None,
-            "pk": 0,
-            "label": 0,
-        }
-        if columns is None:
-            columns = self.columns.split(",")
-        if not value:
-            for col in ["pk", "label", "parent"]:
-                if col in columns:
-                    config[col] = columns.index(col)
+    def get_api_url(self):
+        try:
+            pk, label, parent = self.columns.split(",")
+        except ValueError:
+            pk, label, parent = 0, 0, -1
+        return reverse("optionset", args=[self.name, pk, label, parent])
 
+    def get_data(self, columns=None):
+        value = None
+        if config.CACHE_FORMS:
+            value = cache.get(self.get_cache_key(columns), version=self.version)
+
+        if columns is None:
+            pk_col, label_col, parent_col = map(int, self.columns.split(","))
+        else:
+            pk_col, label_col, parent_col = columns
+
+        if not value:
             value = []
             for line in self.data.split("\r\n"):
                 if not line.strip():
                     continue
                 parent = None
-                # if len(columns) == 1:
-                #     pk, parent, label = line.strip().lower(), None, line
-                # else:
                 if self.separator:
                     cols = line.split(self.separator)
-                    pk = cols[config["pk"]]
-                    label = cols[config["label"]]
-                    if "parent" in columns:
-                        parent = cols[config["parent"]]
+                    pk = cols[pk_col]
+                    label = cols[label_col]
+                    if parent_col > 0:
+                        parent = cols[parent_col]
                 else:
                     label = line
                     pk = str(line).lower()
@@ -408,6 +411,18 @@ class OptionSet(NaturalKeyModel, models.Model):
 
     def as_json(self, cols=None):
         return self.get_data(cols)
+
+    @classmethod
+    def parse_datasource(cls, datasource):
+        if datasource:
+            if ":" in datasource:
+                name, cols = datasource.split(":")
+                columns = map(int, cols.split(","))
+            else:
+                name = datasource
+                columns = 0, 0, -1
+            return name, columns
+        return "", []
 
 
 def clean_choices(value):
