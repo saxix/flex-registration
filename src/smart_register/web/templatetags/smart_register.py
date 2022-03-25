@@ -91,6 +91,7 @@ def markdown(value):
     if value:
         p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
         return mark_safe(p)
+    return ""
 
 
 @register.filter(name="md")
@@ -98,3 +99,4 @@ def _md(value):
     if value:
         p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
         return mark_safe(p.replace("<p>", "").replace("</p>", ""))
+    return ""

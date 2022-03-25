@@ -28,7 +28,7 @@
                     {% include "registration/_staff_edit_module.html" %}
                 {% endif %}
                 <div class="intro">
-                    {{ dataset.intro|markdown }}
+                    {{ dataset.intro|default_if_none:""|markdown }}
                 </div>
             </div>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
