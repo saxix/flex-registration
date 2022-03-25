@@ -34,8 +34,14 @@ class SelectField(forms.ChoiceField):
             try:
                 from smart_register.core.models import OptionSet
 
-                optset = OptionSet.objects.get(name=value)
-                value = list(optset.as_choices())
+                if ":" in value:
+                    name, cols = value.split(":")
+                    columns = cols.split(",")
+                else:
+                    name = value
+                    columns = None
+                optset = OptionSet.objects.get(name=name)
+                value = list(optset.as_choices(columns))
             except OptionSet.DoesNotExist as e:
                 logger.exception(e)
                 value = []
