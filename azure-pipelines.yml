@@ -81,12 +81,6 @@ stages:
           vmImage: ubuntu-latest
         displayName: "Deploy app"
         steps:
-          - task: AzureKeyVault@2
-            inputs:
-              azureSubscription: $(azureSubscription)
-              KeyVaultName: 'Your-Key-Vault-Name'
-              SecretsFilter: '*'
-              RunAsPreJob: false
           - task: AzureWebAppContainer@1
             displayName: Azure Web App on Container Deploy
             inputs:
