@@ -97,7 +97,7 @@ stages:
               -ROOT_TOKEN $(ROOT_TOKEN)
               -DEBUG $(DEBUG)
               -USE_X_FORWARDED_HOST $(USE_X_FORWARDED_HOST)
-              -AZURE_CLIENT_ID @Microsoft.KeyVault(SecretUri=https://kv-hope-ukr-sr-dev.vault.azure.net/secrets/uni-hope-ukr-sr-dev-id/)
-              -AZURE_CLIENT_SECRET @Microsoft.KeyVault(SecretUri=https://kv-hope-ukr-sr-dev.vault.azure.net/secrets/uni-hope-ukr-sr-dev-secret/)
-              -AZURE_TENANT_KEY @Microsoft.KeyVault(SecretUri=https://kv-hope-ukr-sr-dev.vault.azure.net/secrets/uni-hope-ukr-sr-dev-tenant/)
+              -AZURE_CLIENT_ID $(KEY_VALUT_AZURE_CLIENT_ID)
+              -AZURE_CLIENT_SECRET $(KEY_VALUT_AZURE_CLIENT_SECRET)
+              -AZURE_TENANT_KEY $(KEY_VALUT_AZURE_TENANT_KEY)
               "
