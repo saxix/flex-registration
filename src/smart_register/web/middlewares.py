@@ -1,3 +1,4 @@
+import locale
 import logging
 import re
 from enum import IntFlag, unique
@@ -12,6 +13,7 @@ from django.utils.functional import cached_property
 from htmlmin.main import Minifier
 from sentry_sdk import configure_scope
 
+from smart_register.core.utils import get_default_language
 from smart_register.state import state
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,11 @@ class LocaleMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        lang = get_default_language(request)
+        request.selected_language = lang
+        translation.activate(lang)
+        locale.setlocale(locale.LC_ALL, "")
+
         ret = self.get_response(request)
         translation.deactivate()
         return ret

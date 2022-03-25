@@ -10,7 +10,7 @@
 <script>
     $(function() {
         $('img.captcha').after(
-            $('<a href="#void" class="captcha-refresh">Refresh</a>')
+            $('<a href="#void" class="captcha-refresh">{% trans "refresh" %}</a>')
         );
         $('.captcha-refresh').click(function(){
             var $form = $(this).parents('form');
