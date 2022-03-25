@@ -5,7 +5,7 @@ from django.views.generic.list import BaseListView
 from smart_register.core.models import OptionSet
 
 
-def filter_optionset(obj, request):
+def filter_optionset(obj, request, columns):
     term = request.GET.get("q")
     parent = request.GET.get("parent")
     pk = request.GET.get("pk")
@@ -23,7 +23,7 @@ def filter_optionset(obj, request):
     data = {
         "results": [
             {"id": record["pk"], "parent": record["parent"], "text": record["label"]}
-            for record in obj.as_json()
+            for record in obj.as_json(columns)
             if _filter(record)
         ],
     }
@@ -35,5 +35,12 @@ def filter_optionset(obj, request):
 
 class OptionsListView(BaseListView):
     def get(self, request, *args, **kwargs):
-        obj = get_object_or_404(OptionSet, name=self.kwargs["name"])
-        return filter_optionset(obj, request)
+        value = self.kwargs["name"]
+        if ":" in value:
+            name, cols = value.split(":")
+            columns = cols.split(",")
+        else:
+            name = value
+            columns = None
+        obj = get_object_or_404(OptionSet, name=name)
+        return filter_optionset(obj, request, columns)

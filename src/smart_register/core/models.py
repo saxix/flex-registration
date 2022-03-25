@@ -342,7 +342,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
 class OptionSet(NaturalKeyModel, models.Model):
     version = IntegerVersionField()
-    name = CICharField(max_length=100, unique=True)
+    name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[a-z0-9-_]")])
     description = models.CharField(max_length=1000, blank=True, null=True)
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
@@ -355,42 +355,38 @@ class OptionSet(NaturalKeyModel, models.Model):
         if self.separator and len(cols) == 1:
             raise ValidationError("You must define columns order if 'separator' is set.")
 
-        if len(cols) > 3:
-            raise ValidationError("Invalid columns definition")
-
         super().clean()
 
-    def get_cache_key(self):
-        return f"options-{self.pk}-{self.name}-{self.version}"
+    def get_cache_key(self, cols=None):
+        return f"options-{self.pk}-{self.name}-{cols}-{self.version}"
 
-    def get_data(self):
-        value = cache.get(self.get_cache_key(), version=self.version)
-        parent_col = None
-        if not value:
+    def get_data(self, columns=None):
+        value = cache.get(self.get_cache_key(columns), version=self.version)
+        config = {
+            "parent": None,
+            "pk": 0,
+            "label": 0,
+        }
+        if columns is None:
             columns = self.columns.split(",")
-            if len(columns) == 1:
-                pk_col = label_col = 0
-            if len(columns) > 1:
-                pk_col = columns.index("pk")
-            if len(columns) >= 2:
-                label_col = columns.index("label")
-            if len(columns) == 3 and "parent" in columns:
-                parent_col = columns.index("parent")
+        if not value:
+            for col in ["pk", "label", "parent"]:
+                if col in columns:
+                    config[col] = columns.index(col)
 
             value = []
             for line in self.data.split("\r\n"):
                 if not line.strip():
                     continue
-                if len(columns) == 1:
-                    pk, parent, label = line.strip().lower(), None, line
-                else:
-                    cols = line.split(self.separator)
-                    if len(columns) == 3 and "parent" in columns:
-                        pk, parent, label = cols[pk_col], cols[parent_col], cols[label_col]
-                    elif len(columns) > 1:
-                        pk, parent, label = cols[pk_col], None, cols[label_col]
-                    else:
-                        raise ValueError("")
+                parent = None
+                # if len(columns) == 1:
+                #     pk, parent, label = line.strip().lower(), None, line
+                # else:
+                cols = line.split(self.separator)
+                pk = cols[config["pk"]]
+                label = cols[config["label"]]
+                if "parent" in columns:
+                    parent = cols[config["parent"]]
                 values = {
                     "pk": pk,
                     "parent": parent,
@@ -400,13 +396,13 @@ class OptionSet(NaturalKeyModel, models.Model):
             cache.set(self.get_cache_key(), value)
         return value
 
-    def as_choices(self):
-        data = self.get_data()
+    def as_choices(self, cols=None):
+        data = self.get_data(cols)
         for entry in data:
             yield entry["pk"], entry["label"]
 
-    def as_json(self):
-        return self.get_data()
+    def as_json(self, cols=None):
+        return self.get_data(cols)
 
 
 def clean_choices(value):
