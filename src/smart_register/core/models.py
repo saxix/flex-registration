@@ -382,11 +382,16 @@ class OptionSet(NaturalKeyModel, models.Model):
                 # if len(columns) == 1:
                 #     pk, parent, label = line.strip().lower(), None, line
                 # else:
-                cols = line.split(self.separator)
-                pk = cols[config["pk"]]
-                label = cols[config["label"]]
-                if "parent" in columns:
-                    parent = cols[config["parent"]]
+                if self.separator:
+                    cols = line.split(self.separator)
+                    pk = cols[config["pk"]]
+                    label = cols[config["label"]]
+                    if "parent" in columns:
+                        parent = cols[config["parent"]]
+                else:
+                    label = line
+                    pk = str(line).lower()
+
                 values = {
                     "pk": pk,
                     "parent": parent,
