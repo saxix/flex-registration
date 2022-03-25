@@ -4,27 +4,37 @@ $color-error: #ff9898;
 * {
 
 }
-.landing{
-  ul{
-    li{
+
+.landing {
+  a {
+    color: $base-color;
+    font-weight: bold;
+  }
+
+  ul {
+    li {
 
     }
   }
 }
-.intro{
+
+.intro {
   h1 {
     font-size: larger;
     font-weight: bold;
     margin-bottom: 2px;
   }
-  p{
+
+  p {
     margin: 10px 0 10px 0;
   }
-  ul{
-    li{
+
+  ul {
+    li {
       list-style-type: disc;
       list-style-position: inside;
-      li{
+
+      li {
         list-style-type: circle;
         list-style-position: inside;
       }

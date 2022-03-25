@@ -67,7 +67,7 @@ msgstr ""
 
 #: smart_register/web/templates/registration/_fieldset.html:19
 msgid "required"
-msgstr "вимагається"
+msgstr "обов’язкове"
 
 #: smart_register/web/templates/registration/register.html:18
 msgid "please fix the errors below"

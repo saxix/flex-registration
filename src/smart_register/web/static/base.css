@@ -1,3 +1,7 @@
+.landing a {
+  color: #0da7e6;
+  font-weight: bold;
+}
 .intro h1 {
   font-size: larger;
   font-weight: bold;
