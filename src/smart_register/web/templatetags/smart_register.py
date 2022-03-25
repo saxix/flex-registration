@@ -88,11 +88,13 @@ def link(registration):
 
 @register.filter()
 def markdown(value):
-    p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
-    return mark_safe(p)
+    if value:
+        p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
+        return mark_safe(p)
 
 
 @register.filter(name="md")
 def _md(value):
-    p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
-    return mark_safe(p.replace("<p>", "").replace("</p>", ""))
+    if value:
+        p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
+        return mark_safe(p.replace("<p>", "").replace("</p>", ""))
