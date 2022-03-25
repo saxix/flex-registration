@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
+from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
 from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
@@ -32,18 +33,27 @@ class QRVerify(TemplateView):
 class RegisterCompleteView(TemplateView):
     template_name = "registration/register_done.html"
 
+    @cached_property
+    def record(self):
+        return Record.objects.select_related("registration").get(
+            registration__id=self.kwargs["pk"], id=self.kwargs["rec"]
+        )
+
     def get_qrcode(self, record):
         h = md5(record.storage).hexdigest()
         url = self.request.build_absolute_uri(f"/register/qr/{record.pk}/{h}")
         return get_qrcode(url), url
 
     def get_context_data(self, **kwargs):
-        record = Record.objects.get(registration__id=self.kwargs["pk"], id=self.kwargs["rec"])
         if config.QRCODE:
-            qrcode, url = self.get_qrcode(record)
+            qrcode, url = self.get_qrcode(self.record)
         else:
             qrcode, url = None, None
-        return super().get_context_data(qrcode=qrcode, url=url, record=record, **kwargs)
+        return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        translation.activate(self.record.registration.locale)
+        return self.render_to_response(self.get_context_data())
 
 
 class RegisterView(FormView):
