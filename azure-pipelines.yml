@@ -81,6 +81,12 @@ stages:
           vmImage: ubuntu-latest
         displayName: "Deploy app"
         steps:
+          - task: AzureKeyVault@2
+            inputs:
+              azureSubscription: $(azureSubscription)
+              KeyVaultName: 'Your-Key-Vault-Name'
+              SecretsFilter: '*'
+              RunAsPreJob: false
           - task: AzureWebAppContainer@1
             displayName: Azure Web App on Container Deploy
             inputs:
@@ -97,4 +103,7 @@ stages:
               -ROOT_TOKEN $(ROOT_TOKEN)
               -DEBUG $(DEBUG)
               -USE_X_FORWARDED_HOST $(USE_X_FORWARDED_HOST)
+              -AZURE_CLIENT_ID @Microsoft.KeyVault(SecretUri=https://kv-hope-ukr-sr-dev.vault.azure.net/secrets/uni-hope-ukr-sr-dev-id/)
+              -AZURE_CLIENT_SECRET @Microsoft.KeyVault(SecretUri=https://kv-hope-ukr-sr-dev.vault.azure.net/secrets/uni-hope-ukr-sr-dev-secret/)
+              -AZURE_TENANT_KEY @Microsoft.KeyVault(SecretUri=https://kv-hope-ukr-sr-dev.vault.azure.net/secrets/uni-hope-ukr-sr-dev-tenant/)
               "
