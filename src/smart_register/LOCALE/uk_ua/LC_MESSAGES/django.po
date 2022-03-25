@@ -75,7 +75,7 @@ msgstr ""
 
 #: smart_register/web/templates/registration/register.html:105
 msgid "Save"
-msgstr ""
+msgstr "Кінець"
 
 #: smart_register/web/templates/registration/register_done.html:5
 msgid "Registration successful"
