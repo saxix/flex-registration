@@ -353,10 +353,10 @@ class OptionSet(NaturalKeyModel, models.Model):
     )
 
     def clean(self):
-        cols = self.columns.split(",")
-        if self.separator and len(cols) == 1:
-            raise ValidationError("You must define columns order if 'separator' is set.")
-
+        try:
+            a, b, c = list(map(int, self.columns.split(",")))
+        except ValueError:
+            raise ValidationError("Invalid columns")
         super().clean()
 
     def get_cache_key(self, cols=None):

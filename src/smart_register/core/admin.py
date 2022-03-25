@@ -19,6 +19,7 @@ from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
 from django.http import JsonResponse, HttpResponseRedirect
+from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
 from smart_admin.modeladmin import SmartModelAdmin
@@ -326,7 +327,11 @@ class OptionSetAdmin(SmartModelAdmin):
     def view_json(self, button):
         original = button.context["original"]
         if original:
-            button.href = original.get_api_url()
+            try:
+                button.href = original.get_api_url()
+            except NoReverseMatch:
+                button.href = "#"
+                button.label = "Error reversing url"
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         if request.method == "POST" and "_saveasnew" in request.POST:
