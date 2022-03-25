@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-25 12:41+0000\n"
+"POT-Creation-Date: 2022-03-25 18:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,11 +27,11 @@ msgstr ""
 
 #: smart_register/core/templates/admin/login.html:24
 msgid "Please correct the error below."
-msgstr ""
+msgstr "Будь ласка, вкажіть обов’язкові дані"
 
 #: smart_register/core/templates/admin/login.html:25
 msgid "Please correct the errors below."
-msgstr ""
+msgstr "Будь ласка, вкажіть обов’язкові дані"
 
 #: smart_register/core/templates/admin/login.html:41
 #, python-format
@@ -57,6 +57,10 @@ msgstr ""
 msgid "Play CAPTCHA as audio file"
 msgstr ""
 
+#: smart_register/core/templates/captcha/widgets/captcha.html:13
+msgid "refresh"
+msgstr "oновити"
+
 #: smart_register/web/templates/admin/base_site.html:8
 msgid "Django site admin"
 msgstr ""
@@ -75,7 +79,7 @@ msgstr ""
 
 #: smart_register/web/templates/registration/register.html:105
 msgid "Save"
-msgstr "Кінець"
+msgstr "Зберегти"
 
 #: smart_register/web/templates/registration/register_done.html:5
 msgid "Registration successful"
