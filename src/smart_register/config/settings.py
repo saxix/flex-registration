@@ -321,6 +321,7 @@ CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 # CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 CONSTANCE_CONFIG = OrderedDict(
     {
+        "CACHE_FORMS": (False, "", bool),
         "HOME_PAGE_REGISTRATIONS": ("", "", str),
         "SMART_ADMIN_BOOKMARKS": (
             "",

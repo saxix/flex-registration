@@ -22,25 +22,26 @@ def filter_optionset(obj, request, columns):
 
     data = {
         "results": [
-            {"id": record["pk"], "parent": record["parent"], "text": record["label"]}
+            {
+                "id": record["pk"],
+                "parent": record["parent"],
+                "text": record["label"],
+            }
             for record in obj.as_json(columns)
             if _filter(record)
         ],
     }
     response = JsonResponse(data)
-    response["Cache-Control"] = "public, max-age=315360000"
-    response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}"
+    # response["Cache-Control"] = "public, max-age=315360000"
+    # response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}"
     return response
 
 
 class OptionsListView(BaseListView):
     def get(self, request, *args, **kwargs):
-        value = self.kwargs["name"]
-        if ":" in value:
-            name, cols = value.split(":")
-            columns = cols.split(",")
-        else:
-            name = value
-            columns = None
+        name = self.kwargs["name"]
+        pk = int(self.kwargs["pk"])
+        label = int(self.kwargs["label"])
+        parent = int(self.kwargs.get("parent", "-1"))
         obj = get_object_or_404(OptionSet, name=name)
-        return filter_optionset(obj, request, columns)
+        return filter_optionset(obj, request, [pk, label, parent])

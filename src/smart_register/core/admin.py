@@ -19,7 +19,7 @@ from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
 from django.http import JsonResponse, HttpResponseRedirect
-from django.urls import reverse
+from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
 from smart_admin.modeladmin import SmartModelAdmin
@@ -164,6 +164,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
                 "options": getattr(instance, "options", None),
                 "choices": getattr(instance, "choices", None),
                 "widget": getattr(instance, "widget", None),
+                "widget_attrs": instance.widget_attrs(instance.widget),
             }
             form_class_attrs = {
                 "sample": instance,
@@ -182,6 +183,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
             ctx["error"] = e
+            raise
 
         return render(request, "admin/core/flexformfield/test.html", ctx)
 
@@ -325,8 +327,11 @@ class OptionSetAdmin(SmartModelAdmin):
     def view_json(self, button):
         original = button.context["original"]
         if original:
-            url = reverse("optionset", args=[original.name])
-            button.href = url
+            try:
+                button.href = original.get_api_url()
+            except NoReverseMatch:
+                button.href = "#"
+                button.label = "Error reversing url"
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         if request.method == "POST" and "_saveasnew" in request.POST:
