@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-21 05:16+0000\n"
+"POT-Creation-Date: 2022-03-25 12:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,18 +48,53 @@ msgstr ""
 msgid "Log in"
 msgstr ""
 
+#: smart_register/core/templates/adminfilters/select2.html:2
+#, python-format
+msgid " By %(filter_title)s "
+msgstr ""
+
 #: smart_register/core/templates/captcha/widgets/captcha.html:4
 msgid "Play CAPTCHA as audio file"
 msgstr ""
 
-#: smart_register/web/templates/admin/base_site.html:3
+#: smart_register/web/templates/admin/base_site.html:8
 msgid "Django site admin"
 msgstr ""
 
-#: smart_register/web/templates/admin/base_site.html:18
+#: smart_register/web/templates/admin/base_site.html:23
 msgid "Django administration"
 msgstr ""
 
-#: smart_register/web/templates/registration/_fieldset.html:20
+#: smart_register/web/templates/registration/_fieldset.html:19
 msgid "required"
 msgstr "вимагається"
+
+#: smart_register/web/templates/registration/register.html:18
+msgid "please fix the errors below"
+msgstr ""
+
+#: smart_register/web/templates/registration/register.html:105
+msgid "Save"
+msgstr ""
+
+#: smart_register/web/templates/registration/register_done.html:5
+msgid "Registration successful"
+msgstr ""
+
+#: smart_register/web/templates/registration/register_done.html:15
+msgid "Please save your registration ID or take a screenshot of this QR code."
+msgstr ""
+"Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода. Ця інформація "
+"буде обов’язкова для подальшої комунікації щодо вашої заявки."
+
+#: smart_register/web/templates/registration/register_done.html:19
+msgid "Please save your registration ID."
+msgstr ""
+
+#: smart_register/web/templates/registration/register_done.html:23
+msgid "This info will allow faster follow up in case of support request."
+msgstr ""
+
+#: smart_register/web/templates/registration/register_done.html:29
+msgid "register another household"
+msgstr "Зареєструвати нове домогосподарство."
