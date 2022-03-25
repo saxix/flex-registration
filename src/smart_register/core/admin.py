@@ -131,6 +131,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     list_editable = ["ordering", "required", "enabled"]
     search_fields = ("name", "label")
     autocomplete_fields = ("flex_form", "validator")
+    save_as = True
 
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},

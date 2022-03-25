@@ -77,7 +77,7 @@ def link(registration):
     attrs = dict_get_nested(widget, "attrs")
 
     if "class" not in attrs:
-        widget["attrs"]["style"] = "background-color:#01ADF1;"
+        widget["attrs"]["style"] = "background-color:#01ADF1;color:white;"
         widget["attrs"]["class"] = "text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
     widget["attrs"]["href"] = reverse("register", args=[registration.locale, registration.slug])
     return {
@@ -91,6 +91,7 @@ def markdown(value):
     if value:
         p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
         return mark_safe(p)
+    return ""
 
 
 @register.filter(name="md")
@@ -98,3 +99,4 @@ def _md(value):
     if value:
         p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
         return mark_safe(p.replace("<p>", "").replace("</p>", ""))
+    return ""
