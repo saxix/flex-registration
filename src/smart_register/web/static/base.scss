@@ -11,10 +11,13 @@ $color-error: #ff9898;
     font-weight: bold;
     margin-bottom: 2px;
   }
+  p{
+    margin: 10px 0 10px 0;
+  }
   ul{
     li{
       list-style-type: disc;
-      list-style-position: outside;
+      list-style-position: inside;
       li{
         list-style-type: circle;
         list-style-position: inside;

@@ -3,9 +3,12 @@
   font-weight: bold;
   margin-bottom: 2px;
 }
+.intro p {
+  margin: 10px 0 10px 0;
+}
 .intro ul li {
   list-style-type: disc;
-  list-style-position: outside;
+  list-style-position: inside;
 }
 .intro ul li li {
   list-style-type: circle;
