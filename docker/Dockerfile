@@ -5,6 +5,7 @@ ARG VERSION
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
     build-essential \
+    locales \
     libjpeg-dev \
     zlib1g-dev \
     git-core \
