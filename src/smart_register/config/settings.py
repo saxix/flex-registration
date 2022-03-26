@@ -105,6 +105,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "constance.context_processors.config",
+                "smart_register.i18n.context_processors.itrans",
                 "smart_register.web.context_processors.smart",
                 # Social auth context_processors
                 "social_django.context_processors.backends",
