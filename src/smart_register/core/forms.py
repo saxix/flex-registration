@@ -10,15 +10,9 @@ from .fields.widgets import PythonEditor
 class ValidatorForm(forms.ModelForm):
     code = forms.CharField(widget=PythonEditor)
 
-    # def clean_code(self):
-    #     code = self.cleaned_data["code"]
-    #     try:
-    #         self.instance.validate({}, code=code)
-    #     except ValidationError:
-    #         pass
-    #     except Exception as e:
-    #         raise ValidationError(str(e))
-    #     return self.cleaned_data["code"]
+
+class Select2Widget(forms.Select):
+    template_name = "django/forms/widgets/select2.html"
 
 
 class CustomFieldMixin:
@@ -61,11 +55,12 @@ class SmartBaseFormSet(BaseFormSet):
                 "total_form_count": self.total_form_count(),
                 "errors": self._errors,
                 "non_form_errors": self._non_form_errors,
+                "cleaned_data": getattr(self, "cleaned_data", []),
             }
             try:
                 self.fs.validator.validate(data)
             except ValidationError as e:
-                raise ValidationError([e.error_dict])
+                raise ValidationError([e])
 
     @property
     def media(self):

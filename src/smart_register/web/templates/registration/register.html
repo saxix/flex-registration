@@ -13,7 +13,7 @@
     <script>var formsetConfig = [];</script>
     <div class="min-h-screen flex justify-center bg-gray-100">
         <div class="w-full lg:w-1/2">
-            {% if errors %}
+            {% if invalid %}
                 <div class="mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
                     {% trans "please fix the errors below" %}
                 </div>
@@ -23,14 +23,21 @@
                     {% endfor %}
                 {% endfor %}</ul>
             {% endif %}
+            {% if dataset.intro %}
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                 {% if user.is_staff %}
                     {% include "registration/_staff_edit_module.html" %}
                 {% endif %}
-                {{ dataset.intro|safe }}
+                <div class="intro">
+                    {{ dataset.intro|default_if_none:""|markdown }}
+                </div>
             </div>
+            {% endif %}
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
+                {% if user.is_staff %}
+                    {% include "registration/_staff_edit_form.html" %}
+                {% endif %}
                 <form class="w-full" method="post">
                     {% csrf_token %}
                     <div class="form-container">
@@ -97,18 +104,21 @@
                     <div class="submit-row">
                         <input type="submit"
                                class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                               value="Save"
+                               value="{% trans "Save" %}"
                         />
                     </div>
                 </form>
             </div>
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
-                {{ dataset.footer|safe }}
+                {{ dataset.footer|markdown }}
             </div>
 
         </div>
     </div>
-    <script>$(function () {
-        configureFormsets(formsetConfig);
-    });</script>
+    <script>
+        $(function () {
+            configureFormsets(formsetConfig);
+            $("input:checked[onchange]").trigger("change");
+        });
+    </script>
 {% endblock body %}

@@ -5,7 +5,7 @@ from django.views.generic.list import BaseListView
 from smart_register.core.models import OptionSet
 
 
-def filter_optionset(obj, request):
+def filter_optionset(obj, request, columns):
     term = request.GET.get("q")
     parent = request.GET.get("parent")
     pk = request.GET.get("pk")
@@ -22,18 +22,26 @@ def filter_optionset(obj, request):
 
     data = {
         "results": [
-            {"id": record["pk"], "parent": record["parent"], "text": record["label"]}
-            for record in obj.as_json()
+            {
+                "id": record["pk"],
+                "parent": record["parent"],
+                "text": record["label"],
+            }
+            for record in obj.as_json(columns)
             if _filter(record)
         ],
     }
     response = JsonResponse(data)
-    response["Cache-Control"] = "public, max-age=315360000"
-    response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}"
+    # response["Cache-Control"] = "public, max-age=315360000"
+    # response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}"
     return response
 
 
 class OptionsListView(BaseListView):
     def get(self, request, *args, **kwargs):
-        obj = get_object_or_404(OptionSet, name=self.kwargs["name"])
-        return filter_optionset(obj, request)
+        name = self.kwargs["name"]
+        pk = int(self.kwargs["pk"])
+        label = int(self.kwargs["label"])
+        parent = int(self.kwargs.get("parent", "-1"))
+        obj = get_object_or_404(OptionSet, name=name)
+        return filter_optionset(obj, request, [pk, label, parent])

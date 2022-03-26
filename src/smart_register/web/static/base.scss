@@ -5,6 +5,43 @@ $color-error: #ff9898;
 
 }
 
+.landing {
+  a {
+    color: $base-color;
+    font-weight: bold;
+  }
+
+  ul {
+    li {
+
+    }
+  }
+}
+
+.intro {
+  h1 {
+    font-size: larger;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 10px 0 10px 0;
+  }
+
+  ul {
+    li {
+      list-style-type: disc;
+      list-style-position: inside;
+
+      li {
+        list-style-type: circle;
+        list-style-position: inside;
+      }
+    }
+  }
+}
+
 body {
   font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;
   font-size: 10pt;

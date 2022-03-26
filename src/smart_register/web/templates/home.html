@@ -1,17 +1,25 @@
-{% extends config.BASE_TEMPLATE %}{% load static %}
+{% extends config.BASE_TEMPLATE %}{% load static smart_register %}
 {% block body %}
     <section class="text-gray-700 body-font">
         <div class="container mx-auto flex px-5 py-6 lg:py-24 flex-col-reverse lg:flex-row items-center">
             <div class="lg:flex-grow w-full lg:w-1/2 lg:pr-24 lg:pr-16 flex flex-col md:items-start sm:text-center lg:text-left text-center mb-16 md:mb-0 items-center ">
-                <h1 class="title-font sm:text-6xl text-xl mb-4 font-medium text-gray-900">Registration
-                </h1>
                 <p class="mb-8 text-xl leading-relaxed">Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                     In quis augue a velit commodo posuere vitae non ipsum. Sed malesuada sed sem vel congue.
-                    Ut scelerisque metus sed suscipit dictum. Integer molestie faucibus ante vel lobortis. Nullam vulputate justo eget tortor congue, non consectetur ex placerat.
-                    Sed eget nibh rutrum risus sollicitudin lobortis eu a mauris.  Phasellus hendrerit tortor quis quam vehicula, at porttitor nisi congue. Quisque ut lacinia lectus. Maecenas dolor metus, consectetur eget laoreet vitae, semper sit amet orci.
+                    Ut scelerisque metus sed suscipit dictum. Integer molestie faucibus ante vel lobortis. Nullam
+                    vulputate justo eget tortor congue, non consectetur ex placerat.
+                    Sed eget nibh rutrum risus sollicitudin lobortis eu a mauris. Phasellus hendrerit tortor quis quam
+                    vehicula, at porttitor nisi congue. Quisque ut lacinia lectus. Maecenas dolor metus, consectetur
+                    eget laoreet vitae, semper sit amet orci.
                 </p>
-                <a href="{% url "register-latest" %}" class="w-full text-white bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-4xl">Start</a>
             </div>
         </div>
+        {% if request.user.is_authenticated %}
+            <div class="flex space-x-2 m-5 px-10">
+                {% for reg in buttons %}
+                    {% link reg %}
+                {% endfor %}
+            </div>
+        {% endif %}
     </section>
+
 {% endblock body %}

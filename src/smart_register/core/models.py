@@ -4,6 +4,7 @@ from json import JSONDecodeError
 
 import jsonpickle
 import sentry_sdk
+from constance import config
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
 from django import forms
@@ -14,8 +15,9 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
+from django.urls import reverse
 from natural_keys import NaturalKeyModel
-from py_mini_racer.py_mini_racer import JSParseException
+from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
 from .cache import cache_form
@@ -48,6 +50,7 @@ class Validator(NaturalKeyModel):
             (MODULE, "Module"),
         ),
     )
+    trace = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -60,41 +63,42 @@ class Validator(NaturalKeyModel):
             return jsonfy(value)
         return value
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super().save(force_insert, force_update, using, update_fields)
-        for frm in self.flexform_set.all():
-            frm.get_form.cache_clear()
-        for frm in self.formset_set.all():
-            frm.flex_form.get_form.cache_clear()
-        for frm in self.flexformfield_set.all():
-            frm.get_instance.cache_clear()
-
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        ctx = MiniRacer()
-        sentry_sdk.set_tag("validator", self.pk)
-        try:
-            ctx.eval(f"var value = {jsonpickle.encode(value)};")
-            result = ctx.eval(self.code)
-            if result is None:
-                ret = False
-            else:
-                try:
-                    ret = jsonpickle.decode(result)
-                except (JSONDecodeError, TypeError):
-                    ret = result
-            if isinstance(ret, (str, dict)):
-                raise ValidationError(ret)
-            elif isinstance(ret, bool) and not ret:
-                raise ValidationError(self.message)
-        except ValidationError:
-            raise
-        except JSParseException as e:
-            logger.exception(e)
-        except Exception as e:
-            logger.exception(e)
-            raise
+        with sentry_sdk.push_scope() as scope:
+            scope.set_extra("value", value)
+            scope.set_extra("code", self.code)
+            scope.set_extra("target", self.target)
+            scope.set_tag("validator", self.pk)
+
+            ctx = MiniRacer()
+            try:
+                ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
+                result = ctx.eval(self.code)
+                scope.set_tag("result", result)
+                if result is None:
+                    ret = False
+                else:
+                    try:
+                        ret = jsonpickle.decode(result)
+                    except (JSONDecodeError, TypeError):
+                        ret = result
+                if isinstance(ret, (str, dict)):
+                    raise ValidationError(ret)
+                elif isinstance(ret, bool) and not ret:
+                    raise ValidationError(self.message)
+            except ValidationError as e:
+                if self.trace:
+                    logger.exception(e)
+                raise
+            except MiniRacerBaseException as e:
+                logger.exception(e)
+            except Exception as e:
+                logger.exception(e)
+                raise
+        if self.trace:
+            sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
 
 
 def get_validators(field):
@@ -251,7 +255,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
     version = IntegerVersionField()
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
-    name = CICharField(max_length=30, blank=True)
+    name = CICharField(max_length=100, blank=True)
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
@@ -329,9 +333,9 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.name:
-            self.name = namify(self.label)
+            self.name = namify(self.label)[:100]
         else:
-            self.name = namify(self.name)
+            self.name = namify(self.name)[:100]
 
         dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
@@ -340,55 +344,57 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
 class OptionSet(NaturalKeyModel, models.Model):
     version = IntegerVersionField()
-    name = CICharField(max_length=100, unique=True)
+    name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[a-z0-9-_]")])
     description = models.CharField(max_length=1000, blank=True, null=True)
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
     columns = models.CharField(
-        max_length=20, default="label", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
+        max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
 
     def clean(self):
-        cols = self.columns.split(",")
-        if self.separator and len(cols) == 1:
-            raise ValidationError("You must define columns order if 'separator' is set.")
-
-        if len(cols) > 3:
-            raise ValidationError("Invalid columns definition")
-
+        try:
+            a, b, c = list(map(int, self.columns.split(",")))
+        except ValueError:
+            raise ValidationError("Invalid columns")
         super().clean()
 
-    def get_cache_key(self):
-        return f"options-{self.pk}-{self.name}-{self.version}"
+    def get_cache_key(self, cols=None):
+        return f"options-{self.pk}-{self.name}-{cols}-{self.version}"
 
-    def get_data(self):
-        value = cache.get(self.get_cache_key(), version=self.version)
-        parent_col = None
+    def get_api_url(self):
+        try:
+            pk, label, parent = self.columns.split(",")
+        except ValueError:
+            pk, label, parent = 0, 0, -1
+        return reverse("optionset", args=[self.name, pk, label, parent])
+
+    def get_data(self, columns=None):
+        value = None
+        if config.CACHE_FORMS:
+            value = cache.get(self.get_cache_key(columns), version=self.version)
+
+        if columns is None:
+            pk_col, label_col, parent_col = map(int, self.columns.split(","))
+        else:
+            pk_col, label_col, parent_col = columns
+
         if not value:
-            columns = self.columns.split(",")
-            if len(columns) == 1:
-                pk_col = label_col = 0
-            if len(columns) > 1:
-                pk_col = columns.index("pk")
-            if len(columns) >= 2:
-                label_col = columns.index("label")
-            if len(columns) == 3 and "parent" in columns:
-                parent_col = columns.index("parent")
-
             value = []
             for line in self.data.split("\r\n"):
                 if not line.strip():
                     continue
-                if len(columns) == 1:
-                    pk, parent, label = line.strip().lower(), None, line
-                else:
+                parent = None
+                if self.separator:
                     cols = line.split(self.separator)
-                    if len(columns) == 3 and "parent" in columns:
-                        pk, parent, label = cols[pk_col], cols[parent_col], cols[label_col]
-                    elif len(columns) > 1:
-                        pk, parent, label = cols[pk_col], None, cols[label_col]
-                    else:
-                        raise ValueError("")
+                    pk = cols[pk_col]
+                    label = cols[label_col]
+                    if parent_col > 0:
+                        parent = cols[parent_col]
+                else:
+                    label = line
+                    pk = str(line).lower()
+
                 values = {
                     "pk": pk,
                     "parent": parent,
@@ -398,13 +404,25 @@ class OptionSet(NaturalKeyModel, models.Model):
             cache.set(self.get_cache_key(), value)
         return value
 
-    def as_choices(self):
-        data = self.get_data()
+    def as_choices(self, cols=None):
+        data = self.get_data(cols)
         for entry in data:
             yield entry["pk"], entry["label"]
 
-    def as_json(self):
-        return self.get_data()
+    def as_json(self, cols=None):
+        return self.get_data(cols)
+
+    @classmethod
+    def parse_datasource(cls, datasource):
+        if datasource:
+            if ":" in datasource:
+                name, cols = datasource.split(":")
+                columns = map(int, cols.split(","))
+            else:
+                name = datasource
+                columns = 0, 0, -1
+            return name, columns
+        return "", []
 
 
 def clean_choices(value):

@@ -1,6 +1,9 @@
 {% extends "admin_extra_buttons/action_page.html" %}
 {% block action-content %}
+    <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+
     {{ error }}
+    {{ form.media }}
     <table>
         <tr>
             <th>Label</th>

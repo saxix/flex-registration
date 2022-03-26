@@ -23,6 +23,14 @@ def import_custom_field(value, exc):
 
 
 class FieldRegistry(Registry):
+    def get_name(self, entry):
+        return entry.__name__
+
+    def as_choices(self):
+        if not self._choices:
+            self._choices = sorted([(fqn(klass), self.get_name(klass)) for klass in self], key=lambda e: e[1])
+        return self._choices
+
     def __contains__(self, y):
         if isinstance(y, str):
             return y in [fqn(s) for s in self]
@@ -41,8 +49,10 @@ field_registry.register(forms.DateField)
 field_registry.register(forms.DateTimeField)
 field_registry.register(forms.DurationField)
 field_registry.register(forms.EmailField)
+field_registry.register(forms.FileField)
 field_registry.register(forms.FloatField)
 field_registry.register(forms.GenericIPAddressField)
+field_registry.register(forms.ImageField)
 field_registry.register(forms.IntegerField)
 field_registry.register(forms.MultipleChoiceField)
 field_registry.register(forms.NullBooleanField)
@@ -55,6 +65,7 @@ field_registry.register(fields.MultiCheckboxField)
 field_registry.register(fields.PictureField)
 field_registry.register(fields.RadioField)
 field_registry.register(fields.SelectField)
+field_registry.register(fields.SmartCaptchaField)
 field_registry.register(fields.SmartCaptchaField)
 field_registry.register(fields.YesNoChoice)
 field_registry.register(fields.YesNoRadio)

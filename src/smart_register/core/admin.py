@@ -5,10 +5,12 @@ import tempfile
 from json import JSONDecodeError
 from pathlib import Path
 
+import jsonpickle
 import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
+from adminfilters.combo import ChoicesFieldComboFilter
 from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
@@ -16,13 +18,14 @@ from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
-from django.http import JsonResponse
-from django.urls import reverse
+from django.http import JsonResponse, HttpResponseRedirect
+from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
 from smart_admin.modeladmin import SmartModelAdmin
 
-from .forms import ValidatorForm
+from .fields.widgets import PythonEditor
+from .forms import ValidatorForm, Select2Widget
 from .models import (
     CustomFieldType,
     FlexForm,
@@ -36,9 +39,51 @@ from .utils import render
 logger = logging.getLogger(__name__)
 
 
+class Select2FieldComboFilter(ChoicesFieldComboFilter):
+    template = "adminfilters/select2.html"
+
+
+class ValidatorTestForm(forms.Form):
+    code = forms.CharField(
+        widget=PythonEditor,
+    )
+    input = forms.CharField(widget=PythonEditor(toolbar=False), required=False)
+
+
 @register(Validator)
 class ValidatorAdmin(SmartModelAdmin):
+    list_display = ("name", "target", "message")
     form = ValidatorForm
+    search_fields = ("name",)
+    list_filter = ("target",)
+    DEFAULTS = {
+        Validator.FORM: {},  # cleaned data
+        Validator.FIELD: "",  # field value
+        Validator.MODULE: [{}],
+        Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
+    }
+
+    @view()
+    def _test(self, request, pk):
+        return {}
+
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Test Validator")
+        param = self.DEFAULTS[self.object.target]
+        if request.method == "POST":
+            form = ValidatorTestForm(request.POST)
+            if form.is_valid():
+                self.object.code = form.cleaned_data["code"]
+                self.object.save()
+                return HttpResponseRedirect("..")
+        else:
+            form = ValidatorTestForm(
+                initial={"code": self.object.code, "input": jsonpickle.encode(param)},
+            )
+
+        ctx["form"] = form
+        return render(request, "admin/core/validator/test.html", ctx)
 
 
 @register(FormSet)
@@ -52,7 +97,6 @@ class FormSetAdmin(SmartModelAdmin):
     )
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
-        # RegexField: {"widget": RegexEditor}
     }
 
 
@@ -82,20 +126,27 @@ class FlexFormFieldForm(forms.ModelForm):
 
 @register(FlexFormField)
 class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
-    list_display = ("ordering", "flex_form", "name", "label", "_type", "required", "enabled")
-    list_filter = (("flex_form", AutoCompleteFilter),)
+    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
+    list_filter = (("flex_form", AutoCompleteFilter), ("field_type", Select2FieldComboFilter))
     list_editable = ["ordering", "required", "enabled"]
     search_fields = ("name", "label")
+    autocomplete_fields = ("flex_form", "validator")
+    save_as = True
 
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
-        # RegexField: {"widget": RegexEditor}
     }
     ordering_field = "ordering"
     order = "ordering"
 
     def _type(self, obj):
         return obj.field_type.__name__
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == "field_type":
+            kwargs["widget"] = Select2Widget()
+            return db_field.formfield(**kwargs)
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
@@ -114,6 +165,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
                 "options": getattr(instance, "options", None),
                 "choices": getattr(instance, "choices", None),
                 "widget": getattr(instance, "widget", None),
+                "widget_attrs": instance.widget_attrs(instance.widget),
             }
             form_class_attrs = {
                 "sample": instance,
@@ -132,6 +184,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
             ctx["error"] = e
+            raise
 
         return render(request, "admin/core/flexformfield/test.html", ctx)
 
@@ -144,6 +197,12 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
     extra = 0
     ordering_field = "ordering"
     ordering_field_hide_input = True
+
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == "field_type":
+            kwargs["widget"] = Select2Widget()
+            return db_field.formfield(**kwargs)
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
 
 
 class SyncForm(forms.Form):
@@ -171,6 +230,25 @@ class FlexFormAdmin(SmartModelAdmin):
 
     def parents(self, obj):
         return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
+
+    @button(html_attrs={"class": "aeb-danger"})
+    def invalidate_cache(self, request):
+        from .cache import cache
+
+        cache.clear()
+
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        form_class = self.object.get_form()
+        if request.method == "POST":
+            form = form_class(request.POST)
+            if form.is_valid():
+                self.message_user(request, "Form in valid")
+        else:
+            form = form_class()
+        ctx["form"] = form
+        return render(request, "admin/core/flexform/test.html", ctx)
 
     @view(http_basic_auth=True, permission=lambda request, obj: request.user.is_superuser)
     def export(self, request):
@@ -250,8 +328,11 @@ class OptionSetAdmin(SmartModelAdmin):
     def view_json(self, button):
         original = button.context["original"]
         if original:
-            url = reverse("optionset", args=[original.name])
-            button.href = url
+            try:
+                button.href = original.get_api_url()
+            except NoReverseMatch:
+                button.href = "#"
+                button.label = "Error reversing url"
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         if request.method == "POST" and "_saveasnew" in request.POST:

@@ -3,9 +3,11 @@ from hashlib import md5
 from constance import config
 from django.core.exceptions import ValidationError
 from django.forms import forms
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
+from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
 from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
@@ -31,18 +33,27 @@ class QRVerify(TemplateView):
 class RegisterCompleteView(TemplateView):
     template_name = "registration/register_done.html"
 
+    @cached_property
+    def record(self):
+        return Record.objects.select_related("registration").get(
+            registration__id=self.kwargs["pk"], id=self.kwargs["rec"]
+        )
+
     def get_qrcode(self, record):
         h = md5(record.storage).hexdigest()
         url = self.request.build_absolute_uri(f"/register/qr/{record.pk}/{h}")
         return get_qrcode(url), url
 
     def get_context_data(self, **kwargs):
-        record = Record.objects.get(registration__id=self.kwargs["pk"], id=self.kwargs["rec"])
         if config.QRCODE:
-            qrcode, url = self.get_qrcode(record)
+            qrcode, url = self.get_qrcode(self.record)
         else:
             qrcode, url = None, None
-        return super().get_context_data(qrcode=qrcode, url=url, record=record, **kwargs)
+        return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        translation.activate(self.record.registration.locale)
+        return self.render_to_response(self.get_context_data())
 
 
 class RegisterView(FormView):
@@ -94,7 +105,6 @@ class RegisterView(FormView):
         return self.render_to_response(self.get_context_data())
 
     def validate(self, cleaned_data):
-        self.errors = []
         if self.registration.validator:
             try:
                 self.registration.validator.validate(cleaned_data)
@@ -104,18 +114,18 @@ class RegisterView(FormView):
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         formsets = self.get_formsets()
+        self.errors = []
         is_valid = True
         all_cleaned_data = {}
 
         for fs in formsets.values():
-            is_valid = is_valid and fs.is_valid()
-            all_cleaned_data[fs.fs.name] = []
-            for f in fs:
-                is_valid = is_valid and f.is_valid()
-                if hasattr(f, "cleaned_data"):
-                    all_cleaned_data[fs.fs.name].append(f.cleaned_data)
+            if fs.is_valid():
+                all_cleaned_data[fs.fs.name] = fs.cleaned_data
+            else:
+                is_valid = False
 
-        self.validate(all_cleaned_data)
+        if is_valid:
+            self.validate(all_cleaned_data)
 
         if form.is_valid() and is_valid:
             return self.form_valid(form, formsets)
@@ -129,10 +139,22 @@ class RegisterView(FormView):
             for f in fs:
                 data[name].append(f.cleaned_data)
 
+        def parse_field(field):
+            if isinstance(field, InMemoryUploadedFile):
+                return str(field.read())
+            elif isinstance(field, dict):
+                return {item[0]: parse_field(item[1]) for item in field.items()}
+            elif isinstance(field, list):
+                return [parse_field(item) for item in field]
+            return field
+
+        data = {field_name: parse_field(field) for field_name, field in data.items()}
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)
 
     def form_invalid(self, form, formsets):
         """If the form is invalid, render the invalid form."""
-        return self.render_to_response(self.get_context_data(form=form, errors=self.errors, formsets=formsets))
+        return self.render_to_response(
+            self.get_context_data(form=form, invalid=True, errors=self.errors, formsets=formsets)
+        )

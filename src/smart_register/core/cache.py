@@ -2,6 +2,8 @@ import logging
 from collections import OrderedDict
 from functools import wraps
 
+from constance import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,6 +22,10 @@ class Cache(OrderedDict):
             while len(self) > self.size_limit:
                 self.popitem(last=False)
 
+    def clear(self):
+        while len(self) > 0:
+            self.popitem(last=False)
+
 
 cache = Cache(size=100)
 
@@ -27,6 +33,9 @@ cache = Cache(size=100)
 def cache_form(f):
     @wraps(f)
     def _inner(*args, **kwargs):
+        if not config.CACHE_FORMS:
+            return f(*args, **kwargs)
+
         key = f"{args[0].pk}-{args[0].version}"
         if key not in cache:
             logger.debug("cache missing")

@@ -4,28 +4,23 @@
         <a title="{% trans "Play CAPTCHA as audio file" %}" href="{{ audio }}">
     {% endif %}
 <img src="{{ image }}" alt="captcha" class="captcha" />
-{#<a id="captcha-refresh" href="#">Refresh</a>#}
 {% if audio %}</a>{% endif %}
 {% endspaceless %}
 {% include "django/forms/widgets/multiwidget.html" %}
 <script>
     $(function() {
         $('img.captcha').after(
-            $('<a href="#void" class="captcha-refresh">Refresh</a>')
+            $('<a href="#void" class="captcha-refresh">{% trans "refresh" %}</a>')
         );
-
-        // Click-handler for the refresh-link
         $('.captcha-refresh').click(function(){
             var $form = $(this).parents('form');
             var url = location.protocol + "//" + window.location.hostname + ":"
                 + location.port + "/captcha/refresh/";
 
-            // Make the AJAX-call
             $.getJSON(url, {}, function(json) {
                 $form.find('input[name="captcha_0"]').val(json.key);
                 $form.find('img.captcha').attr('src', json.image_url);
             });
-
             return false;
         });
     });

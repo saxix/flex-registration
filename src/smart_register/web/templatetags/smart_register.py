@@ -1,5 +1,7 @@
+import markdown as md
 from django.template import Library, Node
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
@@ -75,10 +77,26 @@ def link(registration):
     attrs = dict_get_nested(widget, "attrs")
 
     if "class" not in attrs:
-        widget["attrs"]["style"] = "background-color:#01ADF1;"
+        widget["attrs"]["style"] = "background-color:#01ADF1;color:white;"
         widget["attrs"]["class"] = "text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
     widget["attrs"]["href"] = reverse("register", args=[registration.locale, registration.slug])
     return {
         "reg": registration,
         "widget": widget,
     }
+
+
+@register.filter()
+def markdown(value):
+    if value:
+        p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
+        return mark_safe(p)
+    return ""
+
+
+@register.filter(name="md")
+def _md(value):
+    if value:
+        p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
+        return mark_safe(p.replace("<p>", "").replace("</p>", ""))
+    return ""
