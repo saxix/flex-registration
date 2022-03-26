@@ -155,7 +155,7 @@ LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
     ("en-us", "English"),
     ("pl-pl", "Polskie"),
-    ("uk-ua", "український")
+    ("uk-ua", "український"),
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),

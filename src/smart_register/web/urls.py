@@ -4,6 +4,7 @@ from .views import (
     HomeView,
     MaintenanceView,
     OptionsListView,
+    PageView,
     ProbeView,
     QRCodeView,
     QRVerify,
@@ -14,6 +15,7 @@ from .views import (
 
 urlpatterns = [
     path("", HomeView.as_view(), name="index"),
+    path("page/<str:page>/", PageView.as_view(), name="page"),
     path("probe/", ProbeView.as_view(), name="probe"),
     path("qrcode/", QRCodeView.as_view(), name="qrcode"),
     path("maintenance", MaintenanceView.as_view(), name="maintenance"),

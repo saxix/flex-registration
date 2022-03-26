@@ -51,9 +51,9 @@ class RegisterCompleteView(TemplateView):
             qrcode, url = None, None
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         translation.activate(self.record.registration.locale)
-        return self.render_to_response(self.get_context_data())
+        return super().dispatch(request, *args, **kwargs)
 
 
 class RegisterView(FormView):
@@ -100,9 +100,14 @@ class RegisterView(FormView):
         ctx["media"] = m
         return ctx
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         translation.activate(self.registration.locale)
-        return self.render_to_response(self.get_context_data())
+        return super().dispatch(request, *args, **kwargs)
+
+    # def get(self, request, *args, **kwargs):
+    #     # translation.activate(self.registration.locale)
+    #     with translation.override(self.registration.locale):
+    #         return self.render_to_response(self.get_context_data())
 
     def validate(self, cleaned_data):
         if self.registration.validator:

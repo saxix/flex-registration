@@ -11,6 +11,13 @@ from smart_register.registration.models import Registration
 logger = logging.getLogger(__name__)
 
 
+class PageView(TemplateView):
+    template_name = "index.html"
+
+    def get_template_names(self):
+        return [f"{self.kwargs['page']}.html"]
+
+
 class HomeView(TemplateView):
     template_name = "index.html"
 
