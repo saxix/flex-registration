@@ -205,12 +205,15 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
         return super().formfield_for_choice_field(db_field, request, **kwargs)
 
 
-class SyncForm(forms.Form):
+class SyncConfigForm(forms.Form):
     APPS = ("core", "registration")
+    apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
+
+
+class SyncForm(SyncConfigForm):
     host = forms.CharField()
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
-    apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
     remember = forms.BooleanField(label="Remember me", required=False)
 
 
@@ -253,10 +256,16 @@ class FlexFormAdmin(SmartModelAdmin):
     @view(http_basic_auth=True, permission=lambda request, obj: request.user.is_superuser)
     def export(self, request):
         try:
-            apps = request.GET.get("apps", "").split(",")
-            buf = io.StringIO()
-            call_command("dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
-            return JsonResponse(json.loads(buf.getvalue()), safe=False)
+            frm = SyncConfigForm(request.GET)
+            if frm.is_valid():
+                apps = frm.cleaned_data["apps"]
+                buf = io.StringIO()
+                call_command(
+                    "dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True
+                )
+                return JsonResponse(json.loads(buf.getvalue()), safe=False)
+            else:
+                return JsonResponse(frm.errors, status=400)
         except Exception as e:
             logger.exception(e)
             return JsonResponse({}, status=400)
@@ -286,7 +295,9 @@ class FlexFormAdmin(SmartModelAdmin):
                         cookies = {self.SYNC_COOKIE: self._get_signed_cookie(request, form)}
                     else:
                         cookies = {self.SYNC_COOKIE: ""}
-                    url = f"{form.cleaned_data['host']}core/flexform/export/?apps={','.join(form.cleaned_data['apps'])}"
+                    url = f"{form.cleaned_data['host']}core/flexform/export/?"
+                    for app in form.cleaned_data["apps"]:
+                        url += f"apps={app}&"
                     if not url.startswith("http"):
                         url = f"https://{url}"
 
@@ -294,7 +305,7 @@ class FlexFormAdmin(SmartModelAdmin):
                     out = io.StringIO()
                     with requests.get(url, stream=True, auth=auth) as res:
                         if res.status_code != 200:
-                            raise Exception(res.status_code)
+                            raise Exception(str(res))
                         ctx["url"] = url
                         with tempfile.NamedTemporaryFile(
                             dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
