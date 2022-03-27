@@ -76,6 +76,7 @@ build: check .build
 			-e ADMIN_EMAIL="${ADMIN_EMAIL}" \
 			-e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
 			-e ADMINS="" \
+			-e LANGUAGE_CODE="uk-ua" \
 			-e ALLOWED_HOSTS="*" \
 			-e DATABASE_URL="${DATABASE_URL}" \
 			-e DEBUG="0" \

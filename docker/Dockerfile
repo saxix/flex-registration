@@ -2,11 +2,12 @@ FROM python:3.9.2-slim-buster
 ARG BUILD_DATE
 ARG VERSION
 
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
     build-essential \
     locales \
     locales-all \
+    gettext \
     libjpeg-dev \
     zlib1g-dev \
     git-core \
@@ -15,8 +16,14 @@ RUN apt-get install -y --no-install-recommends \
     python-psycopg2 \
     python-gdal \
     gdal-bin \
-    curl
-RUN apt-get clean
+    curl \
+    && locale-gen --no-purge uk_UA.UTF-8 \
+    && apt-get clean
+
+ENV LANG uk_UA.UTF-8
+ENV LANGUAGE uk_UA:ua
+ENV LC_ALL uk_UA.UTF-8
+
 WORKDIR /tmp
 
 ARG APP_ENV=prod

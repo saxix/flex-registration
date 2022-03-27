@@ -28,11 +28,12 @@ class HomeView(TemplateView):
         selection = config.HOME_PAGE_REGISTRATIONS.split(";")
         buttons = []
         for sel in selection:
-            try:
-                slug, locale = sel.split(",")
-                buttons.append(Registration.objects.get(active=True, slug=slug, locale=locale))
-            except Exception as e:
-                logger.exception(e)
+            if sel.strip():
+                try:
+                    slug, locale = sel.strip().split(",")
+                    buttons.append(Registration.objects.get(active=True, slug=slug.strip(), locale=locale.strip()))
+                except Exception as e:
+                    logger.exception(e)
         return super().get_context_data(buttons=buttons, **kwargs)
 
 
