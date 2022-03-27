@@ -2,7 +2,7 @@
 {% block after_field_sets %}
     {% if original.registration.public_key %}
         <div>This data have been encrypted</div>
-    {% else %}
+    {% elif is_root %}
         {% dump_dict original.data %}
     {% endif %}
 {% endblock %}

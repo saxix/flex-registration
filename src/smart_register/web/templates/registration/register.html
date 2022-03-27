@@ -23,17 +23,17 @@
                     {% endfor %}
                 {% endfor %}</ul>
             {% endif %}
+            {% if user.is_staff %}
+                {% include "registration/_staff_edit_module.html" %}
+            {% endif %}
             {% if dataset.intro %}
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
-                {% if user.is_staff %}
-                    {% include "registration/_staff_edit_module.html" %}
-                {% endif %}
                 <div class="intro">
                     {{ dataset.intro|default_if_none:""|markdown }}
                 </div>
             </div>
             {% else %}
-                <div class="m-10">&nbsp;</div>
+                <div class="m-5 ">&nbsp;</div>
             {% endif %}
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}

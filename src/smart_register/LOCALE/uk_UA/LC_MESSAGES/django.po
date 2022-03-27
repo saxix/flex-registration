@@ -84,21 +84,20 @@ msgstr "Зберегти"
 
 #: smart_register/web/templates/registration/register_done.html:5
 msgid "Registration successful"
-msgstr ""
+msgstr "Реєстрація успішна"
 
 #: smart_register/web/templates/registration/register_done.html:15
 msgid "Please save your registration ID or take a screenshot of this QR code."
 msgstr ""
-"Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода. Ця інформація "
-"буде обов’язкова для подальшої комунікації щодо вашої заявки."
+"Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода."
 
 #: smart_register/web/templates/registration/register_done.html:19
 msgid "Please save your registration ID."
-msgstr ""
+msgstr "Будь ласка, збережіть ID-номер"
 
 #: smart_register/web/templates/registration/register_done.html:23
 msgid "This info will allow faster follow up in case of support request."
-msgstr ""
+msgstr "Ця інформація буде обов’язкова для подальшої комунікації щодо вашої заявки."
 
 #: smart_register/web/templates/registration/register_done.html:29
 msgid "register another household"

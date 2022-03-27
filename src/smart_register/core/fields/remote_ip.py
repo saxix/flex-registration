@@ -1,12 +1,11 @@
 from django import forms
 from django.forms import HiddenInput
 
-from smart_register.core.registry import field_registry
-from smart_register.core.utils import get_client_ip
 from smart_register.state import state
 
+from ..utils import get_client_ip
 
-@field_registry.register
+
 class RemoteIpField(forms.CharField):
     widget = HiddenInput
 

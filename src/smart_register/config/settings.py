@@ -328,6 +328,7 @@ CONSTANCE_CONFIG = OrderedDict(
             "",
             str,
         ),
+        "LOG_POST_ERRORS": (False, "", bool),
         "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
         "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
         "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
@@ -402,7 +403,7 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 # CAPTCHA_IMAGE_SIZE = 300,200
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
-
+CAPTCHA_TEST_MODE = env("CAPTCHA_TEST_MODE")
 
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
 
