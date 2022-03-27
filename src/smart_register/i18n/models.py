@@ -8,8 +8,8 @@ from .fields import LanguageField
 
 class Message(models.Model):
     locale = LanguageField()
-    msgid = models.CharField()
-    msgstr = models.TextField()
+    msgid = models.TextField()
+    msgstr = models.TextField(blank=True, null=True)
     md5: str = models.CharField(verbose_name=_("MD5"), max_length=512, null=False, blank=False, db_index=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):

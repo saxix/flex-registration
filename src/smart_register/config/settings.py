@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "corsheaders",
     # ---
     "smart_register",
+    "smart_register.i18n",
     "smart_register.web",
     "smart_register.core",
     "smart_register.registration",
@@ -151,7 +152,7 @@ else:
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = "en"
+LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
     ("en-us", "English"),
@@ -177,8 +178,6 @@ SESSION_COOKIE_NAME = env("SESSION_COOKIE_NAME")
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
 
 TIME_ZONE = "UTC"
 

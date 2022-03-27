@@ -36,6 +36,7 @@ class FixedLocaleView:
         raise NotImplementedError
 
     def dispatch(self, request, *args, **kwargs):
+        request.LANGUAGE_CODE = self.registration.locale
         translation.activate(self.registration.locale)
         return super().dispatch(request, *args, **kwargs)
 

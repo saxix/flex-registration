@@ -56,6 +56,7 @@ DEFAULTS = {
     "AZURE_CLIENT_ID": (str, None),
     "AZURE_CLIENT_SECRET": (str, None),
     "AZURE_TENANT_KEY": (str, None),
+    "LANGUAGE_CODE": (str, "en-us"),
 }
 
 env = Env(**DEFAULTS)

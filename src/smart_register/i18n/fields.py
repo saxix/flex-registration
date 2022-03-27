@@ -11,7 +11,7 @@ class LanguageField(models.CharField):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("verbose_name", _("Language"))
         kwargs.setdefault("max_length", 10)
-        kwargs.setdefault("default", "en-us")
+        kwargs.setdefault("default", settings.LANGUAGE_CODE)
         kwargs.setdefault("null", True)
         kwargs.setdefault("choices", settings.LANGUAGES)
         super().__init__(*args, **kwargs)

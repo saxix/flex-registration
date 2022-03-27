@@ -11,5 +11,6 @@ urlpatterns = [
     path("", include("smart_register.web.urls")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
+    path("i18n/", include("django.conf.urls.i18n")),
     path("__debug__/", include(debug_toolbar.urls)),
 ]
