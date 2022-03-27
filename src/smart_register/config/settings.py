@@ -150,7 +150,7 @@ else:
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = "uk-ua"
+LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
     ("uk-ua", "український"),
