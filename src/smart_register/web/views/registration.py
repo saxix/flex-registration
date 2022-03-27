@@ -1,9 +1,11 @@
+import logging
 from hashlib import md5
 
+import sentry_sdk
 from constance import config
 from django.core.exceptions import ValidationError
-from django.forms import forms
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
@@ -14,6 +16,8 @@ from django.views.generic.edit import FormView
 
 from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Record, Registration
+
+logger = logging.getLogger(__name__)
 
 
 class DataSetView(CreateView):
@@ -166,6 +170,15 @@ class RegisterView(FixedLocaleView, FormView):
 
     def form_invalid(self, form, formsets):
         """If the form is invalid, render the invalid form."""
+        if config.LOG_POST_ERRORS:
+            with sentry_sdk.push_scope() as scope:
+                scope.set_extra("errors", self.errors)
+                scope.set_extra("form.errors", form.errors)
+                for n, f in formsets.items():
+                    scope.set_extra(n, f.errors)
+                scope.set_extra("target", self.target)
+                logger.error("Validation Error")
+
         return self.render_to_response(
             self.get_context_data(form=form, invalid=True, errors=self.errors, formsets=formsets)
         )

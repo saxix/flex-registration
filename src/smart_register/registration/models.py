@@ -4,6 +4,7 @@ from Crypto.PublicKey import RSA
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
+from django.urls import reverse
 from django.utils.text import slugify
 
 from smart_register.core.crypto import crypt, decrypt
@@ -46,6 +47,9 @@ class Registration(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse("register", args=[self.locale, self.slug])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:

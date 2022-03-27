@@ -70,6 +70,7 @@ field_registry.register(fields.SmartCaptchaField)
 field_registry.register(fields.YesNoChoice)
 field_registry.register(fields.YesNoRadio)
 field_registry.register(fields.LabelOnlyField)
+field_registry.register(fields.RemoteIpField)
 
 form_registry = Registry(forms.BaseForm)
 form_registry.register(forms.Form)

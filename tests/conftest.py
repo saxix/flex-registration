@@ -8,6 +8,7 @@ from django.core.files.storage import get_storage_class
 def pytest_configure(config):
     os.environ["DEBUG"] = "0"
     os.environ["ADMINS"] = "admin@demo.org"
+    os.environ["CAPTCHA_TEST_MODE"] = "true"
 
 
 @pytest.fixture()
