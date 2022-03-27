@@ -31,7 +31,7 @@ class HomeView(TemplateView):
             if sel.strip():
                 try:
                     slug, locale = sel.strip().split(",")
-                    buttons.append(Registration.objects.get(active=True, slug=slug, locale=locale))
+                    buttons.append(Registration.objects.get(active=True, slug=slug.strip(), locale=locale.strip()))
                 except Exception as e:
                     logger.exception(e)
         return super().get_context_data(buttons=buttons, **kwargs)

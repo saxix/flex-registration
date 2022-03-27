@@ -38,6 +38,7 @@ DEFAULTS = {
     "EMAIL_USE_SSL": (bool, False),
     "EMAIL_TIMEOUT": (int, 30),
     "INTERNAL_IPS": (list, ["127.0.0.1", "localhost"]),
+    "LANGUAGE_CODE": (str, "en-us"),
     "CACHE_DEFAULT": (str, "locmemcache://"),
     "MEDIA_ROOT": (str, "/tmp/media/"),
     "ROOT_TOKEN": (str, uuid.uuid4().hex),

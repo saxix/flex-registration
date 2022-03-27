@@ -68,3 +68,14 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
                     u.save()
                 except CommandError:
                     raise
+
+        import django
+        from django.conf import settings
+        from django.utils import translation
+
+        django.setup()
+        print(f"LANGUAGE_CODE: {settings.LANGUAGE_CODE}")
+        print(f"LOCALE: {translation.to_locale(settings.LANGUAGE_CODE)}")
+        translation.activate(settings.LANGUAGE_CODE)
+        print(translation.gettext("required"))
+        print("check_for_language", translation.check_for_language("settings.LANGUAGE_CODE"))

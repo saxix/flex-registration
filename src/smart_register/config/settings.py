@@ -155,9 +155,9 @@ else:
 LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
+    ("uk-ua", "український"),
     ("en-us", "English"),
     ("pl-pl", "Polskie"),
-    ("uk-ua", "український"),
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),

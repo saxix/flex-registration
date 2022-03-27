@@ -38,7 +38,10 @@ class LocaleMiddleware:
         lang = get_default_language(request)
         request.selected_language = lang
         translation.activate(lang)
-        locale.setlocale(locale.LC_ALL, "")
+        try:
+            locale.setlocale(locale.LC_ALL, translation.to_locale(lang))
+        except locale.Error as e:
+            logger.exception(e)
 
         ret = self.get_response(request)
         translation.deactivate()

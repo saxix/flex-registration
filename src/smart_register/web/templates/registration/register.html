@@ -1,4 +1,4 @@
-{% extends config.BASE_TEMPLATE %}{% load smart_register l10n static i18n itrans %}
+{% extends config.BASE_TEMPLATE %}{% load smart_register static itrans %}
 {% block head %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"
             integrity="sha512-wT7uPE7tOP6w4o28u1DN775jYjHQApdBnib5Pho4RB0Pgd9y7eSkAV1BTqQydupYDB9GBhTcQQzyNMPMV3cAew=="
@@ -12,7 +12,7 @@
 {% block body %}
     <script>var formsetConfig = [];</script>
     <div class="min-h-screen flex justify-center bg-gray-100 pb-10">
-        <div class="w-full lg:w-1/2 mt-10">
+        <div class="w-full lg:w-1/2 mt-5">
             {% if invalid %}
                 <div class="mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
                     {% trans "please fix the errors below" %}
