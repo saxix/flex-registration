@@ -30,8 +30,27 @@ class QRVerify(TemplateView):
         return super().get_context_data(valid=valid, record=record, **kwargs)
 
 
-class RegisterCompleteView(TemplateView):
+class FixedLocaleView:
+    @cached_property
+    def registration(self):
+        raise NotImplementedError
+
+    def dispatch(self, request, *args, **kwargs):
+        translation.activate(self.registration.locale)
+        return super().dispatch(request, *args, **kwargs)
+
+    # def get(self, request, *args, **kwargs):
+    #     translation.activate(self.registration.locale)
+    #     with translation.override(self.registration.locale):
+    #         return self.render_to_response(self.get_context_data())
+
+
+class RegisterCompleteView(FixedLocaleView, TemplateView):
     template_name = "registration/register_done.html"
+
+    @cached_property
+    def registration(self):
+        return self.record.registration
 
     @cached_property
     def record(self):
@@ -51,12 +70,8 @@ class RegisterCompleteView(TemplateView):
             qrcode, url = None, None
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
 
-    def get(self, request, *args, **kwargs):
-        translation.activate(self.record.registration.locale)
-        return self.render_to_response(self.get_context_data())
 
-
-class RegisterView(FormView):
+class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
 
     @property
@@ -99,10 +114,6 @@ class RegisterView(FormView):
             m += f.media
         ctx["media"] = m
         return ctx
-
-    def get(self, request, *args, **kwargs):
-        translation.activate(self.registration.locale)
-        return self.render_to_response(self.get_context_data())
 
     def validate(self, cleaned_data):
         if self.registration.validator:
