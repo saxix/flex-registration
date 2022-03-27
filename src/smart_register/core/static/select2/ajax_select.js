@@ -56,7 +56,7 @@
             }
             var selected = $target.data('selected');
             if (selected){
-                var url = $target.data('ajax-url');
+                var url = $target.data('ajax--url');
                 $.getJSON(url + '?pk=' + selected, function (results){
                     var data = results.results[0];
                     var newOption = new Option(data.text, data.id, true, true);
