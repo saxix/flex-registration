@@ -4,9 +4,9 @@ from json import JSONDecodeError
 
 import jsonpickle
 import sentry_sdk
-from constance import config
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
+from constance import config
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.cache import caches
@@ -94,6 +94,7 @@ class Validator(NaturalKeyModel):
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
+                return True
             except Exception as e:
                 logger.exception(e)
                 raise

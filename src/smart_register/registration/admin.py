@@ -174,6 +174,10 @@ class RecordAdmin(SmartModelAdmin):
     def get_common_context(self, request, pk=None, **kwargs):
         return super().get_common_context(request, pk, is_root=is_root(request), **kwargs)
 
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        extra_context = {"is_root": is_root(request)}
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
     @button(permission=is_root)
     def decrypt(self, request, pk):
         ctx = self.get_common_context(request, pk, title="To decrypt you need to provide Registration Private Key")

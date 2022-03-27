@@ -20,6 +20,7 @@ DEFAULTS = {
     "SECRET_KEY": (str, ""),
     "ADMINS": (parse_emails, ""),
     "ALLOWED_HOSTS": (list, []),
+    "CAPTCHA_TEST_MODE": (bool, False),
     "CORS_ALLOWED_ORIGINS": (list, []),
     "DATABASE_URL": (str, "psql://postgres:@postgres:5432/smart_register"),
     "DEBUG": (bool, False),

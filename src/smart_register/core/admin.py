@@ -18,14 +18,14 @@ from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .fields.widgets import PythonEditor
-from .forms import ValidatorForm, Select2Widget
+from .forms import Select2Widget, ValidatorForm
 from .models import (
     CustomFieldType,
     FlexForm,
