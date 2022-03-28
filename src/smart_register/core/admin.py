@@ -332,9 +332,9 @@ class FlexFormAdmin(SmartModelAdmin):
 
 @register(OptionSet)
 class OptionSetAdmin(SmartModelAdmin):
-    list_display = ("name", "id", "separator", "columns")
+    list_display = ("name", "id", "separator", "comment", "columns")
     search_fields = ("name",)
-    list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
+    list_filter = (("data", ValueFilter),)
     save_as = True
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})

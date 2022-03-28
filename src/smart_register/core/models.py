@@ -349,6 +349,7 @@ class OptionSet(NaturalKeyModel, models.Model):
     description = models.CharField(max_length=1000, blank=True, null=True)
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
+    comment = models.CharField(max_length=1, default="#", blank=True)
     columns = models.CharField(
         max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
@@ -384,6 +385,8 @@ class OptionSet(NaturalKeyModel, models.Model):
             value = []
             for line in self.data.split("\r\n"):
                 if not line.strip():
+                    continue
+                if line.startswith(self.comment):
                     continue
                 parent = None
                 if self.separator:
