@@ -150,12 +150,12 @@ else:
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = "en"
+LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
+    ("uk-ua", "український"),
     ("en-us", "English"),
     ("pl-pl", "Polskie"),
-    ("uk-ua", "український")
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),
@@ -176,8 +176,6 @@ SESSION_COOKIE_NAME = env("SESSION_COOKIE_NAME")
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
 
 TIME_ZONE = "UTC"
 
@@ -328,6 +326,7 @@ CONSTANCE_CONFIG = OrderedDict(
             "",
             str,
         ),
+        "LOG_POST_ERRORS": (False, "", bool),
         "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
         "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
         "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
@@ -402,7 +401,7 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 # CAPTCHA_IMAGE_SIZE = 300,200
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
-
+CAPTCHA_TEST_MODE = env("CAPTCHA_TEST_MODE")
 
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
 

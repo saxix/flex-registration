@@ -4,9 +4,9 @@ from json import JSONDecodeError
 
 import jsonpickle
 import sentry_sdk
-from constance import config
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
+from constance import config
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.cache import caches
@@ -94,6 +94,7 @@ class Validator(NaturalKeyModel):
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
+                return True
             except Exception as e:
                 logger.exception(e)
                 raise
@@ -348,6 +349,7 @@ class OptionSet(NaturalKeyModel, models.Model):
     description = models.CharField(max_length=1000, blank=True, null=True)
     data = models.TextField(blank=True, null=True)
     separator = models.CharField(max_length=1, default="", blank=True)
+    comment = models.CharField(max_length=1, default="#", blank=True)
     columns = models.CharField(
         max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
@@ -383,6 +385,8 @@ class OptionSet(NaturalKeyModel, models.Model):
             value = []
             for line in self.data.split("\r\n"):
                 if not line.strip():
+                    continue
+                if line.startswith(self.comment):
                     continue
                 parent = None
                 if self.separator:

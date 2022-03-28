@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-25 18:14+0000\n"
+"POT-Creation-Date: 2022-03-27 08:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -61,6 +61,11 @@ msgstr ""
 msgid "refresh"
 msgstr "oновити"
 
+#: smart_register/management/commands/upgrade.py:81
+#: smart_register/web/templates/registration/_fieldset.html:19
+msgid "required"
+msgstr "обов’язкове"
+
 #: smart_register/web/templates/admin/base_site.html:8
 msgid "Django site admin"
 msgstr ""
@@ -69,35 +74,30 @@ msgstr ""
 msgid "Django administration"
 msgstr ""
 
-#: smart_register/web/templates/registration/_fieldset.html:19
-msgid "required"
-msgstr "обов’язкове"
-
 #: smart_register/web/templates/registration/register.html:18
 msgid "please fix the errors below"
-msgstr ""
+msgstr "Будь ласка, вкажіть обов’язкові дані"
 
-#: smart_register/web/templates/registration/register.html:105
+#: smart_register/web/templates/registration/register.html:109
 msgid "Save"
 msgstr "Зберегти"
 
 #: smart_register/web/templates/registration/register_done.html:5
 msgid "Registration successful"
-msgstr ""
+msgstr "Реєстрація успішна"
 
 #: smart_register/web/templates/registration/register_done.html:15
 msgid "Please save your registration ID or take a screenshot of this QR code."
 msgstr ""
-"Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода. Ця інформація "
-"буде обов’язкова для подальшої комунікації щодо вашої заявки."
+"Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода."
 
 #: smart_register/web/templates/registration/register_done.html:19
 msgid "Please save your registration ID."
-msgstr ""
+msgstr "Будь ласка, збережіть ID-номер"
 
 #: smart_register/web/templates/registration/register_done.html:23
 msgid "This info will allow faster follow up in case of support request."
-msgstr ""
+msgstr "Ця інформація буде обов’язкова для подальшої комунікації щодо вашої заявки."
 
 #: smart_register/web/templates/registration/register_done.html:29
 msgid "register another household"

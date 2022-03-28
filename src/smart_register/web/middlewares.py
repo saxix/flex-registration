@@ -1,4 +1,3 @@
-import locale
 import logging
 import re
 from enum import IntFlag, unique
@@ -38,8 +37,6 @@ class LocaleMiddleware:
         lang = get_default_language(request)
         request.selected_language = lang
         translation.activate(lang)
-        locale.setlocale(locale.LC_ALL, "")
-
         ret = self.get_response(request)
         translation.deactivate()
         return ret

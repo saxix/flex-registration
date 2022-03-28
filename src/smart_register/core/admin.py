@@ -11,6 +11,8 @@ from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.combo import ChoicesFieldComboFilter
+from adminfilters.querystring import QueryStringFilter
+from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
@@ -18,14 +20,14 @@ from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .fields.widgets import PythonEditor
-from .forms import ValidatorForm, Select2Widget
+from .forms import Select2Widget, ValidatorForm
 from .models import (
     CustomFieldType,
     FlexForm,
@@ -126,10 +128,14 @@ class FlexFormFieldForm(forms.ModelForm):
 
 @register(FlexFormField)
 class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
-    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
-    list_filter = (("flex_form", AutoCompleteFilter), ("field_type", Select2FieldComboFilter))
-    list_editable = ["ordering", "required", "enabled"]
     search_fields = ("name", "label")
+    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
+    list_editable = ["ordering", "required", "enabled"]
+    list_filter = (
+        ("flex_form", AutoCompleteFilter),
+        ("field_type", Select2FieldComboFilter),
+        QueryStringFilter,
+    )
     autocomplete_fields = ("flex_form", "validator")
     save_as = True
 
@@ -205,12 +211,15 @@ class FlexFormFieldInline(OrderableAdmin, TabularInline):
         return super().formfield_for_choice_field(db_field, request, **kwargs)
 
 
-class SyncForm(forms.Form):
+class SyncConfigForm(forms.Form):
     APPS = ("core", "registration")
+    apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
+
+
+class SyncForm(SyncConfigForm):
     host = forms.CharField()
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
-    apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
     remember = forms.BooleanField(label="Remember me", required=False)
 
 
@@ -218,7 +227,12 @@ class SyncForm(forms.Form):
 class FlexFormAdmin(SmartModelAdmin):
     SYNC_COOKIE = "sync"
     list_display = ("name", "validator", "used_by", "childs", "parents")
+    list_filter = (
+        QueryStringFilter,
+        "formsets",
+    )
     search_fields = ("name",)
+
     inlines = [FlexFormFieldInline, FormSetInline]
     save_as = True
 
@@ -253,10 +267,16 @@ class FlexFormAdmin(SmartModelAdmin):
     @view(http_basic_auth=True, permission=lambda request, obj: request.user.is_superuser)
     def export(self, request):
         try:
-            apps = request.GET.get("apps", "").split(",")
-            buf = io.StringIO()
-            call_command("dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True)
-            return JsonResponse(json.loads(buf.getvalue()), safe=False)
+            frm = SyncConfigForm(request.GET)
+            if frm.is_valid():
+                apps = frm.cleaned_data["apps"]
+                buf = io.StringIO()
+                call_command(
+                    "dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True
+                )
+                return JsonResponse(json.loads(buf.getvalue()), safe=False)
+            else:
+                return JsonResponse(frm.errors, status=400)
         except Exception as e:
             logger.exception(e)
             return JsonResponse({}, status=400)
@@ -286,7 +306,9 @@ class FlexFormAdmin(SmartModelAdmin):
                         cookies = {self.SYNC_COOKIE: self._get_signed_cookie(request, form)}
                     else:
                         cookies = {self.SYNC_COOKIE: ""}
-                    url = f"{form.cleaned_data['host']}core/flexform/export/?apps={','.join(form.cleaned_data['apps'])}"
+                    url = f"{form.cleaned_data['host']}core/flexform/export/?"
+                    for app in form.cleaned_data["apps"]:
+                        url += f"apps={app}&"
                     if not url.startswith("http"):
                         url = f"https://{url}"
 
@@ -294,7 +316,7 @@ class FlexFormAdmin(SmartModelAdmin):
                     out = io.StringIO()
                     with requests.get(url, stream=True, auth=auth) as res:
                         if res.status_code != 200:
-                            raise Exception(res.status_code)
+                            raise Exception(str(res))
                         ctx["url"] = url
                         with tempfile.NamedTemporaryFile(
                             dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
@@ -320,8 +342,9 @@ class FlexFormAdmin(SmartModelAdmin):
 
 @register(OptionSet)
 class OptionSetAdmin(SmartModelAdmin):
+    list_display = ("name", "id", "separator", "comment", "columns")
     search_fields = ("name",)
-    list_display = ("name", "id", "separator", "columns")
+    list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
     save_as = True
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
