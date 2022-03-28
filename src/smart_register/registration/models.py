@@ -10,9 +10,10 @@ from django.utils.text import slugify
 from smart_register.core.crypto import crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
 from smart_register.core.utils import dict_setdefault, safe_json
+from smart_register.i18n.models import I18NModel
 
 
-class Registration(models.Model):
+class Registration(I18NModel, models.Model):
     ADVANCED_DEFAULT_ATTRS = {
         "smart": {
             "buttons": {

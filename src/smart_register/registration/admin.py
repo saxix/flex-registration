@@ -1,5 +1,6 @@
 import logging
 
+import requests
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
@@ -7,7 +8,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import register
 from django.db.models import JSONField
-from django.db.transaction import atomic
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -16,7 +16,7 @@ from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ..core.utils import clone_form, clone_model, is_root
+from ..core.utils import is_root
 from .forms import CloneForm
 from .models import Record, Registration
 
@@ -69,35 +69,11 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         if request.method == "POST":
             form = CloneForm(request.POST, instance=instance)
             if form.is_valid():
-                try:
-                    with atomic():
-                        created = []
-                        locale = form.cleaned_data["locale"]
-                        base_form = instance.flex_form
-                        cloned = clone_form(base_form, name=f"{base_form.name} {locale}")
-                        for fs in base_form.formsets.all():
-                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} {locale}")
-                            fs = clone_model(
-                                fs,
-                                parent=cloned,
-                                flex_form=o,
-                            )
-
-                        reg = clone_model(
-                            instance,
-                            name=f"{instance.name} {locale}",
-                            flex_form=cloned,
-                            active=False,
-                            locale=locale,
-                            public_key=None,
-                        )
-                        created.append(fs)
-
-                        ctx["cloned"] = reg
-                except Exception as e:
-                    logger.exception(e)
-                    self.message_error_to_user(request, e)
-
+                locale = form.cleaned_data["locale"]
+                uri = request.build_absolute_uri(instance.get_absolute_url())
+                r = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
+                if r.status_code != 200:
+                    raise Exception(r.status_code)
             else:
                 self.message_user(request, "----")
                 ctx["form"] = form

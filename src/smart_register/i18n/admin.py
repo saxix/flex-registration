@@ -1,43 +1,48 @@
 from admin_extra_buttons.decorators import button
+from adminfilters.value import ValueFilter
 from django.contrib.admin import register
-from django.db.models import CharField
 from django.shortcuts import render
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .models import Message
-from ..core.models import FlexForm, FlexFormField, OptionSet
+from ..core.models import FlexForm, FlexFormField
 from ..registration.models import Registration
 
 
 @register(Message)
 class MessageAdmin(SmartModelAdmin):
-    list_display = ("msgid", "locale", "msgstr")
     search_fields = ("msgid",)
-    list_filter = ("locale",)
-    FIELD_TYPES = (CharField,)
+    list_display = ("msgid", "locale", "msgstr")
+    list_editable = ("msgstr",)
+    list_filter = (
+        "locale",
+        ("msgstr", ValueFilter),
+    )
+    readonly_fields = ("msgid",)
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "msgid",
+                    "msgstr",
+                    "locale",
+                )
+            },
+        ),
+    )
 
     @button()
     def collect(self, request):
         ctx = self.get_common_context(request, title="Collect")
         field_names = []
         ignored_field_names = []
-        for model in FlexForm, FlexFormField, OptionSet, Registration:
-            fields = model._meta.get_fields()
-            for f in fields:
-                if isinstance(f, self.FIELD_TYPES):
-                    field_names.append(
-                        [
-                            f.name,
-                            f.__class__.__name__,
-                        ]
-                    )
-                else:
-                    ignored_field_names.append(
-                        [
-                            f.name,
-                            f.__class__.__name__,
-                        ]
-                    )
+        for model in FlexForm, FlexFormField, Registration:
+            for record in model.objects.all():
+                for fname in model.I18N_FIELDS:
+                    value = getattr(record, fname)
+                    field_names.append([fname, value])
+            # for fname in model.I18N_ADVANCED:
 
         ctx["fields"] = field_names
         ctx["ignored_field_names"] = ignored_field_names

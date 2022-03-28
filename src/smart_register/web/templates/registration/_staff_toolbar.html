@@ -1,24 +1,24 @@
-{% load static %}{% if user.is_staff %}
+{% load static itrans %}{% if user.is_staff %}
     <div class="fixed flex staff-toolbar">
         <div class="flex-shrink block hidden lg:inline-flex">
-            Version: {{ project.version|slice:':7'|join:'' }}
+            {% trans "Version" %}: {{ project.version|slice:':7'|join:'' }}
         </div>
         <div class="flex-shrink block hidden lg:inline-flex">
-            Build date: {{ project.build_date }}
+            {% trans "Build date" %}: {{ project.build_date }}
         </div>
 
         <span class="flex-grow block inline-flex">
             {{ project.env }}
         </span>
         <div class="hidden md:inline-flex ">
-            <span>Edit: </span>
+            <span>{% trans "Edit" %} </span>
             <a target="_edit" href="{% url "admin:registration_registration_change" dataset.pk %}">Module</a>
             <a target="_edit" href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Form</a>
             {% for name, formset in formsets.items %}
                 <a target="_edit"
                    href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">{{ name }}</a>
             {% endfor %}
-            <a target="_edit" href="{% url "admin:index" %}">Admin</a>
+            <a target="_edit" href="{% url "admin:index" %}">{% trans "Admin" %}</a>
         </div>
         <input id="staff-editor" type="checkbox" class="ml-2 mt-1 cursor-pointer">
     </div>

@@ -29,7 +29,8 @@
             {% if dataset.intro %}
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                 <div class="intro">
-                    {{ dataset.intro|default_if_none:""|markdown }}
+                    {% trans dataset.intro as intro %}
+                    {{ intro|default_if_none:""|markdown }}
                 </div>
             </div>
             {% else %}

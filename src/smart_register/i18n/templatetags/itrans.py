@@ -37,15 +37,22 @@ class TranslateNode(Node):
         value = mark_safe(value) if is_safe else value
         current_locale = get_language()
         if self.filter_expression.var.literal:
-            msgstr = self.filter_expression.var.literal
+            msgid = self.filter_expression.var.literal
         else:
-            msgstr = self.filter_expression.resolve(context)
-        from smart_register.state import state
+            msgid = self.filter_expression.resolve(context)
+        from smart_register.i18n.cache import cache
 
-        if state.collect_messages:
-            from smart_register.i18n.models import Message
+        value = cache[current_locale][msgid]
+        # if state.collect_messages:
+        #     from smart_register.i18n.models import Message
+        #     Message.objects.get_or_create(msgid=msgstr,
+        #                                   locale=current_locale,
+        #                                   defaults={"msgstr": value})
+        # else:
+        #     Message.objects.get_or_create(msgid=msgstr,
+        #                                   locale=current_locale,
+        #                                   defaults={"msgstr": value})
 
-            Message.objects.get_or_create(msgid=msgstr, locale=current_locale, defaults={"msgstr": value})
         # from smart_register.i18n.models import Message
         # Message.objects.get_or_create()
 
@@ -201,7 +208,7 @@ def do_translate(parser, token):
 
 @register.tag("blocktranslate")
 @register.tag("blocktrans")
-def do_block_translate(parser, token):
+def do_block_translate(parser, token):  # noqa
     """
     Translate a block of text with parameters.
 

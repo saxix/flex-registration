@@ -26,6 +26,8 @@ from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
+from ..i18n.gettext import gettext as _
+from ..i18n.models import I18NModel
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +114,7 @@ def get_validators(field):
     return []
 
 
-class FlexForm(NaturalKeyModel):
+class FlexForm(I18NModel, NaturalKeyModel):
     version = IntegerVersionField()
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
@@ -241,7 +243,11 @@ class FormSet(NaturalKeyModel, OrderableModel):
         return formSet
 
 
-class FlexFormField(NaturalKeyModel, OrderableModel):
+class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
+    I18N_FIELDS = [
+        "label",
+    ]
+    I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
         "smart": {
             "hint": "",
@@ -306,7 +312,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
-            kwargs.setdefault("label", self.label)
+            kwargs.setdefault("label", _(self.label))
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
             # if self.choices and hasattr(field_type, "choices"):

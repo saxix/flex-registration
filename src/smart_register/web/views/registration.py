@@ -8,7 +8,6 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
-from django.utils import translation
 from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
 from django.views.generic import CreateView, TemplateView
@@ -39,10 +38,10 @@ class FixedLocaleView:
     def registration(self):
         raise NotImplementedError
 
-    def dispatch(self, request, *args, **kwargs):
-        request.LANGUAGE_CODE = self.registration.locale
-        translation.activate(self.registration.locale)
-        return super().dispatch(request, *args, **kwargs)
+    # def dispatch(self, request, *args, **kwargs):
+    #     request.LANGUAGE_CODE = self.registration.locale
+    #     translation.activate(self.registration.locale)
+    #     return super().dispatch(request, *args, **kwargs)
 
     # def get(self, request, *args, **kwargs):
     #     translation.activate(self.registration.locale)
