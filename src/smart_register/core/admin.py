@@ -11,6 +11,7 @@ from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.combo import ChoicesFieldComboFilter
+from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
@@ -331,8 +332,9 @@ class FlexFormAdmin(SmartModelAdmin):
 
 @register(OptionSet)
 class OptionSetAdmin(SmartModelAdmin):
+    list_display = ("name", "id", "separator", "comment", "columns")
     search_fields = ("name",)
-    list_display = ("name", "id", "separator", "columns")
+    list_filter = (("data", ValueFilter),)
     save_as = True
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
