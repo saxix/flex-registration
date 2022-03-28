@@ -86,6 +86,7 @@ MIDDLEWARE = [
     "smart_register.web.middlewares.HtmlMinMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "smart_register.web.middlewares.StateMiddleware",
 ]
 
 ROOT_URLCONF = "smart_register.config.urls"
@@ -394,6 +395,7 @@ FLAGS_STATE_LOGGING = DEBUG
 FLAGS = {
     "DEVELOP_DEVELOPER": [],
     "DEVELOP_DEBUG_TOOLBAR": [],
+    "I18N_COLLECT_MESSAGES": [],
 }
 
 JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"

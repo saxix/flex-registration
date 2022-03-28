@@ -8,6 +8,8 @@ from django.utils.safestring import SafeData, mark_safe
 
 # from django.templatetags.i18n import translation
 #
+from django.utils.translation import get_language
+
 register = Library()
 
 
@@ -33,13 +35,25 @@ class TranslateNode(Node):
         is_safe = isinstance(value, SafeData)
         value = value.replace("%%", "%")
         value = mark_safe(value) if is_safe else value
+        current_locale = get_language()
+        if self.filter_expression.var.literal:
+            msgstr = self.filter_expression.var.literal
+        else:
+            msgstr = self.filter_expression.resolve(context)
+        from smart_register.state import state
+
+        if state.collect_messages:
+            from smart_register.i18n.models import Message
+
+            Message.objects.get_or_create(msgid=msgstr, locale=current_locale, defaults={"msgstr": value})
+        # from smart_register.i18n.models import Message
+        # Message.objects.get_or_create()
+
         if self.asvar:
-            # context[self.asvar] = value
-            context[self.asvar] = "2222"
+            context[self.asvar] = value
             return ""
         else:
-            return "3333"
-            # return value
+            return value
 
 
 class BlockTranslateNode(Node):

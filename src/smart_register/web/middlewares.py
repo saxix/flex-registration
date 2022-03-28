@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
 from django.utils.functional import cached_property
+from flags.state import flag_enabled
 from htmlmin.main import Minifier
 from sentry_sdk import configure_scope
 
@@ -88,6 +89,19 @@ class ThreadLocalMiddleware:
         state.request = request
         ret = self.get_response(request)
         state.request = None
+        return ret
+
+
+class StateMiddleware:
+    """Middleware that puts the request object in thread local storage."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        state.collect_messages = flag_enabled("I18N_COLLECT_MESSAGES", request=request)
+        ret = self.get_response(request)
+        state.collect_messages = False
         return ret
 
 

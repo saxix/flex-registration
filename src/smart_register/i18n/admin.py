@@ -11,6 +11,9 @@ from ..registration.models import Registration
 
 @register(Message)
 class MessageAdmin(SmartModelAdmin):
+    list_display = ("msgid", "locale", "msgstr")
+    search_fields = ("msgid",)
+    list_filter = ("locale",)
     FIELD_TYPES = (CharField,)
 
     @button()

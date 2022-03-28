@@ -13,6 +13,6 @@ class Message(models.Model):
     md5: str = models.CharField(verbose_name=_("MD5"), max_length=512, null=False, blank=False, db_index=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.md5 = hashlib.md5((self.language_code + "__" + self.source).encode()).digest()
+        self.md5 = hashlib.md5((self.locale + "__" + self.msgid).encode()).digest()
         obj: Message = super().save()
         return obj

@@ -17,6 +17,11 @@ class PageView(TemplateView):
     def get_template_names(self):
         return [f"{self.kwargs['page']}.html"]
 
+    def get_context_data(self, **kwargs):
+        from smart_register.i18n.gettext import gettext as _
+
+        return super().get_context_data(title="Title", title2=_("Title2"), **kwargs)
+
 
 class HomeView(TemplateView):
     template_name = "index.html"

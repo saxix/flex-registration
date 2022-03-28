@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.utils.safestring import SafeData, mark_safe
-from django.utils.translation.trans_real import translation, _active, DjangoTranslation
+from django.utils.translation.trans_real import translation, _active, DjangoTranslation, _default
 
 
 def gettext(message):
@@ -16,16 +16,17 @@ def gettext(message):
     if eol_message:
         _default = _default or translation(settings.LANGUAGE_CODE)
         translation_object = getattr(_active, "value", _default)
-
-        # CANICOMPET
-        if (
-            type(translation_object) == DjangoTranslation
-            and translation_object.language() in settings.LANGUAGE_TO_GOOGLE_CODES
-        ):
-            result = settings.LANGUAGE_TO_GOOGLE_FCT(eol_message, translation_object.language())
-        else:
-            # original Django
-            result = translation_object.gettext(eol_message)
+        # FIXME: remove me (print)
+        print(111, "gettext.py:20 (gettext)", 11111111, message)
+        # # CANICOMPET
+        # if (
+        #     type(translation_object) == DjangoTranslation
+        #     and translation_object.language() in settings.LANGUAGE_TO_GOOGLE_CODES
+        # ):
+        #     result = settings.LANGUAGE_TO_GOOGLE_FCT(eol_message, translation_object.language())
+        # else:
+        #     # original Django
+        result = translation_object.gettext(eol_message)
 
     else:
         # Return an empty value of the corresponding type if an empty message
