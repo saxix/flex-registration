@@ -11,6 +11,7 @@ from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.combo import ChoicesFieldComboFilter
+from adminfilters.querystring import QueryStringFilter
 from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
 from django import forms
@@ -127,10 +128,14 @@ class FlexFormFieldForm(forms.ModelForm):
 
 @register(FlexFormField)
 class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
-    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
-    list_filter = (("flex_form", AutoCompleteFilter), ("field_type", Select2FieldComboFilter))
-    list_editable = ["ordering", "required", "enabled"]
     search_fields = ("name", "label")
+    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
+    list_editable = ["ordering", "required", "enabled"]
+    list_filter = (
+        ("flex_form", AutoCompleteFilter),
+        ("field_type", Select2FieldComboFilter),
+        QueryStringFilter,
+    )
     autocomplete_fields = ("flex_form", "validator")
     save_as = True
 
@@ -222,7 +227,12 @@ class SyncForm(SyncConfigForm):
 class FlexFormAdmin(SmartModelAdmin):
     SYNC_COOKIE = "sync"
     list_display = ("name", "validator", "used_by", "childs", "parents")
+    list_filter = (
+        QueryStringFilter,
+        "formsets",
+    )
     search_fields = ("name",)
+
     inlines = [FlexFormFieldInline, FormSetInline]
     save_as = True
 
