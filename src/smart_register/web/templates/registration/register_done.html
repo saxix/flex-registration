@@ -24,7 +24,7 @@ HOPE-{{ record.timestamp.year }}{{ record.timestamp.month }}{{ record.timestamp.
         </div>
         {% if config.SHOW_REGISTER_ANOTHER %}
             <div class="text-center mt-10 pt-10">
-                <a href="{% url "register" record.registration.locale record.registration.slug %}"
+                <a href="{% url "index" %}"
                    class="w-full text-white capitalize bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">
                     {% trans "register another household" %}
                 </a>
