@@ -67,9 +67,9 @@
             $select = $(e);
             if ($select.data('subscribers')){
                 $select.on("change", function (e) {
-                    console.log(111111, e);
                     var $self = $(e.target);
                     $self.data('subscribers').forEach(function (e, i){
+                        $('#' + e).val('').trigger("change");
                         $('#' + e).prop("disabled", !$self.val());
                     })
                 });
