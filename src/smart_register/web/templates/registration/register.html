@@ -3,6 +3,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"
             integrity="sha512-wT7uPE7tOP6w4o28u1DN775jYjHQApdBnib5Pho4RB0Pgd9y7eSkAV1BTqQydupYDB9GBhTcQQzyNMPMV3cAew=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{% url 'javascript-catalog' %}"></script>
     {{ media }}
 {% endblock head %}
 {% block staff-toolbar %}
@@ -35,7 +36,7 @@
             {% else %}
                 <div class="m-5 ">&nbsp;</div>
             {% endif %}
-            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="bg-white shadow-md rounded px-2 sm:px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
                 {% if user.is_staff %}
                     {% include "registration/_staff_edit_form.html" %}
@@ -47,7 +48,7 @@
                     </div>
                     {% for name, formset in formsets.items %}
                         {{ formset.non_form_errors }}
-                        <div class="shadow-md rounded bg-gray-100 p-4">
+                        <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4">
                             <div class="w-full formset">
                                 {% if user.is_staff %}
                                     {% include "registration/_staff_edit_formset.html" %}

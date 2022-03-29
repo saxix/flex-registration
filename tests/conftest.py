@@ -5,10 +5,31 @@ from django import forms
 from django.core.files.storage import get_storage_class
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--selenium", action="store_true", dest="enable_selenium", default=False, help="enable selenium tests"
+    )
+
+    parser.addoption(
+        "--show-browser",
+        "-S",
+        action="store_true",
+        dest="show_browser",
+        default=False,
+        help="will not start browsers in headless mode",
+    )
+
+
 def pytest_configure(config):
     os.environ["DEBUG"] = "0"
     os.environ["ADMINS"] = "admin@demo.org"
     os.environ["CAPTCHA_TEST_MODE"] = "true"
+
+    if config.option.show_browser:
+        setattr(config.option, "enable_selenium", True)
+
+    if not config.option.enable_selenium:
+        setattr(config.option, "markexpr", "not selenium")
 
 
 @pytest.fixture()
