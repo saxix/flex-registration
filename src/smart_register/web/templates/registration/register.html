@@ -36,7 +36,7 @@
             {% else %}
                 <div class="m-5 ">&nbsp;</div>
             {% endif %}
-            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="bg-white shadow-md rounded px-2 sm:px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
                 {% if user.is_staff %}
                     {% include "registration/_staff_edit_form.html" %}
@@ -48,7 +48,7 @@
                     </div>
                     {% for name, formset in formsets.items %}
                         {{ formset.non_form_errors }}
-                        <div class="shadow-md rounded bg-gray-100 p-4">
+                        <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4">
                             <div class="w-full formset">
                                 {% if user.is_staff %}
                                     {% include "registration/_staff_edit_formset.html" %}
