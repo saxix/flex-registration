@@ -74,7 +74,7 @@ class Registration(models.Model):
 
     def encrypt(self, value):
         if not isinstance(value, str):
-            value = json.dumps(value)
+            value = safe_json(value)
         return crypt(value, self.public_key)
 
     def add_record(self, data):
