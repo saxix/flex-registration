@@ -115,7 +115,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @link(html_attrs={"class": "aeb-warn "})
+    @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
         try:
             if button.original:
@@ -162,13 +162,9 @@ class DecryptForm(forms.Form):
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
-    list_display = (
-        "timestamp",
-        "id",
-        "registration",
-    )
+    list_display = ("timestamp", "id", "registration", "ignored")
     readonly_fields = ("registration", "timestamp", "id")
-    list_filter = (("registration", AutoCompleteFilter),)
+    list_filter = (("registration", AutoCompleteFilter), "ignored")
     change_form_template = None
 
     def get_common_context(self, request, pk=None, **kwargs):
@@ -209,7 +205,7 @@ class RecordAdmin(SmartModelAdmin):
         return is_root(request) or settings.DEBUG
 
     def has_delete_permission(self, request, obj=None):
-        return is_root(request) or settings.DEBUG
+        return settings.DEBUG
 
     def has_change_permission(self, request, obj=None):
         return is_root(request) or settings.DEBUG

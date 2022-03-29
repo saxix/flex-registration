@@ -89,6 +89,7 @@ class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     timestamp = models.DateField(auto_now_add=True)
     storage = models.BinaryField(null=True, blank=True)
+    ignored = models.BooleanField(default=False, blank=True)
 
     def decrypt(self, private_key):
         return json.loads(decrypt(self.storage, private_key))

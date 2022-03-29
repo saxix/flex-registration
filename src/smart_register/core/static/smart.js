@@ -1,4 +1,17 @@
 smart = {
+    showHideInForm: function (sender, target, showHide) {
+        try {
+            var $form = $(sender).parents(".form-container");
+            var $target = $form.find(target);
+            if (showHide) {
+                $target.show();
+            } else {
+                $target.hide();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    },
     showHideDependant: function (sender, target, value) {
         try {
             var cmp = value.toLowerCase();
