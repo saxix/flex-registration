@@ -1,5 +1,5 @@
-{% extends "admin_extra_buttons/change_form.html" %}{% load smart_register %}
-{% block after_field_sets %}
+{% extends "admin_extra_buttons/action_page.html" %}{% load smart_register %}
+{% block action-content %}
     {% if original.registration.public_key %}
         <div>This data have been encrypted</div>
     {% elif is_root %}
