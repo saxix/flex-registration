@@ -1,3 +1,4 @@
+import base64
 import logging
 from hashlib import md5
 
@@ -156,7 +157,7 @@ class RegisterView(FixedLocaleView, FormView):
 
         def parse_field(field):
             if isinstance(field, InMemoryUploadedFile):
-                return str(field.read())
+                return base64.b64encode(field.read())
             elif isinstance(field, dict):
                 return {item[0]: parse_field(item[1]) for item in field.items()}
             elif isinstance(field, list):

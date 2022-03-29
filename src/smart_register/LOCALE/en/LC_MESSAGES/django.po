@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-27 08:47+0000\n"
+"POT-Creation-Date: 2022-03-29 02:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -62,7 +62,7 @@ msgstr ""
 msgid "refresh"
 msgstr ""
 
-#: smart_register/management/commands/upgrade.py:81
+#: smart_register/management/commands/upgrade.py:80
 #: smart_register/web/templates/registration/_fieldset.html:19
 msgid "required"
 msgstr ""
@@ -75,11 +75,11 @@ msgstr ""
 msgid "Django administration"
 msgstr ""
 
-#: smart_register/web/templates/registration/register.html:18
+#: smart_register/web/templates/registration/register.html:19
 msgid "please fix the errors below"
 msgstr ""
 
-#: smart_register/web/templates/registration/register.html:109
+#: smart_register/web/templates/registration/register.html:110
 msgid "Save"
 msgstr ""
 

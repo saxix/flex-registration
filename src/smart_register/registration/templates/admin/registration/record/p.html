@@ -1,0 +1,9 @@
+{% extends "admin_extra_buttons/change_form.html" %}{% load smart_register %}
+{% block after_field_sets %}
+    {% if original.registration.public_key %}
+        <div>This data have been encrypted</div>
+    {% elif is_root %}
+        {% dump_dict original.data %}
+    {% endif %}
+{% endblock %}
+{% block inline_field_sets %}{% endblock %}

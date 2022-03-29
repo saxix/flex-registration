@@ -274,7 +274,9 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         ordering = ["ordering"]
 
     def __str__(self):
-        return f"{self.name} {self.field_type.__name__}"
+        if self.field_type:
+            return f"{self.name} {self.field_type.__name__}"
+        return f"{self.name} <no type>"
 
     def type_name(self):
         return str(self.field_type.__name__)
@@ -299,6 +301,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
             regex = self.regex
 
             smart_attrs = kwargs.pop("smart", {}).copy()
+            # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
             if smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
@@ -309,6 +312,8 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
+            # for k, v in data.items():
+            #     kwargs[f"data-{k}"] = v
             # if self.choices and hasattr(field_type, "choices"):
             #     kwargs["choices"] = self.choices
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
