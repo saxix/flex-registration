@@ -1,3 +1,5 @@
+import re
+
 import markdown as md
 from django.template import Library, Node
 from django.urls import reverse
@@ -67,6 +69,12 @@ def formset_config(formset):
 def lookup(value, arg):
     # value_dict = ast.literal_eval(value)
     return value.get(arg, None)
+
+
+@register.filter()
+def is_base64(element):
+    expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
+    return re.match(expression, element)
 
 
 @register.inclusion_tag("buttons/link.html")

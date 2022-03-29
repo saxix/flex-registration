@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 
 import pytest
@@ -161,7 +162,7 @@ def test_upload_image(django_app, complex_registration, mock_storage):
     )
     res = res.form.submit().follow()
     assert res.context["record"].data["family_name"] == "HH #1"
-    assert res.context["record"].data["form2s"][0]["image"] == str(IMAGE.content)
+    assert res.context["record"].data["form2s"][0]["image"] == base64.b64encode(IMAGE.content).decode()
 
 
 @pytest.mark.django_db
@@ -179,4 +180,4 @@ def test_upload_image_register_encrypted(django_app, encrypted_registration, moc
     data = record.decrypt(encrypted_registration._private_pem)
 
     assert data["first_name"] == "first"
-    assert data["image"] == str(IMAGE.content)
+    assert data["image"] == base64.b64encode(IMAGE.content).decode()

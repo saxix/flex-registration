@@ -274,7 +274,9 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         ordering = ["ordering"]
 
     def __str__(self):
-        return f"{self.name} {self.field_type.__name__}"
+        if self.field_type:
+            return f"{self.name} {self.field_type.__name__}"
+        return f"{self.name} <no type>"
 
     def type_name(self):
         return str(self.field_type.__name__)

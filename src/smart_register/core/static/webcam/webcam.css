@@ -18,31 +18,5 @@
   background-color: rgba(0, 0, 0, 0.4);
   /* Black w/ opacity */
 }
-#camera .content video {
-  border: 1px solid black;
-  box-shadow: 2px 2px 3px black;
-  width: 400px;
-  height: 240px;
-}
-
-#photo {
-  width: 460px;
-}
-
-#canvas {
-  display: none;
-}
-
-.output {
-  width: 340px;
-  display: inline-block;
-  vertical-align: top;
-}
-
-.contentarea {
-  font-size: 16px;
-  font-family: "Lucida Grande", "Arial", sans-serif;
-  width: 760px;
-}
 
 /*# sourceMappingURL=webcam.css.map */
