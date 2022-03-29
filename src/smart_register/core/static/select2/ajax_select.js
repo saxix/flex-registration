@@ -4,12 +4,14 @@
             var $target = $(e);
             var parentName = $target.data("parent");
             $target.data("subscribers", $target.data("subscribers") || []);
+
             if (parentName){
                 var $formContainer = $target.parents(".form-container");
                 $parent = $formContainer.find("[data-source=" + parentName + "]");
                 var subscribers = $parent.data("subscribers") || [];
                 subscribers.push($(e).attr('id'));
                 $parent.data("subscribers", subscribers);
+                $target.data("parent", $parent);
             }
         });
         $(".ajaxSelect").each(function (i, e) {
@@ -24,7 +26,7 @@
             var label = $target.data("label");
             // var name = $target.data("name");
             // var $formContainer = $target.parents(".form-container");
-            var $parent = null;
+            var $parent = $target.data("parent");;
 
             $target.select2({
                 placeholder: "Select " + label,
@@ -65,6 +67,7 @@
             $select = $(e);
             if ($select.data('subscribers')){
                 $select.on("change", function (e) {
+                    console.log(111111, e);
                     var $self = $(e.target);
                     $self.data('subscribers').forEach(function (e, i){
                         $('#' + e).prop("disabled", !$self.val());
