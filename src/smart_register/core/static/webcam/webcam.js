@@ -2,7 +2,6 @@
     $(function () {
         const cameraId = "camera";
         var Session = function (fieldName) {
-            console.log(111, "Session ", fieldName);
             var self = this;
             self.fieldName = fieldName;
             self.$container = $("#div_" + fieldName);
@@ -10,6 +9,10 @@
             self.context = self.canvas.getContext("2d");
             self.$image = $("#div_" + fieldName + " canvas img");
             self.$field = $("#id_" + fieldName);
+            var btnSnap = self.$container.find("button.show-camera")
+            var btnCancel = self.$container.find("button.clear-camera")
+            btnSnap.data("session", self);
+            btnCancel.data("session", self);
         };
         $("<div class='flex justify-center items-center' id='" + cameraId + "'>" +
             "<div class='w-full md:w-1/3 bg-white rounded shadow border p-6 flex items-center flex-col'>" +
@@ -21,16 +24,16 @@
             gettext("Cancel") + "</button>" +
             "</div></div></div>").appendTo("body");
 
-        var session = null;
+        var activeSession = null;
         var streaming = false;
         var width = 460;    // We will scale the photo width to this
         var height = 0;     // This will be computed based on the input stream
         var video = $("#" + cameraId).find("video")[0];
 
         window.initWebCamField = function (f) {
-            console.log(111.2, f);
             var fieldName = $(f).attr("name");
-            var sess = new Session(fieldName);
+
+            var sess = $(f).data("session") || new Session(fieldName);
             var currentValue = sess.$field.val();
 
             if (currentValue) {
@@ -50,22 +53,20 @@
 
         $("div.formset").on("click", ".show-camera", function () {
             var win = $(window);
-            session = new Session($(this).parents('.field-container').find('input').attr("name"));
-            // $("#camera div").css({
-            //     position: "absolute",
-            //     top: "100px"
-            // });
+            // session = new Session($(this).parents('.field-container').find('input').attr("name"));
+            activeSession = $(this).data("session");
             $("#camera").css("display", "flex");
             startup();
         });
         $("div.formset").on("click", ".clear-camera", function () {
-            session = new Session($(this).parents('.field-container').find('input').attr("name"));
-            session.context.fillStyle = "#AAA";
-            session.context.fillRect(0, 0, session.canvas.width, session.canvas.height);
+            // activeSession = new Session($(this).parents('.field-container').find('input').attr("name"));
+            activeSession = $(this).data("session");
+            activeSession.context.fillStyle = "#AAA";
+            activeSession.context.fillRect(0, 0, activeSession.canvas.width, activeSession.canvas.height);
 
-            var data = session.canvas.toDataURL("image/png");
-            session.$image.prop("src", data);
-            session.$field.val("");
+            var data = activeSession.canvas.toDataURL("image/png");
+            activeSession.$image.prop("src", data);
+            activeSession.$field.val("");
         });
 
         function cancel() {
@@ -75,14 +76,14 @@
 
         function takepicture() {
             if (width && height) {
-                session.canvas.width = width / 2;
-                session.canvas.height = height / 2;
-                session.context.drawImage(video, 0, 0, width / 2, height / 2);
+                activeSession.canvas.width = width / 2;
+                activeSession.canvas.height = height / 2;
+                activeSession.context.drawImage(video, 0, 0, width / 2, height / 2);
 
-                var data = session.canvas.toDataURL("image/png");
-                session.$image.prop("src", data);
-                session.$field.val(data);
-                session = null;
+                var data = activeSession.canvas.toDataURL("image/png");
+                activeSession.$image.prop("src", data);
+                activeSession.$field.val(data);
+                activeSession = null;
                 $("#camera").hide();
             } else {
                 clearphoto();
