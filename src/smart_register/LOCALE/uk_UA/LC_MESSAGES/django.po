@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-27 08:47+0000\n"
+"POT-Creation-Date: 2022-03-29 02:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -61,7 +61,7 @@ msgstr ""
 msgid "refresh"
 msgstr "oновити"
 
-#: smart_register/management/commands/upgrade.py:81
+#: smart_register/management/commands/upgrade.py:80
 #: smart_register/web/templates/registration/_fieldset.html:19
 msgid "required"
 msgstr "обов’язкове"
@@ -74,11 +74,11 @@ msgstr ""
 msgid "Django administration"
 msgstr ""
 
-#: smart_register/web/templates/registration/register.html:18
+#: smart_register/web/templates/registration/register.html:19
 msgid "please fix the errors below"
 msgstr "Будь ласка, вкажіть обов’язкові дані"
 
-#: smart_register/web/templates/registration/register.html:109
+#: smart_register/web/templates/registration/register.html:110
 msgid "Save"
 msgstr "Зберегти"
 
@@ -88,8 +88,7 @@ msgstr "Реєстрація успішна"
 
 #: smart_register/web/templates/registration/register_done.html:15
 msgid "Please save your registration ID or take a screenshot of this QR code."
-msgstr ""
-"Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода."
+msgstr "Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода."
 
 #: smart_register/web/templates/registration/register_done.html:19
 msgid "Please save your registration ID."
@@ -97,7 +96,8 @@ msgstr "Будь ласка, збережіть ID-номер"
 
 #: smart_register/web/templates/registration/register_done.html:23
 msgid "This info will allow faster follow up in case of support request."
-msgstr "Ця інформація буде обов’язкова для подальшої комунікації щодо вашої заявки."
+msgstr ""
+"Ця інформація буде обов’язкова для подальшої комунікації щодо вашої заявки."
 
 #: smart_register/web/templates/registration/register_done.html:29
 msgid "register another household"
