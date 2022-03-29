@@ -8,8 +8,11 @@ var DEFAULT = {
             $(row).removeClass(highlight);
         }, 400);
         $(row).find(".vDateField").each(function (i) {
-
         });
+        $(row).find(".vPictureField").each(function () {
+            initWebCamField(this);
+        });
+
         $(row).find(".question-visibility").each(function (i, e) {
             $(e).on("click", function () {
                 smart.handleQuestion(this);

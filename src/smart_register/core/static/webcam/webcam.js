@@ -2,6 +2,7 @@
     $(function () {
         const cameraId = "camera";
         var Session = function (fieldName) {
+            console.log(111, "Session ", fieldName);
             var self = this;
             self.fieldName = fieldName;
             self.$container = $("#div_" + fieldName);
@@ -26,8 +27,9 @@
         var height = 0;     // This will be computed based on the input stream
         var video = $("#" + cameraId).find("video")[0];
 
-        $(".vPictureField").each(function () {
-            var fieldName = $(this).data("target");
+        window.initWebCamField = function (f) {
+            console.log(111.2, f);
+            var fieldName = $(f).attr("name");
             var sess = new Session(fieldName);
             var currentValue = sess.$field.val();
 
@@ -41,11 +43,14 @@
                 });
                 img.setAttribute("src", currentValue);
             }
+        };
+        $(".vPictureField").each(function () {
+            initWebCamField(this);
         });
 
         $("div.formset").on("click", ".show-camera", function () {
             var win = $(window);
-            session = new Session($(this).data("target"));
+            session = new Session($(this).parents('.field-container').find('input').attr("name"));
             // $("#camera div").css({
             //     position: "absolute",
             //     top: "100px"
@@ -54,7 +59,7 @@
             startup();
         });
         $("div.formset").on("click", ".clear-camera", function () {
-            session = new Session($(this).data("target"));
+            session = new Session($(this).parents('.field-container').find('input').attr("name"));
             session.context.fillStyle = "#AAA";
             session.context.fillRect(0, 0, session.canvas.width, session.canvas.height);
 
