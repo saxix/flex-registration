@@ -1,3 +1,4 @@
+import logging
 import re
 
 import markdown as md
@@ -9,6 +10,7 @@ from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
 from ...registration.models import Registration
 
+logger = logging.getLogger(__name__)
 register = Library()
 
 
@@ -74,7 +76,12 @@ def lookup(value, arg):
 @register.filter()
 def is_base64(element):
     expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
-    return re.match(expression, element)
+    try:
+        if isinstance(element, str):
+            return re.match(expression, element)
+    except Exception as e:
+        logger.exception(e)
+    return False
 
 
 @register.inclusion_tag("buttons/link.html")
