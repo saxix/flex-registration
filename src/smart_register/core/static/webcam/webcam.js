@@ -15,9 +15,9 @@
             "<video>" + gettext("Video stream not available.") + " </video>" +
             "<div class='w-full flex justify-between align-center'>" +
             "<button type='button' class='snap bg-white hover:bg-gray-100 text-gray-800 font-semibold my-2 mx-2 py-2 px-4 border border-gray-400 rounded shadow'>" +
-            gettext("Take photo") +" </button>" +
+            gettext("Take photo") + " </button>" +
             "<button type='button' class='cancel bg-white hover:bg-gray-100 text-gray-800 font-semibold my-2 mx-2 py-2 px-4 border border-gray-400 rounded shadow'>" +
-            gettext("Cancel") +"</button>" +
+            gettext("Cancel") + "</button>" +
             "</div></div></div>").appendTo("body");
 
         var session = null;
@@ -94,13 +94,29 @@
 
         function startup() {
             // snapshot = document.getElementById("snapshot");
-            navigator.mediaDevices.getUserMedia({video: true, audio: false})
-                     .then(function (stream) {
-                         video.srcObject = stream;
-                         video.play();
-                     })
-                     .catch(function (err) {
-                         console.log("An error occurred: " + err);
+            navigator.mediaDevices.enumerateDevices()
+                     .then(function (devices) {
+                         var totalCameras = 0;
+                         devices.forEach(function(device) {
+                             if (device.kind === "videoinput"){
+                                 totalCameras++
+                             }
+                         });
+                         navigator.mediaDevices.getUserMedia({
+                             video: {
+                                 width: 800,
+                                 height: 600,
+                                 facingMode: 'environment'
+                             },
+                             audio: false
+                         })
+                                  .then(function (stream) {
+                                      video.srcObject = stream;
+                                      video.play();
+                                  })
+                                  .catch(function (err) {
+                                      console.log("An error occurred: " + err);
+                                  });
                      });
         }
 
