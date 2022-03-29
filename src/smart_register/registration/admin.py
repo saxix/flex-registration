@@ -115,7 +115,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @link(html_attrs={"class": "aeb-warn "})
+    @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
         try:
             if button.original:
