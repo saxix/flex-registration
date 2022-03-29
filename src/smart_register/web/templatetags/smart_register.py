@@ -77,7 +77,7 @@ def lookup(value, arg):
 def is_base64(element):
     expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
     try:
-        if isinstance(element, str):
+        if isinstance(element, str) and element.strip().endswith("=="):
             return re.match(expression, element)
     except Exception as e:
         logger.exception(e)
