@@ -70,13 +70,14 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
+    "django.middleware.cache.UpdateCacheMiddleware",
     "smart_register.web.middlewares.ThreadLocalMiddleware",
     "smart_register.web.middlewares.SentryMiddleware",
     "smart_register.web.middlewares.SecurityHeadersMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "smart_register.web.middlewares.MaintenanceMiddleware",
     "smart_register.web.middlewares.LocaleMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -87,6 +88,7 @@ MIDDLEWARE = [
     "smart_register.web.middlewares.HtmlMinMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
 ROOT_URLCONF = "smart_register.config.urls"
@@ -189,12 +191,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Ensure STATIC_ROOT exists.
-os.makedirs(STATIC_ROOT, exist_ok=True)
+# os.makedirs(STATIC_ROOT, exist_ok=True)
 
 STATIC_URL = "/static/"
-# STATIC_ROOT = env('STATIC_ROOT')
+STATIC_ROOT = env("STATIC_ROOT")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 STATICFILES_DIRS = [
