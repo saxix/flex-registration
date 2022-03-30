@@ -52,6 +52,7 @@ def simple_form(db):
         label="Last Name", defaults={"field_type": forms.CharField, "required": True, "validator": v2}
     )
     frm.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
+    frm.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})
     return frm
 
 
@@ -78,6 +79,7 @@ def complex_form():
     ind.fields.get_or_create(label="Date Of Birth", defaults={"field_type": forms.DateField, "required": True})
 
     ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
+    ind.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})
     hh.add_formset(ind)
     return hh
 

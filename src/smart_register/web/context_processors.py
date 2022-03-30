@@ -2,6 +2,8 @@ import os
 
 from django.conf import settings
 
+from smart_register.core.utils import has_token
+
 
 def smart(request):
     return {
@@ -11,5 +13,6 @@ def smart(request):
             "debug": settings.DEBUG,
             "env": settings.SMART_ADMIN_HEADER,
             "sentry_dsn": settings.SENTRY_DSN,
+            "has_token": has_token(request),
         }
     }

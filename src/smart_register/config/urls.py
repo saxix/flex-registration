@@ -5,7 +5,11 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.i18n import JavaScriptCatalog
 
+from smart_register.web.views.site import error_404
+
 actions.add_to_site(admin.site)
+
+handler404 = error_404
 
 urlpatterns = [
     path(settings.DJANGO_ADMIN_URL, admin.site.urls),
