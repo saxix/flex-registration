@@ -2,20 +2,17 @@ import adminactions.actions as actions
 import debug_toolbar
 from django.conf import settings
 from django.contrib import admin
-from django.template.response import TemplateResponse
 from django.urls import include, path
 from django.views.i18n import JavaScriptCatalog
 
+from smart_register.web.views.site import error_404
+
 actions.add_to_site(admin.site)
 
-
-def redir_to_login(request):
-    return TemplateResponse(request, "404.html", status=404, headers={"Session-Token": settings.DJANGO_ADMIN_URL})
-
+handler404 = error_404
 
 urlpatterns = [
     path(settings.DJANGO_ADMIN_URL, admin.site.urls),
-    path("aaaa/", redir_to_login),
     path("", include("smart_register.web.urls")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),

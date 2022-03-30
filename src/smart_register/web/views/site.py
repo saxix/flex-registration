@@ -1,7 +1,9 @@
 import logging
 
 from constance import config
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -9,6 +11,10 @@ from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Registration
 
 logger = logging.getLogger(__name__)
+
+
+def error_404(request, exception):
+    return TemplateResponse(request, "404.html", status=404, headers={"Session-Token": settings.DJANGO_ADMIN_URL})
 
 
 class PageView(TemplateView):
