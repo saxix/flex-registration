@@ -11,7 +11,9 @@ urlpatterns = [
     path(settings.DJANGO_ADMIN_URL, admin.site.urls),
     path("", include("smart_register.web.urls")),
     path("", include("social_django.urls", namespace="social")),
+    path("api/", include("smart_register.api.urls", namespace="api")),
     path("captcha/", include("captcha.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
+    path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
 ]

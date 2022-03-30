@@ -43,6 +43,10 @@ INSTALLED_APPS = [
     # -- dev --
     "debug_toolbar",
     # ---
+    "rest_framework",
+    "rest_framework_social_oauth2",
+    "oauth2_provider",
+    # ---
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartConfig",
@@ -100,6 +104,8 @@ TEMPLATES = [
                 "django.template.loaders.app_directories.Loader",
             ],
             "context_processors": [
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
@@ -204,6 +210,7 @@ ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "rest_framework_social_oauth2.backends.DjangoOAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -403,6 +410,7 @@ CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
 CAPTCHA_TEST_MODE = env("CAPTCHA_TEST_MODE")
 
+
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
 
 
@@ -489,3 +497,16 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 # fix admin name
 LOGIN_URL = "/login/azuread-tenant-oauth2"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
+
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",  # django-oauth-toolkit >= 1.0.0
+        "rest_framework_social_oauth2.authentication.SocialAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}
