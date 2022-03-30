@@ -12,7 +12,7 @@ from django.utils.functional import cached_property
 from htmlmin.main import Minifier
 from sentry_sdk import configure_scope
 
-from smart_register.core.utils import get_default_language
+from smart_register.core.utils import get_default_language, has_token
 from smart_register.state import state
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class MaintenanceMiddleware:
         """
         if config.MAINTENANCE_MODE:
             url = reverse("maintenance")
-            if not url == request.path and settings.DJANGO_ADMIN_URL not in request.path:
+            if not (url == request.path or settings.DJANGO_ADMIN_URL in request.path or has_token(request)):
                 return HttpResponseRedirect(url)
 
         return self.get_response(request)

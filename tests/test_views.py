@@ -131,7 +131,9 @@ def test_register_complex(django_app, complex_registration):
             "date_of_birth": "2000-12-01",
         },
     )
-    res = res.form.submit().follow()
+    res = res.form.submit()
+    # FIXME: remove me (res.showbrowser)
+    res = res.follow()
     assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
     assert res.context["record"].data["form2s"][0]["last_name"] == "Last"
     assert res.context["record"].data["form2s"][1]["first_name"] == "First2"
