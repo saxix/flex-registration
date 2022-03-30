@@ -6,6 +6,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
     locales \
+    nginx \
     locales-all \
     gettext \
     libjpeg-dev \
@@ -33,7 +34,8 @@ ENV PATH = "${PATH}:/root/.poetry/bin"
 
 ADD pyproject.toml poetry.lock /tmp/
 RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi --no-root
+  && poetry install --no-interaction --no-ansi --no-root \
+  && pip install uwsgi
 
 ENV ADMINS="" \
     BUILD_DATE=${BUILD_DATE} \
@@ -55,6 +57,8 @@ WORKDIR /code/
 EXPOSE 8000
 
 ADD ./docker/entrypoint.sh /bin/
+ADD ./docker/uwsgi.ini /etc/
+
 RUN chmod +x /bin/entrypoint.sh
 
 ENTRYPOINT ["entrypoint.sh"]

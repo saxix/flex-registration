@@ -15,6 +15,7 @@ from django.utils.translation import get_language_info
 from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
 
+from smart_register.core.cache import cache_formset
 from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Record, Registration
 
@@ -76,16 +77,17 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
 
 
+# @method_decorator(cache_page(60 * 60), name="dispatch")
 class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
 
-    @property
+    @cached_property
     def registration(self):
         filters = {}
         if not self.request.user.is_staff:
             filters["active"] = True
 
-        base = Registration.objects.select_related("flex_form")
+        base = Registration.objects.select_related("flex_form", "validator")
         try:
             return base.get(slug=self.kwargs["slug"], locale=self.kwargs["locale"], **filters)
         except Registration.DoesNotExist:  # pragma: no cover
@@ -97,12 +99,23 @@ class RegisterView(FixedLocaleView, FormView):
     def get_form(self, form_class=None):
         return super().get_form(form_class)
 
+    @cache_formset
+    def get_formsets_classes(self):
+        formsets = {}
+        attrs = self.get_form_kwargs().copy()
+        attrs.pop("prefix")
+        for fs in self.registration.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()
+        return formsets
+
     def get_formsets(self):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop("prefix")
-        for fs in self.registration.flex_form.formsets.filter(enabled=True):
-            formsets[fs.name] = fs.get_formset()(prefix=f"{fs.name}", **attrs)
+        for name, fs in self.get_formsets_classes().items():
+            formsets[name] = fs(prefix=f"{name}", **attrs)
+        # for fs in self.registration.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
+        #     formsets[fs.name] = fs.get_formset()(prefix=f"{fs.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
