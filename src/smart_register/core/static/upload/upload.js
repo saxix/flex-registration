@@ -86,6 +86,7 @@
             var self = this;
             var fields = [];
             self.addField = function (f) {
+                console.log(111111, f);
                 var $field = $(f);
                 var name = $field.attr("id");
                 if (!fields.includes(name)) {
@@ -96,7 +97,8 @@
         };
         window.uploadManager = new UploadManager();
 
-        $("input.vUploadField").each(function () {
+        $("input[type=file]").each(function () {
+            console.log(11111, this);
             window.uploadManager.addField(this);
         });
 

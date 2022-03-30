@@ -1,3 +1,23 @@
+input {
+  cursor: pointer;
+}
+
+input[type=file] {
+  width: 100%;
+}
+input[type=file]::-webkit-file-upload-button {
+  visibility: hidden;
+}
+input[type=file]::before {
+  content: "Select some files";
+  display: inline-block;
+  border: 1px solid #cbd5e0;
+  border-radius: 0.25rem;
+  padding: 5px 8px;
+  font-weight: 600;
+  font-size: 10pt;
+}
+
 .landing a {
   color: #0da7e6;
   font-weight: bold;

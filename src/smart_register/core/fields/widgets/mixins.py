@@ -22,6 +22,7 @@ class SmartFieldMixin:
                 attrs[k] = v
         for k, v in self.data_attrs.items():
             attrs[f"data-{k}"] = v
-
-        attrs["smart_attrs"] = self.smart_attrs
+        widget.smart_attrs = self.smart_attrs
+        widget.flex_field = self.flex_field
+        # attrs["smart_attrs"] = self.smart_attrs
         return attrs
