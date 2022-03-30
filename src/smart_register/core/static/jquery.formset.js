@@ -186,9 +186,9 @@
             if (options.addContainerClass) {
                 // If we have a specific container for the "add" button,
                 // place it as the last child of that container:
-                var addContainer = $('[class*="' + options.addContainerClass + '"');
+                var addContainer = $('.' + options.addContainerClass);
                 addContainer.append(addButtonHTML);
-                addButton = addContainer.find('[class="' + options.addCssClass + '"]');
+                addButton = addContainer.find('.' + options.addCssClass);
             } else if ($$.is('TR')) {
                 // If forms are laid out as table rows, insert the
                 // "add" button in a new table row:

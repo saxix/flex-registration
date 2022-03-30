@@ -394,6 +394,7 @@ FLAGS_STATE_LOGGING = DEBUG
 FLAGS = {
     "DEVELOP_DEVELOPER": [],
     "DEVELOP_DEBUG_TOOLBAR": [],
+    "SENTRY_JAVASCRIPT": [],
 }
 
 JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"
