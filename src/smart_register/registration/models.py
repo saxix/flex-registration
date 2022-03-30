@@ -1,4 +1,5 @@
 import json
+import logging
 
 from Crypto.PublicKey import RSA
 from django.conf import settings
@@ -7,9 +8,13 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
-from smart_register.core.crypto import crypt, decrypt
+from smart_register.core.crypto import crypt, decrypt, Crypto
 from smart_register.core.models import FlexForm, Validator
 from smart_register.core.utils import dict_setdefault, safe_json
+
+logger = logging.getLogger(__name__)
+
+undefined = object()
 
 
 class Registration(models.Model):
@@ -39,6 +44,7 @@ class Registration(models.Model):
         blank=True,
         null=True,
     )
+    encrypt_data = models.BooleanField(default=False)
     advanced = models.JSONField(default=dict, blank=True)
 
     class Meta:
@@ -80,6 +86,8 @@ class Registration(models.Model):
     def add_record(self, data):
         if self.public_key:
             fields = {"storage": self.encrypt(data)}
+        elif self.encrypt_data:
+            fields = {"storage": Crypto().encrypt(data).encode()}
         else:
             fields = {"storage": safe_json(data).encode()}
         return Record.objects.create(registration=self, **fields)
@@ -89,9 +97,13 @@ class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     timestamp = models.DateField(auto_now_add=True)
     storage = models.BinaryField(null=True, blank=True)
+    ignored = models.BooleanField(default=False, blank=True)
 
-    def decrypt(self, private_key):
-        return json.loads(decrypt(self.storage, private_key))
+    def decrypt(self, private_key=undefined, secret=undefined):
+        if private_key != undefined:
+            return json.loads(decrypt(self.storage, private_key))
+        elif secret != undefined:
+            return json.loads(Crypto(secret).decrypt(self.storage))
 
     @property
     def data(self):

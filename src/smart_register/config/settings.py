@@ -21,6 +21,7 @@ DEV_DIR = SRC_DIR.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
+FERNET_KEY = env("FERNET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     # ---
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
+    "smart_admin.apps.SmartAuthConfig",
     "smart_admin.apps.SmartConfig",
     # 'smart_admin',
     "admin_ordering",
