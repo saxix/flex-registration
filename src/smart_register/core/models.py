@@ -6,7 +6,6 @@ import jsonpickle
 import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import IntegerVersionField
-from constance import config
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.cache import caches
@@ -20,7 +19,7 @@ from natural_keys import NaturalKeyModel
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
-from .cache import cache_form
+from .cache import cache_form, Cache
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
@@ -348,6 +347,10 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         self.flex_form.get_form.cache_clear()
 
 
+class OptionSetManager(models.Manager):
+    cache = Cache()
+
+
 class OptionSet(NaturalKeyModel, models.Model):
     version = IntegerVersionField()
     name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[a-z0-9-_]")])
@@ -358,6 +361,7 @@ class OptionSet(NaturalKeyModel, models.Model):
     columns = models.CharField(
         max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
+    objects = OptionSetManager()
 
     def clean(self):
         try:
@@ -377,9 +381,7 @@ class OptionSet(NaturalKeyModel, models.Model):
         return reverse("optionset", args=[self.name, pk, label, parent])
 
     def get_data(self, columns=None):
-        value = None
-        if config.CACHE_FORMS:
-            value = cache.get(self.get_cache_key(columns), version=self.version)
+        value = cache.get(self.get_cache_key(columns), version=self.version)
 
         if columns is None:
             pk_col, label_col, parent_col = map(int, self.columns.split(","))

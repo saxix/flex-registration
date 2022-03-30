@@ -2,8 +2,6 @@ import logging
 from collections import OrderedDict
 from functools import wraps
 
-from constance import config
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,10 +31,30 @@ cache = Cache(size=100)
 def cache_form(f):
     @wraps(f)
     def _inner(*args, **kwargs):
-        if not config.CACHE_FORMS:
-            return f(*args, **kwargs)
+        # if not config.CACHE_FORMS:
+        #     return f(*args, **kwargs)
 
         key = f"{args[0].pk}-{args[0].version}"
+        if key not in cache:
+            logger.debug("cache missing")
+            ret = f(*args, **kwargs)
+            cache[key] = ret
+        else:
+            logger.debug("cache hit")
+
+        return cache[key]
+
+    _inner.cache_clear = lambda: True
+    return _inner
+
+
+def cache_formset(f):
+    @wraps(f)
+    def _inner(*args, **kwargs):
+        # if not config.CACHE_FORMS:
+        #     return f(*args, **kwargs)
+        flex_form = args[0].registration.flex_form
+        key = f"{flex_form.pk}-{flex_form.version}-formset"
         if key not in cache:
             logger.debug("cache missing")
             ret = f(*args, **kwargs)

@@ -27,10 +27,16 @@ class AjaxSelectWidget(TailWindMixin, forms.Select):
 
     class Media:
         js = [
-            "select2/select2.min.js",
+            # "select2/select2.min.js",
+            "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.0/js/select2.min.js",
             "select2/ajax_select.js",
         ]
-        css = {"all": ["select2/select2.min.css"]}
+        css = {
+            "all": [
+                "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.0/css/select2.min.css",
+                # "select2/select2.min.css"
+            ]
+        }
 
 
 class SelectField(forms.ChoiceField):
@@ -84,7 +90,7 @@ class AjaxSelectField(forms.Field):
         try:
             name, columns = OptionSet.parse_datasource(self.datasource)
             attrs["data-source"] = name
-            OptionSet.objects.get(name=name)
+            # OptionSet.objects.get(name=name)
             attrs["data-ajax--url"] = reverse("optionset", args=[name, *columns])
         except (OptionSet.DoesNotExist, NoReverseMatch, TypeError) as e:
             logger.exception(e)
