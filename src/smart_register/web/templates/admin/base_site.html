@@ -12,6 +12,7 @@
     {% if profile_link %} / <a href="{{ profile_link }}">Profile</a> {% endif %}
     {% if profile_link %} / <a href="{% url "qrcode" %}">qrcode</a> {% endif %}
     {{ project.version|slice:':7'|join:'' }} / {{ project.build_date }}
+    {% if project.has_token %} &Omega; {% else %} N/A {% endif %}
 {% endblock %}
 
 {% block branding %}

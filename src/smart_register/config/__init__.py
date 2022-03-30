@@ -14,7 +14,7 @@ def parse_emails(value):
 
 
 DEFAULTS = {
-    "DJANGO_ADMIN_URL": (str, "admin/"),
+    "DJANGO_ADMIN_URL": (str, f"{uuid.uuid4().hex}/"),
     "DJANGO_ADMIN_TITLE": (str, "="),
     "AUTHENTICATION_BACKENDS": (list, []),
     "SECRET_KEY": (str, ""),
@@ -38,6 +38,7 @@ DEFAULTS = {
     "EMAIL_USE_TLS": (bool, True),
     "EMAIL_USE_SSL": (bool, False),
     "EMAIL_TIMEOUT": (int, 30),
+    "FERNET_KEY": (str, "2jQklRvSAZUdsVOKH-521Wbf_p5t2nTDA0LgD9sgim4="),
     "INTERNAL_IPS": (list, ["127.0.0.1", "localhost"]),
     "LANGUAGE_CODE": (str, "en-us"),
     "CACHE_DEFAULT": (str, "locmemcache://"),

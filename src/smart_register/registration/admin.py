@@ -175,9 +175,9 @@ class RecordAdmin(SmartModelAdmin):
         return super().changeform_view(request, object_id, form_url, extra_context)
 
     @button(label="Preview", permission=is_root)
-    def view(self, request, pk):
+    def preview(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Preview")
-        return render(request, "admin/registration/record/p.html", ctx)
+        return render(request, "admin/registration/record/preview.html", ctx)
 
     @button(permission=is_root)
     def decrypt(self, request, pk):

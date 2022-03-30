@@ -5,7 +5,7 @@ from hashlib import md5
 import sentry_sdk
 from constance import config
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile, UploadedFile
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
@@ -156,7 +156,7 @@ class RegisterView(FixedLocaleView, FormView):
                 data[name].append(f.cleaned_data)
 
         def parse_field(field):
-            if isinstance(field, InMemoryUploadedFile):
+            if isinstance(field, (UploadedFile, InMemoryUploadedFile, TemporaryUploadedFile)):
                 return base64.b64encode(field.read())
             elif isinstance(field, dict):
                 return {item[0]: parse_field(item[1]) for item in field.items()}
