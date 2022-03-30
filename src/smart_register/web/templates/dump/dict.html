@@ -3,7 +3,13 @@
         <th>{{ k }}</th>
         <td>
             {% if v|is_base64 %}
-                <img src="data:image/jpeg;base64, {{ v }}">
+                <div class="base64">
+                    {{ v|truncatechars:"50" }}
+                    <a href="#">img</a>
+                    <img class="preview"
+                         style="position:relative; display: none; max-height: 300px"
+                         src="data:image/jpeg;base64, {{ v }}">
+                </div>
             {% elif v|islist %}
                 <table>{% include "dump/list.html" %}</table>
             {% else %}
