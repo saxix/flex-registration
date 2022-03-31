@@ -70,7 +70,7 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
-    "django.middleware.cache.UpdateCacheMiddleware",
+    # "django.middleware.cache.UpdateCacheMiddleware",
     "smart_register.web.middlewares.ThreadLocalMiddleware",
     "smart_register.web.middlewares.SentryMiddleware",
     "smart_register.web.middlewares.SecurityHeadersMiddleware",
@@ -88,7 +88,7 @@ MIDDLEWARE = [
     "smart_register.web.middlewares.HtmlMinMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django.middleware.cache.FetchFromCacheMiddleware",
+    # "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
 ROOT_URLCONF = "smart_register.config.urls"
