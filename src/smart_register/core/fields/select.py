@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 from django.forms import BoundField
 from django.urls import NoReverseMatch, reverse
 
@@ -25,18 +26,21 @@ class AjaxSelectWidget(TailWindMixin, forms.Select):
         self.attrs.setdefault("class", {})
         self.attrs["class"] += " ajaxSelect"
 
-    class Media:
-        js = [
-            # "select2/select2.min.js",
-            "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.0/js/select2.min.js",
-            "select2/ajax_select.js",
-        ]
-        css = {
-            "all": [
-                "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.0/css/select2.min.css",
-                # "select2/select2.min.css"
-            ]
-        }
+    @property
+    def media(self):
+        extra = "" if settings.DEBUG else ".min"
+        base = super().media
+        return base + forms.Media(
+            js=[
+                "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.0/js/select2.min.js",
+                "select2/ajax_select%s.js" % extra,
+            ],
+            css={
+                "all": [
+                    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.0/css/select2.min.css",
+                ]
+            },
+        )
 
 
 class SelectField(forms.ChoiceField):
