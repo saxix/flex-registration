@@ -1,14 +1,16 @@
 from django import forms
 
+from smart_register.core.utils import get_versioned_static_name
+
 
 class PictureWidget(forms.Textarea):
     template_name = "django/forms/widgets/picture.html"
 
     class Media:
         js = [
-            "webcam/webcam.js",
+            get_versioned_static_name("webcam/webcam.js"),
         ]
-        css = {"all": ["webcam/webcam.css"]}
+        css = {"all": [get_versioned_static_name("webcam/webcam.css")]}
 
     def __init__(self, attrs=None):
         attrs = {"class": "vPictureField", **(attrs or {})}

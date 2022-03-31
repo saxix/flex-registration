@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ObjectDoesNotExist
+from simplemathcaptcha.fields import MathCaptchaField
 from strategy_field.exceptions import StrategyAttributeError
 from strategy_field.registry import Registry
 from strategy_field.utils import fqn
@@ -71,6 +72,7 @@ field_registry.register(fields.YesNoChoice)
 field_registry.register(fields.YesNoRadio)
 field_registry.register(fields.LabelOnlyField)
 field_registry.register(fields.RemoteIpField)
+field_registry.register(MathCaptchaField)
 
 form_registry = Registry(forms.BaseForm)
 form_registry.register(forms.Form)
