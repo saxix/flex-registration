@@ -508,6 +508,14 @@ Pillow = ">=6.2.0"
 test = ["testfixtures"]
 
 [[package]]
+name = "django-simple-math-captcha"
+version = "1.1"
+description = "An easy-to-use math field/widget captcha for Django forms."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "django-smart-admin"
 version = "1.9.0"
 description = ""
@@ -2006,7 +2014,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "80ae0ede5a2c1d418217ad68e5ad70768149008e8e8e3bf8671e769510ca83ff"
+content-hash = "939c83ceb93ba12db4ab49b96010fe4b07d528ae15669da032680b4f12fe85c8"
 
 [metadata.files]
 appnope = [
@@ -2296,6 +2304,10 @@ django-rest-framework = [
 django-simple-captcha = [
     {file = "django-simple-captcha-0.5.17.tar.gz", hash = "sha256:9649e66dab4e71efacbfef02f48b83b91684898352a1ab56f1686ce71033b328"},
     {file = "django_simple_captcha-0.5.17-py2.py3-none-any.whl", hash = "sha256:f9a07e5e9de264ba4039c9eaad66bc48188a21ceda5fcdc2fa13c5512141c2c9"},
+]
+django-simple-math-captcha = [
+    {file = "django-simple-math-captcha-1.1.tar.gz", hash = "sha256:fa5605daaf9c13b269de7d33f1030ca1565f9843e6f2fc1b8d76396dba3c9628"},
+    {file = "django_simple_math_captcha-1.1-py3-none-any.whl", hash = "sha256:e3e4f6437cff3ca65d1b3fd4ce3d19f47a41299f0d0cc68f6bcea8d1a56f5820"},
 ]
 django-smart-admin = [
     {file = "django-smart-admin-1.9.0.tar.gz", hash = "sha256:6b6987e786260cb2323b3b2e59449c324def140706b2bec056f2a1051fbee3c0"},

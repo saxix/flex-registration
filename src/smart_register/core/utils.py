@@ -240,3 +240,7 @@ def get_default_language(request, default="en-us"):
     if lang not in [x[0] for x in settings.LANGUAGES]:
         lang = default
     return lang or "en-us"
+
+
+def get_versioned_static_name(name):
+    return name

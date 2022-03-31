@@ -1,10 +1,11 @@
 bind = "0.0.0.0:80"
-backlog = 2048
+backlog = 512
 
 
 workers = 4
-worker_class = "gevent"
-worker_connections = 1000
+worker_class = "sync"
+# worker_connections = 1000 # This setting only affects the Eventlet and Gevent worker types.
+max_requests = 1000
 timeout = 30
 keepalive = 2
 

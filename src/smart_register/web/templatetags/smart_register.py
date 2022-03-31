@@ -38,6 +38,11 @@ def islist(value):
 
 
 @register.filter
+def isstring(value):
+    return isinstance(value, (str,))
+
+
+@register.filter
 def isdict(value):
     return isinstance(value, (dict,))
 

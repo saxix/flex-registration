@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "captcha",
     "social_django",
     "corsheaders",
+    "simplemathcaptcha",
     # ---
     "smart_register",
     "smart_register.web",
@@ -124,6 +125,7 @@ WSGI_APPLICATION = "smart_register.config.wsgi.application"
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES["default"]["CONN_MAX_AGE"] = 60
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation
@@ -195,9 +197,11 @@ USE_TZ = True
 # Ensure STATIC_ROOT exists.
 # os.makedirs(STATIC_ROOT, exist_ok=True)
 
-STATIC_URL = "/static/"
+STATIC_URL = f"/static/{os.environ.get('VERSION', '')}/"
+# STATIC_URL = f"/static/"
 STATIC_ROOT = env("STATIC_ROOT")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "web/static"),
@@ -407,6 +411,8 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
 CAPTCHA_TEST_MODE = env("CAPTCHA_TEST_MODE")
+CAPTCHA_GET_FROM_POOL = True
+
 
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
 

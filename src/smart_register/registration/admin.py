@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from admin_extra_buttons.decorators import button, link, view
@@ -5,12 +6,13 @@ from adminfilters.autocomplete import AutoCompleteFilter
 from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin import register
+from django.contrib.admin import SimpleListFilter, register
 from django.db.models import JSONField
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
@@ -158,13 +160,37 @@ class DecryptForm(forms.Form):
     key = forms.CharField(widget=forms.Textarea)
 
 
+class HourFilter(SimpleListFilter):
+    parameter_name = "hours"
+    title = "Latest [n] hours"
+    slots = (
+        (30, _("30 min")),
+        (60, _("1 hour")),
+        (60 * 4, _("4 hour")),
+        (60 * 6, _("6 hour")),
+        (60 * 8, _("8 hour")),
+        (60 * 12, _("12 hour")),
+        (60 * 24, _("24 hour")),
+    )
+
+    def lookups(self, request, model_admin):
+        return self.slots
+
+    def queryset(self, request, queryset):
+        if self.value():
+            offset = datetime.datetime.now() - datetime.timedelta(minutes=int(self.value()))
+            queryset = queryset.filter(timestamp__gte=offset)
+
+        return queryset
+
+
 @register(Record)
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
     list_display = ("timestamp", "id", "registration", "ignored")
     readonly_fields = ("registration", "timestamp", "id")
-    list_filter = (("registration", AutoCompleteFilter), "ignored")
+    list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
     change_form_template = None
     change_list_template = None
 

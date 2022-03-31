@@ -10,8 +10,10 @@ from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
+from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
 
@@ -66,9 +68,9 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
     def get_qrcode(self, record):
         h = md5(record.storage).hexdigest()
-        url = self.request.build_absolute_uri(reverse("register-done", args=[record.pk, h]))
-        # url = self.request.build_absolute_uri(f"/register/qr/{record.pk}/{h}")
-        return get_qrcode(url), url
+        url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
+        hashed_url = f"{url}/{h}"
+        return get_qrcode(hashed_url), url
 
     def get_context_data(self, **kwargs):
         if config.QRCODE:
@@ -78,7 +80,7 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
 
 
-# @method_decorator(cache_page(60 * 60), name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch")
 class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
 
