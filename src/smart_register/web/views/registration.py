@@ -10,8 +10,10 @@ from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
+from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
+from django.views.decorators.cache import never_cache
 from django.views.generic import CreateView, TemplateView
 from django.views.generic.edit import FormView
 
@@ -78,7 +80,7 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
 
 
-# @method_decorator(cache_page(60 * 60), name="dispatch")
+@method_decorator(never_cache, name="dispatch")
 class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
 
