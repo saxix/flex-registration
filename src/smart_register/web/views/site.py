@@ -15,6 +15,12 @@ from smart_register.registration.models import Registration
 logger = logging.getLogger(__name__)
 
 
+def error_csrf(request, reason=""):
+    if reason:
+        logger.error(reason)
+    return TemplateResponse(request, "csrf.html", status=400)
+
+
 def error_404(request, exception):
     return TemplateResponse(request, "404.html", status=404, headers={"Session-Token": settings.DJANGO_ADMIN_URL})
 
