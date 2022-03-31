@@ -451,6 +451,7 @@ DEBUG_TOOLBAR_PANELS = [
 ]
 
 ROOT_TOKEN = env("ROOT_TOKEN")
+CSRF_FAILURE_VIEW = "smart_register.web.views.site.error_csrf"
 
 # Azure login
 
