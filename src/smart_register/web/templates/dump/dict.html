@@ -12,6 +12,8 @@
                 </div>
             {% elif v|islist %}
                 <table>{% include "dump/list.html" %}</table>
+            {% elif v|isstring %}
+                {{ v|truncatechars:"150" }}
             {% else %}
                 {{ v }}
             {% endif %}
