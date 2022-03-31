@@ -48,7 +48,7 @@
 
 {% block footer %}{% include "_footer.html" %}{% endblock %}
 <script>
-    {% flag_enabled '§' as sentry %}
+    {% flag_enabled 'SENTRY_JAVASCRIPT' as sentry %}
     {% if sentry %}
         Sentry.init({
             dsn: "{{ project.sentry_dsn }}",
