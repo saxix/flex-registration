@@ -4,7 +4,8 @@ backlog = 512
 
 workers = 4
 worker_class = "sync"
-worker_connections = 1000
+# worker_connections = 1000 # This setting only affects the Eventlet and Gevent worker types.
+max_requests = 1000
 timeout = 30
 keepalive = 2
 
