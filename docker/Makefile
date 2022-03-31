@@ -13,7 +13,7 @@ BUILD_DATE:="$(shell date +"%Y-%m-%d %H:%M")"
 BUILD_OPTIONS?=--squash
 CMD?=run
 WORKER?='??'
-CONTAINER_NAME?=sos-${VERSION}
+CONTAINER_NAME?=flex-form-cnt
 LAZO?=$(shell which lazo)
 
 DOCKER_REGISTRY=ghcr.io
