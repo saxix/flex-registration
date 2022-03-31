@@ -4,13 +4,21 @@ from constance import config
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 
 from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Registration
 
 logger = logging.getLogger(__name__)
+
+
+def error_csrf(request, reason=""):
+    if reason:
+        logger.error(reason)
+    return TemplateResponse(request, "csrf.html", status=400)
 
 
 def error_404(request, exception):
@@ -24,11 +32,12 @@ class PageView(TemplateView):
         return [f"{self.kwargs['page']}.html"]
 
 
+@method_decorator(cache_page(60 * 60), name="dispatch")
 class HomeView(TemplateView):
-    template_name = "index.html"
+    template_name = "ua.html"
 
-    def get_template_names(self):
-        return [config.HOME_TEMPLATE, self.template_name]
+    # def get_template_names(self):
+    #     return [config.HOME_TEMPLATE, self.template_name]
 
     def get_context_data(self, **kwargs):
         selection = config.HOME_PAGE_REGISTRATIONS.split(";")

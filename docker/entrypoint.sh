@@ -1,9 +1,13 @@
 #!/bin/bash
 set -e
 
+mkdir -p /var/sos/run ${MEDIA_ROOT} ${STATIC_ROOT}
+
 if [ $# -eq 0 ]; then
     python manage.py upgrade --no-input
-    exec gunicorn smart_register.config.wsgi -c /code/gunicorn_config.py
+  #    exec gunicorn smart_register.config.wsgi -c /code/gunicorn_config.py
+    uwsgi --ini /etc/uwsgi.ini
+#    exec circusd /etc/circus.conf
 else
     case "$1" in
         "dev")

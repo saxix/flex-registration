@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic.list import BaseListView
 
 from smart_register.core.models import OptionSet
@@ -37,6 +39,7 @@ def filter_optionset(obj, request, columns):
     return response
 
 
+@method_decorator(cache_page(60 * 60), name="dispatch")
 class OptionsListView(BaseListView):
     def get(self, request, *args, **kwargs):
         name = self.kwargs["name"]

@@ -166,7 +166,12 @@ class RecordAdmin(SmartModelAdmin):
     readonly_fields = ("registration", "timestamp", "id")
     list_filter = (("registration", AutoCompleteFilter), "ignored")
     change_form_template = None
-    # change_list_template = None
+    change_list_template = None
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related("registration")
+        return qs
 
     def get_common_context(self, request, pk=None, **kwargs):
         return super().get_common_context(request, pk, is_root=is_root(request), **kwargs)

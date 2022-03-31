@@ -7,6 +7,7 @@ class SmartDateWidget(TailWindMixin, forms.DateInput):
     class Media:
         js = [
             "datetimepicker/datepicker.js",
+            # "https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js",
             "datetimepicker/dt.js",
         ]
         css = {"all": ["datetimepicker/datepicker.css"]}

@@ -13,7 +13,7 @@ BUILD_DATE:="$(shell date +"%Y-%m-%d %H:%M")"
 BUILD_OPTIONS?=--squash
 CMD?=run
 WORKER?='??'
-CONTAINER_NAME?=sos-${VERSION}
+CONTAINER_NAME?=flex-form-cnt
 LAZO?=$(shell which lazo)
 
 DOCKER_REGISTRY=ghcr.io
@@ -75,6 +75,7 @@ build: check .build
 			-e AUTHENTICATION_BACKENDS=\
 			-e ADMIN_EMAIL="${ADMIN_EMAIL}" \
 			-e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
+			-e DJANGO_ADMIN_URL=admin/ \
 			-e ADMINS="" \
 			-e LANGUAGE_CODE="uk-ua" \
 			-e ALLOWED_HOSTS="*" \
@@ -82,6 +83,9 @@ build: check .build
 			-e DEBUG="0" \
 			-e DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
+			-e STATIC_ROOT="${STATIC_ROOT}" \
+			-v ${PWD}/:/aaa/ \
+			-v /Users/sax/Documents/data/PROGETTI/UNICEF/unicef-flex-form/:/code/ \
 			${RUN_OPTIONS} \
 			${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			${CMD}
@@ -102,7 +106,7 @@ test:  ## test docker image
 	$(MAKE) .run
 
 shell:  ## run docker and spawn a shell
-	DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:latest RUN_OPTIONS=-it CMD='/bin/sh' $(MAKE) .run
+	DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:latest RUN_OPTIONS=-it CMD='/bin/bash' $(MAKE) .run
 
 IMAGE=${DOCKER_REGISTRY}/bitcaster/sos/docker-builder:19.03.12
 docker-builder:
