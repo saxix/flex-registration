@@ -66,7 +66,8 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
     def get_qrcode(self, record):
         h = md5(record.storage).hexdigest()
-        url = self.request.build_absolute_uri(f"/register/qr/{record.pk}/{h}")
+        url = self.request.build_absolute_uri(reverse("register-done", args=[record.pk, h]))
+        # url = self.request.build_absolute_uri(f"/register/qr/{record.pk}/{h}")
         return get_qrcode(url), url
 
     def get_context_data(self, **kwargs):
