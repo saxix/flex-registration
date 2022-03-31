@@ -12,6 +12,7 @@ from .radio import RadioField, YesNoChoice, YesNoRadio
 from .remote_ip import RemoteIpField
 from .select import AjaxSelectField, SelectField, SmartSelectWidget
 from .widgets.mixins import SmartFieldMixin
+from .file import SmartFileField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
