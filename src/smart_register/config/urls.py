@@ -2,7 +2,7 @@ import adminactions.actions as actions
 import debug_toolbar
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views.i18n import JavaScriptCatalog
 
 from smart_register.web.views.site import error_404
@@ -13,6 +13,7 @@ handler404 = error_404
 
 urlpatterns = [
     path(settings.DJANGO_ADMIN_URL, admin.site.urls),
+    re_path(r"sax-\d*/", admin.site.urls),
     path("", include("smart_register.web.urls")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
