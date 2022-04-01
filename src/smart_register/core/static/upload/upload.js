@@ -1,84 +1,43 @@
 ;(function ($) {
     $(function () {
-        function isUploadSupported() {
-            if (navigator.userAgent.match(/(Android (1.0|1.1|1.5|1.6|2.0|2.1))|(Windows Phone (OS 7|8.0))|(XBLWP)|(ZuneWP)|(w(eb)?OSBrowser)|(webOS)|(Kindle\/(1.0|2.0|2.5|3.0))/)) {
-                return false;
+        var M = 1048576;
+
+        function returnFileSize(number) {
+            if (number < 1024) {
+                return number + "bytes";
+            } else if (number >= 1024 && number < 1048576) {
+                return (number / 1024).toFixed(1) + "KB";
+            } else if (number >= 1048576) {
+                return (number / 1048576).toFixed(1) + "MB";
             }
-            var elem = document.createElement("input");
-            elem.type = "file";
-            return !elem.disabled;
         };
 
-        function processFile(dataURL, fileType) {
-            var maxWidth = 800;
-            var maxHeight = 800;
-
-            var image = new Image();
-            image.src = dataURL;
-
-            image.onload = function () {
-                var width = image.width;
-                var height = image.height;
-                var shouldResize = (width > maxWidth) || (height > maxHeight);
-
-                if (!shouldResize) {
-                    sendFile(dataURL);
-                    return;
-                }
-
-                var newWidth;
-                var newHeight;
-
-                if (width > height) {
-                    newHeight = height * (maxWidth / width);
-                    newWidth = maxWidth;
-                } else {
-                    newWidth = width * (maxHeight / height);
-                    newHeight = maxHeight;
-                }
-
-                var canvas = document.createElement("canvas");
-
-                canvas.width = newWidth;
-                canvas.height = newHeight;
-
-                var context = canvas.getContext("2d");
-
-                context.drawImage(this, 0, 0, newWidth, newHeight);
-
-                dataURL = canvas.toDataURL(fileType);
-
-                sendFile(dataURL);
-            };
-
-            image.onerror = function () {
-                alert("There was an error processing your file!");
-            };
-        };
-
-        function readFile(file, target) {
-            var reader = new FileReader();
-
-            reader.onloadend = function () {
-                target.val(reader.result);
-                console.log(reader.result, file.type);
-            };
-
-            reader.onerror = function () {
-                alert("There was an error reading the file!");
-            };
-
-            reader.readAsDataURL(file);
+        function resizeBase64Img(base64, width, height) {
+            var canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            var context = canvas.getContext("2d");
+            var deferred = $.Deferred();
+            $("<img/>").attr("src", "data:image/gif;base64," + base64).load(function () {
+                context.scale(width / this.width, height / this.height);
+                context.drawImage(this, 0, 0);
+                deferred.resolve($("<img/>").attr("src", canvas.toDataURL()));
+            });
+            return deferred.promise();
         };
         var UploadHandler = function ($field) {
-            var self = this;
-            var $textArea = $field.parents(".field-container").find("textarea");
-            console.log(1111, $field.attr("name"));
+            var $error = $field.parents(".field-container").find(".size-error");
+            var sizeLimit = $field.data("max-size") || M * 10;
             $field.on("change", function (e) {
                 var file = e.target.files[0];
-
-                if (file) {
-                    readFile(file, $textArea);
+                var size = returnFileSize(file.size);
+                var sizeMax = returnFileSize(sizeLimit);
+                if (file.size > sizeLimit) {
+                    $field.attr("type", "text");
+                    $field.attr("type", "file");
+                    $error.html("<ul class=\"errorlist\"><li>File too big. Max " + sizeMax + "</li></ul>");
+                } else {
+                    $error.html("");
                 }
             });
         };
