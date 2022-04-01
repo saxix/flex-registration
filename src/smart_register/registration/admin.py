@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -69,6 +69,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
 
     @view()
     def data(self, request, registration):
+
         qs = Record.objects.filter(registration_id=registration)
         param_day = request.GET.get("d", None)
         total = 0
@@ -79,14 +80,14 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             data = defaultdict(lambda: 0)
             for record in qs.all():
                 data[record["hour"]] = record["c"]
-                total += data[record["hour"]]
-            hours = list(range(0, 24))
+                total += record["c"]
+            hours = [f"{x:02d}:00" for x in list(range(0, 24))]
             data = {
-                "label": day.strftime("%A, %d %B"),
+                "label": day.strftime("%A, %d %B %Y"),
                 "total": total,
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": hours,
-                "data": [data[x] for x in hours],
+                "data": [data[x] for x in list(range(0, 24))],
             }
         else:
             param_month = request.GET.get("m", None)
@@ -102,11 +103,12 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 total += data[record["day"].day]
             last_day = last_day_of_month(day)
             days = list(range(1, 1 + last_day.day))
+            labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
             data = {
-                "label": day.strftime("%B"),
+                "label": day.strftime("%B %Y"),
                 "total": total,
                 "day": day.strftime("%Y-%m-%d"),
-                "labels": days,
+                "labels": labels,
                 "data": [data[x] for x in days],
             }
 
@@ -239,7 +241,7 @@ class HourFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            offset = datetime.datetime.now() - datetime.timedelta(minutes=int(self.value()))
+            offset = datetime.now() - timedelta(minutes=int(self.value()))
             queryset = queryset.filter(timestamp__gte=offset)
 
         return queryset
