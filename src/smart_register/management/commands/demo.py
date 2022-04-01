@@ -1,12 +1,15 @@
 """
 """
+import datetime
 import logging
+import random
 
 import djclick as click
 from django import forms
 
 from smart_register.core import fields
 from smart_register.core.models import OptionSet
+from smart_register.registration.models import Record
 
 logger = logging.getLogger(__name__)
 
@@ -66,4 +69,13 @@ dt > limit;""",
 
     hh.formsets.get_or_create(name="individuals", defaults=dict(flex_form=ind))
 
-    Registration.objects.get_or_create(name="Demo Registration1", defaults=dict(flex_form=hh), active=True)
+    reg, __ = Registration.objects.get_or_create(name="Demo Registration1", defaults=dict(flex_form=hh), active=True)
+    today = datetime.datetime.today()
+    Record.objects.all().delete()
+    for _ in range(100):
+        h = random.randint(0, 23)
+        for _ in range(100):
+            m = random.randint(0, 59)
+            time = datetime.datetime(today.year, today.month, today.day, h, m)
+            Record.objects.create(registration=reg, timestamp=time)
+            # Record.objects.bulk_create(records)

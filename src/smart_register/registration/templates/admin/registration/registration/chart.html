@@ -1,0 +1,13 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% block action-content %}
+    <table>
+    {{ records }}
+        {% for hour, count in records.items %}
+            <tr>
+                <td>{{ hour }}</td>
+                <td>{{ count }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock action-content %}

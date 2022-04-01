@@ -7,11 +7,13 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.db.models import JSONField
+from django.db.models import JSONField, Count
+from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
@@ -58,6 +60,39 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 "/static/clipboard%s.js" % extra,
             ]
         )
+
+    @view()
+    def get_data(self, request, registration):
+        qs = Record.objects.filter(registration_id=registration)
+        day = request.GET.get("day", None)
+        if day:
+            qs = qs.filter(timestamp__date=day)
+            qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id")).values("hour", "c")
+        else:
+            day = timezone.now().today()
+            qs = qs.filter(timestamp__lt=day)
+            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id")).values("day", "c")
+        response = JsonResponse({"data": list(qs)})
+        response["Cache-Control"] = f"public, max-age={60 * 60 * 24}"
+
+        return response
+
+    @button(label="Chart")
+    def chart(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="chart")
+        records = list(
+            Record.objects.filter(registration_id=pk)
+            .annotate(hour=ExtractHour("timestamp"))
+            .values("hour")
+            .annotate(c=Count("id"))
+            .values("hour", "c")
+        )
+        data = {}
+        # for h in range(0, 23):
+        #     data[h] = records.get(h, 0)
+        ctx["records"] = records
+        ctx["data"] = data
+        return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
     def create_translation(self, request, pk):

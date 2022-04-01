@@ -1,5 +1,4 @@
 from django import forms
-from django.templatetags.static import static
 
 
 class PythonEditor(forms.Textarea):
@@ -15,20 +14,20 @@ class PythonEditor(forms.Textarea):
     class Media:
         css = {
             "all": (
-                static("codemirror/codemirror.css"),
-                static("codemirror/fullscreen.css"),
-                static("codemirror/midnight.css"),
-                static("codemirror/foldgutter.css"),
+                "codemirror/codemirror.css",
+                "codemirror/fullscreen.css",
+                "codemirror/midnight.css",
+                "codemirror/foldgutter.css",
             )
         }
         js = (
             "/static/admin/js/vendor/jquery/jquery.js",
             "/static/admin/js/jquery.init.js",
-            static("codemirror/codemirror.js"),
-            static("codemirror/javascript.js"),
-            static("codemirror/fullscreen.js"),
-            static("codemirror/active-line.js"),
-            static("codemirror/foldcode.js"),
-            static("codemirror/foldgutter.js"),
-            static("codemirror/indent-fold.js"),
+            "codemirror/codemirror.js",
+            "codemirror/javascript.js",
+            "codemirror/fullscreen.js",
+            "codemirror/active-line.js",
+            "codemirror/foldcode.js",
+            "codemirror/foldgutter.js",
+            "codemirror/indent-fold.js",
         )

@@ -4,6 +4,7 @@ mkdir -p /var/sos/run ${MEDIA_ROOT} ${STATIC_ROOT}
 
 if [ $# -eq 0 ]; then
     python manage.py upgrade --no-input
+    nginx -c /etc/nginx.conf
     uwsgi --ini /etc/uwsgi.ini
 else
     case "$1" in

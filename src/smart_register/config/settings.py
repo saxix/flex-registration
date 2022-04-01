@@ -197,14 +197,14 @@ USE_TZ = True
 # Ensure STATIC_ROOT exists.
 # os.makedirs(STATIC_ROOT, exist_ok=True)
 
-STATIC_URL = f"/static/{os.environ.get('VERSION', '')}/"
-# STATIC_URL = f"/static/"
+# STATIC_URL = f"/static/{os.environ.get('VERSION', '')}/"
+STATIC_URL = "/static/"
 STATIC_ROOT = env("STATIC_ROOT")
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "web/static"),
+    # os.path.join(BASE_DIR, "web/static"),
 ]
 
 # -------- Added Settings

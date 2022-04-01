@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
 from smart_register.core.cache import cache_formset
@@ -22,11 +22,6 @@ from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Record, Registration
 
 logger = logging.getLogger(__name__)
-
-
-class DataSetView(CreateView):
-    model = Registration
-    fields = ()
 
 
 class QRVerify(TemplateView):
