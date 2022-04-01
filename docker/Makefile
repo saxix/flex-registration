@@ -64,8 +64,11 @@ check:
 build: check .build
 
 dev:
-	docker build -t flex-dev -f docker/Dockerfile.dev .
-	DOCKER_IMAGE=flex-dev $(MAKE) .run
+	cd .. && docker build -t flex-dev -f docker/Dockerfile.dev .
+	DOCKER_IMAGE=flex-dev \
+	CMD='/bin/bash' \
+	RUN_OPTIONS="-it -v ${PWD}/conf/:/conf/ -v ${PWD}/../:/code/" \
+	$(MAKE) .run
 
 .push:
 	git push

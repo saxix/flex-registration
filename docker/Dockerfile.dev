@@ -1,9 +1,1 @@
 FROM ghcr.io/saxix/smart_register:38aadec
-
-ADD ./docker/entrypoint.sh /bin/
-ADD ./docker/uwsgi.ini /etc/
-ADD ./docker/nginx.conf /etc/
-
-RUN chmod +x /bin/entrypoint.sh
-
-ENTRYPOINT ["entrypoint.sh"]
