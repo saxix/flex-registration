@@ -78,6 +78,7 @@
                 $.getJSON(baseUrl + "?" + qs).done(function (response) {
                     myChart.data.labels = response.labels;
                     myChart.data.datasets[0].data = response.data;
+                    myChart.options.plugins.title.text = response.label + " - Total Registrations: " + response.total.toLocaleString();
                     myChart.update(); // finally update our chart
                     currentDay = moment(response.day, "YYYY-MM-DD").format("YYYY-MM-DD");
                 });
