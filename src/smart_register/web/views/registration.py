@@ -58,7 +58,7 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
     @cached_property
     def record(self):
         return Record.objects.select_related("registration").get(
-            registration__id=self.kwargs["pk"], id=self.kwargs["rec"]
+            registration__id=self.kwargs["reg"], id=self.kwargs["rec"]
         )
 
     def get_qrcode(self, record):

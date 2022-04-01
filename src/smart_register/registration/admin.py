@@ -1,13 +1,15 @@
-import datetime
 import logging
+from collections import defaultdict
+from datetime import datetime
 
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.db.models import JSONField, Count
+from django.db.models import Count, JSONField
 from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
@@ -30,6 +32,10 @@ logger = logging.getLogger(__name__)
 class RegistrationResource(resources.ModelResource):
     class Meta:
         model = Registration
+
+
+def last_day_of_month(date):
+    return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
 
 
 @register(Registration)
@@ -62,36 +68,51 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         )
 
     @view()
-    def get_data(self, request, registration):
+    def data(self, request, registration):
         qs = Record.objects.filter(registration_id=registration)
-        day = request.GET.get("day", None)
-        if day:
-            qs = qs.filter(timestamp__date=day)
-            qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id")).values("hour", "c")
+        param_day = request.GET.get("d", None)
+        if param_day:
+            day = datetime.strptime(param_day, "%Y-%m-%d")
+            qs = qs.filter(timestamp=day)
+            qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id"))
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["hour"]] = record["c"]
+            hours = list(range(0, 24))
+            data = {
+                "label": day.strftime("%A, %d %B"),
+                "day": day.strftime("%Y-%m-%d"),
+                "labels": hours,
+                "data": [data[x] for x in hours],
+            }
         else:
-            day = timezone.now().today()
-            qs = qs.filter(timestamp__lt=day)
-            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id")).values("day", "c")
-        response = JsonResponse({"data": list(qs)})
-        response["Cache-Control"] = f"public, max-age={60 * 60 * 24}"
+            param_month = request.GET.get("m", None)
+            if param_month:
+                day = datetime.strptime(param_month, "%Y-%m-%d")
+            else:
+                day = timezone.now().today()
+            qs = qs.filter(timestamp__month=day.month)
+            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["day"].day] = record["c"]
+            last_day = last_day_of_month(day)
+            days = list(range(1, 1 + last_day.day))
+            data = {
+                "label": day.strftime("%B"),
+                "day": day.strftime("%Y-%m-%d"),
+                "labels": days,
+                "data": [data[x] for x in days],
+            }
 
+        response = JsonResponse(data)
+        # response["Cache-Control"] = f"public, max-age={60 * 60 * 24}"
         return response
 
     @button(label="Chart")
     def chart(self, request, pk):
         ctx = self.get_common_context(request, pk, title="chart")
-        records = list(
-            Record.objects.filter(registration_id=pk)
-            .annotate(hour=ExtractHour("timestamp"))
-            .values("hour")
-            .annotate(c=Count("id"))
-            .values("hour", "c")
-        )
-        data = {}
-        # for h in range(0, 23):
-        #     data[h] = records.get(h, 0)
-        ctx["records"] = records
-        ctx["data"] = data
+        ctx["today"] = datetime.now().strftime("%Y-%m-%d")
         return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
