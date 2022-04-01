@@ -42,8 +42,10 @@
 
             ajax_chart(baseUrl);
 
-            function ajax_chart(url) {
-                $.getJSON(url).done(function (response) {
+            function ajax_chart(params) {
+                params.rnd = Math.random();
+                var qs = new URLSearchParams(params).toString();
+                $.getJSON(baseUrl + "?" + qs).done(function (response) {
                     myChart.data.labels = response.labels;
                     myChart.data.datasets[0].data = response.data;
                     myChart.data.datasets[0].label = response.label;
@@ -53,29 +55,34 @@
             }
 
             $("#prev").on("click", function (e) {
+                var data;
                 if (MODE==='m'){
                     currentDay = moment(currentDay).subtract(1, 'months').format('YYYY-MM-DD');
-                    ajax_chart(baseUrl + "?m=" + currentDay);
+                    data = {m: currentDay}
                 }else{
                     currentDay = moment(currentDay).subtract(1, 'days').format('YYYY-MM-DD');
-                    ajax_chart(baseUrl + "?d=" + currentDay);
+                    data = {d: currentDay}
                 }
+                ajax_chart( data );
+
             });
             $("#next").on("click", function (e) {
+                var data;
                 if (MODE==='m'){
                     currentDay = moment(currentDay).add(1, 'months').format('YYYY-MM-DD');
-                    ajax_chart(baseUrl + "?m=" + currentDay);
+                    data = {m: currentDay}
                 }else{
                     currentDay = moment(currentDay).add(1, 'days').format('YYYY-MM-DD');
-                    ajax_chart(baseUrl + "?d=" + currentDay);
+                    data = {d: currentDay}
                 }
+                ajax_chart( data );
             });
             $("input[name=chartType]").on("change", function (e) {
                 MODE=$(e.target).val();
                 if ($(e.target).val() === "m") {
-                    ajax_chart(baseUrl + "?m=" + currentDay);
+                    ajax_chart({m: currentDay});
                 } else {
-                    ajax_chart(baseUrl + "?d=" + currentDay);
+                    ajax_chart({d: currentDay});
                 }
             });
         })(django.jQuery);
