@@ -1,5 +1,4 @@
 import logging
-import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -70,10 +69,6 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
 
     @view()
     def data(self, request, registration):
-        def hex_color():
-            random_number = random.randint(0, 16777215)
-            hex_number = str(hex(random_number))
-            return f"#{hex_number[2:]}"
 
         qs = Record.objects.filter(registration_id=registration)
         param_day = request.GET.get("d", None)
@@ -85,15 +80,14 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             data = defaultdict(lambda: 0)
             for record in qs.all():
                 data[record["hour"]] = record["c"]
-                total += data[record["hour"]]
+                total += record["c"]
             hours = [f"{x:02d}:00" for x in list(range(0, 24))]
             data = {
                 "label": day.strftime("%A, %d %B %Y"),
                 "total": total,
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": hours,
-                "data": [data[x] for x in hours],
-                "colors": hex_color(),
+                "data": [data[x] for x in list(range(0, 24))],
             }
         else:
             param_month = request.GET.get("m", None)
@@ -116,8 +110,6 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": labels,
                 "data": [data[x] for x in days],
-                "colors": hex_color(),
-                "xxx": [{labels[x - 1]: data[x - 1]} for x in days],
             }
 
         response = JsonResponse(data)
