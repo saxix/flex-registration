@@ -71,6 +71,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     def data(self, request, registration):
         qs = Record.objects.filter(registration_id=registration)
         param_day = request.GET.get("d", None)
+        total = 0
         if param_day:
             day = datetime.strptime(param_day, "%Y-%m-%d")
             qs = qs.filter(timestamp__date=day)
@@ -78,9 +79,11 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             data = defaultdict(lambda: 0)
             for record in qs.all():
                 data[record["hour"]] = record["c"]
+                total += data[record["hour"]]
             hours = list(range(0, 24))
             data = {
                 "label": day.strftime("%A, %d %B"),
+                "total": total,
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": hours,
                 "data": [data[x] for x in hours],
@@ -96,10 +99,12 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             data = defaultdict(lambda: 0)
             for record in qs.all():
                 data[record["day"].day] = record["c"]
+                total += data[record["day"].day]
             last_day = last_day_of_month(day)
             days = list(range(1, 1 + last_day.day))
             data = {
                 "label": day.strftime("%B"),
+                "total": total,
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": days,
                 "data": [data[x] for x in days],

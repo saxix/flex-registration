@@ -36,9 +36,6 @@ class PageView(TemplateView):
 class HomeView(TemplateView):
     template_name = "ua.html"
 
-    # def get_template_names(self):
-    #     return [config.HOME_TEMPLATE, self.template_name]
-
     def get_context_data(self, **kwargs):
         selection = config.HOME_PAGE_REGISTRATIONS.split(";")
         buttons = []
