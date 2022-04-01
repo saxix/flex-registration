@@ -1,7 +1,7 @@
 import logging
 import random
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -249,7 +249,7 @@ class HourFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            offset = datetime.datetime.now() - datetime.timedelta(minutes=int(self.value()))
+            offset = datetime.now() - timedelta(minutes=int(self.value()))
             queryset = queryset.filter(timestamp__gte=offset)
 
         return queryset
