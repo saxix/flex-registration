@@ -72,10 +72,11 @@ dt > limit;""",
     reg, __ = Registration.objects.get_or_create(name="Demo Registration1", defaults=dict(flex_form=hh), active=True)
     today = datetime.datetime.today()
     Record.objects.all().delete()
-    for _ in range(100):
-        h = random.randint(0, 23)
-        for _ in range(100):
-            m = random.randint(0, 59)
-            time = datetime.datetime(today.year, today.month, today.day, h, m)
-            Record.objects.create(registration=reg, timestamp=time)
-            # Record.objects.bulk_create(records)
+    for d in range(1, 30):
+        for _ in range(50):
+            h = random.randint(0, 23)
+            for _ in range(50):
+                m = random.randint(0, 59)
+                time = datetime.datetime(today.year, today.month, d, h, m)
+                Record.objects.create(registration=reg, timestamp=time)
+                # Record.objects.bulk_create(records)

@@ -1,13 +1,84 @@
 {% extends "admin_extra_buttons/action_page.html" %}
-{% block action-content %}
-    <table>
-    {{ records }}
-        {% for hour, count in records.items %}
-            <tr>
-                <td>{{ hour }}</td>
-                <td>{{ count }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+{% block extrahead %}
+    <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+    <script src="/static/admin/js/jquery.init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
+{% endblock %}
+
+{% block action-content %}
+    <label><input type="radio" value="h" name="chartType">Hours</label>
+    <label><input type="radio" checked value="m" name="chartType">Days</label>
+    <button id="prev"> << </button>
+    <button id="next"> >> </button>
+
+    <div class="chart-container" style="position: relative; height:20vh; width:80vw">
+        <canvas id="myChart"></canvas>
+    </div>
 {% endblock action-content %}
+
+{% block document_ready %}
+
+    <script>
+        (function ($) {
+            var m = moment();
+            var currentDay = m.format('YYYY-MM-DD');
+            var MODE="m";
+            var ctx = document.getElementById("myChart").getContext("2d");
+            var baseUrl = "{% url "admin:registration_registration_data" original.pk %}";
+            var myChart = new Chart(ctx, {
+                type: "bar",
+                responsive: true,
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: "",
+                        data: [],
+                        backgroundColor: "#6286d9",
+                    }]
+                }
+            });
+
+            ajax_chart(baseUrl);
+
+            function ajax_chart(url) {
+                $.getJSON(url).done(function (response) {
+                    myChart.data.labels = response.labels;
+                    myChart.data.datasets[0].data = response.data;
+                    myChart.data.datasets[0].label = response.label;
+                    myChart.update(); // finally update our chart
+                    currentDay = moment(response.day, 'YYYY-MM-DD').format('YYYY-MM-DD');;
+                });
+            }
+
+            $("#prev").on("click", function (e) {
+                if (MODE==='m'){
+                    currentDay = moment(currentDay).subtract(1, 'months').format('YYYY-MM-DD');
+                    ajax_chart(baseUrl + "?m=" + currentDay);
+                }else{
+                    currentDay = moment(currentDay).subtract(1, 'days').format('YYYY-MM-DD');
+                    ajax_chart(baseUrl + "?d=" + currentDay);
+                }
+            });
+            $("#next").on("click", function (e) {
+                if (MODE==='m'){
+                    currentDay = moment(currentDay).add(1, 'months').format('YYYY-MM-DD');
+                    ajax_chart(baseUrl + "?m=" + currentDay);
+                }else{
+                    currentDay = moment(currentDay).add(1, 'days').format('YYYY-MM-DD');
+                    ajax_chart(baseUrl + "?d=" + currentDay);
+                }
+            });
+            $("input[name=chartType]").on("change", function (e) {
+                MODE=$(e.target).val();
+                if ($(e.target).val() === "m") {
+                    ajax_chart(baseUrl + "?m=" + currentDay);
+                } else {
+                    ajax_chart(baseUrl + "?d=" + currentDay);
+                }
+            });
+        })(django.jQuery);
+    </script>
+
+{% endblock %}
