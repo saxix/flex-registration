@@ -73,7 +73,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         param_day = request.GET.get("d", None)
         if param_day:
             day = datetime.strptime(param_day, "%Y-%m-%d")
-            qs = qs.filter(timestamp=day)
+            qs = qs.filter(timestamp__date=day)
             qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id"))
             data = defaultdict(lambda: 0)
             for record in qs.all():
@@ -106,7 +106,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             }
 
         response = JsonResponse(data)
-        # response["Cache-Control"] = f"public, max-age={60 * 60 * 24}"
+        response["Cache-Control"] = f"max-age={60 * 60 * 24}"
         return response
 
     @button(label="Chart")
