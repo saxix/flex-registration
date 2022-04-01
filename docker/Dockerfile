@@ -47,7 +47,7 @@ ENV ADMINS="" \
     PYTHONUNBUFFERED=1 \
     SECRET_KEY="secret-key-just-for-build" \
     SENTRY_DSN="" \
-    STATIC_ROOT="/var/run/static" \
+    STATIC_ROOT="/var/static" \
     PYTHONPATH="/code/src/"
 
 ADD . /code/
@@ -58,6 +58,7 @@ EXPOSE 8000
 
 ADD ./docker/entrypoint.sh /bin/
 ADD ./docker/uwsgi.ini /etc/
+ADD ./docker/nginx.conf /etc/
 
 RUN chmod +x /bin/entrypoint.sh
 
