@@ -30,7 +30,6 @@
             var label = $target.data("label");
             var $parent = $target.data("parent");
 
-
             $target.select2({
                 placeholder: "Select " + label,
                 ajax: {
@@ -54,7 +53,6 @@
                     $target.prop("disabled", true);
                 }
             }
-            ;
 
             if (selected) {
                 var url = $target.data("ajax--url");

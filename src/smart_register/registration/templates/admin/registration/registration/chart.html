@@ -3,16 +3,18 @@
     <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
     <script src="/static/admin/js/jquery.init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.0.0/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
 {% endblock %}
 
 {% block action-content %}
-    <label><input type="radio" value="h" name="chartType">Hours</label>
-    <label><input type="radio" checked value="m" name="chartType">Days</label>
-    <button id="prev"> << </button>
-    <button id="next"> >> </button>
-
+    <div style="margin-bottom: 50px;">
+        <label><input type="radio" value="h" name="chartType">Hours</label>
+        <label><input type="radio" checked value="m" name="chartType">Days</label>
+        <button class="btn button" id="prev"> <<</button>
+        <button class="btn button" id="next"> >></button>
+    </div>
     <div class="chart-container" style="position: relative; height:20vh; width:80vw">
         <canvas id="myChart"></canvas>
     </div>
@@ -22,20 +24,48 @@
 
     <script>
         (function ($) {
+            Chart.register(ChartDataLabels);
             var m = moment();
-            var currentDay = m.format('YYYY-MM-DD');
-            var MODE="m";
+            var currentDay = m.format("YYYY-MM-DD");
+            var MODE = "m";
             var ctx = document.getElementById("myChart").getContext("2d");
             var baseUrl = "{% url "admin:registration_registration_data" original.pk %}";
+
             var myChart = new Chart(ctx, {
                 type: "bar",
-                responsive: true,
+                options: {
+                    responsive: true,
+                    layout: {
+                        padding: 0
+                    },
+                    plugins: {
+                        datalabels: {
+                            anchor: "center",
+                            align: "center",
+                            formatter: Math.round,
+                            padding: 10,
+                            rotation: 0,
+                            font: {
+                                weight: "bold"
+                            },
+                        },
+                        title: {
+                            display: true,
+                            text: "Registrations"
+                        },
+                        legend: {
+                            display: false,
+                        }
+                    }
+                },
                 data: {
                     labels: [],
                     datasets: [{
                         label: "",
                         data: [],
-                        backgroundColor: "#6286d9",
+                        backgroundColor: "#2861c555",
+                        borderColor: "#2861c5",
+                        borderWidth: 1
                     }]
                 }
             });
@@ -48,37 +78,36 @@
                 $.getJSON(baseUrl + "?" + qs).done(function (response) {
                     myChart.data.labels = response.labels;
                     myChart.data.datasets[0].data = response.data;
-                    myChart.data.datasets[0].label = response.label;
                     myChart.update(); // finally update our chart
-                    currentDay = moment(response.day, 'YYYY-MM-DD').format('YYYY-MM-DD');;
+                    currentDay = moment(response.day, "YYYY-MM-DD").format("YYYY-MM-DD");
                 });
             }
 
             $("#prev").on("click", function (e) {
                 var data;
-                if (MODE==='m'){
-                    currentDay = moment(currentDay).subtract(1, 'months').format('YYYY-MM-DD');
-                    data = {m: currentDay}
-                }else{
-                    currentDay = moment(currentDay).subtract(1, 'days').format('YYYY-MM-DD');
-                    data = {d: currentDay}
+                if (MODE === "m") {
+                    currentDay = moment(currentDay).subtract(1, "months").format("YYYY-MM-DD");
+                    data = {m: currentDay};
+                } else {
+                    currentDay = moment(currentDay).subtract(1, "days").format("YYYY-MM-DD");
+                    data = {d: currentDay};
                 }
-                ajax_chart( data );
+                ajax_chart(data);
 
             });
             $("#next").on("click", function (e) {
                 var data;
-                if (MODE==='m'){
-                    currentDay = moment(currentDay).add(1, 'months').format('YYYY-MM-DD');
-                    data = {m: currentDay}
-                }else{
-                    currentDay = moment(currentDay).add(1, 'days').format('YYYY-MM-DD');
-                    data = {d: currentDay}
+                if (MODE === "m") {
+                    currentDay = moment(currentDay).add(1, "months").format("YYYY-MM-DD");
+                    data = {m: currentDay};
+                } else {
+                    currentDay = moment(currentDay).add(1, "days").format("YYYY-MM-DD");
+                    data = {d: currentDay};
                 }
-                ajax_chart( data );
+                ajax_chart(data);
             });
             $("input[name=chartType]").on("change", function (e) {
-                MODE=$(e.target).val();
+                MODE = $(e.target).val();
                 if ($(e.target).val() === "m") {
                     ajax_chart({m: currentDay});
                 } else {
