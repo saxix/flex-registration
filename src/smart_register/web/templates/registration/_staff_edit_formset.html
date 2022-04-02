@@ -1,9 +1,8 @@
 <span class="staff-editor staff-tooltip">
     <span class="tooltiptext text-lower">
-        <p>FormSet:</p>
-        <p>{{ formset.fs.name }}</p>
-        <p>v{{ formset.fs.version }}</p>
-        <p>{{ formset.fs.title|default_if_none:"<no title set>" }}</p>
+        <p><span class="label">FormSet</span>{{ formset.fs.name }}</p>
+        <p><span class="label">Version</span>{{ formset.fs.version }}</p>
+        <p><span class="label">Title</span>{{ formset.fs.title|default_if_none:"<no title set>"|truncatechars:"20" }}</p>
     </span>
     <a target="_edit" class="formset"
        href="{% url "admin:core_formset_change" formset.fs.pk %}">

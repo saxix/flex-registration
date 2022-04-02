@@ -71,7 +71,17 @@ span.staff-tooltip {
   position: relative;
   display: inline-block;
   //border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+  p {
+    .label{
+      all:revert;
+      color: #e8d48a;
+      width: 65px;
+      display: inline-block;
+      &::after {
+        content: ": ";}
 
+    }
+  }
   /* Tooltip text */
   .tooltiptext {
     visibility: hidden;

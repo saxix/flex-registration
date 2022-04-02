@@ -6,9 +6,11 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import condition
 from django.views.generic import TemplateView
 
+from smart_register import VERSION
 from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Registration
 
@@ -32,7 +34,8 @@ class PageView(TemplateView):
         return [f"{self.kwargs['page']}.html"]
 
 
-@method_decorator(cache_page(60 * 60), name="dispatch")
+@method_decorator(condition(etag_func=lambda r: VERSION, last_modified_func=None), name="dispatch")
+@method_decorator(cache_control(public=True), name="dispatch")
 class HomeView(TemplateView):
     template_name = "ua.html"
 
