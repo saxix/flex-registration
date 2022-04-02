@@ -14,13 +14,9 @@
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
     <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
+    <link rel="preload" as="image" href="{% static "loading.gif" %}" />
     {% if project.debug %}
         <link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
-
-    <script defer src="{% http2static "admin/js/vendor/jquery/jquery.js" %}"></script>
-    <script defer src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
-            integrity="sha384-V+jCLoAVKKml0VanRLGJGAdKk+Lzo1kRFe079J0majdfeGabOd32KG/2adGnr4N0"
-            crossorigin="anonymous"></script>
     {% block head %}
     {% endblock head %}
 </head>
