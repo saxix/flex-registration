@@ -1,4 +1,5 @@
 import logging
+import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -114,10 +115,11 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             }
 
         response = JsonResponse(data)
-        response["Cache-Control"] = f"max-age={60 * 60 * 24}"
+        response["Cache-Control"] = "no-cache"
+        # response["Cache-Control"] = f"max-age={60 * 60 * 24}"
         return response
 
-    @button(label="Chart")
+    @button(label="Chart", pattern=f"chart-{random.randint(1, 999999)}/<int:pk>/")
     def chart(self, request, pk):
         ctx = self.get_common_context(request, pk, title="chart")
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
