@@ -72,23 +72,24 @@ FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
-    "smart_register.web.middlewares.ThreadLocalMiddleware",
-    "smart_register.web.middlewares.SentryMiddleware",
-    "smart_register.web.middlewares.SecurityHeadersMiddleware",
+    "smart_register.web.middlewares.thread_local.ThreadLocalMiddleware",
+    "smart_register.web.middlewares.sentry.SentryMiddleware",
+    "smart_register.web.middlewares.security.SecurityHeadersMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "smart_register.web.middlewares.MaintenanceMiddleware",
-    "smart_register.web.middlewares.LocaleMiddleware",
+    "smart_register.web.middlewares.maintenance.MaintenanceMiddleware",
+    "smart_register.web.middlewares.locale.LocaleMiddleware",
     # "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "smart_register.web.middlewares.HtmlMinMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # "smart_register.web.middlewares.http2.HTTP2Middleware",
+    "smart_register.web.middlewares.minify.HtmlMinMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
     # "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
@@ -104,6 +105,9 @@ TEMPLATES = [
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
             ],
+            # 'builtins': [
+            #     'http2.templatetags',
+            # ],
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
@@ -315,6 +319,9 @@ if SENTRY_DSN:
     )
 CORS_ALLOWED_ORIGINS = [
     "https://excubo.unicef.io",
+    "http://localhost:8000",
+    "https://browser.sentry-cdn.com",
+    "https://cdnjs.cloudflare.com",
 ] + env("CORS_ALLOWED_ORIGINS")
 
 CONSTANCE_ADDITIONAL_FIELDS = {
@@ -505,3 +512,7 @@ LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
 # allow upload big file
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2  # 2M
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
+
+HTTP2_PRELOAD_HEADERS = True
+HTTP2_PRESEND_CACHED_HEADERS = True
+HTTP2_SERVER_PUSH = False

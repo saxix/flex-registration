@@ -2,8 +2,9 @@
 <span class="tooltiptext">
     <p>Field:</p>
     <p>{{ field.field.flex_field.type_name }}()</p>
-    {{ field.field.flex_field.name }}
-    #{{ field.auto_id }}
+    <p>v:{{ field.field.flex_field.version }}</p>
+    <p>{{ field.field.flex_field.name }}</p>
+    <p>#{{ field.auto_id }}</p>
 </span>
     <a target="_edit" class="field"
        href="{% url "admin:core_flexformfield_change" field.field.flex_field.pk %}">

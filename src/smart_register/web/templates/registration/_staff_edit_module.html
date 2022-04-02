@@ -3,6 +3,7 @@
         <p>Module:</p>
         <p>{{ dataset.name }}</p>
         <p>{{ dataset.locale }}</p>
+        <p>v{{ dataset.version }}</p>
     </span>
     <a target="_edit" class="module"
        href="{% url "admin:registration_registration_change" dataset.pk %}">

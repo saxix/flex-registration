@@ -2,6 +2,7 @@
     <span class="tooltiptext text-lower">
         <p>FormSet:</p>
         <p>{{ formset.fs.name }}</p>
+        <p>v{{ formset.fs.version }}</p>
         <p>{{ formset.fs.title|default_if_none:"<no title set>" }}</p>
     </span>
     <a target="_edit" class="formset"
