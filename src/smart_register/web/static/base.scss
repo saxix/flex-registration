@@ -9,6 +9,10 @@ $color-error: #ff9898;
   a {
     color: $base-color;
     font-weight: bold;
+    &.button{
+      background-color:#01ADF1;
+      color:white;
+    }
   }
 
   ul {

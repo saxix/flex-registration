@@ -12,13 +12,12 @@
         </span>
         <div class="hidden md:inline-flex ">
             <span>Edit: </span>
-            <a target="_edit" href="{% url "admin:registration_registration_change" dataset.pk %}">Module</a>
-            <a target="_edit" href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Form</a>
+            <a href="{% url "admin:registration_registration_change" dataset.pk %}">Module</a>
+            <a href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Form</a>
             {% for name, formset in formsets.items %}
-                <a target="_edit"
-                   href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">{{ name }}</a>
+                <a href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">{{ name }}</a>
             {% endfor %}
-            <a target="_edit" href="{% url "admin:index" %}">Admin</a>
+            <a href="{% url "admin:index" %}">Admin</a>
         </div>
         <input id="staff-editor" type="checkbox" class="ml-2 mt-1 cursor-pointer">
     </div>

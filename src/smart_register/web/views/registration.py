@@ -13,6 +13,7 @@ from django.utils import translation
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -76,6 +77,7 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
+@method_decorator(never_cache, name="dispatch")
 class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
 

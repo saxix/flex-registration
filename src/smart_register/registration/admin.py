@@ -1,4 +1,5 @@
 import logging
+import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -48,6 +49,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     change_form_template = None
     autocomplete_fields = ("flex_form",)
     save_as = True
+    readonly_fields = ("version", "last_update_date")
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
@@ -113,10 +115,11 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             }
 
         response = JsonResponse(data)
-        response["Cache-Control"] = f"max-age={60 * 60 * 24}"
+        response["Cache-Control"] = "no-cache"
+        # response["Cache-Control"] = f"max-age={60 * 60 * 24}"
         return response
 
-    @button(label="Chart")
+    @button(label="Chart", pattern=f"chart-{random.randint(1, 999999)}/<int:pk>/")
     def chart(self, request, pk):
         ctx = self.get_common_context(request, pk, title="chart")
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
@@ -252,7 +255,7 @@ class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
     list_display = ("timestamp", "id", "registration", "ignored")
-    readonly_fields = ("registration", "timestamp", "id")
+    readonly_fields = ("registration", "timestamp", "remote_ip", "id")
     list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
     change_form_template = None
     change_list_template = None
