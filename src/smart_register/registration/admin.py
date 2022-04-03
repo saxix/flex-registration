@@ -21,7 +21,6 @@ from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
-from timezone_field import TimeZoneFormField
 
 from smart_admin.modeladmin import SmartModelAdmin
 
@@ -39,10 +38,6 @@ class RegistrationResource(resources.ModelResource):
 
 def last_day_of_month(date):
     return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
-
-
-class ChartForm(forms.Form):
-    timezone = TimeZoneFormField()  # renders like "Asia/Dubai"
 
 
 @register(Registration)
@@ -156,7 +151,6 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     @button(label="Chart")
     def chart(self, request, pk):
         ctx = self.get_common_context(request, pk, title="chart")
-        ctx["form"] = ChartForm()
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
         return render(request, "admin/registration/registration/chart.html", ctx)
 
