@@ -132,7 +132,9 @@
     <script nonce="{{request.csp_nonce}}">
         (function ($) {
             $(function () {
-                configureFormsets(formsetConfig);
+                if (formsetConfig.length > 0) {
+                    configureFormsets(formsetConfig);
+                }
                 $("input:checked[onchange]").trigger("change");
                 $('#spinner').hide();
              });

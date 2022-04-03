@@ -1,17 +1,21 @@
 {% extends "admin_extra_buttons/action_page.html" %}
 {% block extrahead %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css">
     <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
     <script src="/static/admin/js/jquery.init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {#    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>#}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.0.0/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
 {% endblock %}
 
 {% block action-content %}
+    {{ form }}
     <div style="margin-bottom: 50px;">
         <label><input type="radio" value="h" name="chartType">Hours</label>
-        <label><input type="radio" checked value="m" name="chartType">Days</label>
+        <label><input type="radio" value="m" name="chartType">Days</label>
+        <label><input type="radio" checked value="a" name="chartType">All</label>
         <button class="btn button" id="prev"> <<</button>
         <button class="btn button" id="next"> >></button>
     </div>
@@ -24,13 +28,17 @@
 
     <script>
         (function ($) {
+            {#$('#id_timezone').select2();#}
+            $("#id_timezone").on("change", function () {
+
+            });
+
             Chart.register(ChartDataLabels);
             var m = moment();
             var currentDay = m.format("YYYY-MM-DD");
             var MODE = "m";
             var ctx = document.getElementById("myChart").getContext("2d");
             var baseUrl = "{% url "admin:registration_registration_data" original.pk %}";
-
             var myChart = new Chart(ctx, {
                 type: "bar",
                 options: {
@@ -70,7 +78,7 @@
                 }
             });
 
-            ajax_chart(baseUrl);
+            ajax_chart({});
 
             function ajax_chart(params) {
                 params.rnd = Math.random();
@@ -111,8 +119,10 @@
                 MODE = $(e.target).val();
                 if ($(e.target).val() === "m") {
                     ajax_chart({m: currentDay});
-                } else {
+                } else if ($(e.target).val() === "h") {
                     ajax_chart({d: currentDay});
+                } else if ($(e.target).val() === "a") {
+                    ajax_chart({});
                 }
             });
         })(django.jQuery);

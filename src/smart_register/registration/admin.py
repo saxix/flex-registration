@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+import pytz
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from dateutil.relativedelta import relativedelta
@@ -20,6 +21,8 @@ from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
+from timezone_field import TimeZoneFormField
+
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.utils import clone_form, clone_model, is_root
@@ -36,6 +39,10 @@ class RegistrationResource(resources.ModelResource):
 
 def last_day_of_month(date):
     return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
+
+
+class ChartForm(forms.Form):
+    timezone = TimeZoneFormField()  # renders like "Asia/Dubai"
 
 
 @register(Registration)
@@ -75,13 +82,20 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
 
     @view()
     def data(self, request, registration):
-
         qs = Record.objects.filter(registration_id=registration)
         param_day = request.GET.get("d", None)
+        param_tz = request.GET.get("tz", None)
         total = 0
-        if param_day:
-            day = datetime.strptime(param_day, "%Y-%m-%d")
-            qs = qs.filter(timestamp__date=day)
+        if param_day or param_tz:
+            tz = pytz.timezone(param_tz or "utc")
+            if not param_day:
+                day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
+            else:
+                day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
+            # day = day.astimezone(tz)
+            start = day.astimezone(pytz.UTC)
+            end = start + timedelta(days=1)
+            qs = qs.filter(timestamp__gte=start, timestamp__lt=end)
             qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id"))
             data = defaultdict(lambda: 0)
             for record in qs.all():
@@ -89,14 +103,17 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 total += record["c"]
             hours = [f"{x:02d}:00" for x in list(range(0, 24))]
             data = {
+                "tz": str(tz),
                 "label": day.strftime("%A, %d %B %Y"),
                 "total": total,
+                "date": str(day),
+                "start": str(start),
+                "end": str(end),
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": hours,
                 "data": [data[x] for x in list(range(0, 24))],
             }
-        else:
-            param_month = request.GET.get("m", None)
+        elif param_month := request.GET.get("m", None):
             if param_month:
                 day = datetime.strptime(param_month, "%Y-%m-%d")
             else:
@@ -117,6 +134,20 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 "labels": labels,
                 "data": [data[x] for x in days],
             }
+        else:
+            qs = qs.all()
+            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id")).order_by("day")
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["day"]] = record["c"]
+                total += data[record["day"]]
+            data = {
+                "label": "",
+                "day": timezone.now().today().strftime("%Y-%m-%d"),
+                "total": total,
+                "labels": [d.strftime("%-d, %a") for d in data.keys()],
+                "data": list(data.values()),
+            }
 
         response = JsonResponse(data)
         response["Cache-Control"] = "max-age=5"
@@ -125,6 +156,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     @button(label="Chart")
     def chart(self, request, pk):
         ctx = self.get_common_context(request, pk, title="chart")
+        ctx["form"] = ChartForm()
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
         return render(request, "admin/registration/registration/chart.html", ctx)
 

@@ -1,3 +1,5 @@
+import base64
+import io
 import logging
 import re
 
@@ -5,6 +7,7 @@ import markdown as md
 from django.template import Library, Node
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from PIL import Image, UnidentifiedImageError
 
 from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
@@ -76,6 +79,19 @@ def formset_config(formset):
 def lookup(value, arg):
     # value_dict = ast.literal_eval(value)
     return value.get(arg, None)
+
+
+@register.filter()
+def is_image(element):
+    if not isinstance(element, str) or len(element) < 200:
+        return False
+    try:
+        imgdata = base64.b64decode(str(element))
+        im = Image.open(io.BytesIO(imgdata))
+        im.verify()
+        return True
+    except UnidentifiedImageError:
+        return None
 
 
 @register.filter()
