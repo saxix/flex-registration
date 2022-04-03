@@ -571,6 +571,17 @@ python-dateutil = "*"
 pytz = "*"
 
 [[package]]
+name = "django-timezone-field"
+version = "5.0"
+description = "A Django app providing DB, form, and REST framework fields for zoneinfo and pytz timezone objects."
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+pytz = "*"
+
+[[package]]
 name = "django-webtest"
 version = "1.9.10"
 description = "Instant integration of Ian Bicking's WebTest (http://docs.pylonsproject.org/projects/webtest/) with Django's testing framework."
@@ -2029,7 +2040,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "9745e4e6b4428a54dd64d6f401adcef64185e76f5bb3bb5a27fb25bd25d7a053"
+content-hash = "15d7079509667666656585c1ca8f1392f2382b4b96c57a1d11c2294a76da9983"
 
 [metadata.files]
 appnope = [
@@ -2338,6 +2349,10 @@ django-strategy-field = [
 django-sysinfo = [
     {file = "django-sysinfo-2.6.2.tar.gz", hash = "sha256:2efe6c1a3bedc5766549b8872c7d8b3266ecb45db9a6423b94365d7d089c86dd"},
     {file = "django_sysinfo-2.6.2-py3-none-any.whl", hash = "sha256:9589d4bff0605ed7681a2ca22ce2326a4b64db768038da39180a2ba31ab3ffea"},
+]
+django-timezone-field = [
+    {file = "django-timezone-field-5.0.tar.gz", hash = "sha256:15746ed367a5a32eda76cfa2886eeec1de8cda79f519b7c5e12f87ed7cdbd663"},
+    {file = "django_timezone_field-5.0-py3-none-any.whl", hash = "sha256:199f211082eeac7e83563929b8ce41399c1c0f00dfc2f36bc00bea381027eaaa"},
 ]
 django-webtest = [
     {file = "django-webtest-1.9.10.tar.gz", hash = "sha256:c8c32041791cdae468e443097c432c67cf17cad339e1ab88b01a6c4841ee4c74"},
