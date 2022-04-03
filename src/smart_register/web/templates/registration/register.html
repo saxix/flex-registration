@@ -22,7 +22,7 @@
 {% endblock staff-toolbar %}
 
 {% block body %}
-    <script>var formsetConfig = [];</script>
+    <script nonce="{{request.csp_nonce}}">var formsetConfig = [];</script>
     <div class="min-h-screen flex justify-center bg-gray-100 pb-10">
         <div class="w-full lg:w-1/2 mt-5">
             {% if invalid %}
@@ -100,7 +100,7 @@
                         {#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
                         {#                        </div>#}
 
-                        <script>
+                        <script nonce="{{request.csp_nonce}}">
                             {% formset_config formset as config %}
                             formsetConfig.push({
                                 formCssClass: "form-container.{{ formset.prefix }}",
@@ -129,7 +129,7 @@
 
         </div>
     </div>
-    <script>
+    <script nonce="{{request.csp_nonce}}">
         (function ($) {
             $(function () {
                 configureFormsets(formsetConfig);

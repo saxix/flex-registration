@@ -41,7 +41,7 @@
 {% endblock body %}
 
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-<script>
+<script nonce="{{request.csp_nonce}}">
     {% flag_enabled 'SENTRY_JAVASCRIPT' as sentry %}
     {% if sentry %}
         Sentry.init({

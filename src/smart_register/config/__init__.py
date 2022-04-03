@@ -14,6 +14,10 @@ def parse_emails(value):
 
 
 DEFAULTS = {
+    # "CSP_INCLUDE_NONCE_IN": (, True),
+    "CSP_REPORT_ONLY": (bool, True),
+    # "CSP_DEFAULT_SRC": (list, ),
+    # "CSP_SCRIPT_SRC": (str, None),
     "DJANGO_ADMIN_URL": (str, f"{uuid.uuid4().hex}/"),
     "DJANGO_ADMIN_TITLE": (str, "="),
     "AUTHENTICATION_BACKENDS": (list, []),
