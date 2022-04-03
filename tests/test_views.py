@@ -19,7 +19,9 @@ def simple_registration(simple_form):
     from smart_register.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
-        locale="en-us", name="registration #1", defaults={"flex_form": simple_form, "active": True}
+        locale="en-us",
+        name="registration #1",
+        defaults={"flex_form": simple_form, "encrypt_data": False, "active": True},
     )
     return reg
 
@@ -29,7 +31,9 @@ def rsa_encrypted_registration(simple_form):
     from smart_register.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
-        locale="en-us", name="registration #1", defaults={"flex_form": simple_form, "active": True}
+        locale="en-us",
+        name="registration #1",
+        defaults={"flex_form": simple_form, "encrypt_data": False, "active": True},
     )
     priv, pub = reg.setup_encryption_keys()
     reg._private_pem = priv
