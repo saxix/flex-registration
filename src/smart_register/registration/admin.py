@@ -1,5 +1,4 @@
 import logging
-import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -69,6 +68,11 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             ]
         )
 
+    @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
+    def _invalidate_cache(self, request, pk):
+        obj = self.get_object(request, pk)
+        obj.save()
+
     @view()
     def data(self, request, registration):
 
@@ -115,11 +119,10 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             }
 
         response = JsonResponse(data)
-        response["Cache-Control"] = "no-cache"
-        # response["Cache-Control"] = f"max-age={60 * 60 * 24}"
+        response["Cache-Control"] = "max-age=5"
         return response
 
-    @button(label="Chart", pattern=f"chart-{random.randint(1, 999999)}/<int:pk>/")
+    @button(label="Chart")
     def chart(self, request, pk):
         ctx = self.get_common_context(request, pk, title="chart")
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")

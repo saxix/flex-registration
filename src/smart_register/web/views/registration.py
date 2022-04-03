@@ -10,10 +10,10 @@ from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import translation
+from django.utils.cache import get_conditional_response
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils.translation import get_language_info
-from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -77,9 +77,16 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-@method_decorator(never_cache, name="dispatch")
 class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
+
+    def get(self, request, *args, **kwargs):
+        res_etag = f'"{self.registration.version}/{self.registration.flex_form.version}"'
+        response = get_conditional_response(request, str(res_etag))
+        if response is None:
+            response = super().get(request, *args, **kwargs)
+        response.headers.setdefault("ETag", res_etag)
+        return response
 
     @cached_property
     def registration(self):
@@ -114,8 +121,6 @@ class RegisterView(FixedLocaleView, FormView):
         attrs.pop("prefix")
         for name, fs in self.get_formsets_classes().items():
             formsets[name] = fs(prefix=f"{name}", **attrs)
-        # for fs in self.registration.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
-        #     formsets[fs.name] = fs.get_formset()(prefix=f"{fs.name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
