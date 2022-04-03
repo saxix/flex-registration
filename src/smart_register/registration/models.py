@@ -123,5 +123,7 @@ class Record(models.Model):
     def data(self):
         if self.registration.public_key:
             return {"Forbidden": "Cannot access encrypted data"}
+        elif self.registration.encrypt_data != undefined:
+            return self.decrypt(secret=None)
         else:
-            return json.loads(self.storage.tobytes().decode())
+            return json.loads(self.storage)
