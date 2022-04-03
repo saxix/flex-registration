@@ -536,6 +536,7 @@ CSP_STYLE_SRC = (
     "unsafe-inline",
     "https://unpkg.com",
     "http://localhost:8000",
+    "https://cdnjs.cloudflare.com",
 )
 # CSP_OBJECT_SRC = ("self",)
 # CSP_BASE_URI = ("self", "http://localhost:8000",)

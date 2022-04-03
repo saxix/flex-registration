@@ -2,6 +2,10 @@
   color: #0da7e6;
   font-weight: bold;
 }
+.landing a.button {
+  background-color: #01ADF1;
+  color: white;
+}
 .intro h1 {
   font-size: larger;
   font-weight: bold;

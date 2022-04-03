@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="version" content="{{ project.version|slice:':7'|join:'' }}">
-    {#    <meta name="release" content="{{ project.version }}">#}
     <meta name="date" content="{{ project.build_date }}">
 
     <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Registration</title>
 
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
-    <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
     <link rel="preload" as="image" href="{% static "loading.gif" %}" />
-    {% if project.debug %}
+    {% if project.debug or user.is_staff %}
+        <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
         <link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
     {% block head %}
     {% endblock head %}
@@ -32,7 +31,7 @@
             </div>
             <div class="flex-grow"></div>
             <div>
-                <img alt="hope logo" src="{% static "hope1.webp" %}" style="height: 40px;" height="40">
+                <img alt="hope logo" src="{% static "hope1.webp" %}"  height="40">
             </div>
         </div>
     </header>
