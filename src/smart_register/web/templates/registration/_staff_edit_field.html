@@ -6,7 +6,9 @@
     <p><span class="label">Validator</span>{{ field.field.flex_field.validator|default_if_none:"" }}</p>
     <p><span class="label">Regex</span>{{ field.field.flex_field.regex.pattern|default_if_none:""|truncatechars:30 }}</p>
 </span>
+    <label aria-label="Edit">
     <a target="_edit" class="field"
        href="{% url "admin:core_flexformfield_change" field.field.flex_field.pk %}">
     </a>
+        </label>
 </span>
