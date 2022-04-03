@@ -381,7 +381,6 @@ class OptionSet(NaturalKeyModel, models.Model):
 
     def get_cache_key(self, cols=None):
         return f"options-{self.get_api_url()}-{self.version}"
-        # return f"options-{self.pk}-{self.name}-{cols}-{self.version}"
 
     def get_api_url(self):
         try:
