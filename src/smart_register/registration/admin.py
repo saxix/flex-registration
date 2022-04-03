@@ -289,7 +289,7 @@ class HourFilter(SimpleListFilter):
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
-    list_display = ("timestamp", "id", "registration", "ignored")
+    list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id")
     list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
     change_form_template = None
