@@ -16,9 +16,9 @@
                 $target.data("parent", $parent);
             }
         });
-        var getData = function(url){
-            $.getJSON(url).then
-        };
+        // var getData = function(url){
+        //     $.getJSON(url).then
+        // };
         $targets.each(function (i, e) {
             if ($(e).data("select2")) {
                 return;
@@ -62,16 +62,21 @@
                     $target.append(newOption).trigger("change");
                 });
             }
-
         });
+
         $targets.each(function (i, e) {
             $select = $(e);
             if ($select.data("subscribers")) {
                 $select.on("change", function (e) {
                     var $self = $(e.target);
                     $self.data("subscribers").forEach(function (e, i) {
-                        $("#" + e).val("").trigger("change");
-                        $("#" + e).prop("disabled", !$self.val());
+                        var child = $("#" + e);
+                        if (!child.data("selected")){
+                            child.val("").trigger("change");
+                            child.prop("disabled", !$self.val());
+                        }else{
+                            child.data("selected", "")
+                        }
                     });
                 });
             }
