@@ -15,7 +15,10 @@
     <link rel="preload" as="image" href="{% static "loading.gif" %}" />
     {% if project.debug or user.is_staff %}
         <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
-        <link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
+        <link rel="stylesheet" href="{% static "debug.css" %}">
+    {% endif %}
+    <script defer src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+
     {% block head %}
     {% endblock head %}
 </head>

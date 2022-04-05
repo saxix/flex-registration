@@ -43,11 +43,6 @@ class FixedLocaleView:
         translation.activate(self.registration.locale)
         return super().dispatch(request, *args, **kwargs)
 
-    # def get(self, request, *args, **kwargs):
-    #     translation.activate(self.registration.locale)
-    #     with translation.override(self.registration.locale):
-    #         return self.render_to_response(self.get_context_data())
-
 
 class RegisterCompleteView(FixedLocaleView, TemplateView):
     template_name = "registration/register_done.html"
@@ -64,9 +59,8 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
     def get_qrcode(self, record):
         h = md5(record.storage).hexdigest()
-        url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
-        hashed_url = f"{url}/{h}"
-        return get_qrcode(hashed_url), url
+        url = self.request.build_absolute_uri(reverse("register-verify", args=[record.pk, h]))
+        return get_qrcode(url), url
 
     def get_context_data(self, **kwargs):
         if config.QRCODE:
