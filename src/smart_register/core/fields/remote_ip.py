@@ -13,7 +13,6 @@ class RemoteIpField(forms.CharField):
         kwargs["required"] = False
         kwargs["label"] = ""
         kwargs["help_text"] = ""
-        kwargs["label"] = ""
         super().__init__(**kwargs)
 
     def to_python(self, value):

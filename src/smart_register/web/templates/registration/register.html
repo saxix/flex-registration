@@ -1,8 +1,7 @@
 {% extends "base.html" %}{% load smart_register l10n static i18n http2 %}
 {% block head %}
     <meta name="Description" CONTENT="Module Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
-    <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />
-    <script src="{% http2static "admin/js/vendor/jquery/jquery.js" %}"></script>
+    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <script src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
             integrity="sha384-V+jCLoAVKKml0VanRLGJGAdKk+Lzo1kRFe079J0majdfeGabOd32KG/2adGnr4N0"
             crossorigin="anonymous"></script>
@@ -13,7 +12,7 @@
     {{ media }}
 {% endblock head %}
 {% block header %}
-    {% include "registration/_spinner.html" %}
+{#    {% include "registration/_spinner.html" %}#}
     {{ block.super }}
 {% endblock %}
 
@@ -126,20 +125,8 @@
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                 {{ dataset.footer|markdown }}
             </div>
-
         </div>
     </div>
-    <script nonce="{{request.csp_nonce}}">
-        (function ($) {
-            $(function () {
-                if (formsetConfig.length > 0) {
-                    configureFormsets(formsetConfig);
-                }
-                $("input:checked[onchange]").trigger("change");
-                $('#spinner').hide();
-             });
-        })($);
-    </script>
 {% endblock body %}
 {% block footer %}
 <div class="flex justify-center text-xs footer m-auto pt-1 pb-2 border-t-2 text-gray-400 border-gray-400">
