@@ -35,6 +35,15 @@ class FlexFormBaseForm(forms.Form):
             ]
         )
 
+    def _clean_fields(self):
+        super()._clean_fields()
+        for name, field in self.fields.items():
+            if getattr(field, "do_not_store", True):
+                del self.cleaned_data[name]
+
+    def full_clean(self):
+        return super().full_clean()
+
     def clean(self):
         cleaned_data = self.cleaned_data
         if self.is_valid() and self.flex_form and self.flex_form.validator:

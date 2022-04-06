@@ -9,3 +9,4 @@ class LabelOnlyWidget(TailWindMixin, forms.TextInput):
 
 class LabelOnlyField(forms.CharField):
     widget = LabelOnlyWidget
+    do_not_store = True
