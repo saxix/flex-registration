@@ -8,11 +8,11 @@ error_log /dev/stdout;
 http {
     include    /conf/mime.types;
     server {
-        client_max_body_size 10M;
+        client_max_body_size ${NGINX_MAX_BODY_SIZE};
         access_log /dev/stdout;
         listen 80;
          location /favicon.ico {
-            alias /var/static/favicon/favicon.ico;
+            alias ${STATIC_ROOT}/favicon/favicon.ico;
             etag off;
             if_modified_since off;
             add_header Cache-Control "public, no-transform, immutable";

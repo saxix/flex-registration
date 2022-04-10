@@ -202,7 +202,7 @@ USE_TZ = True
 # os.makedirs(STATIC_ROOT, exist_ok=True)
 
 # STATIC_URL = f"/static/{os.environ.get('VERSION', '')}/"
-STATIC_URL = "/static/"
+STATIC_URL = env("STATIC_URL")
 STATIC_ROOT = env("STATIC_ROOT")
 # STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
