@@ -13,7 +13,8 @@
         (function ($) {
             $(function () {
                 $(".base64 a")
-                    .click(function () {
+                    .click(function (e) {
+                        e.preventDefault();
                         $(this).parent().find(".preview").toggle();
                     });
             });

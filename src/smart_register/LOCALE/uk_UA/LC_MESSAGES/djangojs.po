@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-29 02:54+0000\n"
+"POT-Creation-Date: 2022-04-07 16:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,17 +17,23 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: smart_register/core/static/webcam/webcam.js:15
+#: smart_register/core/static/upload/upload.js:31
+#: smart_register/core/static/upload/upload.min.js:1
+#, javascript-format
+msgid "File too big. Max %s "
+msgstr "Файл завеликий. Максимальний розмір файлу %s"
+
+#: smart_register/core/static/webcam/webcam.js:19
 #: smart_register/core/static/webcam/webcam.min.js:1
 msgid "Video stream not available."
 msgstr ""
 
-#: smart_register/core/static/webcam/webcam.js:18
+#: smart_register/core/static/webcam/webcam.js:22
 #: smart_register/core/static/webcam/webcam.min.js:1
 msgid "Take photo"
 msgstr ""
 
-#: smart_register/core/static/webcam/webcam.js:20
+#: smart_register/core/static/webcam/webcam.js:24
 #: smart_register/core/static/webcam/webcam.min.js:1
 msgid "Cancel"
 msgstr ""

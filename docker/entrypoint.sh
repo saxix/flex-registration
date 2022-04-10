@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
-mkdir -p /var/sos/run ${MEDIA_ROOT} ${STATIC_ROOT}
+mkdir -p /var/run ${MEDIA_ROOT} ${STATIC_ROOT}
+echo "created support dirs /var/run ${MEDIA_ROOT} ${STATIC_ROOT}"
 
 if [ $# -eq 0 ]; then
     python manage.py upgrade --no-input
-    uwsgi --ini /etc/uwsgi.ini
+    nginx -c /conf/nginx.conf
+    exec uwsgi --ini /conf/uwsgi.ini
+#   exec gunicorn smart_register.config.wsgi -c /code/gunicorn_config.py
 else
     case "$1" in
         "dev")

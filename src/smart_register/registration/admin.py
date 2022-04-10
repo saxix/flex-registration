@@ -1,21 +1,27 @@
-import datetime
 import logging
+from collections import defaultdict
+from datetime import datetime, timedelta
 
+import pytz
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.db.models import JSONField
+from django.db.models import Count, JSONField
+from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
+
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.utils import clone_form, clone_model, is_root
@@ -30,6 +36,10 @@ class RegistrationResource(resources.ModelResource):
         model = Registration
 
 
+def last_day_of_month(date):
+    return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
+
+
 @register(Registration)
 class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
@@ -40,6 +50,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     change_form_template = None
     autocomplete_fields = ("flex_form",)
     save_as = True
+    readonly_fields = ("version", "last_update_date")
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
@@ -58,6 +69,90 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 "/static/clipboard%s.js" % extra,
             ]
         )
+
+    @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
+    def _invalidate_cache(self, request, pk):
+        obj = self.get_object(request, pk)
+        obj.save()
+
+    @view()
+    def data(self, request, registration):
+        qs = Record.objects.filter(registration_id=registration)
+        param_day = request.GET.get("d", None)
+        param_tz = request.GET.get("tz", None)
+        total = 0
+        if param_day or param_tz:
+            tz = pytz.timezone(param_tz or "utc")
+            if not param_day:
+                day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
+            else:
+                day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
+            # day = day.astimezone(tz)
+            start = day.astimezone(pytz.UTC)
+            end = start + timedelta(days=1)
+            qs = qs.filter(timestamp__gte=start, timestamp__lt=end)
+            qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id"))
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["hour"]] = record["c"]
+                total += record["c"]
+            hours = [f"{x:02d}:00" for x in list(range(0, 24))]
+            data = {
+                "tz": str(tz),
+                "label": day.strftime("%A, %d %B %Y"),
+                "total": total,
+                "date": str(day),
+                "start": str(start),
+                "end": str(end),
+                "day": day.strftime("%Y-%m-%d"),
+                "labels": hours,
+                "data": [data[x] for x in list(range(0, 24))],
+            }
+        elif param_month := request.GET.get("m", None):
+            if param_month:
+                day = datetime.strptime(param_month, "%Y-%m-%d")
+            else:
+                day = timezone.now().today()
+            qs = qs.filter(timestamp__month=day.month)
+            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["day"].day] = record["c"]
+                total += data[record["day"].day]
+            last_day = last_day_of_month(day)
+            days = list(range(1, 1 + last_day.day))
+            labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
+            data = {
+                "label": day.strftime("%B %Y"),
+                "total": total,
+                "day": day.strftime("%Y-%m-%d"),
+                "labels": labels,
+                "data": [data[x] for x in days],
+            }
+        else:
+            qs = qs.all()
+            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id")).order_by("day")
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["day"]] = record["c"]
+                total += data[record["day"]]
+            data = {
+                "label": "",
+                "day": timezone.now().today().strftime("%Y-%m-%d"),
+                "total": total,
+                "labels": [d.strftime("%-d, %a") for d in data.keys()],
+                "data": list(data.values()),
+            }
+
+        response = JsonResponse(data)
+        response["Cache-Control"] = "max-age=5"
+        return response
+
+    @button(label="Chart")
+    def chart(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="chart")
+        ctx["today"] = datetime.now().strftime("%Y-%m-%d")
+        return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
     def create_translation(self, request, pk):
@@ -178,7 +273,7 @@ class HourFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            offset = datetime.datetime.now() - datetime.timedelta(minutes=int(self.value()))
+            offset = datetime.now() - timedelta(minutes=int(self.value()))
             queryset = queryset.filter(timestamp__gte=offset)
 
         return queryset
@@ -188,8 +283,8 @@ class HourFilter(SimpleListFilter):
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
-    list_display = ("timestamp", "id", "registration", "ignored")
-    readonly_fields = ("registration", "timestamp", "id")
+    list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
+    readonly_fields = ("registration", "timestamp", "remote_ip", "id")
     list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
     change_form_template = None
     change_list_template = None

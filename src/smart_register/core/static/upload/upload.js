@@ -1,6 +1,7 @@
 ;(function ($) {
     $(function () {
         var M = 1048576;
+
         function returnFileSize(number) {
             if (number < 1024) {
                 return number + "bytes";
@@ -11,17 +12,35 @@
             }
         };
 
+        function resizeBase64Img(base64, width, height) {
+            var canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            var context = canvas.getContext("2d");
+            var deferred = $.Deferred();
+            $("<img/>").attr("src", "data:image/gif;base64," + base64).load(function () {
+                context.scale(width / this.width, height / this.height);
+                context.drawImage(this, 0, 0);
+                deferred.resolve($("<img/>").attr("src", canvas.toDataURL()));
+            });
+            return deferred.promise();
+        };
         var UploadHandler = function ($field) {
             var $error = $field.parents(".field-container").find(".size-error");
+            var sizeLimit = $field.data("max-size") || M * 10;
+            var sizeLimitFormat = gettext("File too big. Max %s ");
+            var sizeMax = returnFileSize(sizeLimit);
+            var sizeLimitMessage = interpolate(sizeLimitFormat, [sizeMax]);
+
             $field.on("change", function (e) {
                 var file = e.target.files[0];
                 var size = returnFileSize(file.size);
-                if (file.size > M *2){
+                if (file.size > sizeLimit) {
                     $field.attr("type", "text");
                     $field.attr("type", "file");
-                    $error.html('<ul class="errorlist"><li>File too big. Max 2 Mb</li></ul>');
-                }else{
-                    $error.html('');
+                    $error.html("<ul class=\"errorlist\"><li>"+ sizeLimitMessage + "</li></ul>");
+                } else {
+                    $error.html("");
                 }
             });
         };
@@ -40,7 +59,6 @@
         window.uploadManager = new UploadManager();
 
         $("input.vUploadField").each(function () {
-            console.log(2222);
             window.uploadManager.addField(this);
         });
 

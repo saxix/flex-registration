@@ -59,6 +59,15 @@ span.staff-tooltip {
   /* Tooltip arrow */
   /* Show the tooltip text when you mouse over the tooltip container */
 }
+span.staff-tooltip p .label {
+  all: revert;
+  color: #e8d48a;
+  width: 65px;
+  display: inline-block;
+}
+span.staff-tooltip p .label::after {
+  content: ": ";
+}
 span.staff-tooltip .tooltiptext {
   visibility: hidden;
   width: 300px;

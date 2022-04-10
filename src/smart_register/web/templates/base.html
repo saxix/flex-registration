@@ -1,28 +1,21 @@
-{% load static feature_flags %}<!DOCTYPE html>
+{% load static feature_flags http2 %}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="version" content="{{ project.version|slice:':7'|join:'' }}">
-    {#    <meta name="release" content="{{ project.version }}">#}
     <meta name="date" content="{{ project.build_date }}">
 
     <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Registration</title>
 
-    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
-    <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
-    {% if project.debug %}
+    <link rel="preload" as="image" href="{% static "loading.gif" %}" />
+    {% if project.debug or user.is_staff %}
+        <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
         <link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
-
-    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
-    <script src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
-            integrity="sha384-V+jCLoAVKKml0VanRLGJGAdKk+Lzo1kRFe079J0majdfeGabOd32KG/2adGnr4N0"
-            crossorigin="anonymous"></script>
-
-
     {% block head %}
     {% endblock head %}
 </head>
@@ -38,7 +31,7 @@
             </div>
             <div class="flex-grow"></div>
             <div>
-                <img alt="hope logo" src="{% static "hope.png" %}" style="height: 40px;" height="40">
+                <img alt="hope logo" src="{% static "hope1.webp" %}"  height="40">
             </div>
         </div>
     </header>
@@ -47,7 +40,7 @@
 {% endblock body %}
 
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-<script>
+<script nonce="{{request.csp_nonce}}">
     {% flag_enabled 'SENTRY_JAVASCRIPT' as sentry %}
     {% if sentry %}
         Sentry.init({

@@ -2,6 +2,7 @@ import json
 import logging
 
 from Crypto.PublicKey import RSA
+from concurrency.fields import AutoIncVersionField
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
@@ -10,7 +11,8 @@ from django.utils.text import slugify
 
 from smart_register.core.crypto import crypt, decrypt, Crypto
 from smart_register.core.models import FlexForm, Validator
-from smart_register.core.utils import dict_setdefault, safe_json
+from smart_register.core.utils import dict_setdefault, safe_json, get_client_ip
+from smart_register.state import state
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,9 @@ class Registration(models.Model):
             }
         }
     }
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
+
     name = CICharField(max_length=255, unique=True)
     title = models.CharField(max_length=500, blank=True, null=True)
     slug = models.SlugField(max_length=500, blank=True, null=True)
@@ -93,8 +98,17 @@ class Registration(models.Model):
         return Record.objects.create(registration=self, **fields)
 
 
+class RemoteIp(models.GenericIPAddressField):
+    def pre_save(self, model_instance, add):
+        if add:
+            value = get_client_ip(state.request)
+            setattr(model_instance, self.attname, value)
+        return getattr(model_instance, self.attname)
+
+
 class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
+    remote_ip = RemoteIp(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     storage = models.BinaryField(null=True, blank=True)
     ignored = models.BooleanField(default=False, blank=True)
@@ -109,5 +123,7 @@ class Record(models.Model):
     def data(self):
         if self.registration.public_key:
             return {"Forbidden": "Cannot access encrypted data"}
+        elif self.registration.encrypt_data:
+            return self.decrypt(secret=None)
         else:
             return json.loads(self.storage.tobytes().decode())

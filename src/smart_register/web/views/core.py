@@ -34,8 +34,8 @@ def filter_optionset(obj, request, columns):
         ],
     }
     response = JsonResponse(data)
-    # response["Cache-Control"] = "public, max-age=315360000"
-    # response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}"
+    response["Cache-Control"] = "public, max-age=315360000"
+    response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}-{columns}-{obj.version}"
     return response
 
 

@@ -63,6 +63,13 @@ check:
 
 build: check .build
 
+dev:
+	cd .. && docker build -t flex-dev -f docker/Dockerfile.dev .
+	DOCKER_IMAGE=flex-dev \
+	CMD='/bin/bash' \
+	RUN_OPTIONS="-it -v ${PWD}/conf/:/conf/ -v ${PWD}/../:/code/" \
+	$(MAKE) .run
+
 .push:
 	git push
 
@@ -83,9 +90,6 @@ build: check .build
 			-e DEBUG="0" \
 			-e DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
-			-e STATIC_ROOT="${STATIC_ROOT}" \
-			-v ${PWD}/:/aaa/ \
-			-v /Users/sax/Documents/data/PROGETTI/UNICEF/unicef-flex-form/:/code/ \
 			${RUN_OPTIONS} \
 			${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			${CMD}

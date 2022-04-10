@@ -1,3 +1,5 @@
+import base64
+import io
 import logging
 import re
 
@@ -5,6 +7,7 @@ import markdown as md
 from django.template import Library, Node
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from PIL import Image, UnidentifiedImageError
 
 from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
@@ -79,6 +82,19 @@ def lookup(value, arg):
 
 
 @register.filter()
+def is_image(element):
+    if not isinstance(element, str) or len(element) < 200:
+        return False
+    try:
+        imgdata = base64.b64decode(str(element))
+        im = Image.open(io.BytesIO(imgdata))
+        im.verify()
+        return True
+    except UnidentifiedImageError:
+        return None
+
+
+@register.filter()
 def is_base64(element):
     expression = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$"
     try:
@@ -97,8 +113,7 @@ def link(registration):
     attrs = dict_get_nested(widget, "attrs")
 
     if "class" not in attrs:
-        widget["attrs"]["style"] = "background-color:#01ADF1;color:white;"
-        widget["attrs"]["class"] = "text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
+        widget["attrs"]["class"] = "button text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
     widget["attrs"]["href"] = reverse("register", args=[registration.locale, registration.slug])
     return {
         "reg": registration,

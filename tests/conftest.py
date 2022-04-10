@@ -31,6 +31,10 @@ def pytest_configure(config):
     if not config.option.enable_selenium:
         setattr(config.option, "markexpr", "not selenium")
 
+    from django.conf import settings, global_settings
+
+    settings.STATICFILES_STORAGE = global_settings.STATICFILES_STORAGE
+
 
 @pytest.fixture()
 def simple_form(db):

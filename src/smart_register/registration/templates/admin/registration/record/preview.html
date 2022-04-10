@@ -1,4 +1,8 @@
 {% extends "admin_extra_buttons/action_page.html" %}{% load smart_register %}
+{% block extrahead %}
+    <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+    <script src="/static/admin/js/jquery.init.js"></script>
+{% endblock %}
 {% block action-content %}
     {% if original.registration.public_key %}
         <div>This data have been encrypted</div>
@@ -13,7 +17,8 @@
         (function ($) {
             $(function () {
                 $(".base64 a")
-                    .click(function () {
+                    .click(function (e) {
+                        e.preventDefault();
                         $(this).parent().find(".preview").toggle();
                     });
             });

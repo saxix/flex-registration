@@ -1,36 +1,37 @@
 (function ($) {
     $(function () {
-        $(".ajaxSelect").each(function (i, e) {
+        var CACHE = {};
+        var $targets = $(".ajaxSelect");
+        $targets.each(function (i, e) {
             var $target = $(e);
             var parentName = $target.data("parent");
             $target.data("subscribers", $target.data("subscribers") || []);
 
-            if (parentName){
+            if (parentName) {
                 var $formContainer = $target.parents(".form-container");
                 $parent = $formContainer.find("[data-source=" + parentName + "]");
                 var subscribers = $parent.data("subscribers") || [];
-                subscribers.push($(e).attr('id'));
+                subscribers.push($(e).attr("id"));
                 $parent.data("subscribers", subscribers);
                 $target.data("parent", $parent);
             }
         });
-        $(".ajaxSelect").each(function (i, e) {
+        // var getData = function(url){
+        //     $.getJSON(url).then
+        // };
+        $targets.each(function (i, e) {
             if ($(e).data("select2")) {
                 return;
             }
             var $target = $(e);
             var url = $target.data("ajax-url");
-            var selected = $target.data('selected');
-            // var source = $target.data("source");
+            var selected = $target.data("selected");
             var parentName = $target.data("parent");
             var label = $target.data("label");
-            // var name = $target.data("name");
-            // var $formContainer = $target.parents(".form-container");
-            var $parent = $target.data("parent");;
+            var $parent = $target.data("parent");
 
             $target.select2({
                 placeholder: "Select " + label,
-                // disabled: true,
                 ajax: {
                     minimumInputLength: 2,
                     url: url,
@@ -48,30 +49,35 @@
             });
 
             if (parentName) {
-                if (!selected){
+                if (!selected) {
                     $target.prop("disabled", true);
                 }
-            };
-
-            if (selected){
-                var url = $target.data('ajax--url');
-                $.getJSON(url + '?pk=' + selected, function (results){
-                    var data = results.results[0];
-                    var newOption = new Option(data.text, data.id, true, true);
-                    $target.append(newOption).trigger('change');
-                });
             }
 
+            if (selected) {
+                var url = $target.data("ajax--url");
+                $.getJSON(url + "?pk=" + selected, function (results) {
+                    var data = results.results[0];
+                    var newOption = new Option(data.text, data.id, true, true);
+                    $target.append(newOption).trigger("change");
+                });
+            }
         });
-        $(".ajaxSelect").each(function (i, e) {
+
+        $targets.each(function (i, e) {
             $select = $(e);
-            if ($select.data('subscribers')){
+            if ($select.data("subscribers")) {
                 $select.on("change", function (e) {
                     var $self = $(e.target);
-                    $self.data('subscribers').forEach(function (e, i){
-                        $('#' + e).val('').trigger("change");
-                        $('#' + e).prop("disabled", !$self.val());
-                    })
+                    $self.data("subscribers").forEach(function (e, i) {
+                        var child = $("#" + e);
+                        if (!child.data("selected")){
+                            child.val("").trigger("change");
+                            child.prop("disabled", !$self.val());
+                        }else{
+                            child.data("selected", "")
+                        }
+                    });
                 });
             }
         });

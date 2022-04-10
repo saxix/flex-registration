@@ -10,7 +10,9 @@ class Config(AppConfig):
         from smart_register.core.registry import field_registry
 
         from . import flags  # noqa
+        from .handlers import cache_handler
 
+        cache_handler()
         try:
             for field in CustomFieldType.objects.all():
                 field_registry.register(field.get_class())
