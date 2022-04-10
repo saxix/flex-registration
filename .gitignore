@@ -16,3 +16,4 @@ package.json
 !.flake8
 !.pre-commit-config.yaml
 .env
+docker/conf/nginx.conf

@@ -38,7 +38,9 @@ ENV ADMINS="" \
     SECRET_KEY="secret-key-just-for-build" \
     SENTRY_DSN="" \
     STATIC_ROOT="/var/static" \
-    PYTHONPATH="/code/src/"
+    STATIC_URL="/static/" \
+    PYTHONPATH="/code/src/" \
+    NGINX_MAX_BODY_SIZE=30M \
 
 ADD pyproject.toml poetry.lock /tmp/
 RUN poetry config virtualenvs.create false \

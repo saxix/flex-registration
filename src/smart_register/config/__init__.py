@@ -56,7 +56,7 @@ DEFAULTS = {
     "SESSION_COOKIE_SECURE": (bool, "false"),
     "SESSION_COOKIE_NAME": (str, "reg_id"),
     "SMART_ADMIN_BOOKMARKS": (parse_bookmarks, ""),
-    "STATIC_ROOT": (str, "/tmp/static/"),
+    # "STATIC_ROOT": (str, "/tmp/static/"),
     "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "USE_HTTPS": (bool, False),

@@ -1,6 +1,5 @@
-bind = "0.0.0.0:80"
+bind = "0.0.0.0:8000"
 backlog = 512
-
 
 workers = 4
 worker_class = "sync"
@@ -8,7 +7,6 @@ worker_class = "sync"
 max_requests = 1000
 timeout = 30
 keepalive = 2
-
 
 proc_name = None
 daemon = False
