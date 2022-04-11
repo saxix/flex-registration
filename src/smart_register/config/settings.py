@@ -93,6 +93,10 @@ MIDDLEWARE = [
     # "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
+if env("WHITENOISE"):
+    MIDDLEWARE += [
+        "whitenoise.middleware.WhiteNoiseMiddleware",
+    ]
 ROOT_URLCONF = "smart_register.config.urls"
 
 TEMPLATES = [

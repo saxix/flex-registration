@@ -64,6 +64,7 @@ DEFAULTS = {
     "AZURE_CLIENT_ID": (str, None),
     "AZURE_CLIENT_SECRET": (str, None),
     "AZURE_TENANT_KEY": (str, None),
+    "WHITENOISE": (bool, False),
 }
 
 env = Env(**DEFAULTS)
