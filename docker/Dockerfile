@@ -41,7 +41,8 @@ ENV ADMINS="" \
     STATIC_URL="/static/" \
     PYTHONPATH="/code/src/" \
     NGINX_MAX_BODY_SIZE=30M \
-    UWSGI_PROCESSES=4
+    UWSGI_PROCESSES=4 \
+    NGINX_CACHE_DIR="/data/nginx/cache"
 
 ADD pyproject.toml poetry.lock /tmp/
 RUN poetry config virtualenvs.create false \
