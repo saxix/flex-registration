@@ -41,12 +41,12 @@ http {
             http2_push https://browser.sentry-cdn.com/5.30.0/bundle.min.js;
             http2_push https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css;
 
-            add_header X-Cache-Status $upstream_cache_status;
+            add_header X-Cache-Status ${DOLLAR}upstream_cache_status;
 
             proxy_pass http://127.0.0.1:8000;
             proxy_set_header Host ${DOLLAR}host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Scheme $scheme;
+            proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+            proxy_set_header X-Scheme ${DOLLAR}scheme;
         }
     }
 }
