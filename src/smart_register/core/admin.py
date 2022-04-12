@@ -279,7 +279,12 @@ class FlexFormAdmin(SmartModelAdmin):
                 apps = frm.cleaned_data["apps"]
                 buf = io.StringIO()
                 call_command(
-                    "dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True
+                    "dumpdata",
+                    *apps,
+                    stdout=buf,
+                    exclude=["registration.Record"],
+                    use_natural_foreign_keys=True,
+                    use_natural_primary_keys=True,
                 )
                 return JsonResponse(json.loads(buf.getvalue()), safe=False)
             else:
