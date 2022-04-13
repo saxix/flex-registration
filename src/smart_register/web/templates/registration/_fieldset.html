@@ -7,6 +7,7 @@
             <label for="question_{{ field.auto_id }}" class="cursor-pointer">
                 <input id="question_{{ field.auto_id }}"
                        class="question-visibility {% if field.errors %}error{% endif %}"
+                       onchange="{{ field|smart:"question-onchange" }}"
                        data-target="field-container-{{ field.name }}"
                        {% if field.errors %} checked {% endif %}
                        type="checkbox">

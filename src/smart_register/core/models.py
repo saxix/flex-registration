@@ -5,8 +5,7 @@ from json import JSONDecodeError
 import jsonpickle
 import sentry_sdk
 from admin_ordering.models import OrderableModel
-from concurrency.fields import IntegerVersionField
-from constance import config
+from concurrency.fields import AutoIncVersionField
 from django import forms
 from django.contrib.postgres.fields import CICharField
 from django.core.cache import caches
@@ -20,7 +19,7 @@ from natural_keys import NaturalKeyModel
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
-from .cache import cache_form
+from .cache import cache_form, Cache
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
@@ -39,6 +38,9 @@ class Validator(NaturalKeyModel):
     FIELD = "field"
     MODULE = "module"
     FORMSET = "formset"
+
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=255, unique=True)
     message = models.CharField(max_length=255)
@@ -86,10 +88,13 @@ class Validator(NaturalKeyModel):
                         ret = jsonpickle.decode(result)
                     except (JSONDecodeError, TypeError):
                         ret = result
-                if isinstance(ret, (str, dict)):
-                    raise ValidationError(ret)
+                if isinstance(ret, str):
+                    raise ValidationError(_(ret))
+                elif isinstance(ret, dict):
+                    errors = {k: _(v) for (k, v) in ret.items()}
+                    raise ValidationError(errors)
                 elif isinstance(ret, bool) and not ret:
-                    raise ValidationError(self.message)
+                    raise ValidationError(_(self.message))
             except ValidationError as e:
                 if self.trace:
                     logger.exception(e)
@@ -115,7 +120,8 @@ def get_validators(field):
 
 
 class FlexForm(I18NModel, NaturalKeyModel):
-    version = IntegerVersionField()
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
     validator = models.ForeignKey(
@@ -173,7 +179,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
             "flex_form": self,
             **fields,
         }
-        flexForm = type(FlexFormBaseForm)(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
+        flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
@@ -193,7 +199,9 @@ class FormSet(NaturalKeyModel, OrderableModel):
             }
         }
     }
-    version = IntegerVersionField()
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
+
     name = CICharField(max_length=255)
     title = models.CharField(max_length=300, blank=True, null=True)
     description = models.TextField(max_length=2000, blank=True, null=True)
@@ -259,7 +267,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         },
     }
 
-    version = IntegerVersionField()
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
+
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
     name = CICharField(max_length=100, blank=True)
@@ -280,7 +290,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         ordering = ["ordering"]
 
     def __str__(self):
-        return f"{self.name} {self.field_type.__name__}"
+        if self.field_type:
+            return f"{self.name} {self.field_type.__name__}"
+        return f"{self.name} <no type>"
 
     def type_name(self):
         return str(self.field_type.__name__)
@@ -305,6 +317,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             regex = self.regex
 
             smart_attrs = kwargs.pop("smart", {}).copy()
+            # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
             if smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
@@ -349,8 +362,13 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         self.flex_form.get_form.cache_clear()
 
 
+class OptionSetManager(models.Manager):
+    cache = Cache()
+
+
 class OptionSet(NaturalKeyModel, models.Model):
-    version = IntegerVersionField()
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
     name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[a-z0-9-_]")])
     description = models.CharField(max_length=1000, blank=True, null=True)
     data = models.TextField(blank=True, null=True)
@@ -359,6 +377,7 @@ class OptionSet(NaturalKeyModel, models.Model):
     columns = models.CharField(
         max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
+    objects = OptionSetManager()
 
     def clean(self):
         try:
@@ -368,7 +387,7 @@ class OptionSet(NaturalKeyModel, models.Model):
         super().clean()
 
     def get_cache_key(self, cols=None):
-        return f"options-{self.pk}-{self.name}-{cols}-{self.version}"
+        return f"options-{self.get_api_url()}-{self.version}"
 
     def get_api_url(self):
         try:
@@ -378,9 +397,7 @@ class OptionSet(NaturalKeyModel, models.Model):
         return reverse("optionset", args=[self.name, pk, label, parent])
 
     def get_data(self, columns=None):
-        value = None
-        if config.CACHE_FORMS:
-            value = cache.get(self.get_cache_key(columns), version=self.version)
+        value = cache.get(self.get_cache_key(columns), version=self.version)
 
         if columns is None:
             pk_col, label_col, parent_col = map(int, self.columns.split(","))

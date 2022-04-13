@@ -1,4 +1,4 @@
-{% extends config.BASE_TEMPLATE %}{% load static smart_register %}
+{% extends "base.html" %}{% load static smart_register %}
 {% block header %}{% endblock %}
 {% block body %}
     <section class="text-gray-700 body-font landing">
@@ -16,15 +16,17 @@
                     </li>
 
                     <li class="my-5">
-                        <span class="font-bold">Протягом першої фази Програми ми допомагаємо родинам в Україні, які належать до однієї з двох груп</span>
+                        <span class="font-bold">
+                            Протягом першої фази Програми ми допомагаємо родинам в Україні,
+                            які належать до однієї з двох груп
+                        </span>
                         <ul>
                             <li class="mb-0">
-                                мають трьох і більше дітей до 18 років, з яких принаймні одна дитина не досягла двох
-                                років;
+                                мають троє і більше дітей до 18 років,
+                                з яких принаймні одна дитина не досягла двох років;
                             </li>
                             <li class="mb-0">
-                                мають двох і більше дітей до 18 років, яких виховує та утримує тільки одна людина, яка є
-                                офіційним представником дітей.
+                                мають двоє і більше дітей до 18 років, з яких принаймні одна дитина з інвалідністю.
                             </li>
                         </ul>
                     </li>
@@ -126,7 +128,7 @@
                             додаткові інформаційні матеріали про програми ЮНІСЕФ.</p>
                     </div>
                 </div>
-                <div class="flex space-x-2 m-5 px-10">
+                <div class="flex space-x-2 m-5 px-10 hp-buttons">
                     {% for reg in buttons %}
                         {% link reg %}
                     {% endfor %}
@@ -137,9 +139,9 @@
                 {#                     style="height: 300px"#}
                 {#                     src="{% static "unicef_ukraine_logo.jpg" %}">#}
                 <img class="mt-10 object-cover self-top object-top rounded"
-                     style="width: 400px;"
+                     width="400" height="286"
                      alt="logo"
-                     src="{% static "ukr_logo.png" %}">
+                     src="{% static "ukr_logo.webp" %}">
             </div>
         </div>
     </section>

@@ -31,7 +31,7 @@ class FlexFormBaseForm(forms.Form):
         base = super().media
         return base + forms.Media(
             js=[
-                "/static/smart%s.js" % extra,
+                static("smart%s.js" % extra),
             ]
         )
 

@@ -64,22 +64,22 @@
                 window.console.out = function (msg) {
                     $log.prepend(msg + "\n");
                 }
-                let message = "{{ original.message }}"
-                let $icon = $(".message .icon");
-                let editor = $("#id_code").data("CodeMirror");
-                let input = $("#id_input").data("CodeMirror");
-                let $log = $("#log");
-                let $messages =  $('#messages');
-                let updateSource = function () {
-                    let code = editor.getValue();
-                    let param = input.getValue();
-                    let source = "var value=" + param + ";" + code;
+                var message = "{{ original.message }}"
+                var $icon = $(".message .icon");
+                var editor = $("#id_code").data("CodeMirror");
+                var input = $("#id_input").data("CodeMirror");
+                var $log = $("#log");
+                var $messages =  $('#messages');
+                var updateSource = function () {
+                    var code = editor.getValue();
+                    var param = input.getValue();
+                    var source = "var value=" + param + ";" + code;
                     run(source);
                 };
-                let run = function (c) {
+                var run = function (c) {
                     try {
                         $messages.text("");
-                        let ret = eval(c);
+                        var ret = eval(c);
                         if (ret === true){
                             $icon.prop("class", "icon").addClass("valid");
                         }else{

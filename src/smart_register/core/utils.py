@@ -22,8 +22,12 @@ from django.utils.timezone import is_aware
 UNDEFINED = object()
 
 
+def has_token(request, *args, **kwargs):
+    return request.headers.get("x-session") == settings.ROOT_TOKEN
+
+
 def is_root(request, *args, **kwargs):
-    return request.user.is_superuser and request.headers.get("x-root-token") == settings.ROOT_TOKEN
+    return request.user.is_superuser and has_token(request)
 
 
 @keep_lazy_text
@@ -228,11 +232,14 @@ def get_client_ip(request):
 
 def get_default_language(request, default="en-us"):
     lang = default
-    if request.COOKIES.get("language"):
-        lang = request.COOKIES.get("language")
+    if request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME):
+        lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
     elif request.META.get("HTTP_ACCEPT_LANGUAGE", None):
         lang = request.META["HTTP_ACCEPT_LANGUAGE"]
-
     if lang not in [x[0] for x in settings.LANGUAGES]:
         lang = default
     return lang or "en-us"
+
+
+def get_versioned_static_name(name):
+    return name

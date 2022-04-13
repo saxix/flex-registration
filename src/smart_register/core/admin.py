@@ -58,6 +58,7 @@ class ValidatorAdmin(SmartModelAdmin):
     form = ValidatorForm
     search_fields = ("name",)
     list_filter = ("target",)
+    readonly_fields = ("version", "last_update_date")
     DEFAULTS = {
         Validator.FORM: {},  # cleaned data
         Validator.FIELD: "",  # field value
@@ -93,6 +94,7 @@ class FormSetAdmin(SmartModelAdmin):
     list_display = ("name", "title", "parent", "flex_form", "enabled", "validator", "min_num")
     search_fields = ("name", "title")
     list_editable = ("enabled",)
+    readonly_fields = ("version", "last_update_date")
     list_filter = (
         ("parent", AutoCompleteFilter),
         ("flex_form", AutoCompleteFilter),
@@ -138,7 +140,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     )
     autocomplete_fields = ("flex_form", "validator")
     save_as = True
-
+    readonly_fields = ("version", "last_update_date")
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
@@ -232,7 +234,7 @@ class FlexFormAdmin(SmartModelAdmin):
         "formsets",
     )
     search_fields = ("name",)
-
+    readonly_fields = ("version", "last_update_date")
     inlines = [FlexFormFieldInline, FormSetInline]
     save_as = True
 
@@ -250,6 +252,11 @@ class FlexFormAdmin(SmartModelAdmin):
         from .cache import cache
 
         cache.clear()
+
+    @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
+    def _invalidate_cache(self, request, pk):
+        obj = self.get_object(request, pk)
+        obj.save()
 
     @button()
     def test(self, request, pk):
@@ -272,7 +279,12 @@ class FlexFormAdmin(SmartModelAdmin):
                 apps = frm.cleaned_data["apps"]
                 buf = io.StringIO()
                 call_command(
-                    "dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True
+                    "dumpdata",
+                    *apps,
+                    stdout=buf,
+                    exclude=["registration.Record"],
+                    use_natural_foreign_keys=True,
+                    use_natural_primary_keys=True,
                 )
                 return JsonResponse(json.loads(buf.getvalue()), safe=False)
             else:
@@ -346,6 +358,7 @@ class OptionSetAdmin(SmartModelAdmin):
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
     save_as = True
+    readonly_fields = ("version", "last_update_date")
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
     def view_json(self, button):

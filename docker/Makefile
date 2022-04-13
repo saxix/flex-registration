@@ -13,7 +13,7 @@ BUILD_DATE:="$(shell date +"%Y-%m-%d %H:%M")"
 BUILD_OPTIONS?=--squash
 CMD?=run
 WORKER?='??'
-CONTAINER_NAME?=sos-${VERSION}
+CONTAINER_NAME?=flex-form-cnt
 LAZO?=$(shell which lazo)
 
 DOCKER_REGISTRY=ghcr.io
@@ -63,6 +63,13 @@ check:
 
 build: check .build
 
+dev:
+	cd .. && docker build -t flex-dev -f docker/Dockerfile.dev .
+	DOCKER_IMAGE=flex-dev \
+	CMD='/bin/bash' \
+	RUN_OPTIONS="-it -v ${PWD}/conf/:/conf/ -v ${PWD}/../:/code/" \
+	$(MAKE) .run
+
 .push:
 	git push
 
@@ -75,6 +82,7 @@ build: check .build
 			-e AUTHENTICATION_BACKENDS=\
 			-e ADMIN_EMAIL="${ADMIN_EMAIL}" \
 			-e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
+			-e DJANGO_ADMIN_URL=admin/ \
 			-e ADMINS="" \
 			-e LANGUAGE_CODE="uk-ua" \
 			-e ALLOWED_HOSTS="*" \
@@ -102,7 +110,7 @@ test:  ## test docker image
 	$(MAKE) .run
 
 shell:  ## run docker and spawn a shell
-	DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:latest RUN_OPTIONS=-it CMD='/bin/sh' $(MAKE) .run
+	DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:latest RUN_OPTIONS=-it CMD='/bin/bash' $(MAKE) .run
 
 IMAGE=${DOCKER_REGISTRY}/bitcaster/sos/docker-builder:19.03.12
 docker-builder:

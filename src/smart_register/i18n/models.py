@@ -18,6 +18,8 @@ class Message(models.Model):
     msgid = models.TextField()
     msgstr = models.TextField(blank=True, null=True)
     md5: str = models.CharField(verbose_name=_("MD5"), max_length=512, null=False, blank=False, db_index=True)
+    auto = models.BooleanField(default=False)
+    draft = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.locale} {truncatechars(self.msgid, 40)}"

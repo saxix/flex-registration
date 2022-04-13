@@ -1,20 +1,38 @@
 import logging
+from collections import defaultdict
+from datetime import datetime, timedelta
 
+import pytz
 import requests
 from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
+from dateutil.relativedelta import relativedelta
+from dateutil.utils import today
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin import SimpleListFilter
+from django.contrib.contenttypes.models import ContentType
+from django.db import OperationalError
+from django.db.models import Count
+from django.db.models.functions import ExtractHour, TruncDay
+from django.db.transaction import atomic
+from django.http import JsonResponse
 from django.contrib.admin import register
 from django.db.models import JSONField
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
+
 from smart_admin.modeladmin import SmartModelAdmin
+from smart_admin.truncate import truncate_model_table
 
 from ..core.utils import is_root
 from .forms import CloneForm
@@ -28,6 +46,10 @@ class RegistrationResource(resources.ModelResource):
         model = Registration
 
 
+def last_day_of_month(date):
+    return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
+
+
 @register(Registration)
 class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
@@ -38,6 +60,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
     change_form_template = None
     autocomplete_fields = ("flex_form",)
     save_as = True
+    readonly_fields = ("version", "last_update_date")
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
@@ -57,8 +80,94 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             ]
         )
 
+    @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
+    def _invalidate_cache(self, request, pk):
+        obj = self.get_object(request, pk)
+        obj.save()
+
+    @view()
+    def data(self, request, registration):
+        qs = Record.objects.filter(registration_id=registration)
+        param_day = request.GET.get("d", None)
+        param_tz = request.GET.get("tz", None)
+        total = 0
+        if param_day or param_tz:
+            tz = pytz.timezone(param_tz or "utc")
+            if not param_day:
+                day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
+            else:
+                day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
+            # day = day.astimezone(tz)
+            start = day.astimezone(pytz.UTC)
+            end = start + timedelta(days=1)
+            qs = qs.filter(timestamp__gte=start, timestamp__lt=end)
+            qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id"))
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["hour"]] = record["c"]
+                total += record["c"]
+            hours = [f"{x:02d}:00" for x in list(range(0, 24))]
+            data = {
+                "tz": str(tz),
+                "label": day.strftime("%A, %d %B %Y"),
+                "total": total,
+                "date": str(day),
+                "start": str(start),
+                "end": str(end),
+                "day": day.strftime("%Y-%m-%d"),
+                "labels": hours,
+                "data": [data[x] for x in list(range(0, 24))],
+            }
+        elif param_month := request.GET.get("m", None):
+            if param_month:
+                day = datetime.strptime(param_month, "%Y-%m-%d")
+            else:
+                day = timezone.now().today()
+            qs = qs.filter(timestamp__month=day.month)
+            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["day"].day] = record["c"]
+                total += data[record["day"].day]
+            last_day = last_day_of_month(day)
+            days = list(range(1, 1 + last_day.day))
+            labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
+            data = {
+                "label": day.strftime("%B %Y"),
+                "total": total,
+                "day": day.strftime("%Y-%m-%d"),
+                "labels": labels,
+                "data": [data[x] for x in days],
+            }
+        else:
+            qs = qs.all()
+            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id")).order_by("day")
+            data = defaultdict(lambda: 0)
+            for record in qs.all():
+                data[record["day"]] = record["c"]
+                total += data[record["day"]]
+            data = {
+                "label": "",
+                "day": timezone.now().today().strftime("%Y-%m-%d"),
+                "total": total,
+                "labels": [d.strftime("%-d, %a") for d in data.keys()],
+                "data": list(data.values()),
+            }
+
+        response = JsonResponse(data)
+        response["Cache-Control"] = "max-age=5"
+        return response
+
+    @button(label="Chart")
+    def chart(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="chart")
+        ctx["today"] = datetime.now().strftime("%Y-%m-%d")
+        return render(request, "admin/registration/registration/chart.html", ctx)
+
     @button()
     def create_translation(self, request, pk):
+        from smart_register.i18n.models import Message
+
         ctx = self.get_common_context(
             request,
             pk,
@@ -70,12 +179,22 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
             form = CloneForm(request.POST, instance=instance)
             if form.is_valid():
                 locale = form.cleaned_data["locale"]
+                existing = Message.objects.filter(locale=locale).count()
                 uri = request.build_absolute_uri(instance.get_absolute_url())
-                r = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
-                if r.status_code != 200:
-                    raise Exception(r.status_code)
+                r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
+                if r1.status_code != 200:
+                    raise Exception(r1.status_code)
+                if r1.status_code != 200:
+                    raise Exception(r1.status_code)
+                r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
+                if r2.status_code != 200:
+                    raise Exception(r1.status_code)
+                updated = Message.objects.filter(locale=locale).count()
+                added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
+                self.message_user(request, f"{updated-existing} messages created. {updated} available")
+                ctx["locale"] = locale
+                ctx["added"] = added
             else:
-                self.message_user(request, "----")
                 ctx["form"] = form
         else:
             form = CloneForm(instance=ctx["original"])
@@ -91,7 +210,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @link(html_attrs={"class": "aeb-warn "})
+    @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
         try:
             if button.original:
@@ -134,18 +253,44 @@ class DecryptForm(forms.Form):
     key = forms.CharField(widget=forms.Textarea)
 
 
+class HourFilter(SimpleListFilter):
+    parameter_name = "hours"
+    title = "Latest [n] hours"
+    slots = (
+        (30, _("30 min")),
+        (60, _("1 hour")),
+        (60 * 4, _("4 hour")),
+        (60 * 6, _("6 hour")),
+        (60 * 8, _("8 hour")),
+        (60 * 12, _("12 hour")),
+        (60 * 24, _("24 hour")),
+    )
+
+    def lookups(self, request, model_admin):
+        return self.slots
+
+    def queryset(self, request, queryset):
+        if self.value():
+            offset = datetime.now() - timedelta(minutes=int(self.value()))
+            queryset = queryset.filter(timestamp__gte=offset)
+
+        return queryset
+
+
 @register(Record)
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
-    list_display = (
-        "timestamp",
-        "id",
-        "registration",
-    )
-    readonly_fields = ("registration", "timestamp", "id")
-    list_filter = (("registration", AutoCompleteFilter),)
+    list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
+    readonly_fields = ("registration", "timestamp", "remote_ip", "id")
+    list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
     change_form_template = None
+    change_list_template = None
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related("registration")
+        return qs
 
     def get_common_context(self, request, pk=None, **kwargs):
         return super().get_common_context(request, pk, is_root=is_root(request), **kwargs)
@@ -153,6 +298,48 @@ class RecordAdmin(SmartModelAdmin):
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
+
+    @button()
+    def truncate(self, request):
+        if request.method == "POST":
+            from django.contrib.admin.models import DELETION, LogEntry
+
+            with atomic():
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=ContentType.objects.get_for_model(self.model).pk,
+                    object_id=None,
+                    object_repr=f"truncate table {self.model._meta.verbose_name}",
+                    action_flag=DELETION,
+                    change_message="truncate table",
+                )
+
+                try:
+                    truncate_model_table(self.model)
+                    return HttpResponseRedirect("..")
+                except OperationalError:
+                    self.get_queryset(request).delete()
+        else:
+            return confirm_action(
+                self,
+                request,
+                self.truncate,
+                mark_safe(
+                    """
+<h1 class="color-red"><b>This is a low level system feature</b></h1>
+<h1 class="color-red"><b>Continuing irreversibly delete all table content</b></h1>
+
+                                       """
+                ),
+                "Successfully executed",
+                title="Truncate table",
+                extra_context={"original": None, "add": False},
+            )
+
+    @button(label="Preview", permission=is_root)
+    def preview(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Preview")
+        return render(request, "admin/registration/record/preview.html", ctx)
 
     @button(permission=is_root)
     def decrypt(self, request, pk):

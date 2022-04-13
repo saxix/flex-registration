@@ -10,19 +10,10 @@
             <input type="submit" value="Create">
         </form>
     {% else %}
-        <h1>{{ cloned }}</h1>
-
-        <table>
-            <tr>
-                <th>Form</th>
-                <td>{{ cloned.flex_form }}</td>
-            </tr>
-            {% for fs in cloned.flex_form.formsets.all %}
-                <tr>
-                    <th>{{ fs.name }}</th>
-                    <td>{{ fs.flex_form }}</td>
-                </tr>
-            {% endfor  %}
-        </table>
+        <a href="{% url "admin:i18n_message_changelist" %}?locale__exact={{ locale }}&amp;draft__exact=1&amp;timestamp__day={% now "d" %}&amp;timestamp__month={% now "n" %}&amp;timestamp__year={% now "Y" %}">View All Messages</a>
+        <h2>New messages</h2>
+        <table>{% for msg in added %}
+            <tr><td><a href="{% url "admin:i18n_message_change" msg.pk %}">{{ msg.msgid }}</a></td><td></td></tr>
+        {% endfor %}</table>
     {% endif %}
 {% endblock action-content %}

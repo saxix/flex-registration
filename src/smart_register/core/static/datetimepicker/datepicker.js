@@ -1,3 +1,4 @@
+'use strict';
 var Datepicker = (function () {
   'use strict';
   function hasProperty(obj, prop) {

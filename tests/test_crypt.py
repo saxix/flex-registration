@@ -3,7 +3,7 @@ import json
 import pytest
 from Crypto.PublicKey import RSA
 
-from smart_register.core.crypto import Crypter, crypt, decrypt
+from smart_register.core.crypto import RSACrypto, crypt, decrypt
 
 LANGUAGES = {
     "english": "first",
@@ -104,10 +104,10 @@ def test_crypt_field(data, registration):
 
 
 def test_crypter1():
-    c = Crypter()
+    c = RSACrypto()
     assert c.decrypt(c.crypt("AAAA")) == "AAAA"
 
 
 def test_crypter2():
-    c = Crypter(PUBLIC.decode(), PRIVATE.decode())
+    c = RSACrypto(PUBLIC.decode(), PRIVATE.decode())
     assert c.decrypt(c.crypt("AAAA")) == "AAAA"

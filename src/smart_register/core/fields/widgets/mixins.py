@@ -12,6 +12,7 @@ class SmartFieldMixin:
     def __init__(self, *args, **kwargs) -> None:
         self.flex_field = kwargs.pop("flex_field")
         self.smart_attrs = kwargs.pop("smart_attrs", {})
+        self.data_attrs = kwargs.pop("data", {})
         super().__init__(*args, **kwargs)
 
     def widget_attrs(self, widget):
@@ -19,5 +20,9 @@ class SmartFieldMixin:
         for k, v in self.smart_attrs.items():
             if k.startswith("data-") or k.startswith("on"):
                 attrs[k] = v
-        # attrs |= self.smart_attrs
+        for k, v in self.data_attrs.items():
+            attrs[f"data-{k}"] = v
+        widget.smart_attrs = self.smart_attrs
+        widget.flex_field = self.flex_field
+        # attrs["smart_attrs"] = self.smart_attrs
         return attrs

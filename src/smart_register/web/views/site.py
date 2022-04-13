@@ -1,14 +1,30 @@
 import logging
 
 from constance import config
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
+from django.template.response import TemplateResponse
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import condition
 from django.views.generic import TemplateView
 
+from smart_register import VERSION
 from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Registration
 
 logger = logging.getLogger(__name__)
+
+
+def error_csrf(request, reason=""):
+    if reason:
+        logger.error(reason)
+    return TemplateResponse(request, "csrf.html", status=400)
+
+
+def error_404(request, exception):
+    return TemplateResponse(request, "404.html", status=404, headers={"Session-Token": settings.DJANGO_ADMIN_URL})
 
 
 class PageView(TemplateView):
@@ -23,11 +39,10 @@ class PageView(TemplateView):
         return super().get_context_data(title="Title", title2=_("Title2"), **kwargs)
 
 
+@method_decorator(condition(etag_func=lambda r: VERSION, last_modified_func=None), name="dispatch")
+@method_decorator(cache_control(public=True), name="dispatch")
 class HomeView(TemplateView):
-    template_name = "index.html"
-
-    def get_template_names(self):
-        return [config.HOME_TEMPLATE, self.template_name]
+    template_name = "ua.html"
 
     def get_context_data(self, **kwargs):
         selection = config.HOME_PAGE_REGISTRATIONS.split(";")

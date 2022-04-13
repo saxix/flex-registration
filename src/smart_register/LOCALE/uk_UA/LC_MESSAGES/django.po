@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-27 08:47+0000\n"
+"POT-Creation-Date: 2022-04-07 16:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,10 +26,12 @@ msgid "Document number..."
 msgstr ""
 
 #: smart_register/core/templates/admin/login.html:24
+#: smart_register/registration/templates/admin/registration/record/change_list.html:50
 msgid "Please correct the error below."
 msgstr "Будь ласка, вкажіть обов’язкові дані"
 
 #: smart_register/core/templates/admin/login.html:25
+#: smart_register/registration/templates/admin/registration/record/change_list.html:50
 msgid "Please correct the errors below."
 msgstr "Будь ласка, вкажіть обов’язкові дані"
 
@@ -61,24 +63,91 @@ msgstr ""
 msgid "refresh"
 msgstr "oновити"
 
-#: smart_register/management/commands/upgrade.py:81
-#: smart_register/web/templates/registration/_fieldset.html:19
-msgid "required"
-msgstr "обов’язкове"
+#: smart_register/registration/admin.py:262
+msgid "30 min"
+msgstr ""
+
+#: smart_register/registration/admin.py:263
+msgid "1 hour"
+msgstr ""
+
+#: smart_register/registration/admin.py:264
+msgid "4 hour"
+msgstr ""
+
+#: smart_register/registration/admin.py:265
+msgid "6 hour"
+msgstr ""
+
+#: smart_register/registration/admin.py:266
+msgid "8 hour"
+msgstr ""
+
+#: smart_register/registration/admin.py:267
+msgid "12 hour"
+msgstr ""
+
+#: smart_register/registration/admin.py:268
+msgid "24 hour"
+msgstr ""
+
+#: smart_register/registration/templates/admin/registration/record/change_list.html:30
+msgid "Home"
+msgstr ""
+
+#: smart_register/registration/templates/admin/registration/record/change_list.html:75
+msgid "Filter"
+msgstr ""
+
+#: smart_register/registration/templates/admin/registration/record/change_list.html:77
+msgid "Clear all filters"
+msgstr ""
 
 #: smart_register/web/templates/admin/base_site.html:8
 msgid "Django site admin"
 msgstr ""
 
-#: smart_register/web/templates/admin/base_site.html:23
+#: smart_register/web/templates/admin/base_site.html:24
 msgid "Django administration"
 msgstr ""
 
-#: smart_register/web/templates/registration/register.html:18
+#: smart_register/web/templates/admin/smart_index.html:48
+msgid "You don't have permission to view or edit anything."
+msgstr ""
+
+#: smart_register/web/templates/admin/smart_index.html:56
+msgid "Quick Links"
+msgstr ""
+
+#: smart_register/web/templates/admin/smart_index.html:64
+msgid "Recent actions"
+msgstr ""
+
+#: smart_register/web/templates/admin/smart_index.html:67
+msgid "Actions"
+msgstr ""
+
+#: smart_register/web/templates/admin/smart_index.html:70
+msgid "My actions"
+msgstr ""
+
+#: smart_register/web/templates/admin/smart_index.html:74
+msgid "None available"
+msgstr ""
+
+#: smart_register/web/templates/admin/smart_index.html:89
+msgid "Unknown content"
+msgstr ""
+
+#: smart_register/web/templates/registration/_fieldset.html:20
+msgid "required"
+msgstr "обов’язкове"
+
+#: smart_register/web/templates/registration/register.html:30
 msgid "please fix the errors below"
 msgstr "Будь ласка, вкажіть обов’язкові дані"
 
-#: smart_register/web/templates/registration/register.html:109
+#: smart_register/web/templates/registration/register.html:121
 msgid "Save"
 msgstr "Зберегти"
 
@@ -88,8 +157,7 @@ msgstr "Реєстрація успішна"
 
 #: smart_register/web/templates/registration/register_done.html:15
 msgid "Please save your registration ID or take a screenshot of this QR code."
-msgstr ""
-"Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода."
+msgstr "Будь ласка, збережіть ID-номер або зробіть скріншот QR-кода."
 
 #: smart_register/web/templates/registration/register_done.html:19
 msgid "Please save your registration ID."
@@ -97,7 +165,8 @@ msgstr "Будь ласка, збережіть ID-номер"
 
 #: smart_register/web/templates/registration/register_done.html:23
 msgid "This info will allow faster follow up in case of support request."
-msgstr "Ця інформація буде обов’язкова для подальшої комунікації щодо вашої заявки."
+msgstr ""
+"Ця інформація буде обов’язкова для подальшої комунікації щодо вашої заявки."
 
 #: smart_register/web/templates/registration/register_done.html:29
 msgid "register another household"

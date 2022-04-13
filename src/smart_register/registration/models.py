@@ -1,16 +1,25 @@
 import json
+import logging
 
 from Crypto.PublicKey import RSA
+from concurrency.fields import AutoIncVersionField
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
-from smart_register.core.crypto import crypt, decrypt
+from smart_register.core.crypto import crypt, decrypt, Crypto
 from smart_register.core.models import FlexForm, Validator
+from smart_register.core.utils import get_client_ip
+from smart_register.registration.fields import ChoiceArrayField
+from smart_register.state import state
 from smart_register.core.utils import dict_setdefault, safe_json
 from smart_register.i18n.models import I18NModel
+
+logger = logging.getLogger(__name__)
+
+undefined = object()
 
 
 class Registration(I18NModel, models.Model):
@@ -21,6 +30,9 @@ class Registration(I18NModel, models.Model):
             }
         }
     }
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
+
     name = CICharField(max_length=255, unique=True)
     title = models.CharField(max_length=500, blank=True, null=True)
     slug = models.SlugField(max_length=500, blank=True, null=True)
@@ -29,7 +41,10 @@ class Registration(I18NModel, models.Model):
     start = models.DateField(auto_now_add=True)
     end = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=False)
-    locale = models.CharField(max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE)
+    locale = models.CharField(
+        verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
+    )
+    locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
     intro = models.TextField(blank=True, null=True)
     footer = models.TextField(blank=True, null=True)
     validator = models.ForeignKey(
@@ -40,6 +55,7 @@ class Registration(I18NModel, models.Model):
         blank=True,
         null=True,
     )
+    encrypt_data = models.BooleanField(default=False)
     advanced = models.JSONField(default=dict, blank=True)
 
     class Meta:
@@ -50,7 +66,7 @@ class Registration(I18NModel, models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("register", args=[self.locale, self.slug])
+        return reverse("register", args=[self.slug])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:
@@ -75,28 +91,48 @@ class Registration(I18NModel, models.Model):
 
     def encrypt(self, value):
         if not isinstance(value, str):
-            value = json.dumps(value)
+            value = safe_json(value)
         return crypt(value, self.public_key)
 
     def add_record(self, data):
         if self.public_key:
             fields = {"storage": self.encrypt(data)}
+        elif self.encrypt_data:
+            fields = {"storage": Crypto().encrypt(data).encode()}
         else:
             fields = {"storage": safe_json(data).encode()}
         return Record.objects.create(registration=self, **fields)
 
+    def languages(self):
+        return [(k, v) for k, v in settings.LANGUAGES if k in self.locales]
+
+
+class RemoteIp(models.GenericIPAddressField):
+    def pre_save(self, model_instance, add):
+        if add:
+            value = get_client_ip(state.request)
+            setattr(model_instance, self.attname, value)
+        return getattr(model_instance, self.attname)
+
 
 class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
-    timestamp = models.DateField(auto_now_add=True)
+    remote_ip = RemoteIp(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     storage = models.BinaryField(null=True, blank=True)
+    ignored = models.BooleanField(default=False, blank=True)
 
-    def decrypt(self, private_key):
-        return json.loads(decrypt(self.storage, private_key))
+    def decrypt(self, private_key=undefined, secret=undefined):
+        if private_key != undefined:
+            return json.loads(decrypt(self.storage, private_key))
+        elif secret != undefined:
+            return json.loads(Crypto(secret).decrypt(self.storage))
 
     @property
     def data(self):
         if self.registration.public_key:
             return {"Forbidden": "Cannot access encrypted data"}
+        elif self.registration.encrypt_data:
+            return self.decrypt(secret=None)
         else:
             return json.loads(self.storage.tobytes().decode())

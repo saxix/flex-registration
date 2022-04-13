@@ -41,11 +41,13 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
         call_command("migrate", **extra)
         call_command("create_extra_permissions")
 
+    static_root = Path(env("STATIC_ROOT"))
+    if not static_root.exists():
+        static_root.mkdir(parents=True)
+    print(f"STATIC_ROOT set to '{static_root}' ('{static_root.absolute()}')")
     if static:
         if verbosity >= 1:
             click.echo("Run collectstatic")
-        if not Path(env("STATIC_ROOT")).exists():
-            Path(env("STATIC_ROOT")).mkdir(parents=True)
         call_command("collectstatic", **extra)
 
     if admin_email:
@@ -77,5 +79,4 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
         print(f"LANGUAGE_CODE: {settings.LANGUAGE_CODE}")
         print(f"LOCALE: {translation.to_locale(settings.LANGUAGE_CODE)}")
         translation.activate(settings.LANGUAGE_CODE)
-        print(translation.gettext("required"))
         print("check_for_language", translation.check_for_language("settings.LANGUAGE_CODE"))

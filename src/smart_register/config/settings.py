@@ -21,6 +21,7 @@ DEV_DIR = SRC_DIR.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
+FERNET_KEY = env("FERNET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     # ---
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
+    "smart_admin.apps.SmartAuthConfig",
     "smart_admin.apps.SmartConfig",
     # 'smart_admin',
     "admin_ordering",
@@ -59,6 +61,7 @@ INSTALLED_APPS = [
     "captcha",
     "social_django",
     "corsheaders",
+    "simplemathcaptcha",
     # ---
     "smart_register",
     "smart_register.i18n",
@@ -69,26 +72,33 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 MIDDLEWARE = [
-    "smart_register.web.middlewares.ThreadLocalMiddleware",
-    "smart_register.web.middlewares.SentryMiddleware",
-    "smart_register.web.middlewares.SecurityHeadersMiddleware",
+    # "django.middleware.cache.UpdateCacheMiddleware",
+    "smart_register.web.middlewares.thread_local.ThreadLocalMiddleware",
+    "smart_register.web.middlewares.sentry.SentryMiddleware",
+    "smart_register.web.middlewares.security.SecurityHeadersMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "smart_register.web.middlewares.MaintenanceMiddleware",
-    "smart_register.web.middlewares.LocaleMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.middleware.gzip.GZipMiddleware",
+    "smart_register.web.middlewares.maintenance.MaintenanceMiddleware",
+    "smart_register.web.middlewares.locale.LocaleMiddleware",
+    # "django.middleware.locale.LocaleMiddleware",
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "smart_register.web.middlewares.HtmlMinMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "smart_register.web.middlewares.StateMiddleware",
+    # "smart_register.web.middlewares.http2.HTTP2Middleware",
+    "smart_register.web.middlewares.minify.HtmlMinMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
+    # "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
+if env("WHITENOISE"):
+    MIDDLEWARE += [
+        "whitenoise.middleware.WhiteNoiseMiddleware",
+    ]
 ROOT_URLCONF = "smart_register.config.urls"
 
 TEMPLATES = [
@@ -101,6 +111,9 @@ TEMPLATES = [
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
             ],
+            # 'builtins': [
+            #     'http2.templatetags',
+            # ],
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
@@ -109,6 +122,7 @@ TEMPLATES = [
                 "constance.context_processors.config",
                 "smart_register.i18n.context_processors.itrans",
                 "smart_register.web.context_processors.smart",
+                "django.template.context_processors.i18n",
                 # Social auth context_processors
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
@@ -123,6 +137,7 @@ WSGI_APPLICATION = "smart_register.config.wsgi.application"
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES["default"]["CONN_MAX_AGE"] = 60
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation
@@ -190,16 +205,19 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Ensure STATIC_ROOT exists.
-os.makedirs(STATIC_ROOT, exist_ok=True)
+# os.makedirs(STATIC_ROOT, exist_ok=True)
 
-STATIC_URL = "/static/"
-# STATIC_ROOT = env('STATIC_ROOT')
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# STATIC_URL = f"/static/{os.environ.get('VERSION', '')}/"
+STATIC_URL = env("STATIC_URL")
+STATIC_ROOT = env("STATIC_ROOT")
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STATICFILES_STORAGE = env("STATICFILES_STORAGE")
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "web/static"),
+    # os.path.join(BASE_DIR, "web/static"),
 ]
 
 # -------- Added Settings
@@ -310,6 +328,9 @@ if SENTRY_DSN:
     )
 CORS_ALLOWED_ORIGINS = [
     "https://excubo.unicef.io",
+    "http://localhost:8000",
+    "https://browser.sentry-cdn.com",
+    "https://cdnjs.cloudflare.com",
 ] + env("CORS_ALLOWED_ORIGINS")
 
 CONSTANCE_ADDITIONAL_FIELDS = {
@@ -395,6 +416,7 @@ FLAGS_STATE_LOGGING = DEBUG
 FLAGS = {
     "DEVELOP_DEVELOPER": [],
     "DEVELOP_DEBUG_TOOLBAR": [],
+    "SENTRY_JAVASCRIPT": [],
     "I18N_COLLECT_MESSAGES": [],
 }
 
@@ -406,6 +428,8 @@ JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.random_char_challenge"
 CAPTCHA_TEST_MODE = env("CAPTCHA_TEST_MODE")
+CAPTCHA_GET_FROM_POOL = True
+
 
 # CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
 
@@ -450,6 +474,7 @@ DEBUG_TOOLBAR_PANELS = [
 ]
 
 ROOT_TOKEN = env("ROOT_TOKEN")
+CSRF_FAILURE_VIEW = "smart_register.web.views.site.error_csrf"
 
 # Azure login
 
@@ -493,3 +518,62 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 # fix admin name
 LOGIN_URL = "/login/azuread-tenant-oauth2"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
+
+# allow upload big file
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2  # 2M
+FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
+
+HTTP2_PRELOAD_HEADERS = True
+HTTP2_PRESEND_CACHED_HEADERS = True
+HTTP2_SERVER_PUSH = False
+# CSP
+SOURCES = (
+    "self",
+    "inline",
+    "unsafe-inline",
+    "http://localhost:8000",
+    "https://unpkg.com",
+    "https://browser.sentry-cdn.com",
+    "https://cdnjs.cloudflare.com",
+    "data",
+    "unsafe-inline",
+)
+# MIDDLEWARE += ["csp.middleware.CSPMiddleware", ]
+CSP_DEFAULT_SRC = SOURCES
+# CSP_SCRIPT_SRC = ("self",)
+CSP_STYLE_SRC = (
+    "self",
+    "unsafe-inline",
+    "https://unpkg.com",
+    "http://localhost:8000",
+    "https://cdnjs.cloudflare.com",
+)
+# CSP_OBJECT_SRC = ("self",)
+# CSP_BASE_URI = ("self", "http://localhost:8000",)
+# CSP_CONNECT_SRC = ("self",)
+# CSP_FONT_SRC = ("self",)
+# CSP_FRAME_SRC = ("self",)
+# CSP_IMG_SRC = ("self", "data")
+# CSP_MANIFEST_SRC = ("self",)
+# CSP_MEDIA_SRC = ("self",)
+# CSP_REPORT_URI = ("https://624948b721ea44ac2a6b4de4.endpoint.csper.io/?v=0;",)
+# CSP_WORKER_SRC = ("self",)
+"""default-src 'self';
+script-src 'report-sample' 'self';
+style-src 'report-sample' 'self';
+object-src 'none';
+base-uri 'self';
+connect-src 'self';
+font-src 'self';
+frame-src 'self';
+img-src 'self';
+manifest-src 'self';
+media-src 'self';
+report-uri https://624948b721ea44ac2a6b4de4.endpoint.csper.io/?v=0;
+worker-src 'none';
+"""
+
+# CSP_INCLUDE_NONCE_IN = env("CSP_INCLUDE_NONCE_IN")
+# CSP_REPORT_ONLY = env("CSP_REPORT_ONLY")
+# CSP_DEFAULT_SRC = env("CSP_DEFAULT_SRC")
+# CSP_SCRIPT_SRC = env("CSP_SCRIPT_SRC")

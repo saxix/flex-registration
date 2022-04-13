@@ -1,27 +1,27 @@
+import base64
 import logging
 from hashlib import md5
 
 import sentry_sdk
 from constance import config
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile, UploadedFile
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
+from django.utils.cache import get_conditional_response
+from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
-from django.utils.translation import get_language_info
-from django.views.generic import CreateView, TemplateView
+from django.utils.translation import get_language
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
+from smart_register.core.cache import cache_formset
 from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Record, Registration
 
 logger = logging.getLogger(__name__)
-
-
-class DataSetView(CreateView):
-    model = Registration
-    fields = ()
 
 
 class QRVerify(TemplateView):
@@ -38,10 +38,9 @@ class FixedLocaleView:
     def registration(self):
         raise NotImplementedError
 
-    # def dispatch(self, request, *args, **kwargs):
-    #     request.LANGUAGE_CODE = self.registration.locale
-    #     translation.activate(self.registration.locale)
-    #     return super().dispatch(request, *args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        # translation.activate(self.registration.locale)
+        return super().dispatch(request, *args, **kwargs)
 
     # def get(self, request, *args, **kwargs):
     #     translation.activate(self.registration.locale)
@@ -59,13 +58,14 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
     @cached_property
     def record(self):
         return Record.objects.select_related("registration").get(
-            registration__id=self.kwargs["pk"], id=self.kwargs["rec"]
+            registration__id=self.kwargs["reg"], id=self.kwargs["rec"]
         )
 
     def get_qrcode(self, record):
         h = md5(record.storage).hexdigest()
-        url = self.request.build_absolute_uri(f"/register/qr/{record.pk}/{h}")
-        return get_qrcode(url), url
+        url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
+        hashed_url = f"{url}/{h}"
+        return get_qrcode(hashed_url), url
 
     def get_context_data(self, **kwargs):
         if config.QRCODE:
@@ -75,18 +75,27 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
 
-    @property
+    def get(self, request, *args, **kwargs):
+        res_etag = "/".join([str(self.registration.version), get_language(), str(request.user.is_staff)])
+        response = get_conditional_response(request, str(res_etag))
+        if response is None:
+            response = super().get(request, *args, **kwargs)
+        response.headers.setdefault("ETag", res_etag)
+        return response
+
+    @cached_property
     def registration(self):
         filters = {}
         if not self.request.user.is_staff:
             filters["active"] = True
 
-        base = Registration.objects.select_related("flex_form")
+        base = Registration.objects.select_related("flex_form", "validator")
         try:
-            return base.get(slug=self.kwargs["slug"], locale=self.kwargs["locale"], **filters)
+            return base.get(slug=self.kwargs["slug"], **filters)
         except Registration.DoesNotExist:  # pragma: no cover
             raise Http404
 
@@ -96,19 +105,28 @@ class RegisterView(FixedLocaleView, FormView):
     def get_form(self, form_class=None):
         return super().get_form(form_class)
 
+    @cache_formset
+    def get_formsets_classes(self):
+        formsets = {}
+        attrs = self.get_form_kwargs().copy()
+        attrs.pop("prefix")
+        for fs in self.registration.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()
+        return formsets
+
     def get_formsets(self):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop("prefix")
-        for fs in self.registration.flex_form.formsets.filter(enabled=True):
-            formsets[fs.name] = fs.get_formset()(prefix=f"{fs.name}", **attrs)
+        for name, fs in self.get_formsets_classes().items():
+            formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets
 
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
-        kwargs["language"] = get_language_info(self.registration.locale)
-        kwargs["locale"] = self.registration.locale
+        # kwargs["language"] = get_language_info(self.registration.locale)
+        # kwargs["locale"] = self.registration.locale
         kwargs["dataset"] = self.registration
 
         ctx = super().get_context_data(**kwargs)
@@ -155,8 +173,8 @@ class RegisterView(FixedLocaleView, FormView):
                 data[name].append(f.cleaned_data)
 
         def parse_field(field):
-            if isinstance(field, InMemoryUploadedFile):
-                return str(field.read())
+            if isinstance(field, (UploadedFile, InMemoryUploadedFile, TemporaryUploadedFile)):
+                return base64.b64encode(field.read())
             elif isinstance(field, dict):
                 return {item[0]: parse_field(item[1]) for item in field.items()}
             elif isinstance(field, list):

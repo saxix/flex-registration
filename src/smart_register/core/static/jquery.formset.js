@@ -58,7 +58,7 @@
                 if (options.deleteContainerClass) {
                     // If we have a specific container for the remove button,
                     // place it as the last child of that container:
-                    row.find('[class*="' + options.deleteContainerClass + '"]').append(delButtonHTML);
+                    row.find('.' + options.deleteContainerClass).append(delButtonHTML);
                 } else if (row.is('TR')) {
                     // If the forms are laid out in table rows, insert
                     // the remove button into the last table cell:
@@ -182,13 +182,15 @@
             // FIXME: Perhaps using $.data would be a better idea?
             options.formTemplate = template;
 
-            var addButtonHTML = '<a class="' + options.addCssClass + '" href="javascript:void(0)">' + options.addText + '</a>';
+            var addButtonHTML = '<a rel="nofollow" class="' + options.addCssClass + '" href="javascript:void(0)">' + options.addText + '</a>';
             if (options.addContainerClass) {
                 // If we have a specific container for the "add" button,
                 // place it as the last child of that container:
-                var addContainer = $('[class*="' + options.addContainerClass + '"');
+                // var addContainer = $('[class*="' + options.addContainerClass + '"');
+                var addContainer = $('.' + options.addContainerClass);
                 addContainer.append(addButtonHTML);
                 addButton = addContainer.find('[class="' + options.addCssClass + '"]');
+                // addButton = addContainer.find('.' + options.addCssClass);
             } else if ($$.is('TR')) {
                 // If forms are laid out as table rows, insert the
                 // "add" button in a new table row:

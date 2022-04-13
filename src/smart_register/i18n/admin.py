@@ -1,4 +1,5 @@
 from admin_extra_buttons.decorators import button
+from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
 from django.contrib.admin import register
 from django.shortcuts import render
@@ -12,12 +13,14 @@ from ..registration.models import Registration
 @register(Message)
 class MessageAdmin(SmartModelAdmin):
     search_fields = ("msgid",)
-    list_display = ("msgid", "locale", "msgstr")
+    list_display = ("msgid", "locale", "msgstr", "draft")
     list_editable = ("msgstr",)
     list_filter = (
-        "locale",
+        ("locale", ChoicesFieldComboFilter),
+        "draft",
         ("msgstr", ValueFilter),
     )
+    date_hierarchy = "timestamp"
     readonly_fields = ("msgid",)
     fieldsets = (
         (
@@ -27,6 +30,15 @@ class MessageAdmin(SmartModelAdmin):
                     "msgid",
                     "msgstr",
                     "locale",
+                )
+            },
+        ),
+        (
+            None,
+            {
+                "fields": (
+                    "draft",
+                    "auto",
                 )
             },
         ),

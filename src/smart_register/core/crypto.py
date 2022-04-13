@@ -1,7 +1,13 @@
+import base64
 import io
+import logging
 
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
+from cryptography.fernet import Fernet
+from django.conf import settings
+
+from smart_register.core.utils import safe_json
 
 BLOCK_SIZE = 16
 CHUNK_SIZE = BLOCK_SIZE * 1024 * 1024 + BLOCK_SIZE
@@ -9,8 +15,40 @@ TAG_SIZE = BLOCK_SIZE
 CIPHERTXT_SIZE = CHUNK_SIZE - TAG_SIZE
 NONCE_SIZE = BLOCK_SIZE
 
+logger = logging.getLogger(__name__)
 
-class Crypter:
+
+class Crypto:
+    def __init__(self, key=None):
+        self.key = key or settings.FERNET_KEY
+
+    def encrypt(self, v):
+        try:
+            if isinstance(v, str):
+                value = v
+            else:
+                value = safe_json(v)
+
+            cipher_suite = Fernet(self.key)  # key should be byte
+            encrypted_text = cipher_suite.encrypt(value.encode("ascii"))
+            encrypted_text = base64.urlsafe_b64encode(encrypted_text).decode("ascii")
+            return encrypted_text
+        except Exception as e:
+            logger.exception(e)
+        return v
+
+    def decrypt(self, value):
+        try:
+            txt = base64.urlsafe_b64decode(value)
+            cipher_suite = Fernet(self.key)
+            decoded_text = cipher_suite.decrypt(txt).decode("ascii")
+            return decoded_text
+        except Exception as e:
+            logger.exception(e)
+        return value
+
+
+class RSACrypto:
     def __init__(self, public_pem: str = None, private_pem: str = None):
         if public_pem and private_pem:
             pass

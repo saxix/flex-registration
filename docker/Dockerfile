@@ -6,6 +6,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
     locales \
+    circus \
+    nginx \
     locales-all \
     gettext \
     libjpeg-dev \
@@ -20,21 +22,11 @@ RUN apt-get update \
     && locale-gen --no-purge uk_UA.UTF-8 \
     && apt-get clean
 
-ENV LANG uk_UA.UTF-8
-ENV LANGUAGE uk_UA:ua
-ENV LC_ALL uk_UA.UTF-8
-
 WORKDIR /tmp
 
-ARG APP_ENV=prod
 ENV POETRY_VERSION=1.1.13
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
 ENV PATH = "${PATH}:/root/.poetry/bin"
-
-ADD pyproject.toml poetry.lock /tmp/
-RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi --no-root
-
 ENV ADMINS="" \
     BUILD_DATE=${BUILD_DATE} \
     VERSION=${VERSION} \
@@ -45,8 +37,18 @@ ENV ADMINS="" \
     PYTHONUNBUFFERED=1 \
     SECRET_KEY="secret-key-just-for-build" \
     SENTRY_DSN="" \
-    STATIC_ROOT="/var/run/static" \
-    PYTHONPATH="/code/src/"
+    STATIC_ROOT="/var/static" \
+    STATIC_URL="/static/" \
+    PYTHONPATH="/code/src/" \
+    NGINX_MAX_BODY_SIZE=30M \
+    UWSGI_PROCESSES=4 \
+    NGINX_CACHE_DIR="/data/nginx/cache"
+
+ADD pyproject.toml poetry.lock /tmp/
+RUN poetry config virtualenvs.create false \
+  && poetry install --no-interaction --no-ansi --no-root \
+  && pip install uwsgi
+
 
 ADD . /code/
 
@@ -55,6 +57,8 @@ WORKDIR /code/
 EXPOSE 8000
 
 ADD ./docker/entrypoint.sh /bin/
+ADD ./docker/conf/* /conf/
+
 RUN chmod +x /bin/entrypoint.sh
 
 ENTRYPOINT ["entrypoint.sh"]

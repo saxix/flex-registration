@@ -14,7 +14,11 @@ def parse_emails(value):
 
 
 DEFAULTS = {
-    "DJANGO_ADMIN_URL": (str, "admin/"),
+    # "CSP_INCLUDE_NONCE_IN": (, True),
+    "CSP_REPORT_ONLY": (bool, True),
+    # "CSP_DEFAULT_SRC": (list, ),
+    # "CSP_SCRIPT_SRC": (str, None),
+    "DJANGO_ADMIN_URL": (str, f"{uuid.uuid4().hex}/"),
     "DJANGO_ADMIN_TITLE": (str, "="),
     "AUTHENTICATION_BACKENDS": (list, []),
     "SECRET_KEY": (str, ""),
@@ -27,6 +31,7 @@ DEFAULTS = {
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
     "LOG_LEVEL": (str, "ERROR"),
     "ROOT_KEY": (str, uuid.uuid4().hex),
+    # "FERNET_KEY": (str, "Nl_puP2z0-OKVNKMtPXx4jEI-ox7sKLM7CgnGT-yAug="),
     "EMAIL_BACKEND": (str, "django.core.mail.backends.smtp.EmailBackend"),
     "EMAIL_HOST": (str, ""),
     "EMAIL_HOST_USER": (str, ""),
@@ -58,6 +63,7 @@ DEFAULTS = {
     "AZURE_CLIENT_ID": (str, None),
     "AZURE_CLIENT_SECRET": (str, None),
     "AZURE_TENANT_KEY": (str, None),
+    "WHITENOISE": (bool, False),
     "LANGUAGE_CODE": (str, "en-us"),
 }
 

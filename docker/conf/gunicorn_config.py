@@ -1,13 +1,12 @@
-bind = "0.0.0.0:80"
-backlog = 2048
+bind = "0.0.0.0:8000"
+backlog = 512
 
-
-workers = 2
-worker_class = "gevent"
-worker_connections = 1000
+workers = 4
+worker_class = "sync"
+# worker_connections = 1000 # This setting only affects the Eventlet and Gevent worker types.
+max_requests = 1000
 timeout = 30
 keepalive = 2
-
 
 proc_name = None
 daemon = False
@@ -19,7 +18,7 @@ tmp_upload_dir = None
 
 
 errorlog = "-"
-loglevel = "info"
+loglevel = "error"
 accesslog = "-"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 

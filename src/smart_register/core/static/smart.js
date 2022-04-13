@@ -1,4 +1,45 @@
 smart = {
+    sameAs: function (sender, target) {
+        var $sender = $(sender)
+        var $form = $sender.parents(".form-container");
+        var $target = $form.find("[data-flex='" + target +"']");
+        if ($sender.val() == $target.val()) {
+            $sender.css("background-color", "#d7f6ca");
+        }else{
+            $sender.css("background-color", "#e1adad");
+        }
+    },
+    preventSubmit: function (sender) {
+        var $form = $(sender).parents("form");
+        var $target = $form.find('input[type=submit]');
+        var valid = false;
+
+        if ($(sender).is('input[type="checkbox"]')){
+            valid = $(sender).is(':checked');
+        }else if ($(sender).is('input[type="radio"]')) {
+            valid = $(sender).val() == 'y';
+        }else {
+            valid = !!$(sender).val();
+        }
+        if (valid) {
+            $target.prop('disabled', false);
+        }else{
+            $target.prop('disabled', true);
+        }
+    },
+    showHideInForm: function (sender, target, showHide) {
+        try {
+            var $form = $(sender).parents(".form-container");
+            var $target = $form.find(target);
+            if (showHide) {
+                $target.show();
+            } else {
+                $target.hide();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    },
     showHideDependant: function (sender, target, value) {
         try {
             var cmp = value.toLowerCase();
@@ -39,6 +80,10 @@ smart = {
 (function ($) {
     $(function () {
         $("[data-visibility=hidden]").parents(".field-container").hide();
+
+        $("[data-trigger=change]").each(function (i, e){
+            $(e).trigger('change');
+        });
 
         $(".question-visibility").on("click", function () {
             smart.handleQuestion(this);
