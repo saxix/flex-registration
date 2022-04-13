@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.text import slugify
 
 from smart_register.core.crypto import crypt, decrypt, Crypto
@@ -103,8 +104,13 @@ class Registration(I18NModel, models.Model):
             fields = {"storage": safe_json(data).encode()}
         return Record.objects.create(registration=self, **fields)
 
+    @cached_property
     def languages(self):
-        return [(k, v) for k, v in settings.LANGUAGES if k in self.locales]
+        locales = [self.locale]
+        if self.locales:
+            locales += self.locales
+
+        return [(k, v) for k, v in settings.LANGUAGES if k in locales]
 
 
 class RemoteIp(models.GenericIPAddressField):

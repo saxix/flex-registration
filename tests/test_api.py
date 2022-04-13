@@ -74,7 +74,7 @@ def public_pem(key) -> str:
 
 @pytest.mark.django_db
 def test_api(django_app, registration, monkeypatch):
-    url = reverse("register", args=[registration.locale, registration.slug])
+    url = reverse("register", args=[registration.slug])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"
