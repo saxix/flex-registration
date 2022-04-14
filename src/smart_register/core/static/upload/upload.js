@@ -28,14 +28,17 @@
         var UploadHandler = function ($field) {
             var $error = $field.parents(".field-container").find(".size-error");
             var sizeLimit = $field.data("max-size") || M * 10;
+            var sizeLimitFormat = gettext("File too big. Max %s ");
+            var sizeMax = returnFileSize(sizeLimit);
+            var sizeLimitMessage = interpolate(sizeLimitFormat, [sizeMax]);
+
             $field.on("change", function (e) {
                 var file = e.target.files[0];
                 var size = returnFileSize(file.size);
-                var sizeMax = returnFileSize(sizeLimit);
                 if (file.size > sizeLimit) {
                     $field.attr("type", "text");
                     $field.attr("type", "file");
-                    $error.html("<ul class=\"errorlist\"><li>File too big. Max " + sizeMax + "</li></ul>");
+                    $error.html("<ul class=\"errorlist\"><li>"+ sizeLimitMessage + "</li></ul>");
                 } else {
                     $error.html("");
                 }

@@ -56,13 +56,15 @@ DEFAULTS = {
     "SESSION_COOKIE_SECURE": (bool, "false"),
     "SESSION_COOKIE_NAME": (str, "reg_id"),
     "SMART_ADMIN_BOOKMARKS": (parse_bookmarks, ""),
-    "STATIC_ROOT": (str, "/tmp/static/"),
-    "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
+    # "STATIC_ROOT": (str, "/tmp/static/"),
+    # "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
+    "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "USE_HTTPS": (bool, False),
     "AZURE_CLIENT_ID": (str, None),
     "AZURE_CLIENT_SECRET": (str, None),
     "AZURE_TENANT_KEY": (str, None),
+    "WHITENOISE": (bool, False),
 }
 
 env = Env(**DEFAULTS)
