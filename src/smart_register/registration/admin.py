@@ -21,7 +21,6 @@ from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
-
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.utils import clone_form, clone_model, is_root

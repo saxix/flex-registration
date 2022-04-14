@@ -85,14 +85,18 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "smart_register.web.middlewares.http2.HTTP2Middleware",
     "smart_register.web.middlewares.minify.HtmlMinMiddleware",
     "django.middleware.gzip.GZipMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     # "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
+if env("WHITENOISE"):
+    MIDDLEWARE += [
+        "whitenoise.middleware.WhiteNoiseMiddleware",
+    ]
 ROOT_URLCONF = "smart_register.config.urls"
 
 TEMPLATES = [
@@ -202,10 +206,11 @@ USE_TZ = True
 # os.makedirs(STATIC_ROOT, exist_ok=True)
 
 # STATIC_URL = f"/static/{os.environ.get('VERSION', '')}/"
-STATIC_URL = "/static/"
+STATIC_URL = env("STATIC_URL")
 STATIC_ROOT = env("STATIC_ROOT")
 # STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STATICFILES_STORAGE = env("STATICFILES_STORAGE")
 
 STATICFILES_DIRS = [
     # os.path.join(BASE_DIR, "web/static"),
@@ -433,33 +438,31 @@ def show_ddt(request):  # pragma: no-cover
     if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):
         return False
     return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
-    # if request.user.is_authenticated:
-    #     if request.path in RegexList(('/tpl/.*', '/api/.*', '/dal/.*', '/healthcheck/')):
-    #         return False
-    # return request.META.get('HTTP_DEV_DDT', None) == env('DEV_DDT_KEY')
 
 
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK": show_ddt,
     "JQUERY_URL": "",
+    "INSERT_BEFORE": "</head>",
+    "SHOW_TEMPLATE_CONTEXT": True,
 }
 INTERNAL_IPS = env.list("INTERNAL_IPS")
 DEBUG_TOOLBAR_PANELS = [
-    # 'debug_toolbar.panels.history.HistoryPanel',
-    # 'debug_toolbar.panels.versions.VersionsPanel',
-    # 'debug_toolbar.panels.timer.TimerPanel',
-    # 'flags.panels.FlagsPanel',
-    # 'flags.panels.FlagChecksPanel',
-    # 'debug_toolbar.panels.settings.SettingsPanel',
+    "debug_toolbar.panels.history.HistoryPanel",
+    "debug_toolbar.panels.versions.VersionsPanel",
+    "debug_toolbar.panels.timer.TimerPanel",
+    "flags.panels.FlagsPanel",
+    "flags.panels.FlagChecksPanel",
+    "debug_toolbar.panels.settings.SettingsPanel",
     "debug_toolbar.panels.headers.HeadersPanel",
     "debug_toolbar.panels.request.RequestPanel",
     "debug_toolbar.panels.sql.SQLPanel",
     "debug_toolbar.panels.staticfiles.StaticFilesPanel",
-    # 'debug_toolbar.panels.templates.TemplatesPanel',
+    "debug_toolbar.panels.templates.TemplatesPanel",
     "debug_toolbar.panels.cache.CachePanel",
-    # 'debug_toolbar.panels.signals.SignalsPanel',
+    "debug_toolbar.panels.signals.SignalsPanel",
     "debug_toolbar.panels.logging.LoggingPanel",
-    # 'debug_toolbar.panels.redirects.RedirectsPanel',
+    "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
 

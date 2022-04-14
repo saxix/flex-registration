@@ -28,3 +28,12 @@ var configureFormsets = function (configs){
         $target.formset(config);
     })
 };
+
+(function ($) {
+    $(function () {
+        if (formsetConfig.length > 0) {
+            configureFormsets(formsetConfig);
+        }
+        $("input:checked[onchange]").trigger("change");
+    });
+})($);
