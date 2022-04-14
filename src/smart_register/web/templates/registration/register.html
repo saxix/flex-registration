@@ -1,6 +1,7 @@
 {% extends "base.html" %}{% load smart_register l10n static i18n http2 %}
 {% block head %}
     <meta name="Description" CONTENT="Module Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
+    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />
     <script src="{% url 'javascript-catalog' dataset.locale %}"></script>
     <script src="{% http2static "admin/js/vendor/jquery/jquery.js" %}"></script>
