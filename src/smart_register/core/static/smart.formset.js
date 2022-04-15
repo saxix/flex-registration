@@ -31,6 +31,12 @@ var configureFormsets = function (configs){
 
 (function ($) {
     $(function () {
+        var formsetConfig = [];
+        $('.formset-config script[type="application/json"]').each(function (i, e){
+            var value = JSON.parse($(e).text() );
+            formsetConfig.push(value);
+        });
+
         if (formsetConfig.length > 0) {
             configureFormsets(formsetConfig);
         }

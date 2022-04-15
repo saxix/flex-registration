@@ -94,15 +94,15 @@ ul.errorlist {
 }
 
 
-.submit-row {
-  .btn {
-    &.save {
-    }
-  }
-}
+//.submit-row {
+//  .btn {
+//    &.save {
+//    }
+//  }
+//}
 
 
-input[type=submit]{
+input[type=submit], input[type=button], {
   color: rgba(255,255,255,var(--text-opacity));
   padding-left: 1rem;
   padding-right: 1rem;
@@ -122,5 +122,6 @@ input[type=submit]{
   }
   &:disabled{
     cursor: not-allowed;
+    background-color: rgba(124, 124, 124, 0.67);
   }
 }
