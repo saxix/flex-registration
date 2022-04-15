@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 
@@ -11,7 +12,8 @@ from django.utils.text import slugify
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
-from smart_register.core.utils import dict_setdefault, get_client_ip, safe_json
+from smart_register.core.utils import dict_setdefault, get_client_ip, safe_json, jsonfy
+from smart_register.registration.storage import router
 from smart_register.state import state
 
 logger = logging.getLogger(__name__)
@@ -88,20 +90,34 @@ class Registration(models.Model):
             value = safe_json(value)
         return crypt(value, self.public_key)
 
-    def add_record(self, data):
+    def add_record(self, fields_data):
+        fields, files = router.decompress(fields_data)
+
         if self.public_key:
-            fields = {"storage": self.encrypt(data)}
+            kwargs = {
+                # "storage": self.encrypt(fields_data),
+                "files": self.encrypt(files),
+                "fields": base64.b64encode(self.encrypt(fields)).decode(),
+            }
         elif self.encrypt_data:
-            fields = {"storage": Crypto().encrypt(data).encode()}
+            kwargs = {
+                # "storage": Crypto().encrypt(fields_data).encode(),
+                "files": Crypto().encrypt(files).encode(),
+                "fields": Crypto().encrypt(fields),
+            }
         else:
-            fields = {"storage": safe_json(data).encode()}
-        return Record.objects.create(registration=self, **fields)
+            kwargs = {
+                # "storage": safe_json(fields_data).encode(),
+                "files": safe_json(files).encode(),
+                "fields": jsonfy(fields),
+            }
+        return Record.objects.create(registration=self, **kwargs)
 
 
 class RemoteIp(models.GenericIPAddressField):
     def pre_save(self, model_instance, add):
         if add:
-            value = get_client_ip(state.request)
+            value = get_client_ip(getattr(state, "request", None))
             setattr(model_instance, self.attname, value)
         return getattr(model_instance, self.attname)
 
@@ -110,14 +126,24 @@ class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     remote_ip = RemoteIp(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    fields = models.JSONField(default=dict, null=True, blank=True)
+    files = models.BinaryField(null=True, blank=True)
+
     storage = models.BinaryField(null=True, blank=True)
-    ignored = models.BooleanField(default=False, blank=True)
+
+    ignored = models.BooleanField(default=False, blank=True, null=True)
 
     def decrypt(self, private_key=undefined, secret=undefined):
         if private_key != undefined:
-            return json.loads(decrypt(self.storage, private_key))
+            # return json.loads(decrypt(self.storage, private_key))
+            files = json.loads(decrypt(self.files, private_key))
+            fields = json.loads(decrypt(base64.b64decode(self.fields), private_key))
+            return router.compress(fields, files)
         elif secret != undefined:
-            return json.loads(Crypto(secret).decrypt(self.storage))
+            files = json.loads(Crypto(secret).decrypt(self.files))
+            fields = json.loads(Crypto(secret).decrypt(self.fields))
+            return router.compress(fields, files)
 
     @property
     def data(self):
@@ -126,4 +152,5 @@ class Record(models.Model):
         elif self.registration.encrypt_data:
             return self.decrypt(secret=None)
         else:
-            return json.loads(self.storage.tobytes().decode())
+            return router.compress(self.fields, json.loads(self.files.tobytes().decode()))
+            # return {**self.fields, **json.loads(self.files.tobytes().decode())}

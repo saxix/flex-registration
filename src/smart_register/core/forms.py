@@ -35,10 +35,13 @@ class FlexFormBaseForm(forms.Form):
             ]
         )
 
+    def get_storage_mapping(self):
+        return {name: field.storage for name, field in self.fields.items()}
+
     def _clean_fields(self):
         super()._clean_fields()
         for name, field in self.fields.items():
-            if getattr(field, "do_not_store", True):
+            if not field.is_stored():
                 del self.cleaned_data[name]
 
     def full_clean(self):

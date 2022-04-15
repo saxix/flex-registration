@@ -10,6 +10,7 @@ from pathlib import Path
 import qrcode
 from constance import config
 from django.conf import settings
+from django.core.files.utils import FileProxyMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.template import loader
@@ -244,3 +245,38 @@ def get_default_language(request, default="en-us"):
 
 def get_versioned_static_name(name):
     return name
+
+
+def apply_nested(cleaned_value, func=lambda v, k: v, key=None):
+    # if isinstance(cleaned_value, FileProxyMixin):
+    #     return base64.b64encode(cleaned_value.read())
+    if isinstance(cleaned_value, dict):
+        return {item[0]: apply_nested(item[1], func, item[0]) for item in cleaned_value.items()}
+    elif isinstance(cleaned_value, list):
+        return [apply_nested(item, func, key) for item in cleaned_value]
+    # elif cleaned_value is None:
+    #     cleaned_value = ""
+    return func(cleaned_value, key)
+
+
+def extract_content(r):
+    return apply_nested(r, lambda k, v: v.read() if isinstance(v, FileProxyMixin) else v)
+
+
+def merge_data(d1, d2):
+    if isinstance(d2, dict):
+        ret = {} or d1.copy()
+        for k, v in d2.items():
+            if isinstance(v, list):
+                if k not in d1:
+                    d1[k] = [None for e in v]
+                ret[k] = [merge_data(d1[k][i], e) for i, e in enumerate(v)]
+            elif isinstance(v, dict):
+                if k not in d1:
+                    d1[k] = {}
+                ret[k] = merge_data(d1[k], v)
+            else:
+                ret[k] = d2[k]
+        return ret
+    else:
+        return d2

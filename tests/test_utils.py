@@ -1,6 +1,10 @@
-import pytest
+import base64
 
-from smart_register.core.utils import namify, underscore_to_camelcase
+import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from smart_register.core.utils import namify, underscore_to_camelcase, merge_data, extract_content
+from smart_register.registration.storage import Router
 
 
 @pytest.mark.parametrize("v", ["underscore_to_camelcase", "underscore to camelcase", "underscore__to_camelcase"])
@@ -19,3 +23,48 @@ def test_underscore_to_camelcase(v):
 )
 def test_namify_allow_unicode(unicode, value, expected):
     assert namify(value, unicode) == expected
+
+
+def test_storage_router_flat():
+    f = SimpleUploadedFile("file", b"content")
+    c = base64.b64encode(b"content")
+    data = {"name": "pippo", "file": f}
+    r = Router()
+    fields, files = r.decompress(data)
+    assert fields == {"name": "pippo", "file": "::file::"}, "fields do not match"
+    assert files == {"file": c}, "files do not match"
+    assert extract_content(r.compress(fields, files)) == extract_content(data)
+
+
+def test_storage_router_nested1():
+    f = SimpleUploadedFile("file", b"content")
+    c = base64.b64encode(b"content")
+    data = {"name": "pippo", "childs": [{"file": f}]}
+
+    r = Router()
+    fields, files = r.decompress(data)
+    assert fields == {"name": "pippo", "childs": [{"file": "::file::"}]}, "fields do not match"
+    assert files == {"childs": [{"file": c}]}, "files do not match"
+    assert extract_content(r.compress(fields, files)) == extract_content(data)
+
+
+def test_storage_router_nested2():
+    f1 = SimpleUploadedFile("sample.txt", b"content")
+    f2 = SimpleUploadedFile("sample.txt", b"content")
+    c = base64.b64encode(b"content")
+    data = {"name": "pippo", "childs": [{"file": f1}], "el": [{"file": f2}]}
+    r = Router()
+    fields, files = r.decompress(data)
+    assert fields == {
+        "name": "pippo",
+        "childs": [{"file": "::file::"}],
+        "el": [{"file": "::file::"}],
+    }, "fields do not match"
+    assert files == {"childs": [{"file": c}], "el": [{"file": c}]}, "files do not match"
+    assert extract_content(r.compress(fields, files)) == extract_content(data)
+
+
+def test_merge():
+    d1 = {"a": "1", "b": 2, "d": [{"bb": 3}]}
+    d2 = {"c": [1], "d": [{"aa": 2}], "aa": {"vv": 1}}
+    assert merge_data(d1, d2) == {"a": "1", "b": 2, "c": [1], "d": [{"aa": 2, "bb": 3}], "aa": {"vv": 1}}

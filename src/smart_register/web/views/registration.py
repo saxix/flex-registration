@@ -1,15 +1,9 @@
-import base64
 import logging
 from hashlib import md5
 
 import sentry_sdk
 from constance import config
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import (
-    InMemoryUploadedFile,
-    TemporaryUploadedFile,
-    UploadedFile,
-)
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
@@ -62,7 +56,7 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
         )
 
     def get_qrcode(self, record):
-        h = md5(record.storage).hexdigest()
+        h = md5(str(record.fields).encode()).hexdigest()
         url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
         hashed_url = f"{url}/{h}"
         return get_qrcode(hashed_url), url
@@ -73,6 +67,11 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
         else:
             qrcode, url = None, None
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
+
+
+class BinaryFile:
+    def __init__(self, content):
+        self.content = content
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -166,26 +165,14 @@ class RegisterView(FixedLocaleView, FormView):
             return self.form_invalid(form, formsets)
 
     def form_valid(self, form, formsets):
+        mapping = form.get_storage_mapping()
         data = form.cleaned_data
         for name, fs in formsets.items():
             data[name] = []
+            mapping[name] = fs.form().get_storage_mapping()
             for f in fs:
                 data[name].append(f.cleaned_data)
 
-        def parse_field(field):
-            if isinstance(field, (UploadedFile, InMemoryUploadedFile, TemporaryUploadedFile)):
-                if not field.read():
-                    return ""
-                return base64.b64encode(field.read())
-            elif isinstance(field, dict):
-                return {item[0]: parse_field(item[1]) for item in field.items()}
-            elif isinstance(field, list):
-                return [parse_field(item) for item in field]
-            elif field is None:
-                field = ""
-            return field
-
-        data = {field_name: parse_field(field) for field_name, field in data.items()}
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)
