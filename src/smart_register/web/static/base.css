@@ -60,7 +60,7 @@ ul.errorlist li {
   color: #c90a0a;
 }
 
-input[type=submit] {
+input[type=submit], input[type=button] {
   color: rgba(255, 255, 255, var(--text-opacity));
   padding-left: 1rem;
   padding-right: 1rem;
@@ -73,14 +73,15 @@ input[type=submit] {
   color: white;
   cursor: pointer;
 }
-input[type=submit]:hover, input[type=submit]:active {
+input[type=submit]:hover, input[type=submit]:active, input[type=button]:hover, input[type=button]:active {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
   background-color: rgba(43, 108, 176, var(--bg-opacity));
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
-input[type=submit]:disabled {
+input[type=submit]:disabled, input[type=button]:disabled {
   cursor: not-allowed;
+  background-color: rgba(124, 124, 124, 0.67);
 }
 
 /*# sourceMappingURL=base.css.map */

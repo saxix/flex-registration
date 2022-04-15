@@ -1,8 +1,9 @@
 {% extends "base.html" %}{% load smart_register l10n static i18n http2 %}
 {% block head %}
-    <meta name="Description" CONTENT="Module Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
+    <meta name="Description"
+          CONTENT="Module Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
-    <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />
+    <link rel="preload" as="image" href="{% http2static "loading.gif" %}"/>
     <script src="{% url 'javascript-catalog' dataset.locale %}"></script>
     <script src="{% http2static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <script src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
@@ -23,7 +24,7 @@
 {% endblock staff-toolbar %}
 
 {% block body %}
-    <script nonce="{{request.csp_nonce}}">var formsetConfig = [];</script>
+    <script nonce="{{ request.csp_nonce }}">var formsetConfig = [];var maxPages = {{ formsets|length }};</script>
     <div class="min-h-screen flex justify-center bg-gray-100 pb-10">
         <div class="w-full lg:w-1/2 mt-5">
             {% if invalid %}
@@ -46,7 +47,6 @@
                     </div>
                 </div>
             {% else %}
-{#                <div class="m-5 ">&nbsp;</div>#}
             {% endif %}
             <div class="bg-white shadow-md rounded px-2 sm:px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
@@ -55,12 +55,12 @@
                 {% endif %}
                 <form class="w-full" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <div class="form-container">
+                    <div class="form-container" data-page="0">
                         {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
                     </div>
                     {% for name, formset in formsets.items %}
                         {{ formset.non_form_errors }}
-                        <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4">
+                        <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4" data-page="{{ forloop.counter }}">
                             <div class="w-full formset">
                                 {% if user.is_staff %}
                                     {% include "registration/_staff_edit_formset.html" %}
@@ -97,11 +97,7 @@
                                 </div>
                             </div>
                         </div>
-                        {#                        <div type="form-template" id="{{ name }}-empty" class="hidden">#}
-                        {#                            {% escapescript %}{{ formset.empty_form.as_table }}{% endescapescript %}#}
-                        {#                        </div>#}
-
-                        <script nonce="{{request.csp_nonce}}">
+                        <script nonce="{{ request.csp_nonce }}">
                             {% formset_config formset as config %}
                             formsetConfig.push({
                                 formCssClass: "form-container.{{ formset.prefix }}",
@@ -117,33 +113,22 @@
                         </script>
                     {% endfor %}
                     <div class="submit-row">
-                        <input type="submit"
-                               lass="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                               value="{% trans "Save" %}"
-                        />
+                        <input type="button" id="wizard-prev" value="{% trans "<<" %}"/>
+                        <input type="button" id="wizard-next" value="{% trans ">>" %}"/>
+                        <input type="submit" value="{% trans "Save" %}"/>
+                        <div id="currentPage"></div>
                     </div>
                 </form>
             </div>
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                 {{ dataset.footer|markdown }}
             </div>
-
         </div>
     </div>
-    <script nonce="{{request.csp_nonce}}">
-        (function ($) {
-            $(function () {
-                if (formsetConfig.length > 0) {
-                    configureFormsets(formsetConfig);
-                }
-                $("input:checked[onchange]").trigger("change");
-                $('#spinner').hide();
-             });
-        })($);
-    </script>
+    <script src="{% static "register.js" %}"></script>
 {% endblock body %}
 {% block footer %}
-<div class="flex justify-center text-xs footer m-auto pt-1 pb-2 border-t-2 text-gray-400 border-gray-400">
-    {{ project.build_date }}
-</div>
+    <div class="flex justify-center text-xs footer m-auto pt-1 pb-2 border-t-2 text-gray-400 border-gray-400">
+        {{ project.build_date }}
+    </div>
 {% endblock footer %}
