@@ -24,7 +24,7 @@
 {% endblock staff-toolbar %}
 
 {% block body %}
-    <script nonce="{{ request.csp_nonce }}">var formsetConfig = [];var maxPages = {{ formsets|length }};</script>
+{#    <script nonce="{{ request.csp_nonce }}">var formsetConfig = [];var maxPages = {{ formsets|length }};</script>#}
     <div class="min-h-screen flex justify-center bg-gray-100 pb-10">
         <div class="w-full lg:w-1/2 mt-5">
             {% if invalid %}
@@ -46,7 +46,6 @@
                         {{ dataset.intro|default_if_none:""|markdown }}
                     </div>
                 </div>
-            {% else %}
             {% endif %}
             <div class="bg-white shadow-md rounded px-2 sm:px-8 pt-6 pb-8 mb-4">
                 {{ form.non_field_errors }}
@@ -60,7 +59,11 @@
                     </div>
                     {% for name, formset in formsets.items %}
                         {{ formset.non_form_errors }}
-                        <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4" data-page="{{ forloop.counter }}">
+                        {% formset_config formset as config %}
+                        <div class="formset-config">{{ config|json_script:name }}</div>
+                        <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4"
+                             data-config="{{ config|escapejs }}"
+                             data-page="{{ forloop.counter }}">
                             <div class="w-full formset">
                                 {% if user.is_staff %}
                                     {% include "registration/_staff_edit_formset.html" %}
@@ -97,26 +100,24 @@
                                 </div>
                             </div>
                         </div>
-                        <script nonce="{{ request.csp_nonce }}">
-                            {% formset_config formset as config %}
-                            formsetConfig.push({
-                                formCssClass: "form-container.{{ formset.prefix }}",
-                                prefix: "{{ formset.prefix }}",
-                                deleteContainerClass: "{{ name }}-delete",
-                                addContainerClass: "{{ name }}-add",
-                                addText: "{{ config.addText|default_if_none:"add another" }}",
-                                addCssClass: "add-button {{ config.addCssClass|default_if_none:"bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" }}",
-                                deleteText: "{{ config.deleteText|default_if_none:"remove" }}",
-                                deleteCssClass: "delete-button {{ config.deleteCssClass|default_if_none:"bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" }}",
-                                keepFieldValues: "{{ config.keepFieldValues|default:"" }}"
-                            });
-                        </script>
+{#                        <script nonce="{{ request.csp_nonce }}">#}
+{#                            formsetConfig.push({#}
+{#                                formCssClass: "form-container.{{ formset.prefix }}",#}
+{#                                prefix: "{{ formset.prefix }}",#}
+{#                                deleteContainerClass: "{{ name }}-delete",#}
+{#                                addContainerClass: "{{ name }}-add",#}
+{#                                addText: "{{ config.addText|default_if_none:"add another" }}",#}
+{#                                addCssClass: "add-button {{ config.addCssClass|default_if_none:"bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" }}",#}
+{#                                deleteText: "{{ config.deleteText|default_if_none:"remove" }}",#}
+{#                                deleteCssClass: "delete-button {{ config.deleteCssClass|default_if_none:"bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" }}",#}
+{#                                keepFieldValues: "{{ config.keepFieldValues|default:"" }}"#}
+{#                            });#}
+{#                        </script>#}
                     {% endfor %}
                     <div class="submit-row">
-                        <input type="button" id="wizard-prev" value="{% trans "<<" %}"/>
-                        <input type="button" id="wizard-next" value="{% trans ">>" %}"/>
+{#                        <input type="button" id="wizard-prev" value="{% trans "<<" %}"/>#}
+{#                        <input type="button" id="wizard-next" value="{% trans ">>" %}"/>#}
                         <input type="submit" value="{% trans "Save" %}"/>
-                        <div id="currentPage"></div>
                     </div>
                 </form>
             </div>
@@ -125,9 +126,9 @@
             </div>
         </div>
     </div>
-    <script src="{% static "register.js" %}"></script>
 {% endblock body %}
 {% block footer %}
+    {% if dataset.wizard %}<script src="{% static "wizard.min.js" %}"></script>{% endif %}
     <div class="flex justify-center text-xs footer m-auto pt-1 pb-2 border-t-2 text-gray-400 border-gray-400">
         {{ project.build_date }}
     </div>
