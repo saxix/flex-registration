@@ -3,6 +3,7 @@ import logging
 from hashlib import md5
 
 import sentry_sdk
+import time
 from constance import config
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import (
@@ -24,6 +25,7 @@ from django.views.generic.edit import FormView
 from smart_register.core.cache import cache_formset
 from smart_register.core.utils import get_qrcode
 from smart_register.registration.models import Record, Registration
+from smart_register.state import state
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +86,16 @@ class RegisterView(FixedLocaleView, FormView):
     template_name = "registration/register.html"
 
     def get(self, request, *args, **kwargs):
-        res_etag = "/".join([str(self.registration.version), get_language(), str(request.user.is_staff)])
+        if state.collect_messages:
+            res_etag = str(time.time())
+        else:
+            res_etag = "/".join(
+                [
+                    str(self.registration.version),
+                    get_language(),
+                    {True: "staff", False: ""}[request.user.is_staff],
+                ]
+            )
         response = get_conditional_response(request, str(res_etag))
         if response is None:
             response = super().get(request, *args, **kwargs)
@@ -106,9 +117,9 @@ class RegisterView(FixedLocaleView, FormView):
     def get_form_class(self):
         return self.registration.flex_form.get_form()
 
-    def get_form(self, form_class=None):
-        return super().get_form(form_class)
-
+    # def get_form(self, form_class=None):
+    #     return super().get_form(form_class)
+    #
     @cache_formset
     def get_formsets_classes(self):
         formsets = {}

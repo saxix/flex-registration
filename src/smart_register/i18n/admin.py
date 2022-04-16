@@ -43,6 +43,10 @@ class MessageAdmin(SmartModelAdmin):
             },
         ),
     )
+    actions = ["approve"]
+
+    def approve(self, request, queryset):
+        queryset.update(draft=False)
 
     @button()
     def collect(self, request):

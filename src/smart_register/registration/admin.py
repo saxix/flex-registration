@@ -177,6 +177,7 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
                 uri = request.build_absolute_uri(instance.get_absolute_url())
+
                 r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
                 if r1.status_code != 200:
                     raise Exception(r1.status_code)

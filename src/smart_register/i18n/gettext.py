@@ -2,6 +2,8 @@ from django.conf import settings
 from django.utils.safestring import SafeData, mark_safe
 from django.utils.translation.trans_real import _active, _default, translation  # noqa
 
+from .engine import translator
+
 
 def gettext(message):
     """
@@ -16,9 +18,7 @@ def gettext(message):
     if eol_message:
         _default = _default or translation(settings.LANGUAGE_CODE)
         translation_object = getattr(_active, "value", _default)
-        from smart_register.i18n.cache import cache
-
-        result = cache[translation_object.language()][eol_message]
+        result = translator[translation_object.language()][eol_message]
 
     else:
         # Return an empty value of the corresponding type if an empty message

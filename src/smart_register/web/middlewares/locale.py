@@ -19,6 +19,12 @@ class LocaleMiddleware:
         translation.activate(lang)
         state.collect_messages = flag_enabled("I18N_COLLECT_MESSAGES", request=request)
 
+        from smart_register.i18n.engine import translator
+
+        e = translator.activate(lang)
+        if state.collect_messages:
+            e.reset()
+
         ret = self.get_response(request)
         state.collect_messages = False
         translation.deactivate()

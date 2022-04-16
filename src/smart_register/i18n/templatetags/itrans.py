@@ -5,10 +5,9 @@ from django.template.base import TokenType, render_value_in_context
 from django.template.defaulttags import token_kwargs
 from django.utils import translation
 from django.utils.safestring import SafeData, mark_safe
-
-# from django.templatetags.i18n import translation
-#
 from django.utils.translation import get_language
+
+from ..engine import translator
 
 register = Library()
 
@@ -40,9 +39,8 @@ class TranslateNode(Node):
             msgid = self.filter_expression.var.literal
         else:
             msgid = self.filter_expression.resolve(context)
-        from smart_register.i18n.cache import cache
 
-        value = cache[current_locale][msgid]
+        value = translator[current_locale][msgid]
         # if state.collect_messages:
         #     from smart_register.i18n.models import Message
         #     Message.objects.get_or_create(msgid=msgstr,

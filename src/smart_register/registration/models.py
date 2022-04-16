@@ -21,8 +21,6 @@ logger = logging.getLogger(__name__)
 
 undefined = object()
 
-undefined = object()
-
 
 class Registration(I18NModel, models.Model):
     ADVANCED_DEFAULT_ATTRS = {
