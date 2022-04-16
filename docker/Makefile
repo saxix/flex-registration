@@ -4,7 +4,7 @@
 DEVELOP?=0
 DOCKER_PASS?=
 DOCKER_USER?=
-VERSION?=0.1.0
+VERSION?=$(shell git rev-parse --short HEAD)
 BASE?=$(shell echo "${VERSION}" | sed "s/\([0-9]*\)\.\([0-9]*\)\.\(.*\)/\1.\2/g" )
 PUSH_BASE?=0
 DEVELOP?=1
@@ -59,6 +59,7 @@ check:
 			--build-arg BUILD_DATE=${BUILD_DATE} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			-f docker/${DOCKERFILE} .
+	docker tag ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${VERSION} ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest
 	docker images | grep "${DOCKER_IMAGE_NAME}" | grep ${VERSION}
 
 build: check .build
@@ -91,7 +92,7 @@ dev:
 			-e DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
 			${RUN_OPTIONS} \
-			${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
+			${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest \
 			${CMD}
 
 # 			-e STATICFILES_STORAGE="django.contrib.staticfiles.storage.ManifestStaticFilesStorage"\
@@ -110,7 +111,7 @@ test:  ## test docker image
 	$(MAKE) .run
 
 shell:  ## run docker and spawn a shell
-	DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:latest RUN_OPTIONS=-it CMD='/bin/bash' $(MAKE) .run
+	DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:latest RUN_OPTIONS=-it CMD='/bin/sh' $(MAKE) .run
 
 IMAGE=${DOCKER_REGISTRY}/bitcaster/sos/docker-builder:19.03.12
 docker-builder:
