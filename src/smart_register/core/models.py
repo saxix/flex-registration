@@ -185,13 +185,21 @@ class FlexForm(NaturalKeyModel):
 class FormSet(NaturalKeyModel, OrderableModel):
     FORMSET_DEFAULT_ATTRS = {
         "smart": {
+            "title": {
+                "class": "",
+                "html_attrs": {},
+            },
+            "container": {
+                "class": "",
+                "html_attrs": {},
+            },
             "widget": {
                 "addText": None,
                 "addCssClass": None,
                 "deleteText": None,
                 "deleteCssClass": None,
                 "keepFieldValues": "",
-            }
+            },
         }
     }
     version = AutoIncVersionField()

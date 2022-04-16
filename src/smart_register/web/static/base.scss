@@ -62,6 +62,10 @@ body {
 .btn {
 
 }
+.bg-red{
+  background-color: $color-error;
+}
+.bg-
 
 .alert-message {
   background-color: $color-error;
@@ -92,14 +96,6 @@ ul.errorlist {
     color: #c90a0a;
   }
 }
-
-
-//.submit-row {
-//  .btn {
-//    &.save {
-//    }
-//  }
-//}
 
 
 input[type=submit], input[type=button], {

@@ -22,9 +22,10 @@ undefined = object()
 class Registration(models.Model):
     ADVANCED_DEFAULT_ATTRS = {
         "smart": {
+            "wizard": False,
             "buttons": {
                 "link": {"widget": {"attrs": {}}},
-            }
+            },
         }
     }
     version = AutoIncVersionField()

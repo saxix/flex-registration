@@ -33,7 +33,11 @@ body header.header {
   z-index: 900;
 }
 
-.alert-message {
+.bg-red {
+  background-color: #ff9898;
+}
+
+.bg- .alert-message {
   background-color: #ff9898;
 }
 
