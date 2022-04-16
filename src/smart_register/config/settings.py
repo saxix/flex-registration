@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.forms",
-    "import_export",
     # -- dev --
     "debug_toolbar",
     # ---
@@ -407,9 +406,6 @@ SYSINFO = {
     # },
     # "checks": None,
 }
-
-IMPORT_EXPORT_USE_TRANSACTIONS = True
-IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 
 FLAGS_STATE_LOGGING = DEBUG
 

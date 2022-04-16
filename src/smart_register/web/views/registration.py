@@ -48,11 +48,6 @@ class FixedLocaleView:
         # translation.activate(self.registration.locale)
         return super().dispatch(request, *args, **kwargs)
 
-    # def get(self, request, *args, **kwargs):
-    #     translation.activate(self.registration.locale)
-    #     with translation.override(self.registration.locale):
-    #         return self.render_to_response(self.get_context_data())
-
 
 class RegisterCompleteView(FixedLocaleView, TemplateView):
     template_name = "registration/register_done.html"

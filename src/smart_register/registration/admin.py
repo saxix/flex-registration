@@ -24,8 +24,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
-from import_export import resources
-from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
@@ -37,17 +35,12 @@ from .models import Record, Registration
 logger = logging.getLogger(__name__)
 
 
-class RegistrationResource(resources.ModelResource):
-    class Meta:
-        model = Registration
-
-
 def last_day_of_month(date):
     return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
 
 
 @register(Registration)
-class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
+class RegistrationAdmin(SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
