@@ -1,8 +1,8 @@
 import json
 import logging
 
-from Crypto.PublicKey import RSA
 from concurrency.fields import AutoIncVersionField
+from Crypto.PublicKey import RSA
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
@@ -10,15 +10,16 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 
-from smart_register.core.crypto import crypt, decrypt, Crypto
+from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
-from smart_register.core.utils import get_client_ip
+from smart_register.core.utils import dict_setdefault, get_client_ip, safe_json
+from smart_register.i18n.models import I18NModel
 from smart_register.registration.fields import ChoiceArrayField
 from smart_register.state import state
-from smart_register.core.utils import dict_setdefault, safe_json
-from smart_register.i18n.models import I18NModel
 
 logger = logging.getLogger(__name__)
+
+undefined = object()
 
 undefined = object()
 
@@ -26,9 +27,10 @@ undefined = object()
 class Registration(I18NModel, models.Model):
     ADVANCED_DEFAULT_ATTRS = {
         "smart": {
+            "wizard": False,
             "buttons": {
                 "link": {"widget": {"attrs": {}}},
-            }
+            },
         }
     }
     version = AutoIncVersionField()

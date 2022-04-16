@@ -1,10 +1,11 @@
 import hashlib
+
 from google.cloud import translate_v2 as translate
 
 
 def GoogleTranslationGetText(msg, language_code):
+    from . import cache_local, translate_client
     from .models import Cache
-    from . import translate_client, cache_local
 
     md5 = hashlib.md5((language_code + "__" + msg).encode()).digest()
 

@@ -12,16 +12,13 @@ from dateutil.utils import today
 from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin import SimpleListFilter
+from django.contrib.admin import SimpleListFilter, register
 from django.contrib.contenttypes.models import ContentType
 from django.db import OperationalError
-from django.db.models import Count
+from django.db.models import Count, JSONField
 from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
-from django.http import JsonResponse
-from django.contrib.admin import register
-from django.db.models import JSONField
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
@@ -30,7 +27,6 @@ from django.utils.translation import gettext as _
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
-
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
 
@@ -367,7 +363,7 @@ class RecordAdmin(SmartModelAdmin):
         return is_root(request) or settings.DEBUG
 
     def has_delete_permission(self, request, obj=None):
-        return is_root(request) or settings.DEBUG
+        return settings.DEBUG
 
     def has_change_permission(self, request, obj=None):
         return is_root(request) or settings.DEBUG

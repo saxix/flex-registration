@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.utils.safestring import SafeData, mark_safe
-from django.utils.translation.trans_real import translation, _active, _default  # noqa
+from django.utils.translation.trans_real import _active, _default, translation  # noqa
 
 
 def gettext(message):

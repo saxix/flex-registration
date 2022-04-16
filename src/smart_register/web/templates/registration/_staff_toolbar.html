@@ -12,8 +12,8 @@
         </span>
         <div class="hidden md:inline-flex ">
             <span>{% trans "Edit" %} </span>
-            <a target="_edit" href="{% url "admin:registration_registration_change" dataset.pk %}">Module</a>
-            <a target="_edit" href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Form</a>
+            <a href="{% url "admin:registration_registration_change" dataset.pk %}">Module</a>
+            <a href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Form</a>
             {% for name, formset in formsets.items %}
                 <a href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">{{ name }}</a>
             {% endfor %}
@@ -21,26 +21,4 @@
         </div>
         <input id="staff-editor" type="checkbox" class="ml-2 mt-1 cursor-pointer">
     </div>
-    <script>
-        (function ($) {
-            $(function () {
-                $editCheckBox = $("#staff-editor");
-                var setEditorIcons = function (onOff) {
-                    if (onOff) {
-                        $(".staff-editor").show();
-                    } else {
-                        $(".staff-editor").hide();
-                    };
-                };
-                $editCheckBox.on("click", function () {
-                    setEditorIcons($editCheckBox.is(":checked"));
-                    Cookies.set("staff-editor", $editCheckBox.is(":checked"));
-                });
-                var pref = Cookies.get("staff-editor") === "true";
-                $editCheckBox.prop( "checked", pref );
-                setEditorIcons(pref);
-            });
-
-        })($);
-    </script>
 {% endif %}

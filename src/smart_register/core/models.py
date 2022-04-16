@@ -19,14 +19,14 @@ from natural_keys import NaturalKeyModel
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
-from .cache import cache_form, Cache
+from ..i18n.gettext import gettext as _
+from ..i18n.models import I18NModel
+from .cache import Cache, cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
-from ..i18n.gettext import gettext as _
-from ..i18n.models import I18NModel
 
 logger = logging.getLogger(__name__)
 
@@ -190,13 +190,21 @@ class FlexForm(I18NModel, NaturalKeyModel):
 class FormSet(NaturalKeyModel, OrderableModel):
     FORMSET_DEFAULT_ATTRS = {
         "smart": {
+            "title": {
+                "class": "",
+                "html_attrs": {},
+            },
+            "container": {
+                "class": "",
+                "html_attrs": {},
+            },
             "widget": {
                 "addText": None,
                 "addCssClass": None,
                 "deleteText": None,
                 "deleteCssClass": None,
                 "keepFieldValues": "",
-            }
+            },
         }
     }
     version = AutoIncVersionField()
@@ -328,6 +336,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             kwargs.setdefault("label", _(self.label))
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
+            # for k, v in data.items():
+            #     kwargs[f"data-{k}"] = v
             # if self.choices and hasattr(field_type, "choices"):
             #     kwargs["choices"] = self.choices
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:

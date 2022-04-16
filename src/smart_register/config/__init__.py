@@ -43,6 +43,7 @@ DEFAULTS = {
     "EMAIL_USE_TLS": (bool, True),
     "EMAIL_USE_SSL": (bool, False),
     "EMAIL_TIMEOUT": (int, 30),
+    "FERNET_KEY": (str, "2jQklRvSAZUdsVOKH-521Wbf_p5t2nTDA0LgD9sgim4="),
     "INTERNAL_IPS": (list, ["127.0.0.1", "localhost"]),
     "LANGUAGE_CODE": (str, "en-us"),
     "CACHE_DEFAULT": (str, "locmemcache://"),
@@ -56,15 +57,15 @@ DEFAULTS = {
     "SESSION_COOKIE_SECURE": (bool, "false"),
     "SESSION_COOKIE_NAME": (str, "reg_id"),
     "SMART_ADMIN_BOOKMARKS": (parse_bookmarks, ""),
-    "STATIC_ROOT": (str, "/tmp/static/"),
-    "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
+    # "STATIC_ROOT": (str, "/tmp/static/"),
+    # "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
+    "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "USE_HTTPS": (bool, False),
     "AZURE_CLIENT_ID": (str, None),
     "AZURE_CLIENT_SECRET": (str, None),
     "AZURE_TENANT_KEY": (str, None),
     "WHITENOISE": (bool, False),
-    "LANGUAGE_CODE": (str, "en-us"),
 }
 
 env = Env(**DEFAULTS)

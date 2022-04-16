@@ -5,9 +5,9 @@ from django.contrib.admin import register
 from django.shortcuts import render
 from smart_admin.modeladmin import SmartModelAdmin
 
-from .models import Message
 from ..core.models import FlexForm, FlexFormField
 from ..registration.models import Registration
+from .models import Message
 
 
 @register(Message)

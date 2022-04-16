@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import logging
 import re
 
@@ -73,6 +74,11 @@ def smart_attr(field, attr):
 @register.simple_tag()
 def formset_config(formset):
     return formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
+
+
+@register.filter()
+def jsonfy(d):
+    return json.dumps(d)
 
 
 @register.filter(name="lookup")

@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save
 
-from smart_register.core.models import FlexFormField, FormSet, FlexForm
+from smart_register.core.models import FlexForm, FlexFormField, FormSet
 
 
 def update_cache(sender, instance, **kwargs):

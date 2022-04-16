@@ -1,5 +1,5 @@
-from .models import Message
 from ..state import state
+from .models import Message
 
 
 class Dictionary:

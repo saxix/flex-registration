@@ -1,5 +1,5 @@
-from django.contrib.postgres.fields import ArrayField
 from django import forms
+from django.contrib.postgres.fields import ArrayField
 
 
 class ChoiceArrayField(ArrayField):
