@@ -174,9 +174,10 @@ class RegisterView(FixedLocaleView, FormView):
 
         def parse_field(field):
             if isinstance(field, (UploadedFile, InMemoryUploadedFile, TemporaryUploadedFile)):
-                if not field.read():
+                value = field.read()
+                if not value:
                     return ""
-                return base64.b64encode(field.read())
+                return base64.b64encode(value)
             elif isinstance(field, dict):
                 return {item[0]: parse_field(item[1]) for item in field.items()}
             elif isinstance(field, list):
