@@ -3,6 +3,26 @@ from django.core.exceptions import ValidationError
 
 from smart_register.core.models import Validator
 
+HH_SIZE = """if (value.household[0].size_h_c != value.individuals.length){
+    "Household size and provided members do not match"
+}"""
+
+ONLY_ONE_HEAD = """
+if (value.cleaned_data.length===0){
+    true
+}else{
+    var heads = value.cleaned_data.filter(e=>e.relationship_i_c == "head");
+    var ret = true;
+
+    if (heads.length==0){
+        ret = "At least one member must be set as Head Of Household";
+    }else if (heads.length>1){
+        ret = "Only one member can be set as Head Of Household";
+    }
+    ret;
+}
+"""
+
 
 def test_error_message():
     v = Validator(code='"Error"')

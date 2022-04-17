@@ -3,6 +3,7 @@ set -e
 export NGINX_MAX_BODY_SIZE="${NGINX_MAX_BODY_SIZE:-30M}"
 export NGINX_CACHE_DIR="${NGINX_CACHE_DIR:-/data/nginx/cache}"
 export DOLLAR='$'
+export STATIC_ROOT="${STATIC_ROOT}${STATIC_URL}"
 
 mkdir -p /var/run ${NGINX_CACHE_DIR} ${MEDIA_ROOT} ${STATIC_ROOT}
 echo "created support dirs /var/run ${MEDIA_ROOT} ${STATIC_ROOT}"

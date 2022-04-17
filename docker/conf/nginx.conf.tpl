@@ -19,14 +19,14 @@ http {
         proxy_cache one;
 
         location /favicon.ico {
-            alias ${STATIC_ROOT}/favicon/favicon.ico;
+            alias ${STATIC_ROOT}favicon/favicon.ico;
             etag off;
             if_modified_since off;
             add_header Cache-Control "public, no-transform, immutable";
             expires 1d;
          }
-         location /static/ {
-            root /var;
+         location ${STATIC_URL} {
+            root ${STATIC_ROOT};
             autoindex off;
             etag off;
             if_modified_since off;

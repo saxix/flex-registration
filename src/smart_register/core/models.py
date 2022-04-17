@@ -25,6 +25,7 @@ from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
+from ..state import state
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,8 @@ class Validator(NaturalKeyModel):
         ),
     )
     trace = models.BooleanField(default=False)
+    active = models.BooleanField(default=False, blank=True)
+    draft = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name
@@ -68,40 +71,42 @@ class Validator(NaturalKeyModel):
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        with sentry_sdk.push_scope() as scope:
-            scope.set_extra("value", value)
-            scope.set_extra("code", self.code)
-            scope.set_extra("target", self.target)
-            scope.set_tag("validator", self.pk)
+        if self.active or (self.draft and state.request.user.is_staff):
+            with sentry_sdk.push_scope() as scope:
+                scope.set_extra("argument", value)
+                scope.set_extra("code", self.code)
+                scope.set_extra("target", self.target)
+                scope.set_tag("validator", self.pk)
 
-            ctx = MiniRacer()
-            try:
-                ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
-                result = ctx.eval(self.code)
-                scope.set_tag("result", result)
-                if result is None:
-                    ret = False
-                else:
-                    try:
-                        ret = jsonpickle.decode(result)
-                    except (JSONDecodeError, TypeError):
-                        ret = result
-                if isinstance(ret, (str, dict)):
-                    raise ValidationError(ret)
-                elif isinstance(ret, bool) and not ret:
-                    raise ValidationError(self.message)
-            except ValidationError as e:
-                if self.trace:
+                ctx = MiniRacer()
+                try:
+                    ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
+                    result = ctx.eval(self.code)
+                    scope.set_extra("result", result)
+                    if result is None:
+                        ret = False
+                    else:
+                        try:
+                            ret = jsonpickle.decode(result)
+                        except (JSONDecodeError, TypeError):
+                            ret = result
+                    scope.set_extra("return_value", ret)
+                    if self.trace:
+                        sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                    if isinstance(ret, (str, dict)):
+                        raise ValidationError(ret)
+                    elif isinstance(ret, bool) and not ret:
+                        raise ValidationError(self.message)
+                except ValidationError as e:
+                    if self.trace:
+                        logger.exception(e)
+                    raise
+                except MiniRacerBaseException as e:
                     logger.exception(e)
-                raise
-            except MiniRacerBaseException as e:
-                logger.exception(e)
-                return True
-            except Exception as e:
-                logger.exception(e)
-                raise
-        if self.trace:
-            sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                    return True
+                except Exception as e:
+                    logger.exception(e)
+                    raise
 
 
 def get_validators(field):

@@ -22,7 +22,7 @@ from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.utils import clone_form, clone_model, is_root
-from .forms import CloneForm
+from .forms import CloneForm, TranslationForm
 from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
@@ -147,6 +147,55 @@ class RegistrationAdmin(SmartModelAdmin):
         return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
+    def clone(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Clone Registration",
+        )
+        instance: Registration = ctx["original"]
+        if request.method == "POST":
+            form = CloneForm(request.POST, instance=instance)
+            if form.is_valid():
+                try:
+                    with atomic():
+                        created = []
+                        name = form.cleaned_data["name"]
+                        base_form = instance.flex_form
+                        cloned = clone_form(base_form, name=name)
+                        for fs in base_form.formsets.all():
+                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} ({name})")
+                            fs = clone_model(
+                                fs,
+                                parent=cloned,
+                                flex_form=o,
+                            )
+
+                        reg = clone_model(
+                            instance,
+                            name=name,
+                            flex_form=cloned,
+                            active=False,
+                            locale=instance.locale,
+                            public_key=None,
+                        )
+                        created.append(fs)
+
+                        ctx["cloned"] = reg
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+
+            else:
+                self.message_user(request, "----")
+                ctx["form"] = form
+        else:
+            form = CloneForm(instance=ctx["original"])
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/clone.html", ctx)
+
+    @button()
     def create_translation(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -156,7 +205,7 @@ class RegistrationAdmin(SmartModelAdmin):
         )
         instance: Registration = ctx["original"]
         if request.method == "POST":
-            form = CloneForm(request.POST, instance=instance)
+            form = TranslationForm(request.POST, instance=instance)
             if form.is_valid():
                 try:
                     with atomic():
@@ -191,18 +240,18 @@ class RegistrationAdmin(SmartModelAdmin):
                 self.message_user(request, "----")
                 ctx["form"] = form
         else:
-            form = CloneForm(instance=ctx["original"])
+            form = TranslationForm(instance=ctx["original"])
             ctx["form"] = form
         return render(request, "admin/registration/registration/clone.html", ctx)
 
-    @link(html_attrs={"class": "aeb-green "})
-    def _view_on_site(self, button):
-        try:
-            if button.original:
-                button.href = reverse("register", args=[button.original.locale, button.original.slug])
-                button.html_attrs["target"] = f"_{button.original.slug}"
-        except Exception as e:
-            logger.exception(e)
+    # @link(html_attrs={"class": "aeb-green "})
+    # def _view_on_site(self, button):
+    #     try:
+    #         if button.original:
+    #             button.href = reverse("register", args=[button.original.locale, button.original.slug])
+    #             button.html_attrs["target"] = f"_{button.original.slug}"
+    #     except Exception as e:
+    #         logger.exception(e)
 
     @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
