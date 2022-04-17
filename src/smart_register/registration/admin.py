@@ -1,8 +1,12 @@
+import io
+import json
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 
 import pytz
+from django.core.management import call_command
+
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from dateutil.relativedelta import relativedelta
@@ -10,7 +14,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.db.models import Count, JSONField
+from django.db.models import Count, JSONField, Q
 from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
@@ -244,15 +248,6 @@ class RegistrationAdmin(SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/clone.html", ctx)
 
-    # @link(html_attrs={"class": "aeb-green "})
-    # def _view_on_site(self, button):
-    #     try:
-    #         if button.original:
-    #             button.href = reverse("register", args=[button.original.locale, button.original.slug])
-    #             button.html_attrs["target"] = f"_{button.original.slug}"
-    #     except Exception as e:
-    #         logger.exception(e)
-
     @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
         try:
@@ -262,6 +257,40 @@ class RegistrationAdmin(SmartModelAdmin):
                 button.html_attrs["target"] = f"_{button.original.pk}"
         except Exception as e:
             logger.exception(e)
+
+    @button()
+    def export(self, request, pk):
+        from smart_register.core.models import FlexForm, FlexFormField, FormSet, Validator, OptionSet
+
+        data = {}
+        reg: Registration = self.get_object(request, pk)
+        buffers = {}
+        buffers["registration"] = io.StringIO()
+        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
+        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
+        validators = Validator.objects.values_list("pk", flat=True)
+        options = OptionSet.objects.values_list("pk", flat=True)
+        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
+        data = {
+            "registration.Registration": [reg.pk],
+            "core.FlexForm": [f.pk for f in forms],
+            "core.FormSet": [f.pk for f in formsets],
+            "core.Validator": validators,
+            "core.OptionSet": options,
+            "core.FlexFormField": fields,
+        }
+        for k, f in data.items():
+            data[k] = io.StringIO()
+            call_command(
+                "dumpdata",
+                [k],
+                stdout=data[k],
+                primary_keys=",".join(map(str, f)),
+                use_natural_foreign_keys=True,
+                use_natural_primary_keys=True,
+            )
+
+        return JsonResponse({k: json.loads(v.getvalue()) for k, v in data.items()}, safe=False)
 
     @view()
     def removekey(self, request, pk):
