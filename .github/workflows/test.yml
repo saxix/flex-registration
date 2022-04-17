@@ -45,6 +45,8 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
     env:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/smart_register
+      STATIC_URL: /static/
+      STATIC_ROOT:
       PY_VER: ${{ matrix.python-version}}
       DJ_VER: ${{ matrix.django-version}}
       SECRET_KEY: super-secret-key

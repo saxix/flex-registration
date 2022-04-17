@@ -28,8 +28,8 @@ from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
 
-from ..core.utils import is_root
-from .forms import CloneForm
+from ..core.utils import clone_form, clone_model, is_root
+from .forms import CloneForm, TranslationForm
 from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
@@ -154,6 +154,55 @@ class RegistrationAdmin(SmartModelAdmin):
         return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
+    def clone(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Clone Registration",
+        )
+        instance: Registration = ctx["original"]
+        if request.method == "POST":
+            form = CloneForm(request.POST, instance=instance)
+            if form.is_valid():
+                try:
+                    with atomic():
+                        created = []
+                        name = form.cleaned_data["name"]
+                        base_form = instance.flex_form
+                        cloned = clone_form(base_form, name=name)
+                        for fs in base_form.formsets.all():
+                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} ({name})")
+                            fs = clone_model(
+                                fs,
+                                parent=cloned,
+                                flex_form=o,
+                            )
+
+                        reg = clone_model(
+                            instance,
+                            name=name,
+                            flex_form=cloned,
+                            active=False,
+                            locale=instance.locale,
+                            public_key=None,
+                        )
+                        created.append(fs)
+
+                        ctx["cloned"] = reg
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+
+            else:
+                self.message_user(request, "----")
+                ctx["form"] = form
+        else:
+            form = CloneForm(instance=ctx["original"])
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/clone.html", ctx)
+
+    @button()
     def create_translation(self, request, pk):
         from smart_register.i18n.models import Message
 
@@ -165,7 +214,7 @@ class RegistrationAdmin(SmartModelAdmin):
         )
         instance: Registration = ctx["original"]
         if request.method == "POST":
-            form = CloneForm(request.POST, instance=instance)
+            form = TranslationForm(request.POST, instance=instance)
             if form.is_valid():
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
@@ -187,7 +236,7 @@ class RegistrationAdmin(SmartModelAdmin):
             else:
                 ctx["form"] = form
         else:
-            form = CloneForm(instance=ctx["original"])
+            form = TranslationForm(instance=ctx["original"])
             ctx["form"] = form
         return render(request, "admin/registration/registration/clone.html", ctx)
 

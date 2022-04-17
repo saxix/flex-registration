@@ -153,6 +153,8 @@ class RegisterView(FixedLocaleView, FormView):
                 self.registration.validator.validate(cleaned_data)
             except ValidationError as e:
                 self.errors.append(e)
+                return False
+        return True
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -168,7 +170,7 @@ class RegisterView(FixedLocaleView, FormView):
                 is_valid = False
 
         if is_valid:
-            self.validate(all_cleaned_data)
+            is_valid = self.validate(all_cleaned_data)
 
         if form.is_valid() and is_valid:
             return self.form_valid(form, formsets)

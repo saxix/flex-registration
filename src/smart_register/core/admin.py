@@ -54,11 +54,12 @@ class ValidatorTestForm(forms.Form):
 
 @register(Validator)
 class ValidatorAdmin(SmartModelAdmin):
-    list_display = ("name", "target", "message")
     form = ValidatorForm
-    search_fields = ("name",)
-    list_filter = ("target",)
+    list_editable = ("trace", "active", "draft")
+    list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
+    list_filter = ("target", "active", "draft", "trace")
     readonly_fields = ("version", "last_update_date")
+    search_fields = ("name",)
     DEFAULTS = {
         Validator.FORM: {},  # cleaned data
         Validator.FIELD: "",  # field value
@@ -69,6 +70,14 @@ class ValidatorAdmin(SmartModelAdmin):
     @view()
     def _test(self, request, pk):
         return {}
+
+    def used_by(self, obj):
+        if obj.target == Validator.FORM:
+            return ", ".join(obj.flexform_set.values_list("name", flat=True))
+        elif obj.target == Validator.FIELD:
+            return ", ".join(obj.flexformfield_set.values_list("name", flat=True))
+        elif obj.target == Validator.FORMSET:
+            return ", ".join(obj.formset_set.values_list("name", flat=True))
 
     @button()
     def test(self, request, pk):
@@ -148,7 +157,10 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     order = "ordering"
 
     def _type(self, obj):
-        return obj.field_type.__name__
+        if obj.field_type:
+            return obj.field_type.__name__
+        else:
+            return "[[ removed ]]"
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         if db_field.name == "field_type":
@@ -228,6 +240,7 @@ class SyncForm(SyncConfigForm):
 @register(FlexForm)
 class FlexFormAdmin(SmartModelAdmin):
     SYNC_COOKIE = "sync"
+    inlines = [FlexFormFieldInline, FormSetInline]
     list_display = ("name", "validator", "used_by", "childs", "parents")
     list_filter = (
         QueryStringFilter,
@@ -235,7 +248,7 @@ class FlexFormAdmin(SmartModelAdmin):
     )
     search_fields = ("name",)
     readonly_fields = ("version", "last_update_date")
-    inlines = [FlexFormFieldInline, FormSetInline]
+    ordering = ("name",)
     save_as = True
 
     def used_by(self, obj):

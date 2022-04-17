@@ -14,7 +14,7 @@
     {{ media }}
 {% endblock head %}
 {% block header %}
-    {% include "registration/_spinner.html" %}
+{#    {% include "registration/_spinner.html" %}#}
     {{ block.super }}
     <div class="float-right absolute hidden">
         {% include "i18n/_select_language.html" with languages=dataset.languages %}
