@@ -42,7 +42,7 @@ class Validator(NaturalKeyModel):
     last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=255, unique=True)
-    message = models.CharField(max_length=255)
+    message = models.CharField(max_length=255, help_text="Default error message if validator return 'false'.")
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -53,9 +53,14 @@ class Validator(NaturalKeyModel):
             (MODULE, "Module"),
         ),
     )
-    trace = models.BooleanField(default=False)
-    active = models.BooleanField(default=False, blank=True)
-    draft = models.BooleanField(default=False, blank=True)
+    trace = models.BooleanField(
+        default=False,
+        help_text="Debug/Testing purposes: trace validator invocation on Sentry.",
+    )
+    active = models.BooleanField(default=False, blank=True, help_text="Enable/Disable validator.")
+    draft = models.BooleanField(
+        default=False, blank=True, help_text="Testing purposes: draft validator are enabled only for staff users."
+    )
 
     def __str__(self):
         return self.name

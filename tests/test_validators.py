@@ -25,45 +25,45 @@ if (value.cleaned_data.length===0){
 
 
 def test_error_message():
-    v = Validator(code='"Error"')
+    v = Validator(code='"Error"', active=True)
     with pytest.raises(ValidationError) as e:
         v.validate(22)
     assert e.value.messages == ["Error"]
 
 
 def test_error_dict():
-    v = Validator(code='{first_name:"Mandatory"}')
+    v = Validator(code='{first_name:"Mandatory"}', active=True)
     with pytest.raises(ValidationError) as e:
         v.validate(22)
         assert e.message == ""
 
 
 def test_default_error():
-    v = Validator(code="var a=1;", message="default_error")
+    v = Validator(code="var a=1;", message="default_error", active=True)
     with pytest.raises(ValidationError) as e:
         v.validate(22)
         assert e.message == "default_error"
 
 
 def test_success_true():
-    v = Validator(code="true")
+    v = Validator(code="true", active=True)
     v.validate(22)
 
 
 def test_form_valid():
-    v = Validator(code="true")
+    v = Validator(code="true", active=True)
     v.validate({"last_name": "Last"})
 
 
 def test_form_simple():
-    v = Validator(code="value.last_name.length==3;", message="wrong length")
+    v = Validator(code="value.last_name.length==3;", message="wrong length", active=True)
     with pytest.raises(ValidationError) as e:
         v.validate({"last_name": "Last"})
     assert e.value.messages == ["wrong length"]
 
 
 def test_form_complex():
-    v = Validator(code='JSON.stringify({last_name: "Invalid"})', message="wrong length")
+    v = Validator(code='JSON.stringify({last_name: "Invalid"})', message="wrong length", active=True)
     with pytest.raises(ValidationError) as e:
         v.validate({"last_name": "Last"})
     assert e.value.message_dict == {"last_name": ["Invalid"]}
@@ -78,7 +78,7 @@ def test_form_complex():
     ],
 )
 def test_form_fail_custom_message(code):
-    v = Validator(code=code, message="wrong length")
+    v = Validator(code=code, message="wrong length", active=True)
     with pytest.raises(ValidationError) as e:
         v.validate({"last_name": "Last"})
     assert e.value.messages == ["Error"]
@@ -93,7 +93,7 @@ def test_form_fail_custom_message(code):
     ],
 )
 def test_form_fail_default_message(code):
-    v = Validator(code=code, message="wrong length")
+    v = Validator(code=code, message="wrong length", active=True)
     with pytest.raises(ValidationError) as e:
         v.validate({"last_name": "Last"})
     assert e.value.messages == ["wrong length"]
@@ -107,5 +107,5 @@ def test_form_fail_default_message(code):
     ],
 )
 def test_form_success_custom_message(code):
-    v = Validator(code=code, message="wrong length")
+    v = Validator(code=code, message="wrong length", active=True)
     v.validate({"last_name": "ABC"})

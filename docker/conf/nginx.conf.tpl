@@ -26,7 +26,7 @@ http {
             expires 1d;
          }
          location ${STATIC_URL} {
-            root ${STATIC_ROOT};
+            root /var;
             autoindex off;
             etag off;
             if_modified_since off;
