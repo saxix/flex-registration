@@ -1,1 +1,1 @@
-FROM ghcr.io/saxix/smart_register:38aadec
+FROM ghcr.io/saxix/smart_register:latest
