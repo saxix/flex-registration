@@ -5,7 +5,11 @@ from hashlib import md5
 import sentry_sdk
 from constance import config
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile, UploadedFile
+from django.core.files.uploadedfile import (
+    InMemoryUploadedFile,
+    TemporaryUploadedFile,
+    UploadedFile,
+)
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
@@ -42,11 +46,6 @@ class FixedLocaleView:
     def dispatch(self, request, *args, **kwargs):
         translation.activate(self.registration.locale)
         return super().dispatch(request, *args, **kwargs)
-
-    # def get(self, request, *args, **kwargs):
-    #     translation.activate(self.registration.locale)
-    #     with translation.override(self.registration.locale):
-    #         return self.render_to_response(self.get_context_data())
 
 
 class RegisterCompleteView(FixedLocaleView, TemplateView):
@@ -175,11 +174,16 @@ class RegisterView(FixedLocaleView, FormView):
 
         def parse_field(field):
             if isinstance(field, (UploadedFile, InMemoryUploadedFile, TemporaryUploadedFile)):
-                return base64.b64encode(field.read())
+                value = field.read()
+                if not value:
+                    return ""
+                return base64.b64encode(value)
             elif isinstance(field, dict):
                 return {item[0]: parse_field(item[1]) for item in field.items()}
             elif isinstance(field, list):
                 return [parse_field(item) for item in field]
+            elif field is None:
+                field = ""
             return field
 
         data = {field_name: parse_field(field) for field_name, field in data.items()}

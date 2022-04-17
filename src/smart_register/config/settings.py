@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.forms",
-    "import_export",
     # -- dev --
     "debug_toolbar",
     # ---
@@ -85,11 +84,11 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "smart_register.web.middlewares.http2.HTTP2Middleware",
     "smart_register.web.middlewares.minify.HtmlMinMiddleware",
     "django.middleware.gzip.GZipMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     # "django.middleware.cache.FetchFromCacheMiddleware",
 ]
 
@@ -404,9 +403,6 @@ SYSINFO = {
     # "checks": None,
 }
 
-IMPORT_EXPORT_USE_TRANSACTIONS = True
-IMPORT_EXPORT_SKIP_ADMIN_LOG = True
-
 FLAGS_STATE_LOGGING = DEBUG
 
 FLAGS = {
@@ -417,7 +413,8 @@ FLAGS = {
 
 JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"
 JSON_EDITOR_CSS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.css"
-JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
+JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.min.js"
+JSON_EDITOR_ACE_OPTIONS_JS = "jsoneditor/ace_options.min.js"
 
 # CAPTCHA_IMAGE_SIZE = 300,200
 CAPTCHA_FONT_SIZE = 40
@@ -438,33 +435,31 @@ def show_ddt(request):  # pragma: no-cover
     if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):
         return False
     return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
-    # if request.user.is_authenticated:
-    #     if request.path in RegexList(('/tpl/.*', '/api/.*', '/dal/.*', '/healthcheck/')):
-    #         return False
-    # return request.META.get('HTTP_DEV_DDT', None) == env('DEV_DDT_KEY')
 
 
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK": show_ddt,
     "JQUERY_URL": "",
+    "INSERT_BEFORE": "</head>",
+    "SHOW_TEMPLATE_CONTEXT": True,
 }
 INTERNAL_IPS = env.list("INTERNAL_IPS")
 DEBUG_TOOLBAR_PANELS = [
-    # 'debug_toolbar.panels.history.HistoryPanel',
-    # 'debug_toolbar.panels.versions.VersionsPanel',
-    # 'debug_toolbar.panels.timer.TimerPanel',
-    # 'flags.panels.FlagsPanel',
-    # 'flags.panels.FlagChecksPanel',
-    # 'debug_toolbar.panels.settings.SettingsPanel',
+    "debug_toolbar.panels.history.HistoryPanel",
+    "debug_toolbar.panels.versions.VersionsPanel",
+    "debug_toolbar.panels.timer.TimerPanel",
+    "flags.panels.FlagsPanel",
+    "flags.panels.FlagChecksPanel",
+    "debug_toolbar.panels.settings.SettingsPanel",
     "debug_toolbar.panels.headers.HeadersPanel",
     "debug_toolbar.panels.request.RequestPanel",
     "debug_toolbar.panels.sql.SQLPanel",
     "debug_toolbar.panels.staticfiles.StaticFilesPanel",
-    # 'debug_toolbar.panels.templates.TemplatesPanel',
+    "debug_toolbar.panels.templates.TemplatesPanel",
     "debug_toolbar.panels.cache.CachePanel",
-    # 'debug_toolbar.panels.signals.SignalsPanel',
+    "debug_toolbar.panels.signals.SignalsPanel",
     "debug_toolbar.panels.logging.LoggingPanel",
-    # 'debug_toolbar.panels.redirects.RedirectsPanel',
+    "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
 
