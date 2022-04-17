@@ -148,7 +148,10 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     order = "ordering"
 
     def _type(self, obj):
-        return obj.field_type.__name__
+        if obj.field_type:
+            return obj.field_type.__name__
+        else:
+            return "[[ removed ]]"
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         if db_field.name == "field_type":
