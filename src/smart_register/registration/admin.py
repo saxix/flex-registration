@@ -233,6 +233,7 @@ class RegistrationAdmin(SmartModelAdmin):
                 updated = Message.objects.filter(locale=locale).count()
                 added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
                 self.message_user(request, f"{updated-existing} messages created. {updated} available")
+                ctx["uri"] = uri
                 ctx["locale"] = locale
                 ctx["added"] = added
             else:
@@ -240,7 +241,7 @@ class RegistrationAdmin(SmartModelAdmin):
         else:
             form = TranslationForm(instance=ctx["original"])
             ctx["form"] = form
-        return render(request, "admin/registration/registration/clone.html", ctx)
+        return render(request, "admin/registration/registration/translation.html", ctx)
 
     @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
