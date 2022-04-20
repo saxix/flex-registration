@@ -49,7 +49,6 @@ class RegistrationAdmin(SmartModelAdmin):
     list_filter = ("active",)
     list_display = ("name", "title", "slug", "locale", "secure", "active", "validator")
     exclude = ("public_key",)
-    change_form_template = None
     autocomplete_fields = ("flex_form",)
     save_as = True
     readonly_fields = ("version", "last_update_date")

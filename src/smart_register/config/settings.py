@@ -105,7 +105,12 @@ ROOT_URLCONF = "smart_register.config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [PACKAGE_DIR / "admin/ui/templates", PACKAGE_DIR / "core/templates", PACKAGE_DIR / "web/templates"],
+        "DIRS": [
+            PACKAGE_DIR / "admin/ui/templates",
+            PACKAGE_DIR / "registration/templates",
+            PACKAGE_DIR / "core/templates",
+            PACKAGE_DIR / "web/templates",
+        ],
         # 'APP_DIRS': True,
         "OPTIONS": {
             "loaders": [
