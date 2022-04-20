@@ -21,7 +21,7 @@ urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
     path("__debug__/", include(debug_toolbar.urls)),
     path("jsi18n/<str:locale>/", SmartJavascriptCatalog.as_view(), name="javascript-catalog"),
-    path("", include("smart_register.core.urls")),
+    # path("", include("smart_register.core.urls")),
 ]
 
 urlpatterns += i18n_patterns(
