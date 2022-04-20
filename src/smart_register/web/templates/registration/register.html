@@ -31,13 +31,15 @@
         <div class="w-full lg:w-1/2 mt-5">
             {% if invalid %}
                 <div class="mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
+                    {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original="please fix the errors below" %}{% endif %}
                     {% trans "please fix the errors below" %}
                 </div>
                 <ul class="block errorlist">{% for e in errors %}
                     {% for msg in e %}
                         <li>{{ msg }}</li>
                     {% endfor %}
-                {% endfor %}</ul>
+                {% endfor %}
+                </ul>
             {% endif %}
             {% if user.is_staff %}
                 {% include "registration/_staff_edit_module.html" %}
@@ -45,7 +47,9 @@
             {% if dataset.intro %}
                 <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                     <div class="intro">
-                        {{ dataset.intro|default_if_none:""|markdown }}
+                        {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=dataset.intro %}{% endif %}
+                        {% trans dataset.intro as intro %}
+                        {{ intro|default_if_none:""|markdown }}
                     </div>
                 </div>
             {% endif %}
@@ -112,7 +116,8 @@
             </div>
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                 {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=dataset.footer %}{% endif %}
-                {{ dataset.footer|markdown }}
+                {% trans dataset.footer as footer %}
+                {{ footer|default_if_none:""|markdown }}
             </div>
         </div>
     </div>
