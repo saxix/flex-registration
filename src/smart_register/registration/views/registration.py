@@ -23,7 +23,7 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
 from smart_register.core.cache import cache_formset
-from smart_register.core.utils import get_qrcode
+from smart_register.core.utils import get_qrcode, get_etag
 from smart_register.registration.models import Record, Registration
 from smart_register.state import state
 
@@ -82,19 +82,18 @@ class RegisterView(FixedLocaleView, FormView):
 
     def get(self, request, *args, **kwargs):
         if state.collect_messages:
-            res_etag = str(time.time())
+            res_etag = get_etag(request, time.time())
         else:
-            res_etag = "/".join(
-                [
-                    str(self.registration.version),
-                    get_language(),
-                    {True: "staff", False: ""}[request.user.is_staff],
-                ]
+            res_etag = get_etag(
+                request,
+                str(self.registration.version),
+                get_language(),
+                {True: "staff", False: ""}[request.user.is_staff],
             )
         response = get_conditional_response(request, str(res_etag))
         if response is None:
             response = super().get(request, *args, **kwargs)
-        response.headers.setdefault("ETag", res_etag)
+            response.headers.setdefault("ETag", res_etag)
         return response
 
     @cached_property

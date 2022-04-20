@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     # -- dev --
     "debug_toolbar",
     # ---
+    "smart_register.admin.apps.AuroraAdminUIConfig",
+    "smart_register.admin.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartAuthConfig",
@@ -62,7 +64,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "simplemathcaptcha",
     # ---
-    "smart_register.admin.apps.AdminConfig",
     "smart_register.apps.Config",
     "smart_register.i18n",
     "smart_register.web",
@@ -104,7 +105,7 @@ ROOT_URLCONF = "smart_register.config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [PACKAGE_DIR / "core/templates", PACKAGE_DIR / "web/templates"],
+        "DIRS": [PACKAGE_DIR / "admin/ui/templates", PACKAGE_DIR / "core/templates", PACKAGE_DIR / "web/templates"],
         # 'APP_DIRS': True,
         "OPTIONS": {
             "loaders": [

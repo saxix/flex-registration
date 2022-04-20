@@ -91,6 +91,7 @@ def test_api(django_app, registration, monkeypatch):
     monkeypatch.setattr("smart_register.web.views.api.handle_basic_auth", lambda x: True)
 
     res = django_app.get(api_url)
+    assert res.status_code == 200
     records = res.json["data"]
     for r in records:
         storage = r["storage"]

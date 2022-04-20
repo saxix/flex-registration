@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="{% static "base.css" %}">
     {% if project.debug or user.is_staff %}
         <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
-        <link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
+        <link rel="stylesheet" href="{% static "admin/debug.css" %}">{% endif %}
     <link rel="preload" as="image" href="{% static "loading.gif" %}" />
     {% block head %}
     {% endblock head %}

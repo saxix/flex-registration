@@ -12,10 +12,10 @@
             setEditorIcons($editCheckBox.is(":checked"));
             Cookies.set("staff-editor", $editCheckBox.is(":checked"));
         });
-        $('.i18n').each(function(i, e){
-            $(e).prepend('???');
-            console.log($(e).text().trim());
-        });
+        // $('.i18n').each(function(i, e){
+        //     $(e).prepend('???');
+        //     console.log($(e).text().trim());
+        // });
         var pref = Cookies.get("staff-editor") === "true";
         $editCheckBox.prop( "checked", pref );
         setEditorIcons(pref);

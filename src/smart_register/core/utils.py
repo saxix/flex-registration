@@ -19,6 +19,8 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
 
+from smart_register import VERSION
+
 UNDEFINED = object()
 
 
@@ -243,3 +245,7 @@ def get_default_language(request, default="en-us"):
 
 def get_versioned_static_name(name):
     return name
+
+
+def get_etag(request, *args):
+    return "/".join([VERSION, *map(str, args)])

@@ -11,6 +11,7 @@ from django.utils.functional import lazy
 from smart_admin.site import SmartAdminSite
 
 from smart_register import get_full_version
+from smart_register.core.utils import is_root
 
 
 class ConsoleForm(forms.Form):
@@ -28,8 +29,8 @@ class ConsoleForm(forms.Form):
 
 class AuroraAdminSite(SmartAdminSite):
     sysinfo_url = False
-    site_title = "Aurora"
-    site_header = lazy(lambda x: f"Aurora {get_full_version()}")
+    site_title = ""
+    site_header = lazy(lambda x: f"{get_full_version()}")
 
     def each_context(self, request):
         context = super().each_context(request)
@@ -38,6 +39,8 @@ class AuroraAdminSite(SmartAdminSite):
 
     def console(self, request, extra_context=None):
         context = self.each_context(request)
+        if not is_root(request):
+            raise PermissionDenied
 
         if request.method == "POST":
             form = ConsoleForm(request.POST)

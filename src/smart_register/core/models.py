@@ -27,7 +27,7 @@ from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
+from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase, get_default_language
 
 logger = logging.getLogger(__name__)
 
@@ -397,33 +397,44 @@ class OptionSet(NaturalKeyModel, models.Model):
     columns = models.CharField(
         max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
+
+    pk_col = models.IntegerField(default=0, help_text="ID column number")
+    parent_col = models.IntegerField(default=-1, help_text="Column number of the indicating parent element")
+    locale = models.CharField(max_length=5, default="en-us", help_text="default language code")
+    languages = models.CharField(
+        max_length=255, default="-;-;", blank=True, null=True, help_text="language code of each column."
+    )
+
     objects = OptionSetManager()
 
     def clean(self):
+        if self.locale not in self.languages:
+            raise ValidationError("Default locale must be in the languages list")
         try:
-            a, b, c = list(map(int, self.columns.split(",")))
+            self.languages.split(",")
         except ValueError:
-            raise ValidationError("Invalid columns")
-        super().clean()
+            raise ValidationError("Languages must be a comma separated list of locales")
 
-    def get_cache_key(self, cols=None):
-        return f"options-{self.get_api_url()}-{self.version}"
+    def get_cache_key(self, requested_language):
+        return f"options-{self.pk}-{requested_language}-{self.version}"
 
     def get_api_url(self):
         try:
-            pk, label, parent = self.columns.split(",")
+            pk, parent = self.columns.split(",")
         except ValueError:
-            pk, label, parent = 0, 0, -1
-        return reverse("optionset", args=[self.name, pk, label, parent])
+            pk, parent = 0, -1
+        return reverse("optionset", args=[self.name, pk, parent])
 
-    def get_data(self, columns=None):
-        value = cache.get(self.get_cache_key(columns), version=self.version)
-
-        if columns is None:
-            pk_col, label_col, parent_col = map(int, self.columns.split(","))
-        else:
-            pk_col, label_col, parent_col = columns
-
+    def get_data(self, request):
+        requested_language = get_default_language(request)
+        try:
+            label_col = self.languages.split(self.separator).index(requested_language)
+        except ValueError:
+            logger.error(f"Language {requested_language} not available for OptionSet {self.name}")
+            label_col = self.languages.split(",").index(self.locale)
+        key = self.get_cache_key(requested_language)
+        # value = cache.get(key, version=self.version)
+        value = None
         if not value:
             value = []
             for line in self.data.split("\r\n"):
@@ -434,10 +445,10 @@ class OptionSet(NaturalKeyModel, models.Model):
                 parent = None
                 if self.separator:
                     cols = line.split(self.separator)
-                    pk = cols[pk_col]
+                    pk = cols[self.pk_col]
                     label = cols[label_col]
-                    if parent_col > 0:
-                        parent = cols[parent_col]
+                    if self.parent_col > 0:
+                        parent = cols[self.parent_col]
                 else:
                     label = line
                     pk = str(line).lower()
@@ -448,28 +459,29 @@ class OptionSet(NaturalKeyModel, models.Model):
                     "label": label,
                 }
                 value.append(values)
-            cache.set(self.get_cache_key(), value)
+            cache.set(key, value)
         return value
 
-    def as_choices(self, cols=None):
-        data = self.get_data(cols)
-        for entry in data:
-            yield entry["pk"], entry["label"]
+    def as_choices(self):
+        pass
+        # data = self.get_data()
+        # for entry in data:
+        #     yield entry["pk"], entry["label"]
 
-    def as_json(self, cols=None):
-        return self.get_data(cols)
+    def as_json(self, request):
+        return self.get_data(request)
 
-    @classmethod
-    def parse_datasource(cls, datasource):
-        if datasource:
-            if ":" in datasource:
-                name, cols = datasource.split(":")
-                columns = map(int, cols.split(","))
-            else:
-                name = datasource
-                columns = 0, 0, -1
-            return name, columns
-        return "", []
+    # @classmethod
+    # def parse_datasource(cls, datasource):
+    #     if datasource:
+    #         if ":" in datasource:
+    #             name, cols = datasource.split(":")
+    #             columns = map(int, cols.split(","))
+    #         else:
+    #             name = datasource
+    #             columns = 0, -1
+    #         return name, columns
+    #     return "", []
 
 
 def clean_choices(value):
