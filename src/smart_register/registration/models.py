@@ -7,11 +7,14 @@ from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.text import slugify
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
 from smart_register.core.utils import dict_setdefault, get_client_ip, safe_json
+from smart_register.i18n.models import I18NModel
+from smart_register.registration.fields import ChoiceArrayField
 from smart_register.state import state
 
 logger = logging.getLogger(__name__)
@@ -19,7 +22,7 @@ logger = logging.getLogger(__name__)
 undefined = object()
 
 
-class Registration(models.Model):
+class Registration(I18NModel, models.Model):
     ADVANCED_DEFAULT_ATTRS = {
         "smart": {
             "wizard": False,
@@ -39,7 +42,10 @@ class Registration(models.Model):
     start = models.DateField(auto_now_add=True)
     end = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=False)
-    locale = models.CharField(max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE)
+    locale = models.CharField(
+        verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
+    )
+    locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
     intro = models.TextField(blank=True, null=True)
     footer = models.TextField(blank=True, null=True)
     validator = models.ForeignKey(
@@ -61,7 +67,7 @@ class Registration(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("register", args=[self.locale, self.slug])
+        return reverse("register", args=[self.slug])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:
@@ -97,6 +103,14 @@ class Registration(models.Model):
         else:
             fields = {"storage": safe_json(data).encode()}
         return Record.objects.create(registration=self, **fields)
+
+    @cached_property
+    def languages(self):
+        locales = [self.locale]
+        if self.locales:
+            locales += self.locales
+
+        return [(k, v) for k, v in settings.LANGUAGES if k in locales]
 
 
 class RemoteIp(models.GenericIPAddressField):

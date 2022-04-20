@@ -74,7 +74,7 @@ def public_pem(key) -> str:
 
 @pytest.mark.django_db
 def test_api(django_app, registration, monkeypatch):
-    url = reverse("register", args=[registration.locale, registration.slug])
+    url = reverse("register", args=[registration.slug])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"
@@ -88,9 +88,10 @@ def test_api(django_app, registration, monkeypatch):
     res = django_app.get(api_url, expect_errors=True)
 
     assert res.status_code == 401
-    monkeypatch.setattr("smart_register.web.views.api.handle_basic_auth", lambda x: True)
+    monkeypatch.setattr("smart_register.registration.views.api.handle_basic_auth", lambda x: True)
 
     res = django_app.get(api_url)
+    assert res.status_code == 200
     records = res.json["data"]
     for r in records:
         storage = r["storage"]

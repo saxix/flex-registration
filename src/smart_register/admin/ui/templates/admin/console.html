@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}{% load static i18n %}
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
+{% endblock %}
+{% block content %}
+    <div class="module{% if cl.has_filters %} filtered{% endif %}" id="changelist">
+        <div class="changelist-form-container">
+            <form method="POST">
+                {% csrf_token %}
+                <table>
+                    {{ form }}
+                </table>
+                <table>
+                    <tr>
+                        <td>
+                        </td>
+                    </tr>
+                </table>
+                <input type="submit">
+            </form>
+        </div>
+        <div id="changelist-filter">
+            <ul>
+                <li><a class="button" href="{% url "admin:constance_config_changelist" %}">Constance</a></li>
+                <li><a class="button" href="{% url "admin:flags_flagstate_changelist" %}">Flags</a></li>
+                <li><a class="button" href="{% url "admin:smart-sysinfo-admin" %}">System Infos</a></li>
+            </ul>
+        </div>
+    </div>
+{% endblock content %}

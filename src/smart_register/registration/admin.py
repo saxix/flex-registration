@@ -1,28 +1,38 @@
+import io
+import json
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 
 import pytz
+import requests
 from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
 from dateutil.relativedelta import relativedelta
+from dateutil.utils import today
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.db.models import Count, JSONField
+from django.contrib.contenttypes.models import ContentType
+from django.core.management import call_command
+from django.db import OperationalError
+from django.db.models import Count, JSONField, Q
 from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
+from smart_admin.truncate import truncate_model_table
 
 from ..core.utils import clone_form, clone_model, is_root
-from .forms import CloneForm
+from .forms import CloneForm, TranslationForm
 from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
@@ -39,7 +49,6 @@ class RegistrationAdmin(SmartModelAdmin):
     list_filter = ("active",)
     list_display = ("name", "title", "slug", "locale", "secure", "active", "validator")
     exclude = ("public_key",)
-    change_form_template = None
     autocomplete_fields = ("flex_form",)
     save_as = True
     readonly_fields = ("version", "last_update_date")
@@ -147,12 +156,12 @@ class RegistrationAdmin(SmartModelAdmin):
         return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
-    def create_translation(self, request, pk):
+    def clone(self, request, pk):
         ctx = self.get_common_context(
             request,
             pk,
             media=self.media,
-            title="Generate Translation",
+            title="Clone Registration",
         )
         instance: Registration = ctx["original"]
         if request.method == "POST":
@@ -161,11 +170,11 @@ class RegistrationAdmin(SmartModelAdmin):
                 try:
                     with atomic():
                         created = []
-                        locale = form.cleaned_data["locale"]
+                        name = form.cleaned_data["name"]
                         base_form = instance.flex_form
-                        cloned = clone_form(base_form, name=f"{base_form.name} {locale}")
+                        cloned = clone_form(base_form, name=name)
                         for fs in base_form.formsets.all():
-                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} {locale}")
+                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} ({name})")
                             fs = clone_model(
                                 fs,
                                 parent=cloned,
@@ -174,10 +183,10 @@ class RegistrationAdmin(SmartModelAdmin):
 
                         reg = clone_model(
                             instance,
-                            name=f"{instance.name} {locale}",
+                            name=name,
                             flex_form=cloned,
                             active=False,
-                            locale=locale,
+                            locale=instance.locale,
                             public_key=None,
                         )
                         created.append(fs)
@@ -195,14 +204,43 @@ class RegistrationAdmin(SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/clone.html", ctx)
 
-    @link(html_attrs={"class": "aeb-green "})
-    def _view_on_site(self, button):
-        try:
-            if button.original:
-                button.href = reverse("register", args=[button.original.locale, button.original.slug])
-                button.html_attrs["target"] = f"_{button.original.slug}"
-        except Exception as e:
-            logger.exception(e)
+    @button()
+    def create_translation(self, request, pk):
+        from smart_register.i18n.models import Message
+
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Generate Translation",
+        )
+        instance: Registration = ctx["original"]
+        if request.method == "POST":
+            form = TranslationForm(request.POST, instance=instance)
+            if form.is_valid():
+                locale = form.cleaned_data["locale"]
+                existing = Message.objects.filter(locale=locale).count()
+                uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
+
+                r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
+                if r1.status_code != 200:
+                    raise Exception(r1.status_code)
+                if r1.status_code != 200:
+                    raise Exception(r1.status_code)
+                r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
+                if r2.status_code != 200:
+                    raise Exception(r1.status_code)
+                updated = Message.objects.filter(locale=locale).count()
+                added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
+                self.message_user(request, f"{updated-existing} messages created. {updated} available")
+                ctx["locale"] = locale
+                ctx["added"] = added
+            else:
+                ctx["form"] = form
+        else:
+            form = TranslationForm(instance=ctx["original"])
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/clone.html", ctx)
 
     @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
@@ -213,6 +251,46 @@ class RegistrationAdmin(SmartModelAdmin):
                 button.html_attrs["target"] = f"_{button.original.pk}"
         except Exception as e:
             logger.exception(e)
+
+    @button()
+    def export(self, request, pk):
+        from smart_register.core.models import (
+            FlexForm,
+            FlexFormField,
+            FormSet,
+            OptionSet,
+            Validator,
+        )
+
+        data = {}
+        reg: Registration = self.get_object(request, pk)
+        buffers = {}
+        buffers["registration"] = io.StringIO()
+        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
+        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
+        validators = Validator.objects.values_list("pk", flat=True)
+        options = OptionSet.objects.values_list("pk", flat=True)
+        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
+        data = {
+            "registration.Registration": [reg.pk],
+            "core.FlexForm": [f.pk for f in forms],
+            "core.FormSet": [f.pk for f in formsets],
+            "core.Validator": validators,
+            "core.OptionSet": options,
+            "core.FlexFormField": fields,
+        }
+        for k, f in data.items():
+            data[k] = io.StringIO()
+            call_command(
+                "dumpdata",
+                [k],
+                stdout=data[k],
+                primary_keys=",".join(map(str, f)),
+                use_natural_foreign_keys=True,
+                use_natural_primary_keys=True,
+            )
+
+        return JsonResponse({k: json.loads(v.getvalue()) for k, v in data.items()}, safe=False)
 
     @view()
     def removekey(self, request, pk):
@@ -292,6 +370,43 @@ class RecordAdmin(SmartModelAdmin):
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
+
+    @button()
+    def truncate(self, request):
+        if request.method == "POST":
+            from django.contrib.admin.models import DELETION, LogEntry
+
+            with atomic():
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=ContentType.objects.get_for_model(self.model).pk,
+                    object_id=None,
+                    object_repr=f"truncate table {self.model._meta.verbose_name}",
+                    action_flag=DELETION,
+                    change_message="truncate table",
+                )
+
+                try:
+                    truncate_model_table(self.model)
+                    return HttpResponseRedirect("..")
+                except OperationalError:
+                    self.get_queryset(request).delete()
+        else:
+            return confirm_action(
+                self,
+                request,
+                self.truncate,
+                mark_safe(
+                    """
+<h1 class="color-red"><b>This is a low level system feature</b></h1>
+<h1 class="color-red"><b>Continuing irreversibly delete all table content</b></h1>
+
+                                       """
+                ),
+                "Successfully executed",
+                title="Truncate table",
+                extra_context={"original": None, "add": False},
+            )
 
     @button(label="Preview", permission=is_root)
     def preview(self, request, pk):

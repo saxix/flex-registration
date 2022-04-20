@@ -8,7 +8,13 @@ from smart_register.core.models import OptionSet
 def complex(db):
     return OptionSet.objects.get_or_create(
         name="complex",
-        defaults={"data": "1:Rome\r\n2:Milan", "separator": ":", "columns": "0,1,-1"},
+        defaults={
+            "data": "1:Rome\r\n2:Milan",
+            "separator": ":",
+            "pk_col": 0,
+            "locale": "en-us",
+            "languages": "-,en-us",
+        },
     )[0]
 
 
@@ -33,7 +39,7 @@ def nested(db):
 
 
 def test_select_complex(complex):
-    fld = SelectField(datasource="complex:0,1,-1")
+    fld = SelectField(datasource="complex")
     assert fld.choices == [("1", "Rome"), ("2", "Milan")]
 
 

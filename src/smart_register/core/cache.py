@@ -2,6 +2,8 @@ import logging
 from collections import OrderedDict
 from functools import wraps
 
+from smart_register.state import state
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,10 +33,7 @@ cache = Cache(size=100)
 def cache_form(f):
     @wraps(f)
     def _inner(*args, **kwargs):
-        # if not config.CACHE_FORMS:
-        #     return f(*args, **kwargs)
-
-        key = f"{args[0].pk}-{args[0].version}"
+        key = f"{args[0].pk}-{args[0].version}-{state.request.selected_language}"
         if key not in cache:
             logger.debug("cache missing")
             ret = f(*args, **kwargs)
@@ -51,10 +50,8 @@ def cache_form(f):
 def cache_formset(f):
     @wraps(f)
     def _inner(*args, **kwargs):
-        # if not config.CACHE_FORMS:
-        #     return f(*args, **kwargs)
         flex_form = args[0].registration.flex_form
-        key = f"{flex_form.pk}-{flex_form.version}-formset"
+        key = f"{flex_form.pk}-{flex_form.version}-formset-{state.request.selected_language}"
         if key not in cache:
             logger.debug("cache missing")
             ret = f(*args, **kwargs)

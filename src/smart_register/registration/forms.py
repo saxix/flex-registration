@@ -5,6 +5,14 @@ from .models import Registration
 
 
 class CloneForm(forms.ModelForm):
+    name = forms.CharField()
+
+    class Meta:
+        model = Registration
+        fields = ("name",)
+
+
+class TranslationForm(forms.ModelForm):
     locale = forms.ChoiceField(choices=settings.LANGUAGES)
 
     class Meta:

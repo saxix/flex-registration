@@ -14,7 +14,6 @@ from .select import AjaxSelectField, SelectField, SmartSelectWidget
 from .webcam import WebcamField
 from .widgets.mixins import SmartFieldMixin
 
-
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
     forms.CharField: {"widget": widgets.SmartTextWidget},

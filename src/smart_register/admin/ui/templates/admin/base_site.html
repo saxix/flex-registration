@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}{% load smart_register smart static %}
+{% block extrastyle %}
+    {{ block.super }}
+{% if project.debug %}
+    <link rel="stylesheet" href="{% static "admin/debug.css" %}">
+{% endif %}
+{% endblock %}
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block userlinks %}{{ block.super }}
+    {% if enable_switch %} / {% smart_toggler %}{% endif %}
+    {% for page in  extra_pages %}
+        / <a href="{{ page.1 }}">{{ page.0 }}</a>
+    {% endfor %}
+{#    {% if user.is_superuser %} / <a href="{{ sysinfo }}">System Info</a> {% endif %}#}
+{#    {% if profile_link %} / <a href="{{ profile_link }}">Profile</a> {% endif %}#}
+{#    {% if profile_link %} / <a href="{% url "qrcode" %}">qrcode</a> {% endif %}#}
+{#    {{ project.version|slice:':7'|join:'' }} / {{ project.build_date }}#}
+{#    {% if project.has_token %} &Omega; {% else %} N/A {% endif %}#}
+{% endblock %}
+
+{% block branding %}
+    {% if config.MAINTENANCE_MODE %}
+        <div style="color:yellow;font-weight: bold;padding: 3px">
+            <a href="{% url "admin:constance_config_changelist" %}">MAINTENANCE MODE ACTIVE</a>
+        </div>
+    {% endif %}
+    <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+{% block footer %}
+    {{ block.super }}
+{#    <script src="{% static "waf.js" %}"></script>#}
+{% endblock %}

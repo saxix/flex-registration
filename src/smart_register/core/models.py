@@ -15,10 +15,14 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from django.urls import reverse
+from django.utils.translation import get_language
 from natural_keys import NaturalKeyModel
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
+from ..i18n.gettext import gettext as _
+from ..i18n.models import I18NModel
+from ..state import state
 from .cache import Cache, cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
@@ -41,7 +45,7 @@ class Validator(NaturalKeyModel):
     last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=255, unique=True)
-    message = models.CharField(max_length=255)
+    message = models.CharField(max_length=255, help_text="Default error message if validator return 'false'.")
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -52,7 +56,14 @@ class Validator(NaturalKeyModel):
             (MODULE, "Module"),
         ),
     )
-    trace = models.BooleanField(default=False)
+    trace = models.BooleanField(
+        default=False,
+        help_text="Debug/Testing purposes: trace validator invocation on Sentry.",
+    )
+    active = models.BooleanField(default=False, blank=True, help_text="Enable/Disable validator.")
+    draft = models.BooleanField(
+        default=False, blank=True, help_text="Testing purposes: draft validator are enabled only for staff users."
+    )
 
     def __str__(self):
         return self.name
@@ -68,40 +79,45 @@ class Validator(NaturalKeyModel):
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        with sentry_sdk.push_scope() as scope:
-            scope.set_extra("value", value)
-            scope.set_extra("code", self.code)
-            scope.set_extra("target", self.target)
-            scope.set_tag("validator", self.pk)
+        if self.active or (self.draft and state.request.user.is_staff):
+            with sentry_sdk.push_scope() as scope:
+                scope.set_extra("argument", value)
+                scope.set_extra("code", self.code)
+                scope.set_extra("target", self.target)
+                scope.set_tag("validator", self.pk)
 
-            ctx = MiniRacer()
-            try:
-                ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
-                result = ctx.eval(self.code)
-                scope.set_tag("result", result)
-                if result is None:
-                    ret = False
-                else:
-                    try:
-                        ret = jsonpickle.decode(result)
-                    except (JSONDecodeError, TypeError):
-                        ret = result
-                if isinstance(ret, (str, dict)):
-                    raise ValidationError(ret)
-                elif isinstance(ret, bool) and not ret:
-                    raise ValidationError(self.message)
-            except ValidationError as e:
-                if self.trace:
+                ctx = MiniRacer()
+                try:
+                    ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
+                    result = ctx.eval(self.code)
+                    scope.set_extra("result", result)
+                    if result is None:
+                        ret = False
+                    else:
+                        try:
+                            ret = jsonpickle.decode(result)
+                        except (JSONDecodeError, TypeError):
+                            ret = result
+                    scope.set_extra("return_value", ret)
+                    if self.trace:
+                        sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                    if isinstance(ret, str):
+                        raise ValidationError(_(ret))
+                    elif isinstance(ret, dict):
+                        errors = {k: _(v) for (k, v) in ret.items()}
+                        raise ValidationError(errors)
+                    elif isinstance(ret, bool) and not ret:
+                        raise ValidationError(_(self.message))
+                except ValidationError as e:
+                    if self.trace:
+                        logger.exception(e)
+                    raise
+                except MiniRacerBaseException as e:
                     logger.exception(e)
-                raise
-            except MiniRacerBaseException as e:
-                logger.exception(e)
-                return True
-            except Exception as e:
-                logger.exception(e)
-                raise
-        if self.trace:
-            sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                    return True
+                except Exception as e:
+                    logger.exception(e)
+                    raise
 
 
 def get_validators(field):
@@ -114,7 +130,7 @@ def get_validators(field):
     return []
 
 
-class FlexForm(NaturalKeyModel):
+class FlexForm(I18NModel, NaturalKeyModel):
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
     name = CICharField(max_length=255, unique=True)
@@ -254,7 +270,11 @@ class FormSet(NaturalKeyModel, OrderableModel):
         return formSet
 
 
-class FlexFormField(NaturalKeyModel, OrderableModel):
+class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
+    I18N_FIELDS = [
+        "label",
+    ]
+    I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
         "smart": {
             "hint": "",
@@ -324,7 +344,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
-            kwargs.setdefault("label", self.label)
+            kwargs.setdefault("label", _(self.label))
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
             # for k, v in data.items():
@@ -378,33 +398,42 @@ class OptionSet(NaturalKeyModel, models.Model):
     columns = models.CharField(
         max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
+
+    pk_col = models.IntegerField(default=0, help_text="ID column number")
+    parent_col = models.IntegerField(default=-1, help_text="Column number of the indicating parent element")
+    locale = models.CharField(max_length=5, default="en-us", help_text="default language code")
+    languages = models.CharField(
+        max_length=255, default="-;-;", blank=True, null=True, help_text="language code of each column."
+    )
+
     objects = OptionSetManager()
 
     def clean(self):
+        if self.locale not in self.languages:
+            raise ValidationError("Default locale must be in the languages list")
         try:
-            a, b, c = list(map(int, self.columns.split(",")))
+            self.languages.split(",")
         except ValueError:
-            raise ValidationError("Invalid columns")
-        super().clean()
+            raise ValidationError("Languages must be a comma separated list of locales")
 
-    def get_cache_key(self, cols=None):
-        return f"options-{self.get_api_url()}-{self.version}"
+    def get_cache_key(self, requested_language):
+        return f"options-{self.pk}-{requested_language}-{self.version}"
 
     def get_api_url(self):
-        try:
-            pk, label, parent = self.columns.split(",")
-        except ValueError:
-            pk, label, parent = 0, 0, -1
-        return reverse("optionset", args=[self.name, pk, label, parent])
+        return reverse("optionset", args=[self.name])
 
-    def get_data(self, columns=None):
-        value = cache.get(self.get_cache_key(columns), version=self.version)
-
-        if columns is None:
-            pk_col, label_col, parent_col = map(int, self.columns.split(","))
+    def get_data(self, requested_language):
+        if self.separator:
+            try:
+                label_col = self.languages.split(",").index(requested_language)
+            except ValueError:
+                logger.error(f"Language {requested_language} not available for OptionSet {self.name}")
+                label_col = self.languages.split(",").index(self.locale)
         else:
-            pk_col, label_col, parent_col = columns
+            label_col = 0
 
+        key = self.get_cache_key(requested_language)
+        value = cache.get(key, version=self.version)
         if not value:
             value = []
             for line in self.data.split("\r\n"):
@@ -415,10 +444,10 @@ class OptionSet(NaturalKeyModel, models.Model):
                 parent = None
                 if self.separator:
                     cols = line.split(self.separator)
-                    pk = cols[pk_col]
+                    pk = cols[self.pk_col]
                     label = cols[label_col]
-                    if parent_col > 0:
-                        parent = cols[parent_col]
+                    if self.parent_col > 0:
+                        parent = cols[self.parent_col]
                 else:
                     label = line
                     pk = str(line).lower()
@@ -429,28 +458,16 @@ class OptionSet(NaturalKeyModel, models.Model):
                     "label": label,
                 }
                 value.append(values)
-            cache.set(self.get_cache_key(), value)
+            cache.set(key, value)
         return value
 
-    def as_choices(self, cols=None):
-        data = self.get_data(cols)
+    def as_choices(self, language=None):
+        data = self.get_data(language or get_language())
         for entry in data:
             yield entry["pk"], entry["label"]
 
-    def as_json(self, cols=None):
-        return self.get_data(cols)
-
-    @classmethod
-    def parse_datasource(cls, datasource):
-        if datasource:
-            if ":" in datasource:
-                name, cols = datasource.split(":")
-                columns = map(int, cols.split(","))
-            else:
-                name = datasource
-                columns = 0, 0, -1
-            return name, columns
-        return "", []
+    def as_json(self, language=None):
+        return self.get_data(language or get_language())
 
 
 def clean_choices(value):

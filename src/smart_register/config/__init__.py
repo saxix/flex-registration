@@ -31,6 +31,7 @@ DEFAULTS = {
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
     "LOG_LEVEL": (str, "ERROR"),
     "ROOT_KEY": (str, uuid.uuid4().hex),
+    # "FERNET_KEY": (str, "Nl_puP2z0-OKVNKMtPXx4jEI-ox7sKLM7CgnGT-yAug="),
     "EMAIL_BACKEND": (str, "django.core.mail.backends.smtp.EmailBackend"),
     "EMAIL_HOST": (str, ""),
     "EMAIL_HOST_USER": (str, ""),
