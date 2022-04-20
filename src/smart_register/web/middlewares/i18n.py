@@ -16,7 +16,6 @@ class I18NMiddleware:
     def __call__(self, request):
         lang = get_default_language(request)
         request.selected_language = lang
-        # translation.activate(lang)
         state.collect_messages = flag_enabled("I18N_COLLECT_MESSAGES", request=request)
 
         from smart_register.i18n.engine import translator
