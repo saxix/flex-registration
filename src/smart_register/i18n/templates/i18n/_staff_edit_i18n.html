@@ -1,8 +1,9 @@
-<span class="float-left staff-editor staff-tooltip align-left">
+{% load itrans %}<span class="float-left staff-editor staff-tooltip align-left">
 <span class="tooltiptext">
-    <p><span class="label">MsgId</span>{{ original }}</p>
+    <p><span class="label">MsgId</span>{{ original|md5:LANGUAGE_CODE|truncatechars:20 }}</p>
 </span>
 <label aria-label="Edit">
-    <a target="_edit" class="i18n" href="{% url "admin:i18n_message_changelist" %}?msgid__iexact={{ original|urlencode }}&locale__exact={{ LANGUAGE_CODE }}"></a>
+{#    <a target="_edit" class="i18n" href="{% url "admin:i18n_message_changelist" %}?msgid__iexact={{ original|urlencode }}&locale__exact={{ LANGUAGE_CODE }}"></a>#}
+    <a target="_edit" class="i18n" href="{% url "admin:i18n_message_changelist" %}?md5__exact={{ original|md5:LANGUAGE_CODE }}"></a>
 </label>
 </span>

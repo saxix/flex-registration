@@ -13,6 +13,7 @@ class MessageAdmin(SmartModelAdmin):
     list_editable = ("msgstr", "draft")
     list_filter = (
         ("msgid", ValueFilter),
+        ("md5", ValueFilter),
         ("locale", ChoicesFieldComboFilter),
         "draft",
         ("msgstr", ValueFilter),

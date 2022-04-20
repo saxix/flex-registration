@@ -1,3 +1,4 @@
+import hashlib
 from decimal import Decimal
 
 from django.template import Library, Node, TemplateSyntaxError, Variable
@@ -326,3 +327,8 @@ def do_block_translate(parser, token):  # noqa
         asvar=asvar,
         tag_name=bits[0],
     )
+
+
+@register.filter()
+def md5(value, lang):
+    return hashlib.md5((lang + "__" + value).encode()).hexdigest()
