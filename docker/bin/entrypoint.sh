@@ -9,7 +9,7 @@ echo "created support dirs /var/run ${MEDIA_ROOT} ${STATIC_ROOT}"
 
 
 if [ $# -eq 0 ]; then
-    python django-admin.py upgrade --no-input
+    django-admin upgrade --no-input
     envsubst < /conf/nginx.conf.tpl > /conf/nginx.conf && nginx -tc /conf/nginx.conf
     nginx -c /conf/nginx.conf
     exec uwsgi --ini /conf/uwsgi.ini
@@ -19,9 +19,9 @@ else
         "dev")
         until pg_isready -h db -p 5432;
           do echo "waiting for database"; sleep 2; done;
-        python django-admin.py collectstatic --no-input
-        python django-admin.py migrate
-        python django-admin.py runserver 0.0.0.0:8000
+        django-admin collectstatic --no-input
+        django-admin migrate
+        django-admin runserver 0.0.0.0:8000
         ;;
        "dev")
        ;;
