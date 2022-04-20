@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from PIL import Image, UnidentifiedImageError
 
+from smart_register.i18n.gettext import gettext as _
+
 from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
 from ...registration.models import Registration
@@ -68,7 +70,13 @@ def dump_dict(value):
 
 @register.filter(name="smart")
 def smart_attr(field, attr):
-    return field.field.flex_field.advanced.get("smart", {}).get(attr, "")
+    translate = False
+    if "," in attr:
+        attr, translate = attr.split(",")
+    value = field.field.flex_field.advanced.get("smart", {}).get(attr, "")
+    if translate:
+        value = _(value)
+    return value
 
 
 @register.simple_tag()
@@ -120,7 +128,7 @@ def link(registration):
 
     if "class" not in attrs:
         widget["attrs"]["class"] = "button text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
-    widget["attrs"]["href"] = reverse("register", args=[registration.locale, registration.slug])
+    widget["attrs"]["href"] = reverse("register", args=[registration.slug])
     return {
         "reg": registration,
         "widget": widget,

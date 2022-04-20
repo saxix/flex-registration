@@ -12,10 +12,11 @@ from .models import Message
 
 @register(Message)
 class MessageAdmin(SmartModelAdmin):
-    search_fields = ("msgid",)
+    search_fields = ("msgid__icontains",)
     list_display = ("msgid", "locale", "msgstr", "draft")
-    list_editable = ("msgstr",)
+    list_editable = ("msgstr", "draft")
     list_filter = (
+        ("msgid", ValueFilter),
         ("locale", ChoicesFieldComboFilter),
         "draft",
         ("msgstr", ValueFilter),

@@ -5,8 +5,6 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 import pytz
-from django.core.management import call_command
-
 import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_extra_buttons.mixins import confirm_action
@@ -18,6 +16,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
 from django.contrib.contenttypes.models import ContentType
+from django.core.management import call_command
 from django.db import OperationalError
 from django.db.models import Count, JSONField, Q
 from django.db.models.functions import ExtractHour, TruncDay
@@ -222,7 +221,7 @@ class RegistrationAdmin(SmartModelAdmin):
             if form.is_valid():
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
-                uri = request.build_absolute_uri(instance.get_absolute_url())
+                uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
 
                 r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
                 if r1.status_code != 200:
@@ -256,7 +255,13 @@ class RegistrationAdmin(SmartModelAdmin):
 
     @button()
     def export(self, request, pk):
-        from smart_register.core.models import FlexForm, FlexFormField, FormSet, Validator, OptionSet
+        from smart_register.core.models import (
+            FlexForm,
+            FlexFormField,
+            FormSet,
+            OptionSet,
+            Validator,
+        )
 
         data = {}
         reg: Registration = self.get_object(request, pk)

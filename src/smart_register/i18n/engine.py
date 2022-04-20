@@ -23,7 +23,7 @@ class Dictionary:
         except KeyError:
             if state.collect_messages:
                 try:
-                    msg = Message.objects.get(locale=self.locale, msgid=msgid)
+                    msg = Message.objects.get(locale=self.locale, msgid__iexact=str(msgid))
                     if not msg.draft:
                         translation = msg.msgstr
                 except Message.DoesNotExist:
