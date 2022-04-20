@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}{% load static hijack i18n %}
+{% block content %}
+    <form method="POST">
+        {% csrf_token %}
+        <table>
+            {{ form }}
+        </table>
+    <table>
+        <tr>
+            <td>
+                <a class="button" href="{% url "admin:constance_config_changelist" %}">Constance</a>
+                <a class="button" href="{% url "admin:flags_flagstate_changelist" %}">Flags</a>
+                <a class="button" href="{% url "admin:smart-sysinfo-admin" %}">System Infos</a>
+            </td>
+        </tr>
+    </table>
+        <input type="submit">
+    </form>
+{#    <ul>#}
+{#        <li><a href="{% url "admin:error" 400 %}">Error 400</a></li>#}
+{#        <li><a href="{% url "admin:error" 403 %}">Error 403</a></li>#}
+{#        <li><a href="{% url "admin:error" 404 %}">Error 404</a></li>#}
+{#        <li><a href="{% url "admin:error" 500 %}">Error 500</a></li>#}
+{#    </ul>#}
+{% endblock content %}

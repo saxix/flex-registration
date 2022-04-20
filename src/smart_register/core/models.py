@@ -21,13 +21,13 @@ from strategy_field.utils import fqn
 
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
+from ..state import state
 from .cache import Cache, cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
 from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
-from ..state import state
 
 logger = logging.getLogger(__name__)
 

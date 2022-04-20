@@ -1,6 +1,7 @@
 import adminactions.actions as actions
 import debug_toolbar
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import include, path, re_path
 
@@ -21,3 +22,7 @@ urlpatterns = [
     path("__debug__/", include(debug_toolbar.urls)),
     path("jsi18n/<str:locale>/", SmartJavascriptCatalog.as_view(), name="javascript-catalog"),
 ]
+
+urlpatterns += i18n_patterns(
+    path("", include("smart_register.registration.urls")),
+)
