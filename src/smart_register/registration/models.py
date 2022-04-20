@@ -31,6 +31,8 @@ class Registration(I18NModel, models.Model):
             },
         }
     }
+    I18N_FIELDS = ["intro", "footer"]
+
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
