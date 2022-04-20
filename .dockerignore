@@ -1,0 +1,17 @@
+.*
+~*
+*.ini
+*.yml
+*.min.min.js
+package*.*
+coverage.xml
+bin/
+Dockerfile*
+__pycache__
+tests
+node_modules
+src/*.egg-info
+src/smart_register/staticfiles/
+Makefile
+README.md
+manage.py
