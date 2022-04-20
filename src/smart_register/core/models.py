@@ -15,6 +15,7 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from django.urls import reverse
+from django.utils.translation import get_language
 from natural_keys import NaturalKeyModel
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
@@ -27,7 +28,7 @@ from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase, get_default_language
+from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -419,22 +420,20 @@ class OptionSet(NaturalKeyModel, models.Model):
         return f"options-{self.pk}-{requested_language}-{self.version}"
 
     def get_api_url(self):
-        try:
-            pk, parent = self.columns.split(",")
-        except ValueError:
-            pk, parent = 0, -1
-        return reverse("optionset", args=[self.name, pk, parent])
+        return reverse("optionset", args=[self.name])
 
-    def get_data(self, request):
-        requested_language = get_default_language(request)
-        try:
-            label_col = self.languages.split(self.separator).index(requested_language)
-        except ValueError:
-            logger.error(f"Language {requested_language} not available for OptionSet {self.name}")
-            label_col = self.languages.split(",").index(self.locale)
+    def get_data(self, requested_language):
+        if self.separator:
+            try:
+                label_col = self.languages.split(",").index(requested_language)
+            except ValueError:
+                logger.error(f"Language {requested_language} not available for OptionSet {self.name}")
+                label_col = self.languages.split(",").index(self.locale)
+        else:
+            label_col = 0
+
         key = self.get_cache_key(requested_language)
-        # value = cache.get(key, version=self.version)
-        value = None
+        value = cache.get(key, version=self.version)
         if not value:
             value = []
             for line in self.data.split("\r\n"):
@@ -462,26 +461,13 @@ class OptionSet(NaturalKeyModel, models.Model):
             cache.set(key, value)
         return value
 
-    def as_choices(self):
-        pass
-        # data = self.get_data()
-        # for entry in data:
-        #     yield entry["pk"], entry["label"]
+    def as_choices(self, language=None):
+        data = self.get_data(language or get_language())
+        for entry in data:
+            yield entry["pk"], entry["label"]
 
-    def as_json(self, request):
-        return self.get_data(request)
-
-    # @classmethod
-    # def parse_datasource(cls, datasource):
-    #     if datasource:
-    #         if ":" in datasource:
-    #             name, cols = datasource.split(":")
-    #             columns = map(int, cols.split(","))
-    #         else:
-    #             name = datasource
-    #             columns = 0, -1
-    #         return name, columns
-    #     return "", []
+    def as_json(self, language=None):
+        return self.get_data(language or get_language())
 
 
 def clean_choices(value):

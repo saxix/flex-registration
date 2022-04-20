@@ -4,6 +4,7 @@ import decimal
 import io
 import json
 import re
+import time
 import unicodedata
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from django.utils.text import slugify
 from django.utils.timezone import is_aware
 
 from smart_register import VERSION
+from smart_register.state import state
 
 UNDEFINED = object()
 
@@ -248,4 +250,8 @@ def get_versioned_static_name(name):
 
 
 def get_etag(request, *args):
-    return "/".join([VERSION, *map(str, args)])
+    if state.collect_messages:
+        params = [str(time.time())]
+    else:
+        params = [VERSION, *map(str, args)]
+    return "/".join(params)

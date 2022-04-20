@@ -1,11 +1,12 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
 from django.views.generic.list import BaseListView
 
 from smart_register.core.models import OptionSet
-from smart_register.core.utils import get_etag, get_default_language
+from smart_register.core.utils import get_etag
 
 
 def filter_optionset(obj, request, parent=None):
@@ -23,24 +24,21 @@ def filter_optionset(obj, request, parent=None):
             valid = valid and record["parent"] == parent
         return valid
 
-    etag = get_etag(request, obj.pk, obj.version, get_default_language(request), term, parent, pk)
+    lang = get_language()
+    etag = get_etag(request, obj.pk, obj.version, lang, term, parent, pk)
     data = {
-        "data": {
-            "etag": etag,
-        },
         "results": [
             {
                 "id": record["pk"],
                 "parent": record["parent"],
                 "text": record["label"],
             }
-            for record in obj.as_json(request)
+            for record in obj.as_json(lang)
             if _filter(record)
         ],
     }
     response = JsonResponse(data)
     response["Cache-Control"] = "public, max-age=315360000"
-    # response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}-{columns}-{obj.version}"
     response["ETag"] = etag
     return response
 

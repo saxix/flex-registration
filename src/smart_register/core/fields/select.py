@@ -48,6 +48,7 @@ class SelectField(forms.ChoiceField):
 
     def __init__(self, **kwargs):
         self._choices = ()
+        self.language = kwargs.pop("language", "en-us")
         self.parent = kwargs.pop("parent", None)
         options = kwargs.pop("datasource", "")
         super().__init__(**kwargs)
@@ -68,7 +69,7 @@ class SelectField(forms.ChoiceField):
                 from smart_register.core.models import OptionSet
 
                 optset = OptionSet.objects.get(name=value)
-                value = list(optset.as_choices())
+                value = list(optset.as_choices(self.language))
             except OptionSet.DoesNotExist as e:
                 logger.exception(e)
                 value = []

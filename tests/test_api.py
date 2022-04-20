@@ -88,7 +88,7 @@ def test_api(django_app, registration, monkeypatch):
     res = django_app.get(api_url, expect_errors=True)
 
     assert res.status_code == 401
-    monkeypatch.setattr("smart_register.web.views.api.handle_basic_auth", lambda x: True)
+    monkeypatch.setattr("smart_register.registration.views.api.handle_basic_auth", lambda x: True)
 
     res = django_app.get(api_url)
     assert res.status_code == 200
