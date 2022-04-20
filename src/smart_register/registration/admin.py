@@ -23,7 +23,7 @@ from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import reverse, translate_url
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
@@ -221,7 +221,7 @@ class RegistrationAdmin(SmartModelAdmin):
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
                 uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
-
+                uri = translate_url(uri, locale)
                 r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
                 if r1.status_code != 200:
                     raise Exception(r1.status_code)
