@@ -5,7 +5,6 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 import pytz
-import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -220,14 +219,20 @@ class RegistrationAdmin(SmartModelAdmin):
             if form.is_valid():
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
-                uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
+                uri = reverse("register", args=[instance.slug])
                 uri = translate_url(uri, locale)
-                r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
+                from django.test import Client
+
+                headers = {"HTTP_ACCEPT_LANGUAGE": "locale", "HTTP_I18N": "true"}
+                client = Client(**headers)
+                r1 = client.get(uri)
+                # uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
+                # uri = translate_url(uri, locale)
+                # r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
                 if r1.status_code != 200:
                     raise Exception(r1.status_code)
-                if r1.status_code != 200:
-                    raise Exception(r1.status_code)
-                r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
+                # r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
+                r2 = client.post(uri, {})
                 if r2.status_code != 200:
                     raise Exception(r1.status_code)
                 updated = Message.objects.filter(locale=locale).count()
