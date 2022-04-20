@@ -230,11 +230,12 @@ class RegistrationAdmin(SmartModelAdmin):
                 # uri = translate_url(uri, locale)
                 # r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
                 if r1.status_code != 200:
-                    raise Exception(r1.status_code)
-                # r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
-                r2 = client.post(uri, {})
-                if r2.status_code != 200:
-                    raise Exception(r1.status_code)
+                    self.message_user(request, f"Error {r1.status_code}")
+                else:
+                    # r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
+                    r2 = client.post(uri, {})
+                    if r2.status_code != 200:
+                        self.message_user(request, f"Error {r1.status_code}")
                 updated = Message.objects.filter(locale=locale).count()
                 added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
                 self.message_user(request, f"{updated-existing} messages created. {updated} available")
