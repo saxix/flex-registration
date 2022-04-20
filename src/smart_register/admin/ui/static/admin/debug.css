@@ -1,16 +1,1 @@
-.staff-toolbar {
-  background-color: #a3e388;
-  color: #2c2c2c;
-}
-
-#container #header {
-  background-color: #a3e388;
-}
-#container #header * {
-  color: black;
-}
-#container #header #user-tools * {
-  color: black;
-}
-
-/*# sourceMappingURL=debug.css.map */
+.staff-toolbar{background-color:#a3e388;color:#2c2c2c}#container #header{background-color:#a3e388}#container #header *{color:#000}#container #header #user-tools *{color:#000}/*# sourceMappingURL=debug.css.map */
