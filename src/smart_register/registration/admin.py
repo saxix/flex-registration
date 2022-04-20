@@ -224,18 +224,22 @@ class RegistrationAdmin(SmartModelAdmin):
                 from django.test import Client
 
                 headers = {"HTTP_ACCEPT_LANGUAGE": "locale", "HTTP_I18N": "true"}
-                client = Client(**headers)
-                r1 = client.get(uri)
-                # uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
-                # uri = translate_url(uri, locale)
-                # r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
-                if r1.status_code != 200:
-                    self.message_user(request, f"Error {r1.status_code}")
-                else:
+                try:
+                    client = Client(**headers)
+                    r1 = client.get(uri)
+                    # uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
+                    # uri = translate_url(uri, locale)
+                    # r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
+                    if r1.status_code != 200:
+                        raise Exception(r1)
                     # r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
                     r2 = client.post(uri, {})
                     if r2.status_code != 200:
-                        self.message_user(request, f"Error {r1.status_code}")
+                        raise Exception(r2)
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+
                 updated = Message.objects.filter(locale=locale).count()
                 added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
                 self.message_user(request, f"{updated-existing} messages created. {updated} available")
