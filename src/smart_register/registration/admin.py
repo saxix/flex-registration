@@ -20,7 +20,7 @@ from django.db import OperationalError
 from django.db.models import Count, JSONField, Q
 from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils import timezone
@@ -223,6 +223,7 @@ class RegistrationAdmin(SmartModelAdmin):
                 uri = translate_url(uri, locale)
                 from django.test import Client
 
+                settings.ALLOWED_HOSTS.append("testserver")
                 headers = {"HTTP_ACCEPT_LANGUAGE": "locale", "HTTP_I18N": "true"}
                 try:
                     client = Client(**headers)
@@ -231,11 +232,13 @@ class RegistrationAdmin(SmartModelAdmin):
                     # uri = translate_url(uri, locale)
                     # r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
                     if r1.status_code != 200:
-                        raise Exception(f"GET: {uri} - {r1.status_code} - {r1.content}")
+                        return HttpResponse(r1.content, status_code=r1.status_code)
+                        # raise Exception(f"GET: {uri} - {status_code}")
                     # r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
                     r2 = client.post(uri, {}, **headers)
                     if r2.status_code != 200:
-                        raise Exception(f"POST: {uri} - {r2.status_code} - {r2.content}")
+                        return HttpResponse(r2.content, status_code=r2.status_code)
+                        # raise Exception(f"POST: {uri} - {status_code}")
                 except Exception as e:
                     logger.exception(e)
                     self.message_error_to_user(request, e)
