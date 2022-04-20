@@ -1,5 +1,6 @@
 .*
 ~*
+*.min.min.js
 *.py[ico]
 *.db
 *.egg-info
@@ -11,6 +12,7 @@ package-lock.json
 package.json
 !tests/.coveragerc
 !.gitignore
+!.dockerignore
 !.github
 !.isort.cfg
 !.flake8
