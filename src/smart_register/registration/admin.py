@@ -31,7 +31,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
 
 from ..core.utils import clone_form, clone_model, is_root
-from .forms import CloneForm, TranslationForm
+from .forms import CloneForm
 from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
@@ -206,6 +206,7 @@ class RegistrationAdmin(SmartModelAdmin):
     @button()
     def create_translation(self, request, pk):
         from smart_register.i18n.models import Message
+        from smart_register.i18n.forms import TranslationForm
 
         ctx = self.get_common_context(
             request,
@@ -215,7 +216,7 @@ class RegistrationAdmin(SmartModelAdmin):
         )
         instance: Registration = ctx["original"]
         if request.method == "POST":
-            form = TranslationForm(request.POST, instance=instance)
+            form = TranslationForm(request.POST)
             if form.is_valid():
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()

@@ -332,3 +332,8 @@ def do_block_translate(parser, token):  # noqa
 @register.filter()
 def md5(value, lang):
     return hashlib.md5((lang + "__" + value).encode()).hexdigest()
+
+
+@register.filter()
+def strip(value):
+    return value.strip()

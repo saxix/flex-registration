@@ -1,3 +1,8 @@
+from django.utils.translation import get_language
+
+from smart_register.state import state
+
+
 class TailWindMixin:
     def __init__(self, attrs=None, **kwargs):
         attrs = {
@@ -6,6 +11,15 @@ class TailWindMixin:
             **(attrs or {}),
         }
         super().__init__(attrs=attrs, **kwargs)
+
+
+class SmartWidgetMixin:
+    def get_context(self, name, value, attrs):
+        ret = super().get_context(name, value, attrs)
+        ret["LANGUAGE_CODE"] = get_language()
+        ret["request"] = state.request
+        ret["user"] = state.request.user
+        return ret
 
 
 class SmartFieldMixin:

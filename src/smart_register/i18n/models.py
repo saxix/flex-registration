@@ -14,12 +14,15 @@ class I18NModel:
 
 class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
-    locale = LanguageField()
-    msgid = models.TextField()
+    locale = LanguageField(db_index=True)
+    msgid = models.TextField(db_index=True)
     msgstr = models.TextField(blank=True, null=True)
     md5: str = models.CharField(verbose_name=_("MD5"), max_length=512, null=False, blank=False, db_index=True)
     auto = models.BooleanField(default=False)
     draft = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ("msgid", "locale")
 
     def __str__(self):
         return f"{self.locale} {truncatechars(self.msgid, 40)}"

@@ -18,6 +18,8 @@ class Dictionary:
 
     def __getitem__(self, msgid):
         translation = msgid
+        if not msgid.strip():
+            return translation
         try:
             translation = self.messages[msgid]
         except KeyError:

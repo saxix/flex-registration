@@ -1,8 +1,13 @@
 from django import forms
 
+from smart_register.i18n.gettext import gettext as _
+
 
 class ImageWidget(forms.ClearableFileInput):
     template_name = "django/forms/widgets/image.html"
+    clear_checkbox_label = _("Clear")
+    initial_text = _("Currently")
+    input_text = _("Change")
 
     def render(self, name, value, attrs=None, renderer=None):
         attrs["class"] = (

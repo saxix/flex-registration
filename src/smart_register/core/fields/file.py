@@ -1,9 +1,13 @@
 from django import forms
 from django.conf import settings
+from smart_register.i18n.gettext import gettext as _
 
 
 class UploadFileWidget(forms.ClearableFileInput):
     template_name = "django/forms/widgets/upload_file.html"
+    clear_checkbox_label = _("Clear")
+    initial_text = _("Currently")
+    input_text = _("Change")
 
     def render(self, name, value, attrs=None, renderer=None):
         attrs["class"] = (
@@ -33,3 +37,13 @@ class UploadFileWidget(forms.ClearableFileInput):
 
 class SmartFileField(forms.FileField):
     widget = UploadFileWidget
+    default_error_messages = {
+        "invalid": _("No file was submitted. Check the encoding type on the form."),
+        "missing": _("No file was submitted."),
+        "empty": _("The submitted file is empty."),
+        # 'max_length': ngettext_lazy(
+        #     'Ensure this filename has at most %(max)d character (it has %(length)d).',
+        #     'Ensure this filename has at most %(max)d characters (it has %(length)d).',
+        #     'max'),
+        "contradiction": _("Please either submit a file or check the clear checkbox, not both."),
+    }

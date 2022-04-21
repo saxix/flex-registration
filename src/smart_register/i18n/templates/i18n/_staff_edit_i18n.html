@@ -1,9 +1,15 @@
-{% load itrans %}<span class="float-left staff-editor staff-tooltip align-left">
-<span class="tooltiptext">
-    <p><span class="label">MsgId</span>{{ original|md5:LANGUAGE_CODE|truncatechars:20 }}</p>
-</span>
-<label aria-label="Edit">
-{#    <a target="_edit" class="i18n" href="{% url "admin:i18n_message_changelist" %}?msgid__iexact={{ original|urlencode }}&locale__exact={{ LANGUAGE_CODE }}"></a>#}
-    <a target="_edit" class="i18n" href="{% url "admin:i18n_message_changelist" %}?md5__exact={{ original|md5:LANGUAGE_CODE }}"></a>
-</label>
-</span>
+{% load itrans %}
+{% if original|strip %}
+    {% with original|md5:LANGUAGE_CODE as code %}
+        <span class="inline-block staff-editor staff-i18n staff-tooltip align-left ">
+            <span class="tooltiptext">
+                <p><span class="label">MsgId</span>{{ code|truncatechars:25 }}</p>
+                <p><span class="label">Message</span>{{ original|truncatechars:25 }}</p>
+            </span>
+            <label aria-label="Edit">
+                <a target="_edit" class="i18n"
+                   href="{% url "admin:i18n_message_changelist" %}?md5__exact={{ code }}"></a>
+            </label>
+        </span>
+    {% endwith %}
+{% endif %}

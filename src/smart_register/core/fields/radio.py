@@ -1,10 +1,10 @@
 from django import forms
 
-from .widgets import YesNoRadioWidget
+from .widgets import YesNoRadioWidget, RadioWidget
 
 
 class RadioField(forms.ChoiceField):
-    pass
+    widget = RadioWidget
 
 
 class YesNoMixin:

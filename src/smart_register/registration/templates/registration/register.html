@@ -108,6 +108,13 @@
                             </div>
                         </div>
                     {% endfor %}
+{#                    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LcftIsfAAAAAO1h0WT7GLymN-0LS9P1fytSpkuW"></script>#}
+{#                    <script>#}
+{#                        grecaptcha.enterprise.ready(function() {#}
+{#                            grecaptcha.enterprise.execute('6LcftIsfAAAAAO1h0WT7GLymN-0LS9P1fytSpkuW', {action: 'login'}).then(function(token) {#}
+{#                            });#}
+{#                        });#}
+{#                    </script>#}
                     <div class="submit-row">
                         {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original="Save" %}{% endif %}
                         <input type="submit" value="{% trans "Save" %}"/>
@@ -117,7 +124,7 @@
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                 {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=dataset.footer %}{% endif %}
                 {% trans dataset.footer as footer %}
-                {{ footer|default_if_none:""|markdown }}
+                {{ footer|default_if_none:""|md }}
             </div>
         </div>
     </div>
@@ -125,7 +132,7 @@
 {% block footer %}
     {% if dataset.advanced.smart.wizard %}<script src="{% static "wizard.min.js" %}"></script>{% endif %}
     <div class="flex justify-center text-xs footer m-auto pt-1 pb-2 border-t-2 text-gray-400 border-gray-400">
-        {{ project.build_date }}
+        {{ project.build_date }} - {{ LANGUAGE_CODE }}
     </div>
     <script>var VERSION="{{ project.version }}";var DSN="{{ project.sentry_dsn }}";</script>
     <script src="{% static "page.min.js" %}"></script>
