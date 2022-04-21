@@ -1,15 +1,24 @@
+import logging
+
+from dateutil.utils import today
+
+from admin_extra_buttons.decorators import button
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
 from django.contrib.admin import register
+from django.shortcuts import render
+
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .models import Message
+
+logger = logging.getLogger(__name__)
 
 
 @register(Message)
 class MessageAdmin(SmartModelAdmin):
     search_fields = ("msgid__icontains",)
-    list_display = ("msgid", "locale", "msgstr", "draft")
+    list_display = ("id", "msgid", "locale", "msgstr", "draft")
     list_editable = ("msgstr", "draft")
     list_filter = (
         ("msgid", ValueFilter),
@@ -44,6 +53,40 @@ class MessageAdmin(SmartModelAdmin):
 
     def approve(self, request, queryset):
         queryset.update(draft=False)
+
+    @button()
+    def create_translation(self, request):
+        from smart_register.i18n.models import Message
+        from smart_register.i18n.forms import TranslationForm
+
+        ctx = self.get_common_context(
+            request,
+            media=self.media,
+            title="Generate Translation",
+        )
+        if request.method == "POST":
+            form = TranslationForm(request.POST)
+            if form.is_valid():
+                locale = form.cleaned_data["locale"]
+                existing = Message.objects.filter(locale=locale).count()
+                try:
+                    for msg in Message.objects.exclude(locale=locale).order_by("msgid").distinct():
+                        Message.objects.create(msgid=msg.msgid, msgstr=msg.msgid, locale=locale, draft=True)
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+
+                updated = Message.objects.filter(locale=locale).count()
+                added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
+                self.message_user(request, f"{updated - existing} messages created. {updated} available")
+                ctx["locale"] = locale
+                ctx["added"] = added
+            else:
+                ctx["form"] = form
+        else:
+            form = TranslationForm()
+            ctx["form"] = form
+        return render(request, "admin/i18n/message/translation.html", ctx)
 
     def get_readonly_fields(self, request, obj=None):
         if obj.pk:

@@ -105,7 +105,7 @@ class RegisterView(FixedLocaleView, FormView):
         base = Registration.objects.select_related("flex_form", "validator")
         try:
             return base.get(slug=self.kwargs["slug"], **filters)
-        except Registration.DoesNotExist:  # pragma: no cover
+        except Registration.DoesNotExist:  # pragma: no coalidateer
             raise Http404
 
     def get_form_class(self):
@@ -168,8 +168,8 @@ class RegisterView(FixedLocaleView, FormView):
             else:
                 is_valid = False
 
-        if is_valid:
-            is_valid = self.validate(all_cleaned_data)
+        # if is_valid:
+        is_valid = self.validate(all_cleaned_data) and is_valid
 
         if form.is_valid() and is_valid:
             return self.form_valid(form, formsets)
