@@ -260,7 +260,7 @@ class RegistrationAdmin(SmartModelAdmin):
             else:
                 ctx["form"] = form
         else:
-            form = TranslationForm(instance=ctx["original"])
+            form = TranslationForm()
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
 
