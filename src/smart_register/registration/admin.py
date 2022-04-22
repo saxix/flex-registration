@@ -1,10 +1,14 @@
 import io
 import json
 import logging
+import tempfile
 from collections import defaultdict
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytz
+from concurrency.api import disable_concurrency
+
 from admin_extra_buttons.decorators import button, link, view
 from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -32,10 +36,19 @@ from smart_admin.truncate import truncate_model_table
 
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
 from ..core.utils import is_root
-from .forms import CloneForm
 from .models import Record, Registration
+from ..i18n.forms import ImportForm
 
 logger = logging.getLogger(__name__)
+
+DATA = {
+    "registration.Registration": [],
+    "core.FlexForm": [],
+    "core.FormSet": [],
+    "core.Validator": [],
+    "core.OptionSet": [],
+    "core.FlexFormField": [],
+}
 
 
 def last_day_of_month(date):
@@ -55,6 +68,17 @@ class RegistrationAdmin(SmartModelAdmin):
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
+    change_form_template = None
+    fieldsets = [
+        (None, {"fields": (("version", "last_update_date", "active"),)}),
+        (None, {"fields": ("name", "title", "slug")}),
+        ("Config", {"fields": ("flex_form", "validator", "encrypt_data")}),
+        ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
+        ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
+        ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
+        ("Advanced", {"fields": ("advanced",)}),
+        ("Others", {"fields": ("__others__",)}),
+    ]
 
     def secure(self, obj):
         return bool(obj.public_key)
@@ -155,36 +179,36 @@ class RegistrationAdmin(SmartModelAdmin):
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
         return render(request, "admin/registration/registration/chart.html", ctx)
 
-    @button()
-    def clone(self, request, pk):
-        ctx = self.get_common_context(
-            request,
-            pk,
-            media=self.media,
-            title="Clone Registration",
-        )
-        reg: Registration = ctx["original"]
-        if request.method == "POST":
-            form = CloneForm(request.POST)
-            if form.is_valid():
-                try:
-                    with atomic():
-                        reg.pk = None
-                        reg.name = form.cleaned_data["name"]
-                        reg.save()
-
-                        ctx["cloned"] = reg
-                except Exception as e:
-                    logger.exception(e)
-                    self.message_error_to_user(request, e)
-
-            else:
-                self.message_user(request, "----")
-                ctx["form"] = form
-        else:
-            form = CloneForm()
-            ctx["form"] = form
-        return render(request, "admin/registration/registration/clone.html", ctx)
+    # @button()
+    # def clone(self, request, pk):
+    #     ctx = self.get_common_context(
+    #         request,
+    #         pk,
+    #         media=self.media,
+    #         title="Clone Registration",
+    #     )
+    #     reg: Registration = ctx["original"]
+    #     if request.method == "POST":
+    #         form = CloneForm(request.POST)
+    #         if form.is_valid():
+    #             try:
+    #                 with atomic():
+    #                     reg.pk = None
+    #                     reg.name = form.cleaned_data["name"]
+    #                     reg.save()
+    #
+    #                     ctx["cloned"] = reg
+    #             except Exception as e:
+    #                 logger.exception(e)
+    #                 self.message_error_to_user(request, e)
+    #
+    #         else:
+    #             self.message_user(request, "----")
+    #             ctx["form"] = form
+    #     else:
+    #         form = CloneForm()
+    #         ctx["form"] = form
+    #     return render(request, "admin/registration/registration/clone.html", ctx)
 
     @button()
     def create_translation(self, request, pk):
@@ -229,7 +253,7 @@ class RegistrationAdmin(SmartModelAdmin):
 
                 updated = Message.objects.filter(locale=locale).count()
                 added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
-                self.message_user(request, f"{updated-existing} messages created. {updated} available")
+                self.message_user(request, f"{updated - existing} messages created. {updated} available")
                 ctx["uri"] = uri
                 ctx["locale"] = locale
                 ctx["added"] = added
@@ -252,7 +276,44 @@ class RegistrationAdmin(SmartModelAdmin):
 
     @button(label="import")
     def _import(self, request):
-        pass
+        ctx = self.get_common_context(
+            request,
+            media=self.media,
+            title="Import",
+        )
+        if request.method == "POST":
+            form = ImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                try:
+                    f = request.FILES["file"]
+                    buf = io.BytesIO()
+                    for chunk in f.chunks():
+                        buf.write(chunk)
+                    buf.seek(0)
+                    data = json.load(buf)
+                    out = io.StringIO()
+                    workdir = Path(".").absolute()
+                    with disable_concurrency():
+                        for k, v in data.items():
+                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
+
+                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
+                                fdst.write(json.dumps(v).encode())
+                            fixture = (workdir / fdst.name).absolute()
+                            call_command("loaddata", fixture, stdout=out, verbosity=3)
+                            fixture.unlink()
+                            out.write("------\n")
+                            # ctx['out'] = out.getvalue()
+                            out.seek(0)
+                            ctx["out"] = out.readlines()
+                except Exception as e:
+                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+            else:
+                ctx["form"] = form
+        else:
+            form = ImportForm()
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/import.html", ctx)
 
     @button()
     def export(self, request, pk):
@@ -264,14 +325,14 @@ class RegistrationAdmin(SmartModelAdmin):
         validators = Validator.objects.values_list("pk", flat=True)
         options = OptionSet.objects.values_list("pk", flat=True)
         fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
-        data = {
-            "registration.Registration": [reg.pk],
-            "core.FlexForm": [f.pk for f in forms],
-            "core.FormSet": [f.pk for f in formsets],
-            "core.Validator": validators,
-            "core.OptionSet": options,
-            "core.FlexFormField": fields,
-        }
+        data = DATA.copy()
+        data["registration.Registration"] = [reg.pk]
+        data["core.FlexForm"] = [f.pk for f in forms]
+        data["core.FormSet"] = [f.pk for f in formsets]
+        data["core.Validator"] = validators
+        data["core.OptionSet"] = options
+        data["core.FlexFormField"] = fields
+
         for k, f in data.items():
             data[k] = io.StringIO()
             call_command(
@@ -282,8 +343,11 @@ class RegistrationAdmin(SmartModelAdmin):
                 use_natural_foreign_keys=True,
                 use_natural_primary_keys=True,
             )
-
-        return JsonResponse({k: json.loads(v.getvalue()) for k, v in data.items()}, safe=False)
+        return JsonResponse(
+            {k: json.loads(v.getvalue()) for k, v in data.items()},
+            safe=False,
+            headers={"Content-Disposition": f"attachment; filename={reg.slug}.json"},
+        )
 
     @view()
     def removekey(self, request, pk):

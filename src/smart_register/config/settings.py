@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     "smart_admin.apps.SmartAuthConfig",
     # "smart_admin.apps.SmartConfig",
     # 'smart_admin',
+    "rest_framework",
+    "rest_framework.authtoken",
+    "smart_register.api",
     "admin_ordering",
     "django_sysinfo",
     "admin_extra_buttons",
@@ -107,6 +110,7 @@ TEMPLATES = [
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             PACKAGE_DIR / "admin/ui/templates",
+            PACKAGE_DIR / "api/templates",
             PACKAGE_DIR / "registration/templates",
             PACKAGE_DIR / "core/templates",
             PACKAGE_DIR / "web/templates",
@@ -356,11 +360,12 @@ CONSTANCE_CONFIG = OrderedDict(
             "",
             str,
         ),
+        "PRODUCTION_SERVER": ("", "production server url", str),
         "LOG_POST_ERRORS": (False, "", bool),
         "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
         "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
-        "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
-        "HOME_TEMPLATE": ("home.html", "Default home.html", str),
+        # "BASE_TEMPLATE": ("base_lean.html", "Default base template", str),
+        # "HOME_TEMPLATE": ("home.html", "Default home.html", str),
         "QRCODE": (True, "Enable QRCode generation", bool),
         "SHOW_REGISTER_ANOTHER": (True, "Enable QRCode generation", bool),
         "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
@@ -579,3 +584,4 @@ worker-src 'none';
 # CSP_REPORT_ONLY = env("CSP_REPORT_ONLY")
 # CSP_DEFAULT_SRC = env("CSP_DEFAULT_SRC")
 # CSP_SCRIPT_SRC = env("CSP_SCRIPT_SRC")
+CONCURRENCY_ENABLED = False
