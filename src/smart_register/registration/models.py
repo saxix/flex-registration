@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 from natural_keys import NaturalKeyModel
@@ -42,7 +43,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     slug = models.SlugField(max_length=500, blank=True, null=True, unique=True)
 
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
-    start = models.DateField(auto_now_add=True)
+    start = models.DateField(default=timezone.now, editable=True)
     end = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=False)
     locale = models.CharField(
