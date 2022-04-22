@@ -81,20 +81,20 @@ def smart_attr(field, attr):
 
 @register.simple_tag()
 def formset_config(formset):
-    cfg = formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
-
-    cfg["formCssClass"] = f"form-container.{ formset.prefix }"
-    cfg["prefix"] = formset.prefix
-    cfg["deleteContainerClass"] = f"{formset.fs.name}-delete"
-    cfg["addContainerClass"] = f"{formset.fs.name}-add"
-    cfg["addText"] = "Add Another"
-    cfg["addCssClass"] = "add-button text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-    cfg["deleteText"] = "Remove"
-    cfg[
-        "deleteCssClass"
-    ] = "delete-button bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow"
-    cfg["keepFieldValues"] = "false"
-    return {k: v for k, v in cfg.items() if v}
+    config = {
+        "formCssClass": f"form-container.{formset.prefix}",
+        "prefix": formset.prefix,
+        "deleteContainerClass": f"{formset.fs.name}-delete",
+        "addContainerClass": f"{formset.fs.name}-add",
+        "addText": "Add Another",
+        "addCssClass": "formset-add-button",
+        "deleteText": "Remove",
+        "deleteCssClass": "formset-delete-button",
+        "keepFieldValues": False,
+    }
+    fs_config = formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
+    override = {k: v for k, v in fs_config.items() if v}
+    return {**config, **override}
 
 
 @register.filter()

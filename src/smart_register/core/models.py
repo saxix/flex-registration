@@ -210,11 +210,11 @@ class FormSet(NaturalKeyModel, OrderableModel):
                 "html_attrs": {},
             },
             "widget": {
-                "addText": None,
+                "addText": "Add Another",
                 "addCssClass": None,
-                "deleteText": None,
+                "deleteText": "Remove",
                 "deleteCssClass": None,
-                "keepFieldValues": "",
+                "keepFieldValues": False,
             },
         }
     }
