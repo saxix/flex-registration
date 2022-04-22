@@ -68,7 +68,7 @@
                         {% formset_config formset as config %}
                         <div class="formset-config">{{ config|json_script:name }}</div>
                         <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4" data-page="{{ forloop.counter }}">
-                            <div class="w-full formset {{ formset.fs.advanced.smart.container.class }}"
+                            <div class="w-full formset formset-{{ name }} {{ formset.fs.advanced.smart.container.class }}"
                                  {% include "django/forms/widgets/attrs.html" with widget=formset.fs.advanced.smart.container.html_attrs %}>
                                 {% if user.is_staff %}
                                     {% include "registration/_staff_edit_formset.html" %}
