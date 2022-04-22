@@ -16,7 +16,7 @@ from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from django.urls import reverse
 from django.utils.translation import get_language
-from natural_keys import NaturalKeyModel
+from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
@@ -383,7 +383,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         self.flex_form.get_form.cache_clear()
 
 
-class OptionSetManager(models.Manager):
+class OptionSetManager(NaturalKeyModelManager):
     cache = Cache()
 
 

@@ -4,7 +4,9 @@ from smart_register.core.models import FlexForm, FlexFormField, FormSet
 
 
 def update_cache(sender, instance, **kwargs):
-    if isinstance(instance, FlexFormField):
+    if isinstance(instance, FormSet):
+        instance.flex_form.save()
+    elif isinstance(instance, FlexFormField):
         instance.flex_form.save()
     elif isinstance(instance, FlexForm):
         for r in instance.formset_set.all():

@@ -2,7 +2,7 @@ import logging
 
 from dateutil.utils import today
 
-from admin_extra_buttons.decorators import button
+from admin_extra_buttons.decorators import button, link
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
 from django.contrib.admin import register
@@ -53,6 +53,10 @@ class MessageAdmin(SmartModelAdmin):
 
     def approve(self, request, queryset):
         queryset.update(draft=False)
+
+    @link()
+    def translate(self, button):
+        return button
 
     @button()
     def create_translation(self, request):

@@ -1,11 +1,6 @@
 from django import forms
 
-from .models import Registration
 
-
-class CloneForm(forms.ModelForm):
+class CloneForm(forms.Form):
     name = forms.CharField()
-
-    class Meta:
-        model = Registration
-        fields = ("name",)
+    # deep = forms.BooleanField(required=False)

@@ -1,3 +1,15 @@
+// formsetConfig.push({
+//     formCssClass: "form-container.{{ formset.prefix }}",
+//     prefix: "{{ formset.prefix }}",
+//     deleteContainerClass: "{{ name }}-delete",
+//     addContainerClass: "{{ name }}-add",
+//     addText: "{{ config.addText|default_if_none:"add another" }}",
+//     addCssClass: "add-button {{ config.addCssClass|default_if_none:"bg-white  text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" }}",
+//     deleteText: "{{ config.deleteText|default_if_none:"remove" }}",
+//     deleteCssClass: "delete-button {{ config.deleteCssClass|default_if_none:"bg-white  text-red-400 font-semibold py-2 px-4 border border-red-400 rounded shadow" }}",
+//     keepFieldValues: "{{ config.keepFieldValues|default:"" }}"
+// });
+
 var DEFAULT = {
     addText: "add another",
     deleteText: "remove",
@@ -24,6 +36,7 @@ var configureFormsets = function (configs){
     configs.forEach(function (c){
         var config = {};
         Object.assign(config, DEFAULT, c);
+        // var $target = $(".formset-" + config.formCssClass + " forms");
         var $target = $("." + config.formCssClass);
         $target.formset(config);
     })
@@ -33,7 +46,8 @@ var configureFormsets = function (configs){
     $(function () {
         var formsetConfig = [];
         $('.formset-config script[type="application/json"]').each(function (i, e){
-            var value = JSON.parse($(e).text() );
+            var $e = $(e);
+            var value = JSON.parse($e.text() );
             formsetConfig.push(value);
         });
 

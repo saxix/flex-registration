@@ -166,6 +166,7 @@ class RegisterView(FixedLocaleView, FormView):
             if fs.is_valid():
                 all_cleaned_data[fs.fs.name] = fs.cleaned_data
             else:
+                all_cleaned_data[fs.fs.name] = {}
                 is_valid = False
 
         # if is_valid:

@@ -10,7 +10,6 @@ from django.utils.functional import lazy
 from smart_admin.site import SmartAdminSite
 
 from smart_register import get_full_version
-from smart_register.core.utils import is_root
 
 
 class ConsoleForm(forms.Form):
@@ -38,8 +37,8 @@ class AuroraAdminSite(SmartAdminSite):
 
     def console(self, request, extra_context=None):
         context = self.each_context(request)
-        if not is_root(request):
-            raise PermissionDenied
+        # if not is_root(request):
+        #     raise PermissionDenied
 
         if request.method == "POST":
             form = ConsoleForm(request.POST)

@@ -40,6 +40,7 @@
             },
 
             showAddButton = function() {
+                console.log(11111, options.prefix, maxForms.val(), totalForms.val(), maxForms.val() - totalForms.val());
                 return (maxForms.val() === '' || (maxForms.val() - totalForms.val() > 0));
             },
 

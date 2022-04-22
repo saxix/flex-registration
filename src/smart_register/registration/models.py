@@ -9,6 +9,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.text import slugify
+from natural_keys import NaturalKeyModel
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 undefined = object()
 
 
-class Registration(I18NModel, models.Model):
+class Registration(NaturalKeyModel, I18NModel, models.Model):
     ADVANCED_DEFAULT_ATTRS = {
         "smart": {
             "wizard": False,
@@ -38,7 +39,7 @@ class Registration(I18NModel, models.Model):
 
     name = CICharField(max_length=255, unique=True)
     title = models.CharField(max_length=500, blank=True, null=True)
-    slug = models.SlugField(max_length=500, blank=True, null=True)
+    slug = models.SlugField(max_length=500, blank=True, null=True, unique=True)
 
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
     start = models.DateField(auto_now_add=True)

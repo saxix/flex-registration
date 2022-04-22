@@ -20,7 +20,7 @@ from django.db import OperationalError
 from django.db.models import Count, JSONField, Q
 from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils import timezone
@@ -30,7 +30,8 @@ from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
 
-from ..core.utils import clone_form, clone_model, is_root
+from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
+from ..core.utils import is_root
 from .forms import CloneForm
 from .models import Record, Registration
 
@@ -162,33 +163,15 @@ class RegistrationAdmin(SmartModelAdmin):
             media=self.media,
             title="Clone Registration",
         )
-        instance: Registration = ctx["original"]
+        reg: Registration = ctx["original"]
         if request.method == "POST":
-            form = CloneForm(request.POST, instance=instance)
+            form = CloneForm(request.POST)
             if form.is_valid():
                 try:
                     with atomic():
-                        created = []
-                        name = form.cleaned_data["name"]
-                        base_form = instance.flex_form
-                        cloned = clone_form(base_form, name=name)
-                        for fs in base_form.formsets.all():
-                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} ({name})")
-                            fs = clone_model(
-                                fs,
-                                parent=cloned,
-                                flex_form=o,
-                            )
-
-                        reg = clone_model(
-                            instance,
-                            name=name,
-                            flex_form=cloned,
-                            active=False,
-                            locale=instance.locale,
-                            public_key=None,
-                        )
-                        created.append(fs)
+                        reg.pk = None
+                        reg.name = form.cleaned_data["name"]
+                        reg.save()
 
                         ctx["cloned"] = reg
                 except Exception as e:
@@ -199,14 +182,14 @@ class RegistrationAdmin(SmartModelAdmin):
                 self.message_user(request, "----")
                 ctx["form"] = form
         else:
-            form = CloneForm(instance=ctx["original"])
+            form = CloneForm()
             ctx["form"] = form
         return render(request, "admin/registration/registration/clone.html", ctx)
 
     @button()
     def create_translation(self, request, pk):
-        from smart_register.i18n.models import Message
         from smart_register.i18n.forms import TranslationForm
+        from smart_register.i18n.models import Message
 
         ctx = self.get_common_context(
             request,
@@ -267,17 +250,12 @@ class RegistrationAdmin(SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
+    @button(label="import")
+    def _import(self, request):
+        pass
+
     @button()
     def export(self, request, pk):
-        from smart_register.core.models import (
-            FlexForm,
-            FlexFormField,
-            FormSet,
-            OptionSet,
-            Validator,
-        )
-
-        data = {}
         reg: Registration = self.get_object(request, pk)
         buffers = {}
         buffers["registration"] = io.StringIO()
