@@ -1,4 +1,4 @@
-{% if widget.wrap_label %}
+{% load smart_register itrans %}{% if widget.wrap_label %}
     <label class="form-check-label inline-block text-gray-800" {% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
 {% endif %}
 <input
@@ -8,4 +8,4 @@
         {% include "django/forms/widgets/attrs.html" %}
 >
 {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=widget.label %}{% endif %}
-{% if widget.wrap_label %} {{ widget.label }}</label>{% endif %}
+{% if widget.wrap_label %} {% trans widget.label as aa %}{{ aa|md }}</label>{% endif %}

@@ -26,6 +26,8 @@
         <div class="text-sm	">{{ field|smart:"description,1" }}</div>
         {{ field.errors }}
         {{ field }}
-        <div class="text-xs	italic">{{ field|smart:"hint,1" }}</div>
+        <div class="text-xs	italic">
+            {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"hint,1" %}{% endif %}
+            {{ field|smart:"hint,1" }}</div>
     </div>
 </fieldset>
