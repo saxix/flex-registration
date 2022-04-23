@@ -15,6 +15,7 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.translation import get_language
 from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
@@ -210,6 +211,8 @@ class FormSet(NaturalKeyModel, OrderableModel):
                 "html_attrs": {},
             },
             "widget": {
+                "showCounter": False,
+                "counterPrefix": "",
                 "addText": "Add Another",
                 "addCssClass": None,
                 "deleteText": "Remove",
@@ -255,6 +258,11 @@ class FormSet(NaturalKeyModel, OrderableModel):
         self.name = slugify(self.name)
         dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
         super().save(*args, **kwargs)
+
+    @cached_property
+    def widget_attrs(self):
+        dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
+        return self.advanced["smart"]["widget"]
 
     def get_formset(self):
         formSet = formset_factory(

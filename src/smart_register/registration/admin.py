@@ -38,6 +38,7 @@ from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
 from ..core.utils import is_root
 from .models import Record, Registration
 from ..i18n.forms import ImportForm
+from ..i18n.models import Message
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ DATA = {
     "core.Validator": [],
     "core.OptionSet": [],
     "core.FlexFormField": [],
+    "i18n.Message": [],
 }
 
 
@@ -332,6 +334,7 @@ class RegistrationAdmin(SmartModelAdmin):
         data["core.Validator"] = validators
         data["core.OptionSet"] = options
         data["core.FlexFormField"] = fields
+        data["i18n.Message"] = Message.objects.values_list("pk", flat=True)
 
         for k, f in data.items():
             data[k] = io.StringIO()

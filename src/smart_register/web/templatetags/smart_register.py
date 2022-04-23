@@ -82,7 +82,8 @@ def smart_attr(field, attr):
 @register.simple_tag()
 def formset_config(formset):
     config = {
-        "formCssClass": f"form-container.{formset.prefix}",
+        "formCssClass": f"form-container-{formset.prefix}",
+        "counterPrefix": _(formset.fs.widget_attrs["counterPrefix"]),
         "prefix": formset.prefix,
         "deleteContainerClass": f"{formset.fs.name}-delete",
         "addContainerClass": f"{formset.fs.name}-add",

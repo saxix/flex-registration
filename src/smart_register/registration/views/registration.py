@@ -22,7 +22,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-from smart_register.core.cache import cache_formset
+# from smart_register.core.cache import cache_formset
 from smart_register.core.utils import get_qrcode, get_etag
 from smart_register.registration.models import Record, Registration
 from smart_register.state import state
@@ -114,7 +114,7 @@ class RegisterView(FixedLocaleView, FormView):
     # def get_form(self, form_class=None):
     #     return super().get_form(form_class)
     #
-    @cache_formset
+    # @cache_formset
     def get_formsets_classes(self):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
