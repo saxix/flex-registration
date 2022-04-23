@@ -158,7 +158,7 @@ def do_translate(parser, token):
     bits = token.split_contents()
     if len(bits) < 2:
         raise TemplateSyntaxError("'%s' takes at least one argument" % bits[0])
-    message_string = parser.compile_filter(bits[1])
+    message_string = parser.compile_filter(bits[1] or "")
     remaining = bits[2:]
 
     noop = False

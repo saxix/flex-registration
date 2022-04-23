@@ -50,8 +50,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
     )
     locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
-    intro = models.TextField(blank=True, null=True)
-    footer = models.TextField(blank=True, null=True)
+    intro = models.TextField(blank=True, null=True, default="")
+    footer = models.TextField(blank=True, null=True, default="")
     validator = models.ForeignKey(
         Validator, limit_choices_to={"target": Validator.MODULE}, blank=True, null=True, on_delete=models.SET_NULL
     )
