@@ -3,6 +3,7 @@ import hashlib
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import gettext_lazy as _
+from natural_keys import NaturalKeyModel
 
 from .fields import LanguageField
 
@@ -12,12 +13,12 @@ class I18NModel:
     I18N_ADVANCED = []
 
 
-class Message(models.Model):
+class Message(NaturalKeyModel):
     timestamp = models.DateTimeField(auto_now_add=True)
     locale = LanguageField(db_index=True)
     msgid = models.TextField(db_index=True)
     msgstr = models.TextField(blank=True, null=True)
-    md5: str = models.CharField(verbose_name=_("MD5"), max_length=512, null=False, blank=False, db_index=True)
+    md5: str = models.CharField(verbose_name=_("MD5"), max_length=512, null=False, blank=False, unique=True)
     auto = models.BooleanField(default=False)
     draft = models.BooleanField(default=True)
 
