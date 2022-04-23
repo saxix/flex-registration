@@ -1,10 +1,21 @@
 from django.db.models.signals import post_delete, post_save
 
-from smart_register.core.models import FlexForm, FlexFormField, FormSet
+from smart_register.core.models import FlexForm, FlexFormField, FormSet, Validator
 
 
 def update_cache(sender, instance, **kwargs):
-    if isinstance(instance, FormSet):
+    if isinstance(instance, Validator):
+        if instance.target == Validator.FIELD:
+            for r in instance.flexformfield_set.all():
+                r.save()
+        elif instance.target == Validator.FORM:
+            for r in instance.flexform_set.all():
+                r.save()
+        elif instance.target == Validator.MODULE:
+            for r in instance.registration_set.all():
+                r.save()
+
+    elif isinstance(instance, FormSet):
         instance.flex_form.save()
     elif isinstance(instance, FlexFormField):
         instance.flex_form.save()
