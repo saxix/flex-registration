@@ -21,7 +21,7 @@ class Dictionary:
         self._loaded = True
 
     def __getitem__(self, msgid):
-        translation = msgid
+        translation = msgid or ""
         if not msgid.strip():
             return translation
         try:
@@ -36,11 +36,11 @@ class Dictionary:
                     logger.exception(e)
                     msg = Message.objects.filter(locale=self.locale, msgid__iexact=str(msgid)).first()
                     if not msg.draft:
-                        translation = msg.msgstr
+                        translation = msg.msgstr or ""
                 except Message.DoesNotExist:
                     msg, __ = Message.objects.get_or_create(msgid=msgid, locale=self.locale, defaults={"msgstr": msgid})
                     translation = msg.msgstr
-        return translation
+        return translation or ""
 
 
 class Cache:

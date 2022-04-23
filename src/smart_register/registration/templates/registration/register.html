@@ -127,8 +127,8 @@
             </div>
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
                 {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=dataset.footer %}{% endif %}
-                {% trans dataset.footer as footer %}
-                {{ footer|default_if_none:""|md }}
+                {% trans dataset.footer|default_if_none:"" as footer %}
+                {{ footer|md }}
             </div>
         </div>
     </div>
