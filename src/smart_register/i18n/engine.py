@@ -37,7 +37,6 @@ class Dictionary:
                     msg = Message.objects.filter(locale=self.locale, msgid__iexact=str(msgid)).first()
                     if not msg.draft:
                         translation = msg.msgstr
-
                 except Message.DoesNotExist:
                     msg, __ = Message.objects.get_or_create(msgid=msgid, locale=self.locale, defaults={"msgstr": msgid})
                     translation = msg.msgstr
