@@ -12,12 +12,13 @@ from django.shortcuts import render
 from smart_admin.modeladmin import SmartModelAdmin
 
 from .models import Message
+from ..admin.mixin import LoadDumpMixin
 
 logger = logging.getLogger(__name__)
 
 
 @register(Message)
-class MessageAdmin(SmartModelAdmin):
+class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
     search_fields = ("msgid__icontains",)
     list_display = ("id", "msgid", "locale", "msgstr", "draft")
     list_editable = ("msgstr", "draft")
