@@ -33,7 +33,7 @@ cache = Cache(size=100)
 def cache_form(f):
     @wraps(f)
     def _inner(*args, **kwargs):
-        key = f"{args[0].pk}-{args[0].version}-{state.request.selected_language}"
+        key = f"{args[0].pk}-{args[0].version}-{state.request.LANGUAGE_CODE}"
         if key not in cache:
             logger.debug("cache missing")
             ret = f(*args, **kwargs)
@@ -51,7 +51,7 @@ def cache_formset(f):
     @wraps(f)
     def _inner(*args, **kwargs):
         flex_form = args[0].registration.flex_form
-        key = f"{flex_form.pk}-{flex_form.version}-formset-{state.request.selected_language}"
+        key = f"{flex_form.pk}-{flex_form.version}-formset-{state.request.LANGUAGE_CODE}"
         if key not in cache:
             logger.debug("cache missing")
             ret = f(*args, **kwargs)

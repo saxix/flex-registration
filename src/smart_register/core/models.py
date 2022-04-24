@@ -24,7 +24,7 @@ from strategy_field.utils import fqn
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
-from .cache import Cache, cache_form
+from .cache import Cache
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
@@ -182,7 +182,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @cache_form
+    # @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):

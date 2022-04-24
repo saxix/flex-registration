@@ -1,9 +1,10 @@
 import logging
 
 from django.utils import translation
+from django.utils.translation import get_language_from_request
 from flags.state import flag_enabled
 
-from smart_register.core.utils import get_default_language
+# from smart_register.core.utils import get_default_language
 from smart_register.state import state
 
 logger = logging.getLogger(__name__)
@@ -14,8 +15,7 @@ class I18NMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        lang = get_default_language(request)
-        request.selected_language = lang
+        lang = get_language_from_request(request, check_path=True)
         state.collect_messages = flag_enabled("I18N_COLLECT_MESSAGES", request=request)
 
         from smart_register.i18n.engine import translator
