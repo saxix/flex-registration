@@ -195,13 +195,16 @@ def dict_get_nested(obj: dict, path):
     return current
 
 
-def clone_model(obj, **kwargs):
-    obj = obj.__class__.objects.get(pk=obj.pk)
+def clone_model(source, **kwargs):
+    if obj := source.__class__.objects.filter(**kwargs).first():
+        return obj, False
+    obj = source.__class__.objects.get(pk=source.pk)
+
     obj.pk = None
     for k, v in kwargs.items():
         setattr(obj, k, v)
     obj.save()
-    return obj
+    return obj, True
 
 
 def clone_form(instance, **kwargs):

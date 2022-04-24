@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytz
 from concurrency.api import disable_concurrency
+from django.db.models.signals import post_save, post_delete
+from django.utils.text import slugify
 
 from admin_extra_buttons.decorators import button, link, view
 from admin_extra_buttons.mixins import confirm_action
@@ -33,9 +35,11 @@ from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
+from .forms import CloneForm
+from ..admin.mixin import LoadDumpMixin
 
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
-from ..core.utils import is_root
+from ..core.utils import is_root, namify, clone_model
 from .models import Record, Registration
 from ..i18n.forms import ImportForm
 from ..i18n.models import Message
@@ -58,7 +62,7 @@ def last_day_of_month(date):
 
 
 @register(Registration)
-class RegistrationAdmin(SmartModelAdmin):
+class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
@@ -181,36 +185,79 @@ class RegistrationAdmin(SmartModelAdmin):
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
         return render(request, "admin/registration/registration/chart.html", ctx)
 
-    # @button()
-    # def clone(self, request, pk):
-    #     ctx = self.get_common_context(
-    #         request,
-    #         pk,
-    #         media=self.media,
-    #         title="Clone Registration",
-    #     )
-    #     reg: Registration = ctx["original"]
-    #     if request.method == "POST":
-    #         form = CloneForm(request.POST)
-    #         if form.is_valid():
-    #             try:
-    #                 with atomic():
-    #                     reg.pk = None
-    #                     reg.name = form.cleaned_data["name"]
-    #                     reg.save()
-    #
-    #                     ctx["cloned"] = reg
-    #             except Exception as e:
-    #                 logger.exception(e)
-    #                 self.message_error_to_user(request, e)
-    #
-    #         else:
-    #             self.message_user(request, "----")
-    #             ctx["form"] = form
-    #     else:
-    #         form = CloneForm()
-    #         ctx["form"] = form
-    #     return render(request, "admin/registration/registration/clone.html", ctx)
+    @button()
+    def inspect(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Inspect Registration",
+        )
+        return render(request, "admin/registration/registration/inspect.html", ctx)
+
+    @button()
+    def clone(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Clone Registration",
+        )
+        reg: Registration = ctx["original"]
+        if request.method == "POST":
+            form = CloneForm(request.POST)
+            created = set()
+            if form.is_valid():
+                try:
+                    for dip in [
+                        "form_dip",
+                        "field_dip",
+                        "formset_dip",
+                        "form_del_dip",
+                        "field_del_dip",
+                        "formset_del_dip",
+                    ]:
+                        post_save.disconnect(dispatch_uid=dip)
+                        post_delete.disconnect(dispatch_uid=dip)
+
+                    with atomic():
+                        source = Registration.objects.get(id=reg.pk)
+                        title = form.cleaned_data["title"]
+                        reg, __ = clone_model(source, name=namify(title), title=title, slug=slugify(title))
+                        if form.cleaned_data["deep"]:
+                            main_form, __ = clone_model(
+                                source.flex_form, name=f"{source.flex_form.name}-(clone: {reg.name})"
+                            )
+                            reg.flex_form = main_form
+                            reg.save()
+                            for fld in source.flex_form.fields.all():
+                                clone_model(fld, flex_form=main_form)
+
+                            formsets = FormSet.objects.filter(parent=source.flex_form)
+                            forms = {}
+                            for fs in formsets:
+                                forms[fs.flex_form.pk] = fs.flex_form
+                                forms[fs.parent.pk] = fs.parent
+
+                            for frm in forms.values():
+                                frm2, created = clone_model(frm, name=f"{frm.name}-(clone: {reg.name})")
+                                forms[frm.pk] = frm2
+                                for field in frm.fields.all():
+                                    clone_model(field, name=field.name, flex_form=frm2)
+
+                            for fs in formsets:
+                                clone_model(fs, parent=forms[fs.parent.pk], flex_form=forms[fs.flex_form.pk])
+                        return HttpResponseRedirect(reverse("admin:registration_registration_inspect", args=[reg.pk]))
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+
+            else:
+                ctx["form"] = form
+        else:
+            form = CloneForm()
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/clone.html", ctx)
 
     @button()
     def create_translation(self, request, pk):
@@ -276,7 +323,7 @@ class RegistrationAdmin(SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @button(label="loaddata")
+    @button(label="import")
     def _import(self, request):
         ctx = self.get_common_context(
             request,
@@ -318,7 +365,7 @@ class RegistrationAdmin(SmartModelAdmin):
         return render(request, "admin/registration/registration/import.html", ctx)
 
     @button()
-    def dumpdata(self, request, pk):
+    def export(self, request, pk):
         reg: Registration = self.get_object(request, pk)
         buffers = {}
         buffers["registration"] = io.StringIO()
