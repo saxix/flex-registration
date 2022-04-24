@@ -23,7 +23,10 @@
             {% if field.field.required %}
                 <span class="lowercase font-thin required text-xs">({% trans "required" %})</span>{% endif %}
         </label>
-        <div class="text-sm	">{{ field|smart:"description,1" }}</div>
+        <div class="text-sm	">
+            {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"description,1" %}{% endif %}
+            {{ field|smart:"description,1" }}
+        </div>
         {{ field.errors }}
         {{ field }}
         <div class="text-xs	italic">

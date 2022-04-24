@@ -1,6 +1,7 @@
 import logging
 
 from dateutil.utils import today
+from django.conf import settings
 
 from admin_extra_buttons.decorators import button, link
 from adminfilters.combo import ChoicesFieldComboFilter
@@ -74,8 +75,12 @@ class MessageAdmin(SmartModelAdmin):
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
                 try:
-                    for msg in Message.objects.exclude(locale=locale).order_by("msgid").distinct():
-                        Message.objects.create(msgid=msg.msgid, msgstr=msg.msgid, locale=locale, draft=True)
+                    for msg in Message.objects.filter(locale=settings.LANGUAGE_CODE).order_by("msgid").distinct():
+                        Message.objects.get_or_create(
+                            msgid=msg.msgid,
+                            locale=locale,
+                            defaults={"md5": Message.get_md5(locale, msg.msgid), "draft": True},
+                        )
                 except Exception as e:
                     logger.exception(e)
                     self.message_error_to_user(request, e)
@@ -93,7 +98,7 @@ class MessageAdmin(SmartModelAdmin):
         return render(request, "admin/i18n/message/translation.html", ctx)
 
     def get_readonly_fields(self, request, obj=None):
-        if obj.pk:
+        if obj:
             return ("msgid",)
         return self.readonly_fields
 

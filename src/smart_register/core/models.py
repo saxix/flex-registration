@@ -104,6 +104,9 @@ class Validator(NaturalKeyModel):
                         sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
                     if isinstance(ret, str):
                         raise ValidationError(_(ret))
+                    elif isinstance(ret, (list, tuple)):
+                        errors = [_(v) for v in ret]
+                        raise ValidationError(errors)
                     elif isinstance(ret, dict):
                         errors = {k: _(v) for (k, v) in ret.items()}
                         raise ValidationError(errors)
@@ -278,12 +281,19 @@ class FormSet(NaturalKeyModel, OrderableModel):
         return formSet
 
 
+FIELD_KWARGS = {
+    forms.CharField: {"min_length": None, "max_length": None, "empty_value": "", "initial": None},
+    forms.IntegerField: {"min_value": None, "max_value": None, "initial": None},
+}
+
+
 class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     I18N_FIELDS = [
         "label",
     ]
     I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
+        "kwargs": {},
         "smart": {
             "hint": "",
             "visible": True,
@@ -387,6 +397,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             self.name = namify(self.name)[:100]
 
         dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
+        dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
+
         super().save(force_insert, force_update, using, update_fields)
         self.flex_form.get_form.cache_clear()
 

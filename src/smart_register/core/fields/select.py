@@ -4,6 +4,7 @@ from django import forms
 from django.conf import settings
 from django.forms import BoundField
 from django.urls import NoReverseMatch, reverse
+from django.utils.translation import get_language
 
 from .widgets.mixins import TailWindMixin
 
@@ -48,7 +49,7 @@ class SelectField(forms.ChoiceField):
 
     def __init__(self, **kwargs):
         self._choices = ()
-        self.language = kwargs.pop("language", "en-us")
+        self.language = kwargs.pop("language", get_language())
         self.parent = kwargs.pop("parent", None)
         options = kwargs.pop("datasource", "")
         super().__init__(**kwargs)

@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load smart_register l10n static itrans http2 %}
+{% extends "base.html" %}{% load smart_register formset l10n static itrans http2 %}
 {% block head %}
     <meta name="Description" CONTENT="Module Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
     <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />
@@ -81,7 +81,7 @@
                                 {% if formset.fs.description %}
                                     <div class="w-full mt-4 text-sm leading-7 i18n text-gray-800 i18n font-regular">
                                         {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=formset.fs.description %}{% endif %}
-                                        {% trans formset.fs.description|md %} }}
+                                        {% trans formset.fs.description|md %}
                                     </div>
                                 {% endif %}
                                 <div class="flex flex-col">
