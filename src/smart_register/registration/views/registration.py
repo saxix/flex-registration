@@ -82,18 +82,19 @@ class RegisterView(FixedLocaleView, FormView):
 
     def get(self, request, *args, **kwargs):
         if state.collect_messages:
-            res_etag = get_etag(request, time.time())
+            self.res_etag = get_etag(request, time.time())
         else:
-            res_etag = get_etag(
+            self.res_etag = get_etag(
                 request,
                 str(self.registration.version),
                 get_language(),
                 {True: "staff", False: ""}[request.user.is_staff],
             )
-        response = get_conditional_response(request, str(res_etag))
+        response = get_conditional_response(request, str(self.res_etag))
+        response = None
         if response is None:
             response = super().get(request, *args, **kwargs)
-            response.headers.setdefault("ETag", res_etag)
+            response.headers.setdefault("ETag", self.res_etag)
         return response
 
     @cached_property
@@ -137,6 +138,7 @@ class RegisterView(FixedLocaleView, FormView):
         # kwargs["language"] = get_language_info(self.registration.locale)
         # kwargs["locale"] = self.registration.locale
         kwargs["dataset"] = self.registration
+        kwargs["etag"] = self.res_etag
 
         ctx = super().get_context_data(**kwargs)
         m = forms.Media()

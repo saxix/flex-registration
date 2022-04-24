@@ -237,15 +237,16 @@ def get_client_ip(request):
                 return ip.split(",")[0].strip()
 
 
-def get_default_language(request, default="en-us"):
-    lang = default
-    if request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME):
-        lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
-    elif request.META.get("HTTP_ACCEPT_LANGUAGE", None):
-        lang = request.META["HTTP_ACCEPT_LANGUAGE"]
-    if lang not in [x[0] for x in settings.LANGUAGES]:
-        lang = default
-    return lang or "en-us"
+# def get_default_language(request, default="en-us"):
+#     lang = default
+#     if request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME):
+#         lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+#     elif request.META.get("HTTP_ACCEPT_LANGUAGE", None):
+#         lang = request.META["HTTP_ACCEPT_LANGUAGE"]
+#     if lang not in [x[0] for x in settings.LANGUAGES]:
+#         lang = default
+#     return lang or "en-us"
+#
 
 
 def get_versioned_static_name(name):

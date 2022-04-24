@@ -13,6 +13,8 @@ class ThreadLocalMiddleware:
 
     def __call__(self, request):
         state.request = request
+        state.collect_messages = False
+
         ret = self.get_response(request)
         state.request = None
         return ret
