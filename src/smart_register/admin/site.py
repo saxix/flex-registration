@@ -35,6 +35,13 @@ class AuroraAdminSite(SmartAdminSite):
         context["extra_pages"] = self.extra_pages
         return context
 
+    def loaddata(self, request):
+        context = self.each_context(request)
+        return TemplateResponse(request, "admin/loaddata.html", context)
+
+    def dumpdata(self, request):
+        ...
+
     def console(self, request, extra_context=None):
         context = self.each_context(request)
         # if not is_root(request):
@@ -99,6 +106,8 @@ class AuroraAdminSite(SmartAdminSite):
         original = super().get_urls()
 
         extra = [
+            path("loaddata/", wrap(self.loaddata), name="loaddata"),
+            path("dumpdata/", wrap(self.dumpdata), name="dumpdata"),
             path("console/", wrap(self.console), name="console"),
             path("error/<int:code>/", wrap(self.error), name="error"),
         ]
