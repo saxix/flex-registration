@@ -21,7 +21,8 @@ class ImportForm(forms.Form):
 
 class LoadDumpMixin(ExtraButtonsMixin):
     @button(label="loaddata")
-    def _import(self, request):
+    def loaddata(self, request):
+        opts = self.model._meta
         ctx = self.get_common_context(
             request,
             media=self.media,
@@ -40,18 +41,22 @@ class LoadDumpMixin(ExtraButtonsMixin):
                     out = io.StringIO()
                     workdir = Path(".").absolute()
                     with disable_concurrency():
-                        for k, v in data.items():
-                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
-
-                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
-                                fdst.write(json.dumps(v).encode())
-                            fixture = (workdir / fdst.name).absolute()
+                        kwargs = {
+                            "dir": workdir,
+                            "prefix": f"~IMPORT-{opts.model_name}",
+                            "suffix": ".json",
+                            "delete": False,
+                        }
+                        with tempfile.NamedTemporaryFile(**kwargs) as fdst:
+                            fdst.write(json.dumps(data).encode())
+                        fixture = (workdir / fdst.name).absolute()
+                        try:
                             call_command("loaddata", fixture, stdout=out, verbosity=3)
-                            fixture.unlink()
                             out.write("------\n")
-                            # ctx['out'] = out.getvalue()
                             out.seek(0)
                             ctx["out"] = out.readlines()
+                        finally:
+                            fixture.unlink()
                 except Exception as e:
                     self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
             else:
@@ -67,7 +72,7 @@ class LoadDumpMixin(ExtraButtonsMixin):
         stdout = io.StringIO()
         call_command(
             "dumpdata",
-            f"{opts.app_name}.{opts.model_name}",
+            f"{opts.app_label}.{opts.model_name}",
             stdout=stdout,
             use_natural_foreign_keys=True,
             use_natural_primary_keys=True,

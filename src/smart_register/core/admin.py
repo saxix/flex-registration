@@ -37,6 +37,7 @@ from .models import (
     Validator,
 )
 from .utils import render
+from ..admin.mixin import LoadDumpMixin
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class ValidatorTestForm(forms.Form):
 
 
 @register(Validator)
-class ValidatorAdmin(SmartModelAdmin):
+class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
     form = ValidatorForm
     list_editable = ("trace", "active", "draft")
     list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
@@ -99,7 +100,7 @@ class ValidatorAdmin(SmartModelAdmin):
 
 
 @register(FormSet)
-class FormSetAdmin(SmartModelAdmin):
+class FormSetAdmin(LoadDumpMixin, SmartModelAdmin):
     list_display = ("name", "title", "parent", "flex_form", "enabled", "validator", "min_num")
     search_fields = ("name", "title")
     list_editable = ("enabled",)
@@ -138,7 +139,7 @@ class FlexFormFieldForm(forms.ModelForm):
 
 
 @register(FlexFormField)
-class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
+class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
     list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
     list_editable = ["ordering", "required", "enabled"]
@@ -209,7 +210,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         return render(request, "admin/core/flexformfield/test.html", ctx)
 
 
-class FlexFormFieldInline(OrderableAdmin, TabularInline):
+class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
     model = FlexFormField
     form = FlexFormFieldForm
     fields = ("ordering", "label", "name", "required", "enabled", "field_type")
@@ -238,7 +239,7 @@ class SyncForm(SyncConfigForm):
 
 
 @register(FlexForm)
-class FlexFormAdmin(SmartModelAdmin):
+class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
     inlines = [FlexFormFieldInline, FormSetInline]
     list_display = ("name", "validator", "used_by", "childs", "parents")
@@ -366,7 +367,7 @@ class FlexFormAdmin(SmartModelAdmin):
 
 
 @register(OptionSet)
-class OptionSetAdmin(SmartModelAdmin):
+class OptionSetAdmin(LoadDumpMixin, SmartModelAdmin):
     list_display = ("name", "id", "separator", "comment", "columns")
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
