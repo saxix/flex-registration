@@ -1,15 +1,23 @@
+import io
+import json
+import tempfile
 from functools import update_wrapper
+from pathlib import Path
 
+from concurrency.api import disable_concurrency
 from django import forms
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import Http404, HttpResponseRedirect
+from django.core.management import call_command
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import path, reverse, reverse_lazy
 from django.utils.functional import lazy
 from smart_admin.site import SmartAdminSite
 
-from smart_register import get_full_version
+from smart_register import get_full_version, VERSION
+from smart_register.admin.mixin import ImportForm
 
 
 class ConsoleForm(forms.Form):
@@ -37,10 +45,59 @@ class AuroraAdminSite(SmartAdminSite):
 
     def loaddata(self, request):
         context = self.each_context(request)
-        return TemplateResponse(request, "admin/loaddata.html", context)
+        form = ImportForm(request.POST, request.FILES)
+        if request.method == "POST":
+            form = ImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                try:
+                    f = request.FILES["file"]
+                    buf = io.BytesIO()
+                    for chunk in f.chunks():
+                        buf.write(chunk)
+                    buf.seek(0)
+                    data = json.load(buf)
+                    out = io.StringIO()
+                    workdir = Path(".").absolute()
+                    with disable_concurrency():
+                        kwargs = {
+                            "dir": workdir,
+                            "prefix": "~IMPORT",
+                            "suffix": ".json",
+                            "delete": False,
+                        }
+                        with tempfile.NamedTemporaryFile(**kwargs) as fdst:
+                            fdst.write(json.dumps(data).encode())
+                        fixture = (workdir / fdst.name).absolute()
+                        try:
+                            call_command("loaddata", fixture, stdout=out, verbosity=3)
+                            out.write("------\n")
+                            out.seek(0)
+                            context["out"] = out.readlines()
+                        finally:
+                            fixture.unlink()
+                except Exception as e:
+                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+            else:
+                context["form"] = form
+        else:
+            form = ImportForm()
+            context["form"] = form
+        return render(request, "admin/loaddata.html", context)
 
     def dumpdata(self, request):
-        ...
+        stdout = io.StringIO()
+        call_command(
+            "dumpdata",
+            "core",
+            stdout=stdout,
+            use_natural_foreign_keys=True,
+            use_natural_primary_keys=True,
+        )
+        return JsonResponse(
+            json.loads(stdout.getvalue()),
+            safe=False,
+            headers={"Content-Disposition": f"attachment; filename=smart-{VERSION}.json"},
+        )
 
     def console(self, request, extra_context=None):
         context = self.each_context(request)
