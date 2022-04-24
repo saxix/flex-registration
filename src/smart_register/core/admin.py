@@ -182,7 +182,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
             instance = fld.get_instance()
             ctx["debug_info"] = {
                 "instance": instance,
-                "kwargs": fld.advanced,
+                "kwargs": fld.get_field_kwargs(),
                 "options": getattr(instance, "options", None),
                 "choices": getattr(instance, "choices", None),
                 "widget": getattr(instance, "widget", None),
@@ -351,8 +351,6 @@ class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
                             with disable_concurrency():
                                 fixture = (workdir / fdst.name).absolute()
                                 call_command("loaddata", fixture, stdout=out, verbosity=3)
-                                for frm in FlexForm.objects.all():
-                                    frm.get_form.cache_clear()
 
                             message = out.getvalue()
                             self.message_user(request, message)

@@ -12,7 +12,8 @@
                        {% if field.errors %} checked {% endif %}
                        type="checkbox">
                 {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field.field.flex_field.advanced.smart.question %}{% endif %}
-                {% trans field.field.flex_field.advanced.smart.question|md %}
+{#                {% trans field.field.flex_field.advanced.smart.question|md %}#}
+                {{ field|smart:"question,1"|md }}
 {#                {{ field.field.flex_field.advanced.smart.question|md }}#}
             </label>
     {% endif %}
