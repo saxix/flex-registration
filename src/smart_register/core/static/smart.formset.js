@@ -2,15 +2,11 @@ var configureFormsets = function (configs) {
     configs.forEach(function (c, i) {
         var config = {};
         Object.assign(config, DEFAULT, c);
+        console.log(11111111, config);
         var $target = $("." + config.formCssClass);
         config.initialized = function ($$) {
             if ($$.options.showCounter) {
                 updateCounter($$, null);
-                // var $fs = $$.parents('.formset');
-                // var forms = $fs.find('.form-container').length;
-                // $$.find('.fs-counter').each(function (i, e){
-                //     $(e).html($$.options.counterPrefix +  (1+i) + "/"+ forms);
-                // });
             }
         };
         $target.formset(config);
@@ -37,8 +33,8 @@ var updateCounter = function ($$, $row) {
     }
 };
 var DEFAULT = {
-    addText: "add another",
-    deleteText: "remove",
+    // addText: "add another",
+    // deleteText: "remove",
     initialized: null,
     removed: function ($$, row) {
         updateCounter($$, null);

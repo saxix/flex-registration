@@ -276,7 +276,7 @@ class RegistrationAdmin(SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @button(label="import")
+    @button(label="loaddata")
     def _import(self, request):
         ctx = self.get_common_context(
             request,
@@ -318,7 +318,7 @@ class RegistrationAdmin(SmartModelAdmin):
         return render(request, "admin/registration/registration/import.html", ctx)
 
     @button()
-    def export(self, request, pk):
+    def dumpdata(self, request, pk):
         reg: Registration = self.get_object(request, pk)
         buffers = {}
         buffers["registration"] = io.StringIO()

@@ -12,7 +12,6 @@ from PIL import Image, UnidentifiedImageError
 
 from smart_register.i18n.gettext import gettext as _
 
-from ...core.models import FormSet
 from ...core.utils import dict_get_nested, dict_setdefault
 from ...registration.models import Registration
 
@@ -79,23 +78,24 @@ def smart_attr(field, attr):
     return value
 
 
-@register.simple_tag()
-def formset_config(formset):
-    config = {
-        "formCssClass": f"form-container-{formset.prefix}",
-        "counterPrefix": _(formset.fs.widget_attrs["counterPrefix"]),
-        "prefix": formset.prefix,
-        "deleteContainerClass": f"{formset.fs.name}-delete",
-        "addContainerClass": f"{formset.fs.name}-add",
-        "addText": "Add Another",
-        "addCssClass": "formset-add-button",
-        "deleteText": "Remove",
-        "deleteCssClass": "formset-delete-button",
-        "keepFieldValues": False,
-    }
-    fs_config = formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
-    override = {k: v for k, v in fs_config.items() if v}
-    return {**config, **override}
+#
+# @register.simple_tag()
+# def formset_config(formset):
+#     config = {
+#         "formCssClass": f"form-container-{formset.prefix}",
+#         "counterPrefix": _(formset.fs.widget_attrs["counterPrefix"]),
+#         "prefix": formset.prefix,
+#         "deleteContainerClass": f"{formset.fs.name}-delete",
+#         "addContainerClass": f"{formset.fs.name}-add",
+#         "addText": "Add Another",
+#         "addCssClass": "formset-add-button",
+#         "deleteText": "Remove",
+#         "deleteCssClass": "formset-delete-button",
+#         "keepFieldValues": False,
+#     }
+#     fs_config = formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
+#     override = {k: v for k, v in fs_config.items() if v}
+#     return {**config, **override}
 
 
 @register.filter()
