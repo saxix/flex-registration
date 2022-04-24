@@ -43,7 +43,6 @@ def cache_form(f):
 
         return cache[key]
 
-    _inner.cache_clear = lambda: True
     return _inner
 
 
@@ -61,5 +60,4 @@ def cache_formset(f):
 
         return cache[key]
 
-    _inner.cache_clear = lambda: True
     return _inner

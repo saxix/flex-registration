@@ -74,8 +74,8 @@ def smart_attr(field, attr):
         attr, translate = attr.split(",")
     value = field.field.flex_field.advanced.get("smart", {}).get(attr, "")
     if translate:
-        value = _(value)
-    return value
+        value = _(str(value))
+    return str(value)
 
 
 #

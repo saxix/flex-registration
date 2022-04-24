@@ -199,7 +199,6 @@ class FlexForm(I18NModel, NaturalKeyModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
-        self.get_form.cache_clear()
 
 
 class FormSet(NaturalKeyModel, OrderableModel):
@@ -334,8 +333,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     def type_name(self):
         return str(self.field_type.__name__)
 
-    def get_instance(self):
-        # if hasattr(self.field_type, "custom") and isinstance(self.field_type.custom, CustomFieldType):
+    def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):
             field_type = self.field_type.custom.base_type
             kwargs = self.field_type.custom.attrs.copy()
@@ -350,10 +348,11 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             regex = self.regex or self.field_type.custom.regex
         else:
             field_type = self.field_type
-            kwargs = self.advanced.copy()
+            advanced = self.advanced.copy()
+            kwargs = self.advanced.get("kwargs", {}).copy()
             regex = self.regex
 
-            smart_attrs = kwargs.pop("smart", {}).copy()
+            smart_attrs = advanced.pop("smart", {}).copy()
             # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
             if smart_attrs.get("question", ""):
@@ -365,16 +364,25 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             kwargs.setdefault("label", _(self.label))
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
-            # for k, v in data.items():
-            #     kwargs[f"data-{k}"] = v
-            # if self.choices and hasattr(field_type, "choices"):
-            #     kwargs["choices"] = self.choices
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
             kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
-        if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
-            kwargs["choices"] = clean_choices(self.choices.split(","))
+        if "datasource" in self.advanced:
+            kwargs["datasource"] = self.advanced["datasource"]
+        if hasattr(field_type, "choices"):
+            if "choices" in self.advanced:
+                kwargs["choices"] = self.advanced["choices"]
+            elif self.choices:
+                kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
+        return kwargs
+
+    def get_instance(self):
+        if issubclass(self.field_type, CustomFieldMixin):
+            field_type = self.field_type.custom.base_type
+        else:
+            field_type = self.field_type
+        kwargs = self.get_field_kwargs()
         try:
             kwargs.setdefault("flex_field", self)
             tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
@@ -400,7 +408,6 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
 
         super().save(force_insert, force_update, using, update_fields)
-        self.flex_form.get_form.cache_clear()
 
 
 class OptionSetManager(NaturalKeyModelManager):
