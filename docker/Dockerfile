@@ -17,6 +17,7 @@ RUN apt-get update \
                 libpq-dev \
                 python-psycopg2 \
                 python-gdal \
+                redis-server \
                 gdal-bin \
                 curl \
     && locale-gen --no-purge uk_UA.UTF-8 \
@@ -32,6 +33,9 @@ ENV POETRY_VERSION=1.1.13 \
     LOG_LEVEL="ERROR" \
     NGINX_CACHE_DIR="/data/nginx/cache" \
     NGINX_MAX_BODY_SIZE=30M \
+    REDIS_LOGLEVEL="warning" \
+    REDIS_MAXMEMORY="100Mb" \
+    REDIS_MAXMEMORY_POLICY="volatile-ttl" \
     PYTHONPATH="/code/src/" \
     PYTHONUNBUFFERED=1 \
     SECRET_KEY="secret-key-just-for-build" \

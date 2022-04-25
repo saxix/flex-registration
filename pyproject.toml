@@ -49,6 +49,7 @@ django-bitfield = "^2.1.0"
 Markdown = "^3.3.6"
 django-simple-math-captcha = "1.1.0"
 django-csp = "^3.7"
+django-redis = "^5.2.0"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"

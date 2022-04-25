@@ -21,10 +21,10 @@ from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
+from .cache import cache_form
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
-from .cache import Cache
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
@@ -182,7 +182,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    # @cache_form
+    @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
@@ -411,7 +411,13 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
 
 class OptionSetManager(NaturalKeyModelManager):
-    cache = Cache()
+    def get_from_cache(self, name):
+        key = f"option-set-{name}"
+        value = cache.get(key)
+        if value is None:
+            value = self.get(name=name)
+            cache.set(key, value)
+        return value
 
 
 class OptionSet(NaturalKeyModel, models.Model):
