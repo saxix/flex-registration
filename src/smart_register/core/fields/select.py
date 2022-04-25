@@ -69,7 +69,7 @@ class SelectField(forms.ChoiceField):
             try:
                 from smart_register.core.models import OptionSet
 
-                optset = OptionSet.objects.get(name=value)
+                optset = OptionSet.objects.get_from_cache(value)
                 value = list(optset.as_choices(self.language))
             except OptionSet.DoesNotExist as e:
                 logger.exception(e)
@@ -98,7 +98,6 @@ class AjaxSelectField(forms.Field):
             # OptionSet.objects.get(name=name)
             attrs["data-ajax--url"] = reverse("optionset", args=[self.datasource])
         except (OptionSet.DoesNotExist, NoReverseMatch, TypeError) as e:
-            raise
             logger.exception(e)
 
         return attrs

@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}{% load static i18n %}
+{% block content %}
+    {% if form %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <table>
+                {{ form }}
+            </table>
+            <input type="submit" value="Export">
+        </form>
+    {% else %}
+        {% for line in out %}
+            <div>{{ line }}</div>
+        {% endfor %}
+    {% endif %}
+{% endblock content %}

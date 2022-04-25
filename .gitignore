@@ -19,4 +19,5 @@ package.json
 !.pre-commit-config.yaml
 .env
 docker/conf/nginx.conf
+docker/conf/redis.conf
 src/smart_register/staticfiles

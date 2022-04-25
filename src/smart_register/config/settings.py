@@ -350,7 +350,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     ],
 }
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-# CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
+CONSTANCE_DATABASE_CACHE_BACKEND = "default"
 CONSTANCE_CONFIG = OrderedDict(
     {
         "CACHE_FORMS": (False, "", bool),

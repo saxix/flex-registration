@@ -3,20 +3,16 @@ import json
 import tempfile
 from pathlib import Path
 
+from admin_extra_buttons.decorators import button
+from admin_extra_buttons.mixins import ExtraButtonsMixin
 from concurrency.api import disable_concurrency
 from django.contrib import messages
 from django.core.management import call_command
-from django.forms import forms
 from django.http import JsonResponse
 
-from admin_extra_buttons.decorators import button
-
-from admin_extra_buttons.mixins import ExtraButtonsMixin
 from smart_register.core.utils import render
 
-
-class ImportForm(forms.Form):
-    file = forms.FileField()
+from .forms import ImportForm
 
 
 class LoadDumpMixin(ExtraButtonsMixin):

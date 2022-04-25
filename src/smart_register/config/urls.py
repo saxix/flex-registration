@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 
 from smart_register.core.i18n import SmartJavascriptCatalog
+from smart_register.i18n.views import set_language
 from smart_register.web.views.site import error_404
 
 actions.add_to_site(admin.site)
@@ -19,9 +20,8 @@ urlpatterns = [
     path("", include("smart_register.web.urls")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
-    path("i18n/", include("django.conf.urls.i18n")),
-    # path("i18n/setlang/", set_language, name="set_language"),
-    # path("i18n/setlang", include("django.conf.urls.i18n")),
+    # path("i18n/", include("django.conf.urls.i18n")),
+    path("i18n/setlang/", set_language, name="set_language"),
     path("__debug__/", include(debug_toolbar.urls)),
     path("jsi18n/<str:locale>/", SmartJavascriptCatalog.as_view(), name="javascript-catalog"),
 ]

@@ -255,7 +255,8 @@ def get_versioned_static_name(name):
 
 def get_etag(request, *args):
     if state.collect_messages:
-        params = [str(time.time())]
+        params = [time.time()]
     else:
-        params = [VERSION, *map(str, args)]
-    return "/".join(params)
+        params = (VERSION,) + args
+
+    return "/".join(map(str, params))

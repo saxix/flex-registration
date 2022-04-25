@@ -2,6 +2,18 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
+    <style>
+        #changelist-filter a{
+            color: white;
+        }
+    </style>
+{% endblock %}
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a> &rsaquo;
+        <a href="{% url 'admin:console' %}">{% translate 'Console' %}</a>
+        {% if title %} &rsaquo; {{ title }}{% endif %}
+    </div>
 {% endblock %}
 {% block content %}
     <div class="module{% if cl.has_filters %} filtered{% endif %}" id="changelist">
@@ -17,16 +29,19 @@
                         </td>
                     </tr>
                 </table>
-                <input type="submit">
+                <div class="submit-row">
+                <input type="submit" value="Execute">
+                </div>
             </form>
         </div>
         <div id="changelist-filter">
-            <ul>
+            <ul class="submit-row">
                 <li><a class="button" href="{% url "admin:constance_config_changelist" %}">Constance</a></li>
                 <li><a class="button" href="{% url "admin:flags_flagstate_changelist" %}">Flags</a></li>
                 <li><a class="button" href="{% url "admin:smart-sysinfo-admin" %}">System Infos</a></li>
                 <li><a class="button" href="{% url "admin:loaddata" %}">Loaddata</a></li>
                 <li><a class="button" href="{% url "admin:dumpdata" %}">Dumpdata</a></li>
+                <li><a class="button" href="{% url "admin:redis_cli" %}">Redis CLI</a></li>
             </ul>
         </div>
     </div>
