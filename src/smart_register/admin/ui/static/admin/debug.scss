@@ -17,6 +17,9 @@ $dev-color: #a3e388;
     }
   }
 }
+#changelist-filter a{
+  color: white!important;
+}
 .redis-cli{
   input[type=text]{
     width: 100%;

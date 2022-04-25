@@ -47,6 +47,7 @@ DEFAULTS = {
     "INTERNAL_IPS": (list, ["127.0.0.1", "localhost"]),
     "LANGUAGE_CODE": (str, "en-us"),
     "CACHE_DEFAULT": (str, "locmemcache://"),
+    "CONSTANCE_DATABASE_CACHE_BACKEND": (str, "default"),
     "MEDIA_ROOT": (str, "/tmp/media/"),
     "ROOT_TOKEN": (str, uuid.uuid4().hex),
     # Sentry - see CONTRIBUTING.md

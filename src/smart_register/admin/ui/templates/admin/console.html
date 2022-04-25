@@ -2,11 +2,7 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}">
-    <style>
-        #changelist-filter a{
-            color: white;
-        }
-    </style>
+    <script type="text/javascript" src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
 {% endblock %}
 {% block breadcrumbs %}
     <div class="breadcrumbs">
