@@ -111,9 +111,6 @@ class RegisterView(FixedLocaleView, FormView):
     def get_form_class(self):
         return self.registration.flex_form.get_form()
 
-    # def get_form(self, form_class=None):
-    #     return super().get_form(form_class)
-    #
     # @cache_formset
     def get_formsets_classes(self):
         formsets = {}
@@ -134,8 +131,6 @@ class RegisterView(FixedLocaleView, FormView):
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
-        # kwargs["language"] = get_language_info(self.registration.locale)
-        # kwargs["locale"] = self.registration.locale
         kwargs["dataset"] = self.registration
 
         ctx = super().get_context_data(**kwargs)
