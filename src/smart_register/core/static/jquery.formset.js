@@ -46,6 +46,10 @@
             },
 
             showAddButton = function () {
+                console.log(111111, options.prefix, maxForms.val(),
+                    totalForms.val(),
+                    (maxForms.val() - totalForms.val() > 0)
+                    );
                 return (maxForms.val() === "" || (maxForms.val() - totalForms.val() > 0));
             },
 
