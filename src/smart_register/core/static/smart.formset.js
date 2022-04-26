@@ -1,8 +1,7 @@
 var configureFormsets = function (configs) {
     configs.forEach(function (c, i) {
         var config = {};
-        Object.assign(config, DEFAULT, c);
-        console.log(11111111, config);
+        Object.assign(config, DEFAULT, c);;
         var $target = $("." + config.formCssClass);
         config.initialized = function ($$) {
             if ($$.options.showCounter) {

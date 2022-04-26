@@ -102,7 +102,18 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
 
 @register(FormSet)
 class FormSetAdmin(LoadDumpMixin, SmartModelAdmin):
-    list_display = ("name", "title", "parent", "flex_form", "enabled", "validator", "min_num")
+    list_display = (
+        "name",
+        "title",
+        "parent",
+        "flex_form",
+        "enabled",
+        "validator",
+        "min_num",
+        "max_num",
+        "extra",
+        "dynamic",
+    )
     search_fields = ("name", "title")
     list_editable = ("enabled",)
     readonly_fields = ("version", "last_update_date")
