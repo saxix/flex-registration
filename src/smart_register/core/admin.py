@@ -20,7 +20,7 @@ from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
@@ -89,12 +89,13 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
             if form.is_valid():
                 self.object.code = form.cleaned_data["code"]
                 self.object.save()
-                return HttpResponseRedirect("..")
+                # return HttpResponseRedirect("..")
         else:
             form = ValidatorTestForm(
                 initial={"code": self.object.code, "input": jsonpickle.encode(param)},
             )
 
+        ctx["jslib"] = Validator.LIB
         ctx["form"] = form
         return render(request, "admin/core/validator/test.html", ctx)
 

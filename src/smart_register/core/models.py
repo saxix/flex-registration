@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
@@ -16,6 +17,7 @@ from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from django.urls import reverse
 from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
@@ -29,7 +31,7 @@ from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
+from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase, JSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,27 @@ class Validator(NaturalKeyModel):
     FIELD = "field"
     MODULE = "module"
     FORMSET = "formset"
+    CONSOLE = mark_safe(
+        """
+    console = {log: function(d) { return !_.is_child(d)}};
+    """
+    )
+    LIB = mark_safe(
+        """
+TODAY = new Date();
+dateutil = {today: TODAY,
+            years18: new Date(TODAY.setDate(TODAY.getDate() - (365*18))),
+            years2: new Date(TODAY.setDate(TODAY.getDate() - (365*2))),
+
+};
+_ = {is_child: function(d) { return d && Date.parse(d) < dateutil.years18 ? true: false},
+     is_baby: function(d) { return d && Date.parse(d) > dateutil.years2 ? true: false},
+     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years2 ? true: false},
+};
+_.is_adult = function(d) { return !_.is_child(d)};
+
+"""
+    )
 
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
@@ -77,6 +100,9 @@ class Validator(NaturalKeyModel):
             return jsonfy(value)
         return value
 
+    def jspickle(self, value):
+        return json.dumps(value, cls=JSONEncoder)
+
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
@@ -85,11 +111,17 @@ class Validator(NaturalKeyModel):
                 scope.set_extra("argument", value)
                 scope.set_extra("code", self.code)
                 scope.set_extra("target", self.target)
-                scope.set_tag("validator", self.pk)
-
+                scope.set_tag("validator", f"{self.pk}:{self.name}")
                 ctx = MiniRacer()
                 try:
-                    ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
+                    pickled = self.jspickle(value or "")
+                    if self.trace:
+                        import pprint
+
+                        pprint.pprint(self.name)
+                        pprint.pprint(value)
+                        pprint.pprint(f"var value = {pickled};")
+                    ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
                     result = ctx.eval(self.code)
                     scope.set_extra("result", result)
                     if result is None:
@@ -283,6 +315,7 @@ class FormSet(NaturalKeyModel, OrderableModel):
 FIELD_KWARGS = {
     forms.CharField: {"min_length": None, "max_length": None, "empty_value": "", "initial": None},
     forms.IntegerField: {"min_value": None, "max_value": None, "initial": None},
+    forms.DateField: {"initial": None},
 }
 
 

@@ -329,6 +329,7 @@ if SENTRY_DSN:
 
     sentry_sdk.init(
         dsn=SENTRY_DSN,
+        environment="production",
         integrations=[
             DjangoIntegration(transaction_style="url"),
             sentry_logging,
