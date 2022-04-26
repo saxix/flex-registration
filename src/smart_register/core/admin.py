@@ -5,8 +5,9 @@ import tempfile
 from json import JSONDecodeError
 from pathlib import Path
 
-import jsonpickle
 import requests
+from django.core.cache import caches
+
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -40,6 +41,8 @@ from .utils import render
 from ..admin.mixin import LoadDumpMixin
 
 logger = logging.getLogger(__name__)
+
+cache = caches["default"]
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):
@@ -82,8 +85,16 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
 
     @button()
     def test(self, request, pk):
-        ctx = self.get_common_context(request, pk, title="Test Validator")
-        param = self.DEFAULTS[self.object.target]
+        ctx = self.get_common_context(request, pk)
+        original = ctx["original"]
+        stored = cache.get(f"validator-{request.user.pk}-{original.pk}")
+        ctx["traced"] = stored
+        ctx["title"] = f"Test {original.target} validator: {original.name}"
+        if stored:
+            param = json.loads(stored)
+        else:
+            param = self.DEFAULTS[self.object.target]
+
         if request.method == "POST":
             form = ValidatorTestForm(request.POST)
             if form.is_valid():
@@ -92,7 +103,7 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
                 # return HttpResponseRedirect("..")
         else:
             form = ValidatorTestForm(
-                initial={"code": self.object.code, "input": jsonpickle.encode(param)},
+                initial={"code": self.object.code, "input": original.jspickle(param)},
             )
 
         ctx["jslib"] = Validator.LIB

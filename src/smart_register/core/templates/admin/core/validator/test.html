@@ -104,15 +104,16 @@
                         console.log(error);
                     }
                 };
-                var key = "sample-{{ original.pk }}";
-                const cat = localStorage.getItem(key);
-                if (cat){
-                    input.setValue(cat);
-                };
+                {#var key = "sample-{{ original.pk }}";#}
+                {#const cat = localStorage.getItem(key);#}
+                {#if (cat){#}
+                {#    input.setValue(cat);#}
+                {# }; #}
                 editor.on("change", updateHandler);
                 input.on("change", function (e){
                     updateHandler();
-                    localStorage.setItem(key, e.getValue())});
+                 {#localStorage.setItem(key, e.getValue())#}
+                });
                 updateSource();
             });
         })(django.jQuery);

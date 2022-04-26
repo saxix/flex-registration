@@ -17,7 +17,7 @@
             </form>
             <pre class="code">
         {% for line in stdout %}
-            {{ line.decode }}{% endfor %}
+ {{ forloop.counter }}: {{ line.decode }}{% endfor %}
         </pre>
         </div>
         <div id="changelist-filter">

@@ -116,12 +116,6 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 ctx = MiniRacer()
                 try:
                     pickled = self.jspickle(value or "")
-                    if self.trace:
-                        import pprint
-
-                        pprint.pprint(self.name)
-                        pprint.pprint(value)
-                        pprint.pprint(f"var value = {pickled};")
                     ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
                     result = ctx.eval(self.code)
                     scope.set_extra("result", result)
@@ -133,7 +127,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
                         except (JSONDecodeError, TypeError):
                             ret = result
                     scope.set_extra("return_value", ret)
-                    if self.trace:
+                    if self.trace and state.request.user.is_staff:
+                        cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
                         sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
                     if isinstance(ret, str):
                         raise ValidationError(_(ret))

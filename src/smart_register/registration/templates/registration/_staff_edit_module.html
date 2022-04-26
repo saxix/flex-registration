@@ -3,8 +3,12 @@
         <p><span class="label">Module</span> {{ dataset.name }}</p>
         <p><span class="label">Locale</span> {{ dataset.locale }}</p>
         <p><span class="label">Version</span> {{ dataset.version }}</p>
+        <p><span class="label">Validator</span> {{ dataset.validator }}</p>
     </span>
     <a target="_edit" class="module"
        href="{% url "admin:registration_registration_change" dataset.pk %}">
     </a>
 </span>
+{% if dataset.validator %}
+{% include "registration/_staff_edit_validator.html" with validator=dataset.validator %}
+{% endif %}
