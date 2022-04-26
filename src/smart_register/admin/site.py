@@ -5,8 +5,8 @@ import tempfile
 from functools import update_wrapper
 from pathlib import Path
 
+import sentry_sdk
 from concurrency.api import disable_concurrency
-from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -22,28 +22,11 @@ from redis import ResponseError
 from smart_admin.site import SmartAdminSite
 
 from smart_register import get_full_version, VERSION
-from smart_register.admin.forms import ExportForm
+from smart_register.admin.forms import ExportForm, ConsoleForm, RedisCLIForm
 from smart_register.admin.mixin import ImportForm
 from smart_register.core.utils import is_root
 
 logger = logging.getLogger(__name__)
-
-
-class ConsoleForm(forms.Form):
-    ACTIONS = [
-        ("redis", "Flush all Redis cache"),
-        ("400", "raise Error 400"),
-        ("401", "raise Error 401"),
-        ("403", "raise Error 403"),
-        ("404", "raise Error 404"),
-        ("500", "raise Error 500"),
-    ]
-
-    action = forms.ChoiceField(choices=ACTIONS, widget=forms.RadioSelect)
-
-
-class RedisCLIForm(forms.Form):
-    command = forms.CharField()
 
 
 class AuroraAdminSite(SmartAdminSite):
@@ -152,17 +135,25 @@ class AuroraAdminSite(SmartAdminSite):
             form = ConsoleForm(request.POST)
             if form.is_valid():
                 opt = form.cleaned_data["action"]
-                if opt == "redis":
-                    for alias, conn in settings.CACHES.items():
-                        try:
-                            r = get_redis_connection(alias)
-                            r.execute_command("FLUSHALL ASYNC")
-                            messages.add_message(request, messages.SUCCESS, f"{alias}: flushed")
-                        except NotImplementedError:
-                            messages.add_message(request, messages.WARNING, f"{alias}: {messages}")
+                try:
+                    if opt == "sentry":
+                        sentry_sdk.capture_message("Test Message")
+                        sentry_sdk.flush()
+                        messages.add_message(request, messages.SUCCESS, "Done")
+                    elif opt == "redis":
+                        for alias, conn in settings.CACHES.items():
+                            try:
+                                r = get_redis_connection(alias)
+                                r.execute_command("FLUSHALL ASYNC")
+                                messages.add_message(request, messages.SUCCESS, f"{alias}: flushed")
+                            except NotImplementedError:
+                                messages.add_message(request, messages.WARNING, f"{alias}: {messages}")
 
-                if opt in ["400", "401", "403", "404", "500"]:
-                    return HttpResponseRedirect(reverse("admin:error", args=[opt]))
+                    if opt in ["400", "401", "403", "404", "500"]:
+                        return HttpResponseRedirect(reverse("admin:error", args=[opt]))
+                except Exception as e:
+                    messages.add_message(request, messages.ERROR, f"{e.__class__.__name__}: {e}")
+
         else:
             form = ConsoleForm()
         context["form"] = form
