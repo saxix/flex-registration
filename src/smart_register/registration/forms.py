@@ -1,12 +1,7 @@
 from django import forms
-from django.conf import settings
-
-from .models import Registration
 
 
-class CloneForm(forms.ModelForm):
-    locale = forms.ChoiceField(choices=settings.LANGUAGES)
-
-    class Meta:
-        model = Registration
-        fields = ("locale",)
+class CloneForm(forms.Form):
+    title = forms.CharField()
+    deep = forms.BooleanField(required=False, help_text="Clone all forms and fields too")
+    # full = forms.BooleanField(required=False, help_text="Clone all forms and fields too")

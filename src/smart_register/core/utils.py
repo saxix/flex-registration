@@ -4,6 +4,7 @@ import decimal
 import io
 import json
 import re
+import time
 import unicodedata
 from pathlib import Path
 
@@ -19,6 +20,9 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
+
+from smart_register import VERSION
+from smart_register.state import state
 
 UNDEFINED = object()
 
@@ -53,6 +57,10 @@ class JSONEncoder(DjangoJSONEncoder):
     JSONEncoder subclass that knows how to encode date/time and decimal types.
     """
 
+    def __init__(self, **kwargs):
+        self.skip_files = kwargs.pop("skip_files", False)
+        super().__init__(**kwargs)
+
     def default(self, o):
         # See "Date Time String Format" in the ECMA-262 specification.
         if isinstance(o, datetime.datetime):
@@ -75,6 +83,10 @@ class JSONEncoder(DjangoJSONEncoder):
             return list(o)
         elif isinstance(o, decimal.Decimal):
             return str(o)
+        elif isinstance(o, FileProxyMixin):
+            if self.skip_files:
+                return "::file::"
+            return o.get
         elif isinstance(o, memoryview):
             return base64.urlsafe_b64encode(o.tobytes())
         elif isinstance(o, bytes):
@@ -192,13 +204,16 @@ def dict_get_nested(obj: dict, path):
     return current
 
 
-def clone_model(obj, **kwargs):
-    obj = obj.__class__.objects.get(pk=obj.pk)
+def clone_model(source, **kwargs):
+    if obj := source.__class__.objects.filter(**kwargs).first():
+        return obj, False
+    obj = source.__class__.objects.get(pk=source.pk)
+
     obj.pk = None
     for k, v in kwargs.items():
         setattr(obj, k, v)
     obj.save()
-    return obj
+    return obj, True
 
 
 def clone_form(instance, **kwargs):
@@ -231,20 +246,29 @@ def get_client_ip(request):
                 return ip.split(",")[0].strip()
 
 
-def get_default_language(request, default="en-us"):
-    lang = default
-    if request.COOKIES.get("language"):
-        lang = request.COOKIES.get("language")
-    elif request.META.get("HTTP_ACCEPT_LANGUAGE", None):
-        lang = request.META["HTTP_ACCEPT_LANGUAGE"]
-
-    if lang not in [x[0] for x in settings.LANGUAGES]:
-        lang = default
-    return lang or "en-us"
+# def get_default_language(request, default="en-us"):
+#     lang = default
+#     if request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME):
+#         lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+#     elif request.META.get("HTTP_ACCEPT_LANGUAGE", None):
+#         lang = request.META["HTTP_ACCEPT_LANGUAGE"]
+#     if lang not in [x[0] for x in settings.LANGUAGES]:
+#         lang = default
+#     return lang or "en-us"
+#
 
 
 def get_versioned_static_name(name):
     return name
+
+
+def get_etag(request, *args):
+    if state.collect_messages:
+        params = [time.time()]
+    else:
+        params = (VERSION,) + args
+
+    return "/".join(map(str, params))
 
 
 def apply_nested(cleaned_value, func=lambda v, k: v, key=None):

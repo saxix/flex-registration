@@ -4,6 +4,7 @@ from django import forms
 from django.conf import settings
 from django.forms import BoundField
 from django.urls import NoReverseMatch, reverse
+from django.utils.translation import get_language
 
 from .widgets.mixins import TailWindMixin
 
@@ -48,6 +49,7 @@ class SelectField(forms.ChoiceField):
 
     def __init__(self, **kwargs):
         self._choices = ()
+        self.language = kwargs.pop("language", get_language())
         self.parent = kwargs.pop("parent", None)
         options = kwargs.pop("datasource", "")
         super().__init__(**kwargs)
@@ -67,9 +69,8 @@ class SelectField(forms.ChoiceField):
             try:
                 from smart_register.core.models import OptionSet
 
-                name, columns = OptionSet.parse_datasource(value)
-                optset = OptionSet.objects.get(name=name)
-                value = list(optset.as_choices(columns))
+                optset = OptionSet.objects.get_from_cache(value)
+                value = list(optset.as_choices(self.language))
             except OptionSet.DoesNotExist as e:
                 logger.exception(e)
                 value = []
@@ -92,10 +93,10 @@ class AjaxSelectField(forms.Field):
         attrs = super().widget_attrs(widget)
         attrs["data-parent"] = self.parent
         try:
-            name, columns = OptionSet.parse_datasource(self.datasource)
-            attrs["data-source"] = name
+            # name, columns = OptionSet.parse_datasource(self.datasource)
+            attrs["data-source"] = self.datasource
             # OptionSet.objects.get(name=name)
-            attrs["data-ajax--url"] = reverse("optionset", args=[name, *columns])
+            attrs["data-ajax--url"] = reverse("optionset", args=[self.datasource])
         except (OptionSet.DoesNotExist, NoReverseMatch, TypeError) as e:
             logger.exception(e)
 

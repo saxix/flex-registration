@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load i18n %}
+{% block body %}
+    <div class="py-12 text-center">
+        <div class="text-3xl">
+            {% trans "Registration successful" %}
+            {#            <div class="mt-20">{% trans "Please save your registration id" %}</div>#}
+            <pre class="text-2xl p-5">
+HOPE-{{ record.timestamp.year }}{{ record.timestamp.month }}{{ record.timestamp.day }}{{ record.id }}</pre>
+        </div>
+        {% if config.QRCODE %}
+            <div class="flex flex-row justify-center items-center">
+                <img width="300" height="300" src="data:image/png;base64,{{ qrcode }}" alt="Red dot"/>
+            </div>
+            <div class="text-xl">
+                {% trans "Please save your registration ID or take a screenshot of this QR code." %}
+            </div>
+        {% else %}
+            <div class="text-xl">
+                {% trans "Please save your registration ID." %}
+            </div>
+        {% endif %}
+        <div class="text-xl">
+            {% trans "This info will allow faster follow up in case of support request." %}
+        </div>
+        {% if config.SHOW_REGISTER_ANOTHER %}
+            <div class="text-center mt-10 pt-10">
+                <a href="{% url "index" %}"
+                   class="w-full text-white capitalize bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">
+                    {% trans "register another household" %}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock body %}

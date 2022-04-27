@@ -5,8 +5,9 @@ import tempfile
 from json import JSONDecodeError
 from pathlib import Path
 
-import jsonpickle
 import requests
+from django.core.cache import caches
+
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -20,7 +21,7 @@ from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
@@ -37,8 +38,11 @@ from .models import (
     Validator,
 )
 from .utils import render
+from ..admin.mixin import LoadDumpMixin
 
 logger = logging.getLogger(__name__)
+
+cache = caches["default"]
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):
@@ -53,12 +57,13 @@ class ValidatorTestForm(forms.Form):
 
 
 @register(Validator)
-class ValidatorAdmin(SmartModelAdmin):
-    list_display = ("name", "target", "message")
+class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
     form = ValidatorForm
-    search_fields = ("name",)
-    list_filter = ("target",)
+    list_editable = ("trace", "active", "draft")
+    list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
+    list_filter = ("target", "active", "draft", "trace")
     readonly_fields = ("version", "last_update_date")
+    search_fields = ("name",)
     DEFAULTS = {
         Validator.FORM: {},  # cleaned data
         Validator.FIELD: "",  # field value
@@ -70,28 +75,56 @@ class ValidatorAdmin(SmartModelAdmin):
     def _test(self, request, pk):
         return {}
 
+    def used_by(self, obj):
+        if obj.target == Validator.FORM:
+            return ", ".join(obj.flexform_set.values_list("name", flat=True))
+        elif obj.target == Validator.FIELD:
+            return ", ".join(obj.flexformfield_set.values_list("name", flat=True))
+        elif obj.target == Validator.FORMSET:
+            return ", ".join(obj.formset_set.values_list("name", flat=True))
+
     @button()
     def test(self, request, pk):
-        ctx = self.get_common_context(request, pk, title="Test Validator")
-        param = self.DEFAULTS[self.object.target]
+        ctx = self.get_common_context(request, pk)
+        original = ctx["original"]
+        stored = cache.get(f"validator-{request.user.pk}-{original.pk}")
+        ctx["traced"] = stored
+        ctx["title"] = f"Test {original.target} validator: {original.name}"
+        if stored:
+            param = json.loads(stored)
+        else:
+            param = self.DEFAULTS[self.object.target]
+
         if request.method == "POST":
             form = ValidatorTestForm(request.POST)
             if form.is_valid():
                 self.object.code = form.cleaned_data["code"]
                 self.object.save()
-                return HttpResponseRedirect("..")
+                # return HttpResponseRedirect("..")
         else:
             form = ValidatorTestForm(
-                initial={"code": self.object.code, "input": jsonpickle.encode(param)},
+                initial={"code": self.object.code, "input": original.jspickle(param)},
             )
 
+        ctx["jslib"] = Validator.LIB
         ctx["form"] = form
         return render(request, "admin/core/validator/test.html", ctx)
 
 
 @register(FormSet)
-class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "title", "parent", "flex_form", "enabled", "validator", "min_num")
+class FormSetAdmin(LoadDumpMixin, SmartModelAdmin):
+    list_display = (
+        "name",
+        "title",
+        "parent",
+        "flex_form",
+        "enabled",
+        "validator",
+        "min_num",
+        "max_num",
+        "extra",
+        "dynamic",
+    )
     search_fields = ("name", "title")
     list_editable = ("enabled",)
     readonly_fields = ("version", "last_update_date")
@@ -129,7 +162,7 @@ class FlexFormFieldForm(forms.ModelForm):
 
 
 @register(FlexFormField)
-class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
+class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
     list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
     list_editable = ["ordering", "required", "enabled"]
@@ -148,7 +181,10 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     order = "ordering"
 
     def _type(self, obj):
-        return obj.field_type.__name__
+        if obj.field_type:
+            return obj.field_type.__name__
+        else:
+            return "[[ removed ]]"
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         if db_field.name == "field_type":
@@ -169,7 +205,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
             instance = fld.get_instance()
             ctx["debug_info"] = {
                 "instance": instance,
-                "kwargs": fld.advanced,
+                "kwargs": fld.get_field_kwargs(),
                 "options": getattr(instance, "options", None),
                 "choices": getattr(instance, "choices", None),
                 "widget": getattr(instance, "widget", None),
@@ -197,7 +233,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         return render(request, "admin/core/flexformfield/test.html", ctx)
 
 
-class FlexFormFieldInline(OrderableAdmin, TabularInline):
+class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
     model = FlexFormField
     form = FlexFormFieldForm
     fields = ("ordering", "label", "name", "required", "enabled", "field_type")
@@ -226,8 +262,9 @@ class SyncForm(SyncConfigForm):
 
 
 @register(FlexForm)
-class FlexFormAdmin(SmartModelAdmin):
+class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
+    inlines = [FlexFormFieldInline, FormSetInline]
     list_display = ("name", "validator", "used_by", "childs", "parents")
     list_filter = (
         QueryStringFilter,
@@ -235,7 +272,7 @@ class FlexFormAdmin(SmartModelAdmin):
     )
     search_fields = ("name",)
     readonly_fields = ("version", "last_update_date")
-    inlines = [FlexFormFieldInline, FormSetInline]
+    ordering = ("name",)
     save_as = True
 
     def used_by(self, obj):
@@ -337,8 +374,6 @@ class FlexFormAdmin(SmartModelAdmin):
                             with disable_concurrency():
                                 fixture = (workdir / fdst.name).absolute()
                                 call_command("loaddata", fixture, stdout=out, verbosity=3)
-                                for frm in FlexForm.objects.all():
-                                    frm.get_form.cache_clear()
 
                             message = out.getvalue()
                             self.message_user(request, message)
@@ -353,7 +388,7 @@ class FlexFormAdmin(SmartModelAdmin):
 
 
 @register(OptionSet)
-class OptionSetAdmin(SmartModelAdmin):
+class OptionSetAdmin(LoadDumpMixin, SmartModelAdmin):
     list_display = ("name", "id", "separator", "comment", "columns")
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)

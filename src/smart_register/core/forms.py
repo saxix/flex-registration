@@ -49,10 +49,11 @@ class FlexFormBaseForm(forms.Form):
 
     def clean(self):
         cleaned_data = self.cleaned_data
-        if self.is_valid() and self.flex_form and self.flex_form.validator:
+        # if self.is_valid() and self.flex_form and self.flex_form.validator:
+        if self.flex_form.validator:
             try:
                 self.flex_form.validator.validate(cleaned_data)
-            except Exception as e:
+            except ValidationError as e:
                 raise ValidationError(e)
         return cleaned_data
 

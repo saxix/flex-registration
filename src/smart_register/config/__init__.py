@@ -31,6 +31,7 @@ DEFAULTS = {
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
     "LOG_LEVEL": (str, "ERROR"),
     "ROOT_KEY": (str, uuid.uuid4().hex),
+    # "FERNET_KEY": (str, "Nl_puP2z0-OKVNKMtPXx4jEI-ox7sKLM7CgnGT-yAug="),
     "EMAIL_BACKEND": (str, "django.core.mail.backends.smtp.EmailBackend"),
     "EMAIL_HOST": (str, ""),
     "EMAIL_HOST_USER": (str, ""),
@@ -46,6 +47,7 @@ DEFAULTS = {
     "INTERNAL_IPS": (list, ["127.0.0.1", "localhost"]),
     "LANGUAGE_CODE": (str, "en-us"),
     "CACHE_DEFAULT": (str, "locmemcache://"),
+    "CONSTANCE_DATABASE_CACHE_BACKEND": (str, "default"),
     "MEDIA_ROOT": (str, "/tmp/media/"),
     "ROOT_TOKEN": (str, uuid.uuid4().hex),
     # Sentry - see CONTRIBUTING.md

@@ -13,7 +13,6 @@ from .select import AjaxSelectField, SelectField, SmartSelectWidget
 from .webcam import WebcamField
 from .mixins import SmartFieldMixin
 
-
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
     forms.CharField: {"widget": widgets.SmartTextWidget},
@@ -21,9 +20,10 @@ WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.FloatField: {"widget": widgets.NumberWidget},
     forms.ChoiceField: {"widget": SmartSelectWidget},
     forms.ImageField: {"widget": widgets.ImageWidget},
+    # forms.FileField: {"widget": widgets.UploadFileWidget},
     SelectField: {"widget": SmartSelectWidget},
     RadioField: {"widget": widgets.RadioWidget},
     YesNoRadio: {"widget": widgets.YesNoRadioWidget},
     YesNoChoice: {"widget": SmartSelectWidget},
-    MultiCheckboxField: {"widget": widgets.MultiCheckboxWidget},
+    # MultiCheckboxField: {"widget": widgets.MultiCheckboxWidget},
 }

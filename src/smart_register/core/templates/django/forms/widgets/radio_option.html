@@ -1,4 +1,4 @@
-{% load smart_register %}{% if widget.wrap_label %}
+{% load smart_register itrans %}{% if widget.wrap_label %}
     <label{% if widget.attrs.id %} for="{{ widget.attrs.id }}"{% endif %}>
 {% endif %}
 <input
@@ -6,4 +6,6 @@
         name="{{ widget.name }}"
         {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
         {% include "django/forms/widgets/attrs.html" %}
->{% if widget.wrap_label %} {{ widget.label|md }}</label>{% endif %}
+>
+{% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=widget.label %}{% endif %}
+{% if widget.wrap_label %} {% trans widget.label as aa %}{{ aa|md }} </label>{% endif %}

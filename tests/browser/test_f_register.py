@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from django.conf import settings
 from django.core.management import call_command
+from django.urls import reverse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
@@ -32,9 +33,10 @@ def registration(db):
 @pytest.mark.selenium
 def test_ukr(live_server, selenium, registration):
     assert settings.CAPTCHA_TEST_MODE
+    url = reverse("register", args=[registration.locale, registration.slug])
 
     selenium.implicitly_wait(3)
-    selenium.get(f"{live_server.url}{registration.get_absolute_url()}")
+    selenium.get(f"{live_server.url}{url}")
     dim = selenium.get_window_size()
     selenium.set_window_size(1100, dim["height"])
     find_by_css = partial(wait_for, selenium, By.CSS_SELECTOR)
@@ -84,4 +86,4 @@ def test_ukr(live_server, selenium, registration):
     find_by_css('input[name="marketing-0-captcha_1"]').send_keys("passed")
     wait_for(selenium, By.CSS_SELECTOR, "input[type=submit]").click()
 
-    find_by_css(f"a[href='{registration.get_absolute_url()}']").click()
+    find_by_css(f"a[href='{url}']").click()

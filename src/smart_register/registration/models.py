@@ -8,11 +8,16 @@ from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.text import slugify
+from natural_keys import NaturalKeyModel
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
 from smart_register.core.utils import dict_setdefault, get_client_ip, safe_json, jsonfy
+from smart_register.i18n.models import I18NModel
+from smart_register.registration.fields import ChoiceArrayField
 from smart_register.registration.storage import router
 from smart_register.state import state
 
@@ -21,28 +26,34 @@ logger = logging.getLogger(__name__)
 undefined = object()
 
 
-class Registration(models.Model):
+class Registration(NaturalKeyModel, I18NModel, models.Model):
     ADVANCED_DEFAULT_ATTRS = {
         "smart": {
+            "wizard": False,
             "buttons": {
                 "link": {"widget": {"attrs": {}}},
-            }
+            },
         }
     }
+    I18N_FIELDS = ["intro", "footer"]
+
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=255, unique=True)
     title = models.CharField(max_length=500, blank=True, null=True)
-    slug = models.SlugField(max_length=500, blank=True, null=True)
+    slug = models.SlugField(max_length=500, blank=True, null=True, unique=True)
 
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
-    start = models.DateField(auto_now_add=True)
+    start = models.DateField(default=timezone.now, editable=True)
     end = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=False)
-    locale = models.CharField(max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE)
-    intro = models.TextField(blank=True, null=True)
-    footer = models.TextField(blank=True, null=True)
+    locale = models.CharField(
+        verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
+    )
+    locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
+    intro = models.TextField(blank=True, null=True, default="")
+    footer = models.TextField(blank=True, null=True, default="")
     validator = models.ForeignKey(
         Validator, limit_choices_to={"target": Validator.MODULE}, blank=True, null=True, on_delete=models.SET_NULL
     )
@@ -62,7 +73,7 @@ class Registration(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("register", args=[self.locale, self.slug])
+        return reverse("register", args=[self.slug])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:
@@ -112,6 +123,14 @@ class Registration(models.Model):
                 "fields": jsonfy(fields),
             }
         return Record.objects.create(registration=self, **kwargs)
+
+    @cached_property
+    def languages(self):
+        locales = [self.locale]
+        if self.locales:
+            locales += self.locales
+
+        return [(k, v) for k, v in settings.LANGUAGES if k in locales]
 
 
 class RemoteIp(models.GenericIPAddressField):

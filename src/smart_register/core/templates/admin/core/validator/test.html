@@ -25,7 +25,7 @@
         .icon.invalid{
             background-image: url('/static/admin/img/icon-no.svg');
         }
-        #log{
+        #log, {
             overflow-scrolling: auto;
             max-height: 300px;
         }
@@ -45,11 +45,11 @@
                 </td>
             </tr>
             <tr>
-                <td  style="width: 100px">
+                <td  style="width: 200px">
                     {{ form.input }}
                 </td>
                 <td style="width: 500px">
-                    <pre id="log" style="width: 100%"></pre>
+<pre id="log" style="width: 100%"></pre>
                 </td>
             </tr>
         </table>
@@ -61,8 +61,13 @@
     <script>
         (function ($) {
             $(document).ready(function () {
-                window.console.out = function (msg) {
-                    $log.prepend(msg + "\n");
+                {{ jslib }}
+                log = console.log = function () {
+                    {#$log.prepend(msg + "\n");#}
+                    $log.prepend(Array.prototype.join.call(arguments, ', ') + "\n");
+                };
+                log1 = console.log1 = function (msg) {
+                    $log.prepend(JSON.stringify(msg) + "\n");
                 }
                 var message = "{{ original.message }}"
                 var $icon = $(".message .icon");
@@ -70,11 +75,18 @@
                 var input = $("#id_input").data("CodeMirror");
                 var $log = $("#log");
                 var $messages =  $('#messages');
+                var timer, delay = 500;
                 var updateSource = function () {
                     var code = editor.getValue();
                     var param = input.getValue();
                     var source = "var value=" + param + ";" + code;
                     run(source);
+                };
+                var updateHandler = function(e) {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () {
+                        updateSource();
+                    }, delay);
                 };
                 var run = function (c) {
                     try {
@@ -89,11 +101,19 @@
                     } catch (error) {
                         $icon.prop("class", "icon").addClass("error");
                         $messages.text(error)
-                        console.error(error);
+                        console.log(error);
                     }
                 };
-                editor.on("change", updateSource);
-                input.on("change", updateSource);
+                {#var key = "sample-{{ original.pk }}";#}
+                {#const cat = localStorage.getItem(key);#}
+                {#if (cat){#}
+                {#    input.setValue(cat);#}
+                {# }; #}
+                editor.on("change", updateHandler);
+                input.on("change", function (e){
+                    updateHandler();
+                 {#localStorage.setItem(key, e.getValue())#}
+                });
                 updateSource();
             });
         })(django.jQuery);
