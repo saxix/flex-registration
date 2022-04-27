@@ -39,6 +39,11 @@ cache = caches["default"]
 
 
 class Validator(NaturalKeyModel):
+    STATUS_ERROR = "error"
+    STATUS_SUCCESS = "success"
+    STATUS_SKIP = "skip"
+    STATUS_UNKNOWN = "unknown"
+
     FORM = "form"
     FIELD = "field"
     MODULE = "module"
@@ -107,6 +112,10 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", "")
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", "")
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}", "")
+
         if self.active or (self.draft and state.request.user.is_staff):
             with sentry_sdk.push_scope() as scope:
                 scope.set_extra("argument", value)
@@ -143,6 +152,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 except ValidationError as e:
                     if self.trace:
                         logger.exception(e)
+                        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_ERROR)
+                        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", json.dumps(e.message_dict))
                     raise
                 except MiniRacerBaseException as e:
                     logger.exception(e)
@@ -150,6 +161,14 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 except Exception as e:
                     logger.exception(e)
                     raise
+            cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_SUCCESS)
+
+        elif self.trace:
+            cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_SKIP)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
+        super().save(force_insert, force_update, using, update_fields)
 
 
 def get_validators(field):

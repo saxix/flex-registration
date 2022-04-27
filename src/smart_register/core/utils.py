@@ -86,7 +86,10 @@ class JSONEncoder(DjangoJSONEncoder):
         elif isinstance(o, FileProxyMixin):
             if self.skip_files:
                 return "::file::"
-            return o.get
+            else:
+                o.seek(0)
+                data = o.read()
+                return data
         elif isinstance(o, memoryview):
             return base64.urlsafe_b64encode(o.tobytes())
         elif isinstance(o, bytes):
