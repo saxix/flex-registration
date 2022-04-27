@@ -58,9 +58,12 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
     @cached_property
     def record(self):
-        return Record.objects.select_related("registration").get(
-            registration__id=self.kwargs["reg"], id=self.kwargs["rec"]
-        )
+        try:
+            return Record.objects.select_related("registration").get(
+                registration__id=self.kwargs["reg"], id=self.kwargs["rec"]
+            )
+        except Record.DoesNotExist:
+            raise Http404
 
     def get_qrcode(self, record):
         h = md5(record.storage).hexdigest()
