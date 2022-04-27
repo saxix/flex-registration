@@ -11,6 +11,7 @@ from pathlib import Path
 import qrcode
 from constance import config
 from django.conf import settings
+from django.core.files.utils import FileProxyMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.template import loader
@@ -56,6 +57,10 @@ class JSONEncoder(DjangoJSONEncoder):
     JSONEncoder subclass that knows how to encode date/time and decimal types.
     """
 
+    def __init__(self, **kwargs):
+        self.skip_files = kwargs.pop("skip_files", False)
+        super().__init__(**kwargs)
+
     def default(self, o):
         # See "Date Time String Format" in the ECMA-262 specification.
         if isinstance(o, datetime.datetime):
@@ -78,6 +83,13 @@ class JSONEncoder(DjangoJSONEncoder):
             return list(o)
         elif isinstance(o, decimal.Decimal):
             return str(o)
+        elif isinstance(o, FileProxyMixin):
+            if self.skip_files:
+                return "::file::"
+            else:
+                o.seek(0)
+                data = o.read()
+                return data
         elif isinstance(o, memoryview):
             return base64.urlsafe_b64encode(o.tobytes())
         elif isinstance(o, bytes):
