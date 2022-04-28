@@ -11,6 +11,7 @@ from pathlib import Path
 import qrcode
 from constance import config
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files.utils import FileProxyMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
@@ -95,6 +96,8 @@ class JSONEncoder(DjangoJSONEncoder):
         elif isinstance(o, bytes):
             return str(o, encoding="utf-8")
             # return base64.encodebytes(o)
+        elif isinstance(o, Exception):
+            return str(o)
         else:
             return super().default(o)
 

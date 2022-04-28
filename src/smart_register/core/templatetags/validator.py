@@ -10,10 +10,12 @@ logger = logging.getLogger(__name__)
 register = Library()
 
 
-@register.filter()
+@register.simple_tag()
 def validator_status(validator):
+    st = "unknown"
     if validator.trace:
-        return str(cache.get(f"validator-{state.request.user.pk}-{validator.pk}-status")).lower()
+        st = cache.get(f"validator-{state.request.user.pk}-{validator.pk}-status") or st
+    return str(st).lower()
 
 
 @register.simple_tag()

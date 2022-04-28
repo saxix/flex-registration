@@ -36,6 +36,9 @@ class UploadFileWidget(forms.ClearableFileInput):
 
 
 class SmartFileField(forms.FileField):
+    DATA = {"max-size": 1048576 * 3}
+
+    KWARGS = {}
     widget = UploadFileWidget
     default_error_messages = {
         "invalid": _("No file was submitted. Check the encoding type on the form."),

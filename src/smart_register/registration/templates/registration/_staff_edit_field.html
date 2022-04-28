@@ -11,7 +11,4 @@
        href="{% url "admin:core_flexformfield_change" field.field.flex_field.pk %}">
     </a>
         </label>
-</span>
-{% if field.field.flex_field.validator %}
-    {% include "registration/_staff_edit_validator.html" with validator=field.field.flex_field.validator %}
-{% endif %}
+</span>{% if field.field.flex_field.validator %}{% include "registration/_staff_edit_validator.html" with validator=field.field.flex_field.validator %}{% endif %}

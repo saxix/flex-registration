@@ -1,23 +1,18 @@
-{% load itrans smart_register %}<fieldset class="{{ field.name }} {{ field|smart:"fieldset" }}">
-    {% if user.is_staff %}
-        {% include "registration/_staff_edit_field.html" %}
-    {% endif %}
-
+{% load itrans smart_register %}{% lineless %}<fieldset class="{{ field.name }} {{ field|smart:"fieldset" }}">
+    {% if user.is_staff %}{% include "registration/_staff_edit_field.html" %}{% endif %}
     {% if field.field.flex_field.advanced.smart.question %}
             <label for="question_{{ field.auto_id }}" class="cursor-pointer">
                 <input id="question_{{ field.auto_id }}"
-                       class="question-visibility {% if field.errors %}error{% endif %}"
+                       class="question-visibility {% if field.value %} has-value{% endif %} {% if field.errors %}error{% endif %}"
                        onchange="{{ field|smart:"question-onchange" }}"
                        data-target="field-container-{{ field.name }}"
                        {% if field.errors %} checked {% endif %}
                        type="checkbox">
                 {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field.field.flex_field.advanced.smart.question %}{% endif %}
-{#                {% trans field.field.flex_field.advanced.smart.question|md %}#}
                 {{ field|smart:"question,1"|md }}
-{#                {{ field.field.flex_field.advanced.smart.question|md }}#}
             </label>
     {% endif %}
-    <div class="mb-4 field-container field-container-{{ field.name }} mb-5 ">
+    <div class="mb-4 field-container{% if field.value %} has-value{% endif %} field-container-{{ field.name }} mb-5 ">
         <label class="block uppercase tracking-wide text-gray-700 font-bold mb-2"  for="{{ field.auto_id }}">
             {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field.label %}{% endif %}
             {% trans field.label|md %}
@@ -34,4 +29,4 @@
             {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"hint,1" %}{% endif %}
             {{ field|smart:"hint,1" }}</div>
     </div>
-</fieldset>
+</fieldset>{% endlineless %}

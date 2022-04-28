@@ -81,6 +81,11 @@ class SelectField(forms.ChoiceField):
 
 class AjaxSelectField(forms.Field):
     widget = AjaxSelectWidget
+    FIELD_KWARGS = {
+        "parent": "",
+        "datasource": "",
+    }
+    WIDGET_KWARGS = {}
 
     def __init__(self, **kwargs):
         self.parent = kwargs.pop("parent", "")
@@ -91,13 +96,14 @@ class AjaxSelectField(forms.Field):
         from smart_register.core.models import OptionSet
 
         attrs = super().widget_attrs(widget)
+        attrs.pop("onchange", None)
         attrs["data-parent"] = self.parent
         try:
             # name, columns = OptionSet.parse_datasource(self.datasource)
             attrs["data-source"] = self.datasource
             # OptionSet.objects.get(name=name)
             attrs["data-ajax--url"] = reverse("optionset", args=[self.datasource])
-        except (OptionSet.DoesNotExist, NoReverseMatch, TypeError) as e:
+        except (OptionSet.DoesNotExist, AttributeError, NoReverseMatch, TypeError) as e:
             logger.exception(e)
 
         return attrs

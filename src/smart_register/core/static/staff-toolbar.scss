@@ -41,7 +41,10 @@ span.staff-editor {
     background-color: #8cdc6c;
   }
   &.status-skip{
-    background-color: #d4e0f8;
+    background-color: #edd372;
+  }
+  &.status-inactive{
+    background-color: #edd372;
   }
   &.status-unknown{
     background-color: #d4e0f8;

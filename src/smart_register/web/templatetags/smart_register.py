@@ -165,3 +165,23 @@ def _md(value):
         p = md.markdown(value, extensions=["markdown.extensions.fenced_code"])
         return mark_safe(p.replace("<p>", "").replace("</p>", ""))
     return ""
+
+
+@register.tag
+def lineless(parser, token):
+    nodelist = parser.parse(("endlineless",))
+    parser.delete_first_token()
+    return LinelessNode(nodelist)
+
+
+class LinelessNode(Node):
+    def __init__(self, nodelist):
+        self.nodelist = nodelist
+
+    def render(self, context):
+        input_str = self.nodelist.render(context)
+        output_str = ""
+        for line in input_str.splitlines():
+            if line.strip():
+                output_str = "\n".join((output_str, line))
+        return output_str

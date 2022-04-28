@@ -205,10 +205,10 @@ class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
             instance = fld.get_instance()
             ctx["debug_info"] = {
                 "instance": instance,
-                "kwargs": fld.get_field_kwargs(),
                 "options": getattr(instance, "options", None),
                 "choices": getattr(instance, "choices", None),
                 "widget": getattr(instance, "widget", None),
+                "field_kwargs": fld.get_field_kwargs(),
                 "widget_attrs": instance.widget_attrs(instance.widget),
             }
             form_class_attrs = {
