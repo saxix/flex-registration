@@ -50,7 +50,7 @@ class Validator(NaturalKeyModel):
     FORMSET = "formset"
     CONSOLE = mark_safe(
         """
-    console = {log: function(d) { return !_.is_child(d)}};
+    console = {log: function(d) {}};
     """
     )
     LIB = mark_safe(
@@ -109,62 +109,68 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def jspickle(self, value):
         return json.dumps(value, cls=JSONEncoder, skip_files=True)
 
+    def monitor(self, status, exc: ValidationError = None):
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", status)
+        error = None
+        if exc:
+            if hasattr(exc, "error_dict"):
+                error = self.jspickle(
+                    exc.error_dict,
+                )
+            else:
+                error = self.jspickle({"Error": exc.messages})
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}", "")
+
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", "")
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", "")
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}", "")
+        if self.active:
+            self.monitor(self.STATUS_UNKNOWN)
+        else:
+            self.monitor(self.STATUS_INACTIVE)
 
         if self.active or (self.draft and state.request.user.is_staff):
-            with sentry_sdk.push_scope() as scope:
-                scope.set_extra("argument", value)
-                scope.set_extra("code", self.code)
-                scope.set_extra("target", self.target)
-                scope.set_tag("validator", f"{self.pk}:{self.name}")
-                ctx = MiniRacer()
-                try:
-                    pickled = self.jspickle(value or "")
-                    ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
-                    result = ctx.eval(self.code)
-                    scope.set_extra("result", result)
-                    if result is None:
-                        ret = False
-                    else:
-                        try:
-                            ret = jsonpickle.decode(result)
-                        except (JSONDecodeError, TypeError):
-                            ret = result
-                    scope.set_extra("return_value", ret)
-                    if self.trace and state.request.user.is_staff:
-                        cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
-                        sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
-                    if isinstance(ret, str):
-                        raise ValidationError(_(ret))
-                    elif isinstance(ret, (list, tuple)):
-                        errors = [_(v) for v in ret]
-                        raise ValidationError(errors)
-                    elif isinstance(ret, dict):
-                        errors = {k: _(v) for (k, v) in ret.items()}
-                        raise ValidationError(errors)
-                    elif isinstance(ret, bool) and not ret:
-                        raise ValidationError(_(self.message))
-                except ValidationError as e:
-                    if self.trace:
-                        logger.exception(e)
-                        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_ERROR)
-                        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", json.dumps(e.message_dict))
-                    raise
-                except MiniRacerBaseException as e:
+            ctx = MiniRacer()
+            try:
+                pickled = self.jspickle(value or "")
+                ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
+                result = ctx.eval(self.code)
+                if result is None:
+                    ret = False
+                else:
+                    try:
+                        ret = jsonpickle.decode(result)
+                    except (JSONDecodeError, TypeError):
+                        ret = result
+                if self.trace and state.request.user.is_staff:
+                    cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
+                    sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                if isinstance(ret, str):
+                    raise ValidationError(_(ret))
+                elif isinstance(ret, (list, tuple)):
+                    errors = [_(v) for v in ret]
+                    raise ValidationError(errors)
+                elif isinstance(ret, dict):
+                    errors = {k: _(v) for (k, v) in ret.items()}
+                    raise ValidationError(errors)
+                elif isinstance(ret, bool) and not ret:
+                    raise ValidationError(_(self.message))
+            except ValidationError as e:
+                if self.trace:
                     logger.exception(e)
-                    return True
-                except Exception as e:
-                    logger.exception(e)
-                    raise
-            cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_SUCCESS)
+                    self.monitor(self.STATUS_ERROR, e)
+                raise
+            except MiniRacerBaseException as e:
+                logger.exception(e)
+                return True
+            except Exception as e:
+                logger.exception(e)
+                raise
+            self.monitor(self.STATUS_SUCCESS)
 
         elif self.trace:
-            cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_SKIP)
+            self.monitor(self.STATUS_SKIP)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)

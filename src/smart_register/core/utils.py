@@ -95,6 +95,8 @@ class JSONEncoder(DjangoJSONEncoder):
         elif isinstance(o, bytes):
             return str(o, encoding="utf-8")
             # return base64.encodebytes(o)
+        elif isinstance(o, Exception):
+            return str(o)
         else:
             return super().default(o)
 
