@@ -1,20 +1,21 @@
 import logging
+from urllib.parse import unquote
 
-from dateutil.utils import today
-from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.urls import reverse
 
-from admin_extra_buttons.decorators import button, link
+from admin_extra_buttons.decorators import button, link, view
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
+from dateutil.utils import today
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.admin import register
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
-
 from smart_admin.modeladmin import SmartModelAdmin
-from .hreflang import reverse
 
-from .models import Message
 from ..admin.mixin import LoadDumpMixin
+from .models import Message
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,10 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
     search_fields = ("msgid__icontains",)
     list_display = ("id", "msgid", "locale", "msgstr", "draft")
     list_editable = ("msgstr", "draft")
+    readonly_fields = ("md5", "msgcode")
     list_filter = (
         ("msgid", ValueFilter),
+        ("msgcode", ValueFilter),
         ("md5", ValueFilter),
         ("locale", ChoicesFieldComboFilter),
         "draft",
@@ -45,15 +48,14 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
         ),
         (
             None,
-            {
-                "fields": (
-                    "draft",
-                    "auto",
-                )
-            },
+            {"fields": (("draft", "auto"),)},
+        ),
+        (
+            None,
+            {"fields": (("md5", "msgcode"),)},
         ),
     )
-    actions = ["approve"]
+    actions = ["approve", "rehash"]
 
     def approve(self, request, queryset):
         queryset.update(draft=False)
@@ -61,6 +63,29 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
     @link()
     def translate(self, button):
         return button
+
+    @view()
+    def get_or_create(self, request):
+        if request.method == "POST":
+            msgid = unquote(request.POST["msgid"])
+            lang = request.POST["lang"]
+            queryset = self.get_queryset(request)
+            try:
+                obj = queryset.get(msgid=msgid, locale=lang)
+                self.message_user(request, "Found")
+            except Message.DoesNotExist:
+                obj = Message(msgid=msgid, locale=lang)
+                obj.save()
+                self.message_user(request, "Created", messages.WARNING)
+            cl = reverse("admin:i18n_message_change", args=[obj.pk])
+        else:
+            cl = reverse("admin:i18n_message_changelist")
+
+        return HttpResponseRedirect(cl)
+
+    def rehash(self, request, queryset):
+        for m in queryset.all():
+            m.save()
 
     @button()
     def siblings(self, request, pk):
@@ -70,8 +95,8 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
 
     @button()
     def create_translation(self, request):
-        from smart_register.i18n.models import Message
         from smart_register.i18n.forms import TranslationForm
+        from smart_register.i18n.models import Message
 
         ctx = self.get_common_context(
             request,
@@ -108,7 +133,7 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ("msgid",)
+            return ("msgid",) + self.readonly_fields
         return self.readonly_fields
 
     # @button()

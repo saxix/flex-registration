@@ -1,4 +1,3 @@
-import hashlib
 from decimal import Decimal
 
 from django.template import Library, Node, TemplateSyntaxError, Variable
@@ -331,7 +330,18 @@ def do_block_translate(parser, token):  # noqa
 
 @register.filter()
 def md5(value, lang):
-    return hashlib.md5((lang + "__" + str(value)).encode()).hexdigest()
+    from smart_register.i18n.models import Message
+
+    return Message.get_md5(value, lang)
+    # return hashlib.md5((lang + "__" + str(value)).encode()).hexdigest()
+
+
+@register.filter()
+def msgcode(value):
+    from smart_register.i18n.models import Message
+
+    return Message.get_md5(str(value))
+    # return hashlib.md5(str(value)).encode().hexdigest()
 
 
 @register.filter()

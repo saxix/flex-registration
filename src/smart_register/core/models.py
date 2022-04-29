@@ -23,7 +23,6 @@ from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
-from .cache import cache_form
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
@@ -235,7 +234,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @cache_form
+    # @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
@@ -415,7 +414,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
-            kwargs.setdefault("label", _(self.label))
+            kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
