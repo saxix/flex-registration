@@ -4,7 +4,6 @@ from datetime import date, datetime, time
 from json import JSONDecodeError
 
 import jsonpickle
-import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import AutoIncVersionField
 from django import forms
@@ -42,6 +41,7 @@ class Validator(NaturalKeyModel):
     STATUS_SUCCESS = "success"
     STATUS_SKIP = "skip"
     STATUS_UNKNOWN = "unknown"
+    STATUS_INACTIVE = "inactive"
 
     FORM = "form"
     FIELD = "field"
@@ -108,7 +108,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def jspickle(self, value):
         return json.dumps(value, cls=JSONEncoder, skip_files=True)
 
-    def monitor(self, status, exc: ValidationError = None):
+    def monitor(self, status, value, exc: ValidationError = None):
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", status)
         error = None
         if exc:
@@ -119,15 +119,15 @@ _.is_adult = function(d) { return !_.is_child(d)};
             else:
                 error = self.jspickle({"Error": exc.messages})
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}", "")
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}", self.jspickle(value))
 
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
         if self.active:
-            self.monitor(self.STATUS_UNKNOWN)
+            self.monitor(self.STATUS_UNKNOWN, value)
         else:
-            self.monitor(self.STATUS_INACTIVE)
+            self.monitor(self.STATUS_INACTIVE, value)
 
         if self.active or (self.draft and state.request.user.is_staff):
             ctx = MiniRacer()
@@ -142,9 +142,9 @@ _.is_adult = function(d) { return !_.is_child(d)};
                         ret = jsonpickle.decode(result)
                     except (JSONDecodeError, TypeError):
                         ret = result
-                if self.trace and state.request.user.is_staff:
-                    cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
-                    sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                # if self.trace and state.request.user.is_staff:
+                #     cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
+                #     sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
                 if isinstance(ret, str):
                     raise ValidationError(_(ret))
                 elif isinstance(ret, (list, tuple)):
@@ -166,10 +166,10 @@ _.is_adult = function(d) { return !_.is_child(d)};
             except Exception as e:
                 logger.exception(e)
                 raise
-            self.monitor(self.STATUS_SUCCESS)
+            self.monitor(self.STATUS_SUCCESS, value)
 
         elif self.trace:
-            self.monitor(self.STATUS_SKIP)
+            self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
