@@ -249,6 +249,20 @@ class FlexForm(I18NModel, NaturalKeyModel):
         flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
 
+    def get_formsets_classes(self):
+        formsets = {}
+        for fs in self.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()
+        return formsets
+
+    def get_formsets(self, attrs):
+        formsets = {}
+        # attrs = self.get_form_kwargs().copy()
+        # attrs.pop("prefix")
+        for name, fs in self.get_formsets_classes().items():
+            formsets[name] = fs(prefix=f"{name}", **attrs)
+        return formsets
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
 

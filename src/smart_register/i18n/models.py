@@ -22,7 +22,8 @@ class Message(NaturalKeyModel):
     msgcode: str = models.CharField(verbose_name=_("Code"), max_length=512, null=False, blank=False)
     auto = models.BooleanField(default=False)
     draft = models.BooleanField(default=True)
-    orphan = models.BooleanField(default=False)
+    used = models.BooleanField(default=True)
+    last_hit = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         unique_together = ("msgid", "locale")
