@@ -31,6 +31,18 @@ span.staff-editor {
   width: 20px;
   height: 24px;
 }
+span.staff-editor.status-error {
+  background-color: #e1adad;
+}
+span.staff-editor.status-success {
+  background-color: #8cdc6c;
+}
+span.staff-editor.status-skip {
+  background-color: #d4e0f8;
+}
+span.staff-editor.status-unknown {
+  background-color: #d4e0f8;
+}
 span.staff-editor a {
   background-position: center;
   background-repeat: no-repeat;
@@ -97,6 +109,11 @@ span.staff-tooltip .tooltiptext p .label {
 }
 span.staff-tooltip .tooltiptext p .label::after {
   content: ": ";
+}
+span.staff-tooltip .tooltiptext p .label.field-name {
+  margin-left: 10px;
+  width: 100%;
+  overflow-clip: "...";
 }
 span.staff-tooltip .tooltiptext::after {
   content: "";

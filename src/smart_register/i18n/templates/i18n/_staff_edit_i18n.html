@@ -1,7 +1,7 @@
 {% load itrans %}
 {% if original|strip %}
     {% with original|md5:LANGUAGE_CODE as code %}
-        <span class="inline-block staff-editor staff-i18n staff-tooltip align-left ">
+        <span class="inline-flex staff-editor staff-i18n staff-tooltip align-left ">
             <span class="tooltiptext">
                 <p><span class="label">MsgId</span>{{ code|truncatechars:25 }}</p>
                 <p><span class="label">Message</span>{{ original|truncatechars:25 }}</p>

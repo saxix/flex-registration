@@ -2,6 +2,7 @@ import logging
 
 from dateutil.utils import today
 from django.conf import settings
+from django.http import HttpResponseRedirect
 
 from admin_extra_buttons.decorators import button, link
 from adminfilters.combo import ChoicesFieldComboFilter
@@ -10,6 +11,7 @@ from django.contrib.admin import register
 from django.shortcuts import render
 
 from smart_admin.modeladmin import SmartModelAdmin
+from .hreflang import reverse
 
 from .models import Message
 from ..admin.mixin import LoadDumpMixin
@@ -59,6 +61,12 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
     @link()
     def translate(self, button):
         return button
+
+    @button()
+    def siblings(self, request, pk):
+        obj = self.get_object(request, pk)
+        cl = reverse("admin:i18n_message_changelist")
+        return HttpResponseRedirect(f"{cl}?msgid__exact={obj.msgid}")
 
     @button()
     def create_translation(self, request):
