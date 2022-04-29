@@ -91,8 +91,6 @@ def set_cached_preload_urls(request):
 def should_preload(request):
     request_type = request.META.get("HTTP_ACCEPT", "")[:36]
     cached_response_type = get_cached_response_type(request)
-    # print('REQUEST TYPE', request_type)
-    # print('CACHED RESPONSE TYPE', cached_response_type)
     return (
         getattr(settings, "HTTP2_PRELOAD_HEADERS", False)
         and "text/html" in request_type
@@ -110,8 +108,6 @@ def early_preload_response(request, get_response, nonce):
     response = StreamingHttpResponse(generate_response())
     response["Link"] = create_preload_header(request.to_preload, nonce)
     response["X-HTTP2-PRELOAD"] = "early"
-
-    # print('SENDING EARLY PRELOAD REQUEST', request.path, response['Content-Type'])
     return response
 
 
@@ -125,7 +121,6 @@ def late_preload_response(request, get_response, nonce):
         set_cached_preload_urls(request)
         response["X-HTTP2-PRELOAD"] = "late"
 
-    # print('SENDING LATE PRELOAD REQUEST', request.path, response['Content-Type'])
     return response
 
 
@@ -142,7 +137,6 @@ def preload_response(request, get_response):
 def no_preload_response(request, get_response):
     response = get_response(request)
     set_cached_response_type(request, response)
-    # print('SENDING NO PRELOAD REQUEST', request.path, response['Content-Type'])
     response["X-HTTP2-PRELOAD"] = "off"
     return response
 

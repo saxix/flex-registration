@@ -272,5 +272,5 @@ def get_etag(request, *args):
         params = [time.time()]
     else:
         params = (VERSION,) + args
-
+    params = [time.time()]
     return "/".join(map(str, params))

@@ -1,14 +1,18 @@
 {% load itrans %}
 {% if original|strip %}
-    {% with original|md5:LANGUAGE_CODE as code %}
+    {% with original|msgcode as code %}
         <span class="inline-flex staff-editor staff-i18n staff-tooltip align-left ">
             <span class="tooltiptext">
-                <p><span class="label">MsgId</span>{{ code|truncatechars:25 }}</p>
-                <p><span class="label">Message</span>{{ original|truncatechars:25 }}</p>
+                <p><span class="label">Lang</span>{{ LANGUAGE_CODE }}</p>
+                <p><span class="label">MsgId</span>{{ code }}</p>
+                <p><span class="label">Message</span>{{ original }}</p>
             </span>
             <label aria-label="Edit">
                 <a target="_edit" class="i18n"
-                   href="{% url "admin:i18n_message_changelist" %}?md5__exact={{ code }}"></a>
+                   data-url="{% url "admin:i18n_message_get_or_create" %}"
+                   data-lang="{{ LANGUAGE_CODE }}"
+                   data-original="{{ original|urlencode }}"
+                   href="#"></a>
             </label>
         </span>
     {% endwith %}
