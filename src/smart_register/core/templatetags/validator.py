@@ -13,7 +13,7 @@ register = Library()
 @register.filter()
 def validator_status(validator):
     if validator.trace:
-        return cache.get(f"validator-{state.request.user.pk}-{validator.pk}-status").lower()
+        return str(cache.get(f"validator-{state.request.user.pk}-{validator.pk}-status")).lower()
 
 
 @register.simple_tag()

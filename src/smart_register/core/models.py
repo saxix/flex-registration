@@ -4,7 +4,6 @@ from datetime import date, datetime, time
 from json import JSONDecodeError
 
 import jsonpickle
-import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import AutoIncVersionField
 from django import forms
@@ -23,7 +22,6 @@ from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
-from .cache import cache_form
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
@@ -43,6 +41,7 @@ class Validator(NaturalKeyModel):
     STATUS_SUCCESS = "success"
     STATUS_SKIP = "skip"
     STATUS_UNKNOWN = "unknown"
+    STATUS_INACTIVE = "inactive"
 
     FORM = "form"
     FIELD = "field"
@@ -50,7 +49,7 @@ class Validator(NaturalKeyModel):
     FORMSET = "formset"
     CONSOLE = mark_safe(
         """
-    console = {log: function(d) { return !_.is_child(d)}};
+    console = {log: function(d) {}};
     """
     )
     LIB = mark_safe(
@@ -109,62 +108,68 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def jspickle(self, value):
         return json.dumps(value, cls=JSONEncoder, skip_files=True)
 
+    def monitor(self, status, value, exc: ValidationError = None):
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", status)
+        error = None
+        if exc:
+            if hasattr(exc, "error_dict"):
+                error = self.jspickle(
+                    exc.error_dict,
+                )
+            else:
+                error = self.jspickle({"Error": exc.messages})
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}", self.jspickle(value))
+
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", "")
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", "")
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}", "")
+        if self.active:
+            self.monitor(self.STATUS_UNKNOWN, value)
+        else:
+            self.monitor(self.STATUS_INACTIVE, value)
 
         if self.active or (self.draft and state.request.user.is_staff):
-            with sentry_sdk.push_scope() as scope:
-                scope.set_extra("argument", value)
-                scope.set_extra("code", self.code)
-                scope.set_extra("target", self.target)
-                scope.set_tag("validator", f"{self.pk}:{self.name}")
-                ctx = MiniRacer()
-                try:
-                    pickled = self.jspickle(value or "")
-                    ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
-                    result = ctx.eval(self.code)
-                    scope.set_extra("result", result)
-                    if result is None:
-                        ret = False
-                    else:
-                        try:
-                            ret = jsonpickle.decode(result)
-                        except (JSONDecodeError, TypeError):
-                            ret = result
-                    scope.set_extra("return_value", ret)
-                    if self.trace and state.request.user.is_staff:
-                        cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
-                        sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
-                    if isinstance(ret, str):
-                        raise ValidationError(_(ret))
-                    elif isinstance(ret, (list, tuple)):
-                        errors = [_(v) for v in ret]
-                        raise ValidationError(errors)
-                    elif isinstance(ret, dict):
-                        errors = {k: _(v) for (k, v) in ret.items()}
-                        raise ValidationError(errors)
-                    elif isinstance(ret, bool) and not ret:
-                        raise ValidationError(_(self.message))
-                except ValidationError as e:
-                    if self.trace:
-                        logger.exception(e)
-                        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_ERROR)
-                        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", json.dumps(e.message_dict))
-                    raise
-                except MiniRacerBaseException as e:
+            ctx = MiniRacer()
+            try:
+                pickled = self.jspickle(value or "")
+                ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
+                result = ctx.eval(self.code)
+                if result is None:
+                    ret = False
+                else:
+                    try:
+                        ret = jsonpickle.decode(result)
+                    except (JSONDecodeError, TypeError):
+                        ret = result
+                # if self.trace and state.request.user.is_staff:
+                #     cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
+                #     sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                if isinstance(ret, str):
+                    raise ValidationError(_(ret))
+                elif isinstance(ret, (list, tuple)):
+                    errors = [_(v) for v in ret]
+                    raise ValidationError(errors)
+                elif isinstance(ret, dict):
+                    errors = {k: _(v) for (k, v) in ret.items()}
+                    raise ValidationError(errors)
+                elif isinstance(ret, bool) and not ret:
+                    raise ValidationError(_(self.message))
+            except ValidationError as e:
+                if self.trace:
                     logger.exception(e)
-                    return True
-                except Exception as e:
-                    logger.exception(e)
-                    raise
-            cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_SUCCESS)
+                    self.monitor(self.STATUS_ERROR, e)
+                raise
+            except MiniRacerBaseException as e:
+                logger.exception(e)
+                return True
+            except Exception as e:
+                logger.exception(e)
+                raise
+            self.monitor(self.STATUS_SUCCESS, value)
 
         elif self.trace:
-            cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_SKIP)
+            self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
@@ -229,7 +234,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @cache_form
+    # @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
@@ -243,6 +248,20 @@ class FlexForm(I18NModel, NaturalKeyModel):
         }
         flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
+
+    def get_formsets_classes(self):
+        formsets = {}
+        for fs in self.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()
+        return formsets
+
+    def get_formsets(self, attrs):
+        formsets = {}
+        # attrs = self.get_form_kwargs().copy()
+        # attrs.pop("prefix")
+        for name, fs in self.get_formsets_classes().items():
+            formsets[name] = fs(prefix=f"{name}", **attrs)
+        return formsets
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
@@ -409,7 +428,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
-            kwargs.setdefault("label", _(self.label))
+            kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:

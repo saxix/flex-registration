@@ -17,8 +17,10 @@ $dev-color: #a3e388;
     }
   }
 }
-#changelist-filter a{
-  color: white!important;
+.console-buttons{
+  a{
+    color: white!important;
+  }
 }
 .redis-cli{
   input[type=text]{

@@ -1,5 +1,7 @@
 import logging
 
+from django.utils import timezone
+
 from ..state import state
 from .models import Message
 
@@ -25,9 +27,12 @@ class Dictionary:
         if not msgid.strip():
             return translation
         try:
+            if getattr(self, "hit_messages", False):
+                raise KeyError("--")
             translation = self.messages[msgid]
         except KeyError:
             if state.collect_messages:
+                msg = None
                 try:
                     msg = Message.objects.get(locale=self.locale, msgid__iexact=str(msgid))
                     if not msg.draft:
@@ -40,6 +45,10 @@ class Dictionary:
                 except Message.DoesNotExist:
                     msg, __ = Message.objects.get_or_create(msgid=msgid, locale=self.locale, defaults={"msgstr": msgid})
                     translation = msg.msgstr
+                finally:
+                    if getattr(state, "hit_messages", False) and msg:
+                        Message.objects.filter(id=msg.pk).update(last_hit=timezone.now(), used=True)
+
         return translation or ""
 
 

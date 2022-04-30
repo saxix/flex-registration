@@ -1,26 +1,31 @@
-.fs-counter {
+.fs-counter-container {
   display: flex;
+  width: 100%;
 }
-.fs-counter .pages {
+.fs-counter-container .fs-counter {
+  display: flex;
+  width: 100%;
+}
+.fs-counter-container .fs-counter .pages {
   flex-grow: 3;
 }
-.fs-counter .nav {
+.fs-counter-container .fs-counter .nav {
   flex-shrink: 1;
 }
-.fs-counter .nav * {
+.fs-counter-container .fs-counter .nav * {
   height: 32px;
   width: 32px;
   display: inline-block;
   background-repeat: no-repeat;
   background-size: cover;
 }
-.fs-counter .nav *.next {
+.fs-counter-container .fs-counter .nav *.next {
   background-image: url("next.webp");
 }
-.fs-counter .nav *.prev {
+.fs-counter-container .fs-counter .nav *.prev {
   background-image: url("previous.webp");
 }
-.fs-counter .nav *.disabled {
+.fs-counter-container .fs-counter .nav *.disabled {
   filter: opacity(30%);
 }
 

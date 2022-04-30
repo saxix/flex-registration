@@ -4,7 +4,6 @@ from django.utils import translation
 from django.utils.translation import get_language_from_request
 from flags.state import flag_enabled
 
-# from smart_register.core.utils import get_default_language
 from smart_register.state import state
 
 logger = logging.getLogger(__name__)

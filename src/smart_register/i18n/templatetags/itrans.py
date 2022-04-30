@@ -1,11 +1,9 @@
-import hashlib
 from decimal import Decimal
 
 from django.template import Library, Node, TemplateSyntaxError, Variable
 from django.template.base import TokenType, render_value_in_context
 from django.template.defaulttags import token_kwargs
 from django.utils import translation
-from django.utils.safestring import SafeData, mark_safe
 from django.utils.translation import get_language
 
 from ..engine import translator
@@ -32,9 +30,10 @@ class TranslateNode(Node):
         value = render_value_in_context(output, context)
         # Restore percent signs. Percent signs in template text are doubled
         # so they are not interpreted as string format flags.
-        is_safe = isinstance(value, SafeData)
-        value = value.replace("%%", "%")
-        value = mark_safe(value) if is_safe else value
+
+        # is_safe = isinstance(value, SafeData)
+        # value1 = value.replace("%%", "%")
+        # value = mark_safe(value1) if is_safe else value1
         current_locale = get_language()
         if self.filter_expression.var.literal:
             msgid = self.filter_expression.var.literal
@@ -42,18 +41,6 @@ class TranslateNode(Node):
             msgid = self.filter_expression.resolve(context)
 
         value = translator[current_locale][msgid]
-        # if state.collect_messages:
-        #     from smart_register.i18n.models import Message
-        #     Message.objects.get_or_create(msgid=msgstr,
-        #                                   locale=current_locale,
-        #                                   defaults={"msgstr": value})
-        # else:
-        #     Message.objects.get_or_create(msgid=msgstr,
-        #                                   locale=current_locale,
-        #                                   defaults={"msgstr": value})
-
-        # from smart_register.i18n.models import Message
-        # Message.objects.get_or_create()
 
         if self.asvar:
             context[self.asvar] = value
@@ -331,7 +318,18 @@ def do_block_translate(parser, token):  # noqa
 
 @register.filter()
 def md5(value, lang):
-    return hashlib.md5((lang + "__" + str(value)).encode()).hexdigest()
+    from smart_register.i18n.models import Message
+
+    return Message.get_md5(value, lang)
+    # return hashlib.md5((lang + "__" + str(value)).encode()).hexdigest()
+
+
+@register.filter()
+def msgcode(value):
+    from smart_register.i18n.models import Message
+
+    return Message.get_md5(str(value))
+    # return hashlib.md5(str(value)).encode().hexdigest()
 
 
 @register.filter()
