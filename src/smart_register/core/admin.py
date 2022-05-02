@@ -71,6 +71,10 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
         Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
     }
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        cache.set(f"validator-{request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
+
     @view()
     def _test(self, request, pk):
         return {}

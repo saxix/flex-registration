@@ -172,7 +172,6 @@ _.is_adult = function(d) { return !_.is_child(d)};
             self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
         super().save(force_insert, force_update, using, update_fields)
 
 
@@ -257,8 +256,6 @@ class FlexForm(I18NModel, NaturalKeyModel):
 
     def get_formsets(self, attrs):
         formsets = {}
-        # attrs = self.get_form_kwargs().copy()
-        # attrs.pop("prefix")
         for name, fs in self.get_formsets_classes().items():
             formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets

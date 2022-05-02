@@ -2,9 +2,10 @@
 <div class="min-h-screen flex justify-center bg-gray-100 pb-10">
     <div class="w-full lg:w-1/2 mt-5">
         {% if invalid %}
-            <div class="mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
-                {% if user.is_staff %}
-                    {% include "i18n/_staff_edit_i18n.html" with original="please fix the errors below" %}{% endif %}
+            <div class="itrans mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">
+{#                {% if user.is_staff %}#}
+{#                    {% include "i18n/_staff_edit_i18n.html" with original="please fix the errors below" %}#}
+{#                {% endif %}#}
                 {% trans "please fix the errors below" %}
             </div>
             <ul class="block errorlist">{% for e in errors %}
@@ -47,9 +48,9 @@
                                 {% include "registration/_staff_edit_formset.html" %}
                             {% endif %}
                             {% if formset.fs.title %}
-                                <div class="w-full mt-4 text-sm leading-7 text-gray-500 font-regular i18n uppercase text-center title">
-                                    {% if user.is_staff %}
-                                        {% include "i18n/_staff_edit_i18n.html" with original=formset.fs.title %}{% endif %}
+                                <div class="itrans w-full mt-4 text-sm leading-7 text-gray-500 font-regular i18n uppercase text-center title">
+{#                                    {% if user.is_staff %}#}
+{#                                        {% include "i18n/_staff_edit_i18n.html" with original=formset.fs.title %}{% endif %}#}
                                     {% trans formset.fs.title %}
                                 </div>
                             {% endif %}

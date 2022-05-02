@@ -63,6 +63,8 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
                 registration__id=self.kwargs["reg"], id=self.kwargs["rec"]
             )
         except Record.DoesNotExist:
+            if state.collect_messages:
+                Record.objects.first()
             raise Http404
 
     def get_qrcode(self, record):
@@ -115,23 +117,23 @@ class RegisterView(FixedLocaleView, FormView):
         return self.registration.flex_form.get_form()
 
     # @cache_formset
-    # def get_formsets_classes(self):
-    #     return self.registration.flex_form.get_formsets_classes()
-    # formsets = {}
-    # # attrs = self.get_form_kwargs().copy()
-    # # attrs.pop("prefix")
-    # for fs in self.registration.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
-    #     formsets[fs.name] = fs.get_formset()
-    # return formsets
+    def get_formsets_classes(self):
+        #     return self.registration.flex_form.get_formsets_classes()
+        formsets = {}
+        # attrs = self.get_form_kwargs().copy()
+        # attrs.pop("prefix")
+        for fs in self.registration.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()
+        return formsets
 
     def get_formsets(self):
-        # formsets = {}
+        formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs.pop("prefix")
-        # for name, fs in self.get_formsets_classes().items():
-        #     formsets[name] = fs(prefix=f"{name}", **attrs)
-        # return formsets
-        return self.registration.flex_form.get_formsets(attrs)
+        for name, fs in self.get_formsets_classes().items():
+            formsets[name] = fs(prefix=f"{name}", **attrs)
+        return formsets
+        # return self.registration.flex_form.get_formsets(attrs)
 
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:

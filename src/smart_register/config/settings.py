@@ -464,7 +464,8 @@ DEBUG_TOOLBAR_CONFIG = {
 INTERNAL_IPS = env.list("INTERNAL_IPS")
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
-    "debug_toolbar.panels.versions.VersionsPanel",
+    # "debug_toolbar.panels.versions.VersionsPanel",
+    "smart_register.ddt_panel.StatePanel",
     "debug_toolbar.panels.timer.TimerPanel",
     "flags.panels.FlagsPanel",
     "flags.panels.FlagChecksPanel",

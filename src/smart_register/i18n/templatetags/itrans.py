@@ -329,7 +329,6 @@ def msgcode(value):
     from smart_register.i18n.models import Message
 
     return Message.get_md5(str(value))
-    # return hashlib.md5(str(value)).encode().hexdigest()
 
 
 @register.filter()

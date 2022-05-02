@@ -1,5 +1,6 @@
 import base64
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from django.urls import reverse
@@ -12,6 +13,14 @@ LANGUAGES = {
     "japanese": "ファーストネーム",
     "arabic": "الاسم الأول",
 }
+
+
+@pytest.fixture(autouse=True)
+def mock_state():
+    from smart_register.state import state
+    from django.contrib.auth.models import AnonymousUser
+
+    state.request = Mock(user=AnonymousUser())
 
 
 @pytest.fixture()
@@ -109,6 +118,7 @@ def add_extra_form_to_formset_with_data(form, prefix, field_names_and_values):
         form[input_field_name] = extra_field_value
         form.field_order.append((input_field_name, extra_field))
         form[total_forms_field_name].value = str(next_form_index + 1)
+    return form
 
 
 @pytest.mark.django_db
@@ -136,7 +146,6 @@ def test_register_complex(django_app, complex_registration):
         },
     )
     res = res.form.submit()
-    # FIXME: remove me (res.showbrowser)
     res = res.follow()
     assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
     assert res.context["record"].data["form2s"][0]["last_name"] == "Last"
@@ -177,8 +186,9 @@ def test_upload_image(django_app, complex_registration, mock_storage):
         },
     )
     res = res.form.submit().follow()
-    assert res.context["record"].data["family_name"] == "HH #1"
-    assert res.context["record"].data["form2s"][0]["image"] == base64.b64encode(IMAGE.content).decode()
+    obj = res.context["record"]
+    assert obj.data["family_name"] == "HH #1"
+    assert obj.data["form2s"][0]["image"] == base64.b64encode(IMAGE.content).decode()
 
 
 @pytest.mark.django_db
