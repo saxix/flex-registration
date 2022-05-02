@@ -458,6 +458,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     def clean(self):
         try:
+            dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
+            dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
+
             self.get_instance()
         except Exception as e:
             raise ValidationError(e)
@@ -467,9 +470,6 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             self.name = namify(self.label)[:100]
         else:
             self.name = namify(self.name)[:100]
-
-        dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
-        dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
 
         super().save(force_insert, force_update, using, update_fields)
 
