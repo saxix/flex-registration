@@ -1,3 +1,9 @@
+TODAY = new Date();
+dateutil = {today: TODAY,
+    years18: new Date(new Date().setDate(TODAY.getDate() - (365*18))),
+    years2: new Date(new Date().setDate(TODAY.getDate() - (365*2))),
+
+};
 smart = {
     sameAs: function (sender, target) {
         var $sender = $(sender)
@@ -63,6 +69,9 @@ smart = {
         } catch (error) {
             console.error(error);
         }
+    },
+    is_adult: function(d) {
+        return d && Date.parse(d) <= dateutil.years18 ? true: false;
     },
     handleQuestion: function (e) {
         var $container = $(e).parents("fieldset").find(".field-container");

@@ -62,7 +62,7 @@ dateutil = {today: TODAY,
 };
 _ = {is_child: function(d) { return d && Date.parse(d) < dateutil.years18 ? true: false},
      is_baby: function(d) { return d && Date.parse(d) > dateutil.years2 ? true: false},
-     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years2 ? true: false},
+     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years18 ? true: false},
      is_future: function(d) { return d  && Date.parse(d) > dateutil.Validatortoday ? true: false},
 };
 _.is_adult = function(d) { return !_.is_child(d)};
@@ -419,9 +419,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             smart_attrs = advanced.pop("smart", {}).copy()
             # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
-            if smart_attrs.get("question", ""):
+            if not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
-            elif not smart_attrs.get("visible", True):
+            elif smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
