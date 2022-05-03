@@ -18,7 +18,7 @@ var updateCounter = function ($$, $row) {
         $fs.find(".fs-counter").each(function (i, e) {
             var idx = 1 + i;
             var alink = "<a class='aname' id=\"" + $$.options.prefix + "_member_" + idx + "\"></a>";
-            var pages = $$.options.counterPrefix + idx + "/" + forms;
+            var pages = $$.options.counterPrefix + ": " + idx + "/" + forms;
             var next = "<span class='disabled next'></span>";
             var prev = "<span class='disabled prev'></span>";
             if (idx > 1) {

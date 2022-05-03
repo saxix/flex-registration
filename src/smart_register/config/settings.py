@@ -146,8 +146,20 @@ WSGI_APPLICATION = "smart_register.config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["CONN_MAX_AGE"] = 60
+main_conn = env.db("DATABASE_URL")
+main_conn["CONN_MAX_AGE"] = 60
+ro_conn = main_conn.copy()
+ro_conn.update(
+    {
+        "OPTIONS": {"options": "-c default_transaction_read_only=on"},
+        "TEST": {
+            "READ_ONLY": True,  # Do not manage this database during tests
+        },
+    }
+)
+
+DATABASES = {"default": main_conn, "read_only": ro_conn}
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation

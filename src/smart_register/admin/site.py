@@ -8,12 +8,13 @@ from functools import update_wrapper
 from pathlib import Path
 
 import sentry_sdk
+import sqlparse
 from concurrency.api import disable_concurrency
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.management import call_command
-from django.db import connections, DEFAULT_DB_ALIAS
+from django.db import connections
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -133,16 +134,15 @@ class AuroraAdminSite(SmartAdminSite):
         if not is_root(request):
             raise PermissionDenied
         context = self.each_context(request)
-        form = SQLForm(request.POST)
-        context["form"] = form
         if request.method == "POST":
+            form = SQLForm(request.POST)
             response = {"result": [], "error": None, "stm": ""}
             if form.is_valid():
                 try:
                     cmd = form.cleaned_data["command"]
                     stm = urllib.parse.unquote(base64.b64decode(cmd).decode())
-                    response["stm"] = stm
-                    conn = connections[DEFAULT_DB_ALIAS]
+                    response["stm"] = sqlparse.format(stm)
+                    conn = connections["read_only"]
                     cursor = conn.cursor()
                     cursor.execute(stm)
                     if cursor.pgresult_ptr is not None:
@@ -150,11 +150,13 @@ class AuroraAdminSite(SmartAdminSite):
                     else:
                         response["result"] = ["Success"]
                 except Exception as e:
-                    raise
                     response["error"] = str(e)
             else:
                 response["error"] = str(form.errors)
             return JsonResponse(response)
+        else:
+            form = SQLForm()
+        context["form"] = form
         return TemplateResponse(request, "admin/sql.html", context)
 
     def console(self, request, extra_context=None):

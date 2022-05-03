@@ -11,14 +11,21 @@
                     <input type="submit" value="Execute">
                 </div>
             </form>
+            <div id="stm"></div>
             <div class="error" id="errorMessage"></div>
             <pre class="code" id="output" style="padding: 10px;"></pre>
         </div>
-        <div id="changelist-filter">
+        <div id="changelist-filter" class="console-buttons">
             <ul class="submit-row">
                 <li><a class="button" href="https://www.postgresql.org/docs/current/plpgsql.html">Commands</a></li>
                 <li><a class="button quick-sql" href="#" data-cmd="SELECT * FROM information_schema.tables; ">Show
                     Tables</a></li>
+                <li>
+                    <a class="button quick-sql" href="#"
+                       data-cmd="SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=[table_name];">
+                        Describe Table
+                    </a>
+                </li>
             </ul>
             <ul class="submit-row">
             </ul>
@@ -38,6 +45,7 @@
                 csrfmiddlewaretoken: document.getElementsByName("csrfmiddlewaretoken")[0].value
             })
              .done(function (r) {
+                 $("#stm").html(r.stm);
                  $("#errorMessage").html(r.error);
                  r.result.forEach((line) => {
                      if (Array.isArray(line)){

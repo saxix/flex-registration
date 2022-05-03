@@ -16,7 +16,7 @@ register = Library()
 def formset_config(formset):
     default = {
         "formCssClass": f"form-container-{formset.prefix}",
-        "counterPrefix": _(formset.fs.widget_attrs["counterPrefix"]),
+        "counterPrefix": "",
         "prefix": formset.prefix,
         "deleteContainerClass": f"{formset.fs.name}-delete",
         "addContainerClass": f"{formset.fs.name}-add",
@@ -29,7 +29,7 @@ def formset_config(formset):
     fs_config = formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
     override = {k: v for k, v in fs_config.items() if v}
     config = {**default, **override}
-    for e in ["addText", "deleteText"]:
+    for e in ["addText", "deleteText", "counterPrefix"]:
         config[e] = _(config[e])
     return config
 

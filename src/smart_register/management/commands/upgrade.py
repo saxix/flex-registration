@@ -6,8 +6,6 @@ from pathlib import Path
 import djclick as click
 from django.core.management import CommandError, call_command
 
-from smart_register.i18n.models import Message
-
 logger = logging.getLogger(__name__)
 
 
@@ -76,8 +74,6 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
         import django
         from django.conf import settings
         from django.utils import translation
-
-        Message.objects.raw("ALTER TABLE i18n_message DROP COLUMN IF EXISTS orphan;")
 
         django.setup()
         print(f"LANGUAGE_CODE: {settings.LANGUAGE_CODE}")
