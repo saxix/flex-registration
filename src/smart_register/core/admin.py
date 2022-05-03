@@ -175,7 +175,6 @@ class FlexFormFieldForm2(forms.ModelForm):
         ret = super().clean()
         dict_setdefault(ret["advanced"], FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
         dict_setdefault(ret["advanced"], {"kwargs": FIELD_KWARGS.get(ret["field_type"], {})})
-        ret["advanced"]["kwargs"]["aaaaa"] = 111
         return ret
 
 
