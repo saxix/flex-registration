@@ -25,11 +25,12 @@ from strategy_field.utils import fqn
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
+from . import fields
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase, JSONEncoder
+from .utils import JSONEncoder, dict_setdefault, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -347,6 +348,12 @@ FIELD_KWARGS = {
     forms.CharField: {"min_length": None, "max_length": None, "empty_value": "", "initial": None},
     forms.IntegerField: {"min_value": None, "max_value": None, "initial": None},
     forms.DateField: {"initial": None},
+    fields.LocationField: {},
+    fields.RemoteIpField: {},
+    fields.AjaxSelectField: {},
+    fields.SmartFileField: {},
+    fields.SelectField: {},
+    fields.WebcamField: {},
 }
 
 
@@ -458,9 +465,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     def clean(self):
         try:
-            dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
-            dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
-
+            # dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
+            # dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
             self.get_instance()
         except Exception as e:
             raise ValidationError(e)

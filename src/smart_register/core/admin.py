@@ -36,8 +36,9 @@ from .models import (
     FormSet,
     OptionSet,
     Validator,
+    FIELD_KWARGS,
 )
-from .utils import render
+from .utils import render, dict_setdefault
 from ..admin.mixin import LoadDumpMixin
 
 logger = logging.getLogger(__name__)
@@ -165,11 +166,24 @@ class FlexFormFieldForm(forms.ModelForm):
         self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
 
 
+class FlexFormFieldForm2(forms.ModelForm):
+    class Meta:
+        model = FlexFormField
+        exclude = ()
+
+    def clean(self):
+        ret = super().clean()
+        dict_setdefault(ret["advanced"], FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
+        dict_setdefault(ret["advanced"], {"kwargs": FIELD_KWARGS.get(ret["field_type"], {})})
+        ret["advanced"]["kwargs"]["aaaaa"] = 111
+        return ret
+
+
 @register(FlexFormField)
 class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
-    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
-    list_editable = ["ordering", "required", "enabled"]
+    list_display = ("label", "name", "flex_form", "_type", "required", "enabled")
+    list_editable = ["required", "enabled"]
     list_filter = (
         ("flex_form", AutoCompleteFilter),
         ("field_type", Select2FieldComboFilter),
@@ -181,6 +195,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
+    form = FlexFormFieldForm2
     ordering_field = "ordering"
     order = "ordering"
 
@@ -224,7 +239,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
                 form = formClass(request.POST)
                 if form.is_valid():
                     self.message_user(
-                        request, f"Form validation success. " f"You have selected: {form.cleaned_data['sample']}"
+                        request, f"Form validation success. You have selected: {form.cleaned_data['sample']}"
                     )
             else:
                 form = formClass()
