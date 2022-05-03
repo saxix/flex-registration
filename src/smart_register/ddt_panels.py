@@ -1,4 +1,7 @@
+import io
+
 from debug_toolbar.panels import Panel
+from django.core.management import call_command
 from django.template import Template, Context
 from django.utils.translation import ugettext_lazy as _
 
@@ -21,6 +24,37 @@ TEMPLATE = """
 </table>
 
 """
+TEMPLATE2 = """
+<pre>
+{{stdout}}
+</pre>
+"""
+
+
+class MigrationPanel(Panel):
+    name = "migrations"
+    has_content = True
+
+    def nav_title(self):
+        return _("Migrations")
+
+    def title(self):
+        return _("Migrations Panel")
+
+    def url(self):
+        return ""
+
+    @property
+    def content(self):
+        out = io.StringIO()
+        call_command("showmigrations", stdout=out, no_color=True)
+        context = Context(
+            {
+                "stdout": out.getvalue(),
+            }
+        )
+        template = Template(TEMPLATE2)
+        return template.render(context)
 
 
 class StatePanel(Panel):

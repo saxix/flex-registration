@@ -1,0 +1,51 @@
+{% extends "admin/console.html" %}{% load static i18n %}
+{% block content %}
+    <div class="redis-cli" id="changelist">
+        <div class="changelist-form-container">
+            <form method="POST" id="sqlForm">
+                {% csrf_token %}
+                <table>
+                    {{ form.command }}
+                </table>
+                <div class="submit-row">
+                    <input type="submit" value="Execute">
+                </div>
+            </form>
+            <div class="error" id="errorMessage"></div>
+            <pre class="code" id="output"></pre>
+        </div>
+        <div id="changelist-filter">
+            <ul class="submit-row">
+                <li><a class="button" href="https://www.postgresql.org/docs/current/plpgsql.html">Commands</a></li>
+                <li><a class="button quick-sql" href="#" data-cmd="SELECT * FROM information_schema.tables; ">Show
+                    Tables</a></li>
+            </ul>
+            <ul class="submit-row">
+            </ul>
+        </div>
+    </div>
+    <script>
+        $(".quick-sql").on("click", function () {
+            $("#id_command").val($(this).data("cmd"));
+            $("FORM").submit();
+        });
+        $("#sqlForm").on("submit", function (e) {
+            e.preventDefault();
+            var stmt = $("#id_command").val();
+            $('#output').html("");
+            $.post(".", {
+                command: stmt,
+                csrfmiddlewaretoken: document.getElementsByName("csrfmiddlewaretoken")[0].value
+            })
+             .done(function (r) {
+                 $("#errorMessage").html(r.error);
+                 r.result.forEach((line) => {
+                     line.forEach((col) => {
+                         $('#output').append(col).append(" ");
+                     });
+                     $('#output').append("\r\n");
+                 });
+             });
+        });
+    </script>
+{% endblock content %}

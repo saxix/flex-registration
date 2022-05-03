@@ -465,7 +465,8 @@ INTERNAL_IPS = env.list("INTERNAL_IPS")
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
     # "debug_toolbar.panels.versions.VersionsPanel",
-    "smart_register.ddt_panel.StatePanel",
+    "smart_register.ddt_panels.StatePanel",
+    "smart_register.ddt_panels.MigrationPanel",
     "debug_toolbar.panels.timer.TimerPanel",
     "flags.panels.FlagsPanel",
     "flags.panels.FlagChecksPanel",

@@ -10,6 +10,10 @@ class ExportForm(forms.Form):
     apps = forms.MultipleChoiceField(choices=zip(APPS, APPS), widget=forms.CheckboxSelectMultiple())
 
 
+class SQLForm(forms.Form):
+    command = forms.CharField()
+
+
 class ConsoleForm(forms.Form):
     ACTIONS = [
         ("redis", "Flush all Redis cache"),

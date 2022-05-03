@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.management import call_command
+from django.db import connections, DEFAULT_DB_ALIAS
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -22,7 +23,7 @@ from redis import ResponseError
 from smart_admin.site import SmartAdminSite
 
 from smart_register import get_full_version, VERSION
-from smart_register.admin.forms import ExportForm, ConsoleForm, RedisCLIForm
+from smart_register.admin.forms import ExportForm, ConsoleForm, RedisCLIForm, SQLForm
 from smart_register.admin.mixin import ImportForm
 from smart_register.core.utils import is_root
 
@@ -126,8 +127,33 @@ class AuroraAdminSite(SmartAdminSite):
         context["form"] = form
         return render(request, "admin/redis.html", context)
 
+    def sql(self, request, extra_context=None):
+        if not is_root(request):
+            raise PermissionDenied
+        context = self.each_context(request)
+        form = SQLForm(request.POST)
+        context["form"] = form
+        if request.method == "POST":
+            response = {"result": [], "error": None}
+            if form.is_valid():
+                try:
+                    stm = form.cleaned_data["command"]
+                    conn = connections[DEFAULT_DB_ALIAS]
+                    cursor = conn.cursor()
+                    cursor.execute(stm)
+                    response["result"] = cursor.fetchall()
+                except Exception as e:
+                    response["error"] = str(e)
+            else:
+                response["error"] = str(form.errors)
+            return JsonResponse(response)
+        return TemplateResponse(request, "admin/sql.html", context)
+
     def console(self, request, extra_context=None):
         context = self.each_context(request)
+        form = ConsoleForm(request.POST)
+        context["form"] = form
+
         if not is_root(request):
             raise PermissionDenied
 
@@ -202,6 +228,7 @@ class AuroraAdminSite(SmartAdminSite):
             path("dumpdata/", wrap(self.dumpdata), name="dumpdata"),
             path("console/", wrap(self.console), name="console"),
             path("redis_cli/", wrap(self.redis_cli), name="redis_cli"),
+            path("sql/", wrap(self.sql), name="sql"),
             path("error/<int:code>/", wrap(self.error), name="error"),
         ]
         self.extra_pages = [("Console", reverse_lazy("admin:console"))]
