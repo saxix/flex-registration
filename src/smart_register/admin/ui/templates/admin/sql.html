@@ -12,7 +12,7 @@
                 </div>
             </form>
             <div class="error" id="errorMessage"></div>
-            <pre class="code" id="output"></pre>
+            <pre class="code" id="output" style="padding: 10px;"></pre>
         </div>
         <div id="changelist-filter">
             <ul class="submit-row">
@@ -40,9 +40,13 @@
              .done(function (r) {
                  $("#errorMessage").html(r.error);
                  r.result.forEach((line) => {
-                     line.forEach((col) => {
-                         $('#output').append(col).append(" ");
-                     });
+                     if (Array.isArray(line)){
+                         line.forEach((col) => {
+                             $('#output').append(col).append(" ");
+                         });
+                     }else{
+                         $('#output').append(line).append(" ");
+                     }
                      $('#output').append("\r\n");
                  });
              });

@@ -141,11 +141,14 @@ class AuroraAdminSite(SmartAdminSite):
                 try:
                     cmd = form.cleaned_data["command"]
                     stm = urllib.parse.unquote(base64.b64decode(cmd).decode())
+                    response["stm"] = stm
                     conn = connections[DEFAULT_DB_ALIAS]
                     cursor = conn.cursor()
                     cursor.execute(stm)
-                    response["result"] = cursor.fetchall()
-                    response["stm"] = stm
+                    if cursor.pgresult_ptr is not None:
+                        response["result"] = cursor.fetchall()
+                    else:
+                        response["result"] = ["Success"]
                 except Exception as e:
                     raise
                     response["error"] = str(e)
