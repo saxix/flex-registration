@@ -34,7 +34,7 @@
             var stmt = $("#id_command").val();
             $('#output').html("");
             $.post(".", {
-                command: stmt,
+                command: btoa(unescape(encodeURIComponent(stmt))),
                 csrfmiddlewaretoken: document.getElementsByName("csrfmiddlewaretoken")[0].value
             })
              .done(function (r) {

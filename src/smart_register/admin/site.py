@@ -1,7 +1,9 @@
+import base64
 import io
 import json
 import logging
 import tempfile
+import urllib.parse
 from functools import update_wrapper
 from pathlib import Path
 
@@ -134,15 +136,18 @@ class AuroraAdminSite(SmartAdminSite):
         form = SQLForm(request.POST)
         context["form"] = form
         if request.method == "POST":
-            response = {"result": [], "error": None}
+            response = {"result": [], "error": None, "stm": ""}
             if form.is_valid():
                 try:
-                    stm = form.cleaned_data["command"]
+                    cmd = form.cleaned_data["command"]
+                    stm = urllib.parse.unquote(base64.b64decode(cmd).decode())
                     conn = connections[DEFAULT_DB_ALIAS]
                     cursor = conn.cursor()
                     cursor.execute(stm)
                     response["result"] = cursor.fetchall()
+                    response["stm"] = stm
                 except Exception as e:
+                    raise
                     response["error"] = str(e)
             else:
                 response["error"] = str(form.errors)
