@@ -146,6 +146,41 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
         cl = reverse("admin:i18n_message_changelist")
         return HttpResponseRedirect(f"{cl}?msgid__exact={obj.msgid}")
 
+    @button(label="Create Translation")
+    def create_translation_single(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Generate Translation",
+        )
+        if request.method == "POST":
+            form = TranslationForm(request.POST)
+            if form.is_valid():
+                locale = form.cleaned_data["locale"]
+                original = ctx["original"]
+                try:
+                    msg, created = Message.objects.get_or_create(
+                        msgid=original.msgid,
+                        locale=locale,
+                        defaults={"md5": Message.get_md5(locale, original.msgid), "draft": True},
+                    )
+                    if created:
+                        self.message_user(request, "Message created.")
+                    else:
+                        self.message_user(request, "Message found.", messages.WARNING)
+
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+                return HttpResponseRedirect(reverse("admin:i18n_message_change", args=[msg.pk]))
+            else:
+                ctx["form"] = form
+        else:
+            form = TranslationForm()
+            ctx["form"] = form
+        return render(request, "admin/i18n/message/translation.html", ctx)
+
     @button()
     def create_translation(self, request):
         ctx = self.get_common_context(

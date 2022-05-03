@@ -11,6 +11,7 @@ from django.utils.safestring import mark_safe
 from PIL import Image, UnidentifiedImageError
 
 from smart_register.i18n.gettext import gettext as _
+from ...core.flags import parse_bool
 
 from ...core.utils import dict_get_nested, dict_setdefault
 from ...registration.models import Registration
@@ -73,7 +74,7 @@ def smart_attr(field, attr):
     if "," in attr:
         attr, translate = attr.split(",")
     value = field.field.flex_field.advanced.get("smart", {}).get(attr, "")
-    if translate:
+    if parse_bool(translate):
         value = _(str(value))
     return str(value)
 

@@ -23,13 +23,13 @@
                 <span class="lowercase font-thin required text-xs">({% trans "required" %})</span>{% endif %}
         </label>
         <div class="text-sm	">
-            {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"description,1" %}{% endif %}
+            {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"description,0" %}{% endif %}
             {{ field|smart:"description,1" }}
         </div>
         {{ field.errors }}
         {{ field }}
         <div class="text-xs	italic">
-            {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"hint,1" %}{% endif %}
+            {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"hint,0" %}{% endif %}
             {{ field|smart:"hint,1" }}</div>
     </div>
 </fieldset>
