@@ -89,7 +89,7 @@ smart = {
 (function ($) {
     $(function () {
         $('#registrationForm').on('submit', function (e){
-            $(this).find('input[type=submit]').prop('disabled', 'disabled').val(gettext('Please wait...'_);
+            $(this).find('input[type=submit]').prop('disabled', 'disabled').val(gettext('Please wait...'));
         });
 
         $("[data-visibility=hidden]").parents(".field-container").hide();
