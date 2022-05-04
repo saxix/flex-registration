@@ -55,7 +55,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     validator = models.ForeignKey(
         Validator, limit_choices_to={"target": Validator.MODULE}, blank=True, null=True, on_delete=models.SET_NULL
     )
-
+    unique_field = models.CharField(blank=True, null=True, help_text="Form field to be used as unique key")
     public_key = models.TextField(
         blank=True,
         null=True,
@@ -106,6 +106,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
             fields = {"storage": Crypto().encrypt(data).encode()}
         else:
             fields = {"storage": safe_json(data).encode()}
+        if self.unique_field and self.unique_field in data:
+            fields["unique_field"] = data.get(self.unique_field)
         return Record.objects.create(registration=self, **fields)
 
     @cached_property
@@ -127,10 +129,14 @@ class RemoteIp(models.GenericIPAddressField):
 
 class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
+    unique_field = models.CharField(blank=True, null=True, db_index=True)
     remote_ip = RemoteIp(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     storage = models.BinaryField(null=True, blank=True)
     ignored = models.BooleanField(default=False, blank=True)
+
+    class Meta:
+        unique_together = ("registration", "unique_field")
 
     def decrypt(self, private_key=undefined, secret=undefined):
         if private_key != undefined:
