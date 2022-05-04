@@ -1,5 +1,6 @@
 .*
 ~*
+*.min.min.js
 *.py[ico]
 *.db
 *.egg-info
@@ -11,8 +12,12 @@ package-lock.json
 package.json
 !tests/.coveragerc
 !.gitignore
+!.dockerignore
 !.github
 !.isort.cfg
 !.flake8
 !.pre-commit-config.yaml
 .env
+docker/conf/nginx.conf
+docker/conf/redis.conf
+src/smart_register/staticfiles

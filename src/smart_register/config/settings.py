@@ -40,15 +40,22 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.forms",
-    "import_export",
     # -- dev --
     "debug_toolbar",
     # ---
+    "reversion",  # https://github.com/etianen/django-reversion
+    "reversion_compare",  # https://github.com/jedie/django-reversion-compare
+    # ---
+    "smart_register.admin.apps.AuroraAdminUIConfig",
+    "smart_register.admin.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartAuthConfig",
-    "smart_admin.apps.SmartConfig",
+    # "smart_admin.apps.SmartConfig",
     # 'smart_admin',
+    "rest_framework",
+    "rest_framework.authtoken",
+    "smart_register.api",
     "admin_ordering",
     "django_sysinfo",
     "admin_extra_buttons",
@@ -63,7 +70,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "simplemathcaptcha",
     # ---
-    "smart_register",
+    "smart_register.apps.Config",
+    "smart_register.i18n",
     "smart_register.web",
     "smart_register.core",
     "smart_register.registration",
@@ -77,7 +85,8 @@ MIDDLEWARE = [
     "smart_register.web.middlewares.security.SecurityHeadersMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "smart_register.web.middlewares.maintenance.MaintenanceMiddleware",
-    "smart_register.web.middlewares.locale.LocaleMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "smart_register.web.middlewares.i18n.I18NMiddleware",
     # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -85,20 +94,30 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "smart_register.web.middlewares.http2.HTTP2Middleware",
     "smart_register.web.middlewares.minify.HtmlMinMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     # "django.middleware.cache.FetchFromCacheMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
+if env("WHITENOISE"):
+    MIDDLEWARE += [
+        "whitenoise.middleware.WhiteNoiseMiddleware",
+    ]
 ROOT_URLCONF = "smart_register.config.urls"
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [PACKAGE_DIR / "core/templates", PACKAGE_DIR / "web/templates"],
+        "DIRS": [
+            PACKAGE_DIR / "admin/ui/templates",
+            PACKAGE_DIR / "api/templates",
+            PACKAGE_DIR / "registration/templates",
+            PACKAGE_DIR / "core/templates",
+            PACKAGE_DIR / "web/templates",
+        ],
         # 'APP_DIRS': True,
         "OPTIONS": {
             "loaders": [
@@ -114,7 +133,9 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "constance.context_processors.config",
+                "smart_register.i18n.context_processors.itrans",
                 "smart_register.web.context_processors.smart",
+                "django.template.context_processors.i18n",
                 # Social auth context_processors
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
@@ -128,8 +149,20 @@ WSGI_APPLICATION = "smart_register.config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["CONN_MAX_AGE"] = 60
+main_conn = env.db("DATABASE_URL")
+main_conn["CONN_MAX_AGE"] = 60
+ro_conn = main_conn.copy()
+ro_conn.update(
+    {
+        "OPTIONS": {"options": "-c default_transaction_read_only=on"},
+        "TEST": {
+            "READ_ONLY": True,  # Do not manage this database during tests
+        },
+    }
+)
+
+DATABASES = {"default": main_conn, "read_only": ro_conn}
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation
@@ -163,9 +196,9 @@ else:
 LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 LANGUAGES = (
-    ("uk-ua", "український"),
-    ("en-us", "English"),
-    ("pl-pl", "Polskie"),
+    ("uk-ua", "український | Ukrainian"),
+    ("en-us", "English | English"),
+    ("pl-pl", "Polskie | Polish"),
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),
@@ -202,10 +235,11 @@ USE_TZ = True
 # os.makedirs(STATIC_ROOT, exist_ok=True)
 
 # STATIC_URL = f"/static/{os.environ.get('VERSION', '')}/"
-STATIC_URL = "/static/"
-STATIC_ROOT = env("STATIC_ROOT")
+STATIC_URL = env("STATIC_URL")
+STATIC_ROOT = env("STATIC_ROOT") + STATIC_URL  # simplify nginx config
 # STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STATICFILES_STORAGE = env("STATICFILES_STORAGE")
 
 STATICFILES_DIRS = [
     # os.path.join(BASE_DIR, "web/static"),
@@ -310,6 +344,7 @@ if SENTRY_DSN:
 
     sentry_sdk.init(
         dsn=SENTRY_DSN,
+        environment="production",
         integrations=[
             DjangoIntegration(transaction_style="url"),
             sentry_logging,
@@ -331,7 +366,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     ],
 }
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-# CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
+CONSTANCE_DATABASE_CACHE_BACKEND = env("CONSTANCE_DATABASE_CACHE_BACKEND")
 CONSTANCE_CONFIG = OrderedDict(
     {
         "CACHE_FORMS": (False, "", bool),
@@ -341,6 +376,7 @@ CONSTANCE_CONFIG = OrderedDict(
             "",
             str,
         ),
+        "PRODUCTION_SERVER": ("", "production server url", str),
         "LOG_POST_ERRORS": (False, "", bool),
         "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
         "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
@@ -399,20 +435,19 @@ SYSINFO = {
     # "checks": None,
 }
 
-IMPORT_EXPORT_USE_TRANSACTIONS = True
-IMPORT_EXPORT_SKIP_ADMIN_LOG = True
-
 FLAGS_STATE_LOGGING = DEBUG
 
 FLAGS = {
     "DEVELOP_DEVELOPER": [],
     "DEVELOP_DEBUG_TOOLBAR": [],
     "SENTRY_JAVASCRIPT": [],
+    "I18N_COLLECT_MESSAGES": [],
 }
 
 JSON_EDITOR_JS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.js"
 JSON_EDITOR_CSS = "https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/8.6.4/jsoneditor.css"
-JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.js"
+JSON_EDITOR_INIT_JS = "jsoneditor/jsoneditor-init.min.js"
+JSON_EDITOR_ACE_OPTIONS_JS = "jsoneditor/ace_options.min.js"
 
 # CAPTCHA_IMAGE_SIZE = 300,200
 CAPTCHA_FONT_SIZE = 40
@@ -433,33 +468,33 @@ def show_ddt(request):  # pragma: no-cover
     if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):
         return False
     return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
-    # if request.user.is_authenticated:
-    #     if request.path in RegexList(('/tpl/.*', '/api/.*', '/dal/.*', '/healthcheck/')):
-    #         return False
-    # return request.META.get('HTTP_DEV_DDT', None) == env('DEV_DDT_KEY')
 
 
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK": show_ddt,
     "JQUERY_URL": "",
+    "INSERT_BEFORE": "</head>",
+    "SHOW_TEMPLATE_CONTEXT": True,
 }
 INTERNAL_IPS = env.list("INTERNAL_IPS")
 DEBUG_TOOLBAR_PANELS = [
-    # 'debug_toolbar.panels.history.HistoryPanel',
-    # 'debug_toolbar.panels.versions.VersionsPanel',
-    # 'debug_toolbar.panels.timer.TimerPanel',
-    # 'flags.panels.FlagsPanel',
-    # 'flags.panels.FlagChecksPanel',
-    # 'debug_toolbar.panels.settings.SettingsPanel',
+    "debug_toolbar.panels.history.HistoryPanel",
+    # "debug_toolbar.panels.versions.VersionsPanel",
+    "smart_register.ddt_panels.StatePanel",
+    "smart_register.ddt_panels.MigrationPanel",
+    "debug_toolbar.panels.timer.TimerPanel",
+    "flags.panels.FlagsPanel",
+    "flags.panels.FlagChecksPanel",
+    "debug_toolbar.panels.settings.SettingsPanel",
     "debug_toolbar.panels.headers.HeadersPanel",
     "debug_toolbar.panels.request.RequestPanel",
     "debug_toolbar.panels.sql.SQLPanel",
     "debug_toolbar.panels.staticfiles.StaticFilesPanel",
-    # 'debug_toolbar.panels.templates.TemplatesPanel',
+    "debug_toolbar.panels.templates.TemplatesPanel",
     "debug_toolbar.panels.cache.CachePanel",
-    # 'debug_toolbar.panels.signals.SignalsPanel',
+    "debug_toolbar.panels.signals.SignalsPanel",
     "debug_toolbar.panels.logging.LoggingPanel",
-    # 'debug_toolbar.panels.redirects.RedirectsPanel',
+    "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
 
@@ -567,3 +602,9 @@ worker-src 'none';
 # CSP_REPORT_ONLY = env("CSP_REPORT_ONLY")
 # CSP_DEFAULT_SRC = env("CSP_DEFAULT_SRC")
 # CSP_SCRIPT_SRC = env("CSP_SCRIPT_SRC")
+
+# Add reversion models to admin interface:
+ADD_REVERSION_ADMIN = True
+# optional settings:
+REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = False
+REVERSION_COMPARE_IGNORE_NOT_REGISTERED = False

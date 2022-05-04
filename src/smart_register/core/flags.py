@@ -53,3 +53,17 @@ def request_header(param_name, request=None, **kwargs):
     else:
         enabled = key in request.META.keys()
     return enabled
+
+
+@conditions.register("Cookie", validator=validate_parameter)
+def cookie(param_name, request=None, **kwargs):
+    try:
+        param, value = param_name.split("=")
+    except ValueError:
+        param = param_name
+        value = ""
+    if value:
+        enabled = request.COOKIES.get(param)
+    else:
+        enabled = request.COOKIES.get(param) == value
+    return enabled

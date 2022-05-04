@@ -1,39 +1,60 @@
+import io
+import json
 import logging
+import tempfile
 from collections import defaultdict
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytz
+from concurrency.api import disable_concurrency
+from django.db.models.signals import post_save, post_delete
+from django.utils.text import slugify
+
 from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
 from dateutil.relativedelta import relativedelta
+from dateutil.utils import today
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.db.models import Count, JSONField
+from django.contrib.contenttypes.models import ContentType
+from django.core.management import call_command
+from django.db import OperationalError
+from django.db.models import Count, JSONField, Q
 from django.db.models.functions import ExtractHour, TruncDay
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import reverse, translate_url
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
-from import_export import resources
-from import_export.admin import ImportExportMixin
 from jsoneditor.forms import JSONEditor
-
 from smart_admin.modeladmin import SmartModelAdmin
-
-from ..core.utils import clone_form, clone_model, is_root
+from smart_admin.truncate import truncate_model_table
 from .forms import CloneForm
+from ..admin.mixin import LoadDumpMixin
+
+from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
+from ..core.utils import is_root, namify, clone_model
 from .models import Record, Registration
+from ..i18n.forms import ImportForm
+from ..i18n.models import Message
 
 logger = logging.getLogger(__name__)
 
-
-class RegistrationResource(resources.ModelResource):
-    class Meta:
-        model = Registration
+DATA = {
+    "registration.Registration": [],
+    "core.FlexForm": [],
+    "core.FormSet": [],
+    "core.Validator": [],
+    "core.OptionSet": [],
+    "core.FlexFormField": [],
+    "i18n.Message": [],
+}
 
 
 def last_day_of_month(date):
@@ -41,19 +62,29 @@ def last_day_of_month(date):
 
 
 @register(Registration)
-class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
+class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
     list_display = ("name", "title", "slug", "locale", "secure", "active", "validator")
     exclude = ("public_key",)
-    change_form_template = None
     autocomplete_fields = ("flex_form",)
     save_as = True
     readonly_fields = ("version", "last_update_date")
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
+    change_form_template = None
+    fieldsets = [
+        (None, {"fields": (("version", "last_update_date", "active"),)}),
+        (None, {"fields": ("name", "title", "slug")}),
+        ("Config", {"fields": ("flex_form", "validator", "encrypt_data")}),
+        ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
+        ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
+        ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
+        ("Advanced", {"fields": ("advanced",)}),
+        ("Others", {"fields": ("__others__",)}),
+    ]
 
     def secure(self, obj):
         return bool(obj.public_key)
@@ -155,7 +186,84 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
+    def inspect(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Inspect Registration",
+        )
+        return render(request, "admin/registration/registration/inspect.html", ctx)
+
+    @button()
+    def clone(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Clone Registration",
+        )
+        reg: Registration = ctx["original"]
+        if request.method == "POST":
+            form = CloneForm(request.POST)
+            created = set()
+            if form.is_valid():
+                try:
+                    for dip in [
+                        "form_dip",
+                        "field_dip",
+                        "formset_dip",
+                        "form_del_dip",
+                        "field_del_dip",
+                        "formset_del_dip",
+                    ]:
+                        post_save.disconnect(dispatch_uid=dip)
+                        post_delete.disconnect(dispatch_uid=dip)
+
+                    with atomic():
+                        source = Registration.objects.get(id=reg.pk)
+                        title = form.cleaned_data["title"]
+                        reg, __ = clone_model(source, name=namify(title), title=title, slug=slugify(title))
+                        if form.cleaned_data["deep"]:
+                            main_form, __ = clone_model(
+                                source.flex_form, name=f"{source.flex_form.name}-(clone: {reg.name})"
+                            )
+                            reg.flex_form = main_form
+                            reg.save()
+                            for fld in source.flex_form.fields.all():
+                                clone_model(fld, flex_form=main_form)
+
+                            formsets = FormSet.objects.filter(parent=source.flex_form)
+                            forms = {}
+                            for fs in formsets:
+                                forms[fs.flex_form.pk] = fs.flex_form
+                                forms[fs.parent.pk] = fs.parent
+
+                            for frm in forms.values():
+                                frm2, created = clone_model(frm, name=f"{frm.name}-(clone: {reg.name})")
+                                forms[frm.pk] = frm2
+                                for field in frm.fields.all():
+                                    clone_model(field, name=field.name, flex_form=frm2)
+
+                            for fs in formsets:
+                                clone_model(fs, parent=forms[fs.parent.pk], flex_form=forms[fs.flex_form.pk])
+                        return HttpResponseRedirect(reverse("admin:registration_registration_inspect", args=[reg.pk]))
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+
+            else:
+                ctx["form"] = form
+        else:
+            form = CloneForm()
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/clone.html", ctx)
+
+    @button()
     def create_translation(self, request, pk):
+        from smart_register.i18n.forms import TranslationForm
+        from smart_register.i18n.models import Message
+
         ctx = self.get_common_context(
             request,
             pk,
@@ -164,53 +272,46 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
         )
         instance: Registration = ctx["original"]
         if request.method == "POST":
-            form = CloneForm(request.POST, instance=instance)
+            form = TranslationForm(request.POST)
             if form.is_valid():
+                locale = form.cleaned_data["locale"]
+                existing = Message.objects.filter(locale=locale).count()
+                uri = reverse("register", args=[instance.slug])
+                uri = translate_url(uri, locale)
+                from django.test import Client
+
+                settings.ALLOWED_HOSTS.append("testserver")
+                headers = {"HTTP_ACCEPT_LANGUAGE": "locale", "HTTP_I18N": "true"}
                 try:
-                    with atomic():
-                        created = []
-                        locale = form.cleaned_data["locale"]
-                        base_form = instance.flex_form
-                        cloned = clone_form(base_form, name=f"{base_form.name} {locale}")
-                        for fs in base_form.formsets.all():
-                            o = clone_form(fs.flex_form, name=f"{fs.flex_form.name} {locale}")
-                            fs = clone_model(
-                                fs,
-                                parent=cloned,
-                                flex_form=o,
-                            )
-
-                        reg = clone_model(
-                            instance,
-                            name=f"{instance.name} {locale}",
-                            flex_form=cloned,
-                            active=False,
-                            locale=locale,
-                            public_key=None,
-                        )
-                        created.append(fs)
-
-                        ctx["cloned"] = reg
+                    client = Client(**headers)
+                    r1 = client.get(uri)
+                    # uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
+                    # uri = translate_url(uri, locale)
+                    # r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
+                    if r1.status_code != 200:
+                        return HttpResponse(r1.content, status_code=r1.status_code)
+                        # raise Exception(f"GET: {uri} - {status_code}")
+                    # r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
+                    r2 = client.post(uri, {}, **headers)
+                    if r2.status_code != 200:
+                        return HttpResponse(r2.content, status_code=r2.status_code)
+                        # raise Exception(f"POST: {uri} - {status_code}")
                 except Exception as e:
                     logger.exception(e)
                     self.message_error_to_user(request, e)
 
+                updated = Message.objects.filter(locale=locale).count()
+                added = Message.objects.filter(locale=locale, draft=True, timestamp__date=today())
+                self.message_user(request, f"{updated - existing} messages created. {updated} available")
+                ctx["uri"] = uri
+                ctx["locale"] = locale
+                ctx["added"] = added
             else:
-                self.message_user(request, "----")
                 ctx["form"] = form
         else:
-            form = CloneForm(instance=ctx["original"])
+            form = TranslationForm()
             ctx["form"] = form
-        return render(request, "admin/registration/registration/clone.html", ctx)
-
-    @link(html_attrs={"class": "aeb-green "})
-    def _view_on_site(self, button):
-        try:
-            if button.original:
-                button.href = reverse("register", args=[button.original.locale, button.original.slug])
-                button.html_attrs["target"] = f"_{button.original.slug}"
-        except Exception as e:
-            logger.exception(e)
+        return render(request, "admin/registration/registration/translation.html", ctx)
 
     @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
@@ -221,6 +322,82 @@ class RegistrationAdmin(ImportExportMixin, SmartModelAdmin):
                 button.html_attrs["target"] = f"_{button.original.pk}"
         except Exception as e:
             logger.exception(e)
+
+    @button(label="import")
+    def _import(self, request):
+        ctx = self.get_common_context(
+            request,
+            media=self.media,
+            title="Import",
+        )
+        if request.method == "POST":
+            form = ImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                try:
+                    f = request.FILES["file"]
+                    buf = io.BytesIO()
+                    for chunk in f.chunks():
+                        buf.write(chunk)
+                    buf.seek(0)
+                    data = json.load(buf)
+                    out = io.StringIO()
+                    workdir = Path(".").absolute()
+                    with disable_concurrency():
+                        for k, v in data.items():
+                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
+
+                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
+                                fdst.write(json.dumps(v).encode())
+                            fixture = (workdir / fdst.name).absolute()
+                            call_command("loaddata", fixture, stdout=out, verbosity=3)
+                            fixture.unlink()
+                            out.write("------\n")
+                            # ctx['out'] = out.getvalue()
+                            out.seek(0)
+                            ctx["out"] = out.readlines()
+                except Exception as e:
+                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+            else:
+                ctx["form"] = form
+        else:
+            form = ImportForm()
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/import.html", ctx)
+
+    @button()
+    def export(self, request, pk):
+        reg: Registration = self.get_object(request, pk)
+        buffers = {}
+        buffers["registration"] = io.StringIO()
+        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
+        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
+        validators = Validator.objects.values_list("pk", flat=True)
+        options = OptionSet.objects.values_list("pk", flat=True)
+        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
+        data = DATA.copy()
+        data["registration.Registration"] = [reg.pk]
+        data["core.FlexForm"] = [f.pk for f in forms]
+        data["core.FormSet"] = [f.pk for f in formsets]
+        data["core.Validator"] = validators
+        data["core.OptionSet"] = options
+        data["core.FlexFormField"] = fields
+        data["i18n.Message"] = Message.objects.values_list("pk", flat=True)
+
+        for k, f in data.items():
+            data[k] = io.StringIO()
+            call_command(
+                "dumpdata",
+                [k],
+                stdout=data[k],
+                primary_keys=",".join(map(str, f)),
+                use_natural_foreign_keys=True,
+                use_natural_primary_keys=True,
+            )
+        return JsonResponse(
+            {k: json.loads(v.getvalue()) for k, v in data.items()},
+            safe=False,
+            headers={"Content-Disposition": f"attachment; filename={reg.slug}.json"},
+        )
 
     @view()
     def removekey(self, request, pk):
@@ -300,6 +477,43 @@ class RecordAdmin(SmartModelAdmin):
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
+
+    @button()
+    def truncate(self, request):
+        if request.method == "POST":
+            from django.contrib.admin.models import DELETION, LogEntry
+
+            with atomic():
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=ContentType.objects.get_for_model(self.model).pk,
+                    object_id=None,
+                    object_repr=f"truncate table {self.model._meta.verbose_name}",
+                    action_flag=DELETION,
+                    change_message="truncate table",
+                )
+
+                try:
+                    truncate_model_table(self.model)
+                    return HttpResponseRedirect("..")
+                except OperationalError:
+                    self.get_queryset(request).delete()
+        else:
+            return confirm_action(
+                self,
+                request,
+                self.truncate,
+                mark_safe(
+                    """
+<h1 class="color-red"><b>This is a low level system feature</b></h1>
+<h1 class="color-red"><b>Continuing irreversibly delete all table content</b></h1>
+
+                                       """
+                ),
+                "Successfully executed",
+                title="Truncate table",
+                extra_context={"original": None, "add": False},
+            )
 
     @button(label="Preview", permission=is_root)
     def preview(self, request, pk):

@@ -4,14 +4,14 @@ from constance import config
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.utils.cache import get_conditional_response
 from django.utils.decorators import method_decorator
+from django.utils.translation import get_language
 from django.views import View
 from django.views.decorators.cache import cache_control
-from django.views.decorators.http import condition
 from django.views.generic import TemplateView
 
-from smart_register import VERSION
-from smart_register.core.utils import get_qrcode
+from smart_register.core.utils import get_qrcode, get_etag
 from smart_register.registration.models import Registration
 
 logger = logging.getLogger(__name__)
@@ -33,20 +33,36 @@ class PageView(TemplateView):
     def get_template_names(self):
         return [f"{self.kwargs['page']}.html"]
 
+    def get_context_data(self, **kwargs):
+        from smart_register.i18n.gettext import gettext as _
 
-@method_decorator(condition(etag_func=lambda r: VERSION, last_modified_func=None), name="dispatch")
+        return super().get_context_data(title="Title", title2=_("Title2"), **kwargs)
+
+
+# @method_decorator(condition(etag_func=get_etag, last_modified_func=None), name="dispatch")
 @method_decorator(cache_control(public=True), name="dispatch")
 class HomeView(TemplateView):
     template_name = "ua.html"
 
+    def get(self, request, *args, **kwargs):
+        res_etag = get_etag(
+            request,
+            get_language(),
+            {True: "staff", False: ""}[request.user.is_staff],
+        )
+        response = get_conditional_response(request, str(res_etag))
+        if response is None:
+            response = super().get(request, *args, **kwargs)
+            response.headers.setdefault("ETag", res_etag)
+        return response
+
     def get_context_data(self, **kwargs):
         selection = config.HOME_PAGE_REGISTRATIONS.split(";")
         buttons = []
-        for sel in selection:
-            if sel.strip():
+        for slug in selection:
+            if slug.strip():
                 try:
-                    slug, locale = sel.strip().split(",")
-                    buttons.append(Registration.objects.get(active=True, slug=slug.strip(), locale=locale.strip()))
+                    buttons.append(Registration.objects.get(active=True, slug=slug.strip()))
                 except Exception as e:
                     logger.exception(e)
         return super().get_context_data(buttons=buttons, **kwargs)

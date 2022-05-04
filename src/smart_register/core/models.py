@@ -1,9 +1,9 @@
+import json
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
 
 import jsonpickle
-import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import AutoIncVersionField
 from django import forms
@@ -15,16 +15,22 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from django.urls import reverse
-from natural_keys import NaturalKeyModel
+from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
+from django.utils.translation import get_language
+from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
-from .cache import cache_form, Cache
+from ..i18n.gettext import gettext as _
+from ..i18n.models import I18NModel
+from ..state import state
+from . import fields
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase
+from .utils import JSONEncoder, dict_setdefault, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -32,16 +38,45 @@ cache = caches["default"]
 
 
 class Validator(NaturalKeyModel):
+    STATUS_ERROR = "error"
+    STATUS_EXCEPTION = "exc"
+    STATUS_SUCCESS = "success"
+    STATUS_SKIP = "skip"
+    STATUS_UNKNOWN = "unknown"
+    STATUS_INACTIVE = "inactive"
+
     FORM = "form"
     FIELD = "field"
     MODULE = "module"
     FORMSET = "formset"
+    CONSOLE = mark_safe(
+        """
+    console = {log: function(d) {}};
+    """
+    )
+    LIB = mark_safe(
+        """
+TODAY = new Date();
+dateutil = {today: TODAY,
+            years18: new Date(new Date().setDate(TODAY.getDate() - (365*18))),
+            years2: new Date(new Date().setDate(TODAY.getDate() - (365*2))),
+
+};
+_ = {is_child: function(d) { return d && Date.parse(d) < dateutil.years18 ? true: false},
+     is_baby: function(d) { return d && Date.parse(d) > dateutil.years2 ? true: false},
+     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years18 ? true: false},
+     is_future: function(d) { return d  && Date.parse(d) > dateutil.Validatortoday ? true: false},
+};
+_.is_adult = function(d) { return !_.is_child(d)};
+
+"""
+    )
 
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=255, unique=True)
-    message = models.CharField(max_length=255)
+    message = models.CharField(max_length=255, help_text="Default error message if validator return 'false'.")
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -52,7 +87,14 @@ class Validator(NaturalKeyModel):
             (MODULE, "Module"),
         ),
     )
-    trace = models.BooleanField(default=False)
+    trace = models.BooleanField(
+        default=False,
+        help_text="Debug/Testing purposes: trace validator invocation on Sentry.",
+    )
+    active = models.BooleanField(default=False, blank=True, help_text="Enable/Disable validator.")
+    draft = models.BooleanField(
+        default=False, blank=True, help_text="Testing purposes: draft validator are enabled only for staff users."
+    )
 
     def __str__(self):
         return self.name
@@ -65,20 +107,38 @@ class Validator(NaturalKeyModel):
             return jsonfy(value)
         return value
 
+    def jspickle(self, value):
+        return json.dumps(value, cls=JSONEncoder, skip_files=True)
+
+    def monitor(self, status, value, exc: Exception = None):
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", status)
+        error = None
+        if exc:
+            if hasattr(exc, "error_dict"):
+                error = self.jspickle(
+                    exc.error_dict,
+                )
+            elif isinstance(exc, ValidationError):
+                error = self.jspickle({"Error": exc.messages})
+            else:
+                error = self.jspickle({"Error": str(exc)})
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-payload", self.jspickle(value))
+
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
-        with sentry_sdk.push_scope() as scope:
-            scope.set_extra("value", value)
-            scope.set_extra("code", self.code)
-            scope.set_extra("target", self.target)
-            scope.set_tag("validator", self.pk)
+        if self.active:
+            self.monitor(self.STATUS_UNKNOWN, value)
+        else:
+            self.monitor(self.STATUS_INACTIVE, value)
 
+        if self.active or (self.draft and state.request.user.is_staff):
             ctx = MiniRacer()
             try:
-                ctx.eval(f"var value = {jsonpickle.encode(value or '')};")
+                pickled = self.jspickle(value or "")
+                ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
                 result = ctx.eval(self.code)
-                scope.set_tag("result", result)
                 if result is None:
                     ret = False
                 else:
@@ -86,22 +146,39 @@ class Validator(NaturalKeyModel):
                         ret = jsonpickle.decode(result)
                     except (JSONDecodeError, TypeError):
                         ret = result
-                if isinstance(ret, (str, dict)):
-                    raise ValidationError(ret)
+                # if self.trace and state.request.user.is_staff:
+                #     cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
+                #     sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+                if isinstance(ret, str):
+                    raise ValidationError(_(ret))
+                elif isinstance(ret, (list, tuple)):
+                    errors = [_(v) for v in ret]
+                    raise ValidationError(errors)
+                elif isinstance(ret, dict):
+                    errors = {k: _(v) for (k, v) in ret.items()}
+                    raise ValidationError(errors)
                 elif isinstance(ret, bool) and not ret:
-                    raise ValidationError(self.message)
+                    raise ValidationError(_(self.message))
             except ValidationError as e:
                 if self.trace:
                     logger.exception(e)
+                    self.monitor(self.STATUS_ERROR, value, e)
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 return True
             except Exception as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 raise
-        if self.trace:
-            sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
+            self.monitor(self.STATUS_SUCCESS, value)
+
+        elif self.trace:
+            self.monitor(self.STATUS_SKIP, value)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super().save(force_insert, force_update, using, update_fields)
 
 
 def get_validators(field):
@@ -114,7 +191,7 @@ def get_validators(field):
     return []
 
 
-class FlexForm(NaturalKeyModel):
+class FlexForm(I18NModel, NaturalKeyModel):
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
     name = CICharField(max_length=255, unique=True)
@@ -162,7 +239,7 @@ class FlexForm(NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @cache_form
+    # @cache_form
     def get_form(self):
         fields = {}
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
@@ -177,21 +254,42 @@ class FlexForm(NaturalKeyModel):
         flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
 
+    def get_formsets_classes(self):
+        formsets = {}
+        for fs in self.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()
+        return formsets
+
+    def get_formsets(self, attrs):
+        formsets = {}
+        for name, fs in self.get_formsets_classes().items():
+            formsets[name] = fs(prefix=f"{name}", **attrs)
+        return formsets
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
-        self.get_form.cache_clear()
 
 
 class FormSet(NaturalKeyModel, OrderableModel):
     FORMSET_DEFAULT_ATTRS = {
         "smart": {
+            "title": {
+                "class": "",
+                "html_attrs": {},
+            },
+            "container": {
+                "class": "",
+                "html_attrs": {},
+            },
             "widget": {
-                "addText": None,
+                "showCounter": False,
+                "counterPrefix": "",
+                "addText": "Add Another",
                 "addCssClass": None,
-                "deleteText": None,
+                "deleteText": "Remove",
                 "deleteCssClass": None,
-                "keepFieldValues": "",
-            }
+                "keepFieldValues": False,
+            },
         }
     }
     version = AutoIncVersionField()
@@ -232,6 +330,11 @@ class FormSet(NaturalKeyModel, OrderableModel):
         dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
         super().save(*args, **kwargs)
 
+    @cached_property
+    def widget_attrs(self):
+        dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
+        return self.advanced["smart"]["widget"]
+
     def get_formset(self):
         formSet = formset_factory(
             self.get_form(),
@@ -246,8 +349,26 @@ class FormSet(NaturalKeyModel, OrderableModel):
         return formSet
 
 
-class FlexFormField(NaturalKeyModel, OrderableModel):
+FIELD_KWARGS = {
+    forms.CharField: {"min_length": None, "max_length": None, "empty_value": "", "initial": None},
+    forms.IntegerField: {"min_value": None, "max_value": None, "initial": None},
+    forms.DateField: {"initial": None},
+    fields.LocationField: {},
+    fields.RemoteIpField: {},
+    fields.AjaxSelectField: {},
+    fields.SmartFileField: {},
+    fields.SelectField: {},
+    fields.WebcamField: {},
+}
+
+
+class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
+    I18N_FIELDS = [
+        "label",
+    ]
+    I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
+        "kwargs": {},
         "smart": {
             "hint": "",
             "visible": True,
@@ -288,8 +409,7 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
     def type_name(self):
         return str(self.field_type.__name__)
 
-    def get_instance(self):
-        # if hasattr(self.field_type, "custom") and isinstance(self.field_type.custom, CustomFieldType):
+    def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):
             field_type = self.field_type.custom.base_type
             kwargs = self.field_type.custom.attrs.copy()
@@ -304,31 +424,41 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
             regex = self.regex or self.field_type.custom.regex
         else:
             field_type = self.field_type
-            kwargs = self.advanced.copy()
+            advanced = self.advanced.copy()
+            kwargs = self.advanced.get("kwargs", {}).copy()
             regex = self.regex
 
-            smart_attrs = kwargs.pop("smart", {}).copy()
+            smart_attrs = advanced.pop("smart", {}).copy()
             # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
-            if smart_attrs.get("question", ""):
+            if not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
-            elif not smart_attrs.get("visible", True):
+            elif smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
             kwargs.setdefault("label", self.label)
             kwargs.setdefault("required", self.required)
             kwargs.setdefault("validators", get_validators(self))
-            # for k, v in data.items():
-            #     kwargs[f"data-{k}"] = v
-            # if self.choices and hasattr(field_type, "choices"):
-            #     kwargs["choices"] = self.choices
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
             kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
-        if "choices" not in kwargs and self.choices and hasattr(field_type, "choices"):
-            kwargs["choices"] = clean_choices(self.choices.split(","))
+        if "datasource" in self.advanced:
+            kwargs["datasource"] = self.advanced["datasource"]
+        if hasattr(field_type, "choices"):
+            if "choices" in self.advanced:
+                kwargs["choices"] = self.advanced["choices"]
+            elif self.choices:
+                kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
+        return kwargs
+
+    def get_instance(self):
+        if issubclass(self.field_type, CustomFieldMixin):
+            field_type = self.field_type.custom.base_type
+        else:
+            field_type = self.field_type
+        kwargs = self.get_field_kwargs()
         try:
             kwargs.setdefault("flex_field", self)
             tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
@@ -340,6 +470,8 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
 
     def clean(self):
         try:
+            # dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
+            # dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
             self.get_instance()
         except Exception as e:
             raise ValidationError(e)
@@ -350,13 +482,17 @@ class FlexFormField(NaturalKeyModel, OrderableModel):
         else:
             self.name = namify(self.name)[:100]
 
-        dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
-        self.flex_form.get_form.cache_clear()
 
 
-class OptionSetManager(models.Manager):
-    cache = Cache()
+class OptionSetManager(NaturalKeyModelManager):
+    def get_from_cache(self, name):
+        key = f"option-set-{name}"
+        value = cache.get(key)
+        if value is None:
+            value = self.get(name=name)
+            cache.set(key, value)
+        return value
 
 
 class OptionSet(NaturalKeyModel, models.Model):
@@ -370,33 +506,42 @@ class OptionSet(NaturalKeyModel, models.Model):
     columns = models.CharField(
         max_length=20, default="0,0,-1", blank=True, help_text="column order. Es: 'pk,parent,label' or 'pk,label'"
     )
+
+    pk_col = models.IntegerField(default=0, help_text="ID column number")
+    parent_col = models.IntegerField(default=-1, help_text="Column number of the indicating parent element")
+    locale = models.CharField(max_length=5, default="en-us", help_text="default language code")
+    languages = models.CharField(
+        max_length=255, default="-;-;", blank=True, null=True, help_text="language code of each column."
+    )
+
     objects = OptionSetManager()
 
     def clean(self):
+        if self.locale not in self.languages:
+            raise ValidationError("Default locale must be in the languages list")
         try:
-            a, b, c = list(map(int, self.columns.split(",")))
+            self.languages.split(",")
         except ValueError:
-            raise ValidationError("Invalid columns")
-        super().clean()
+            raise ValidationError("Languages must be a comma separated list of locales")
 
-    def get_cache_key(self, cols=None):
-        return f"options-{self.get_api_url()}-{self.version}"
+    def get_cache_key(self, requested_language):
+        return f"options-{self.pk}-{requested_language}-{self.version}"
 
     def get_api_url(self):
-        try:
-            pk, label, parent = self.columns.split(",")
-        except ValueError:
-            pk, label, parent = 0, 0, -1
-        return reverse("optionset", args=[self.name, pk, label, parent])
+        return reverse("optionset", args=[self.name])
 
-    def get_data(self, columns=None):
-        value = cache.get(self.get_cache_key(columns), version=self.version)
-
-        if columns is None:
-            pk_col, label_col, parent_col = map(int, self.columns.split(","))
+    def get_data(self, requested_language):
+        if self.separator:
+            try:
+                label_col = self.languages.split(",").index(requested_language)
+            except ValueError:
+                logger.error(f"Language {requested_language} not available for OptionSet {self.name}")
+                label_col = self.languages.split(",").index(self.locale)
         else:
-            pk_col, label_col, parent_col = columns
+            label_col = 0
 
+        key = self.get_cache_key(requested_language)
+        value = cache.get(key, version=self.version)
         if not value:
             value = []
             for line in self.data.split("\r\n"):
@@ -407,10 +552,10 @@ class OptionSet(NaturalKeyModel, models.Model):
                 parent = None
                 if self.separator:
                     cols = line.split(self.separator)
-                    pk = cols[pk_col]
+                    pk = cols[self.pk_col]
                     label = cols[label_col]
-                    if parent_col > 0:
-                        parent = cols[parent_col]
+                    if self.parent_col > 0:
+                        parent = cols[self.parent_col]
                 else:
                     label = line
                     pk = str(line).lower()
@@ -421,28 +566,16 @@ class OptionSet(NaturalKeyModel, models.Model):
                     "label": label,
                 }
                 value.append(values)
-            cache.set(self.get_cache_key(), value)
+            cache.set(key, value)
         return value
 
-    def as_choices(self, cols=None):
-        data = self.get_data(cols)
+    def as_choices(self, language=None):
+        data = self.get_data(language or get_language())
         for entry in data:
             yield entry["pk"], entry["label"]
 
-    def as_json(self, cols=None):
-        return self.get_data(cols)
-
-    @classmethod
-    def parse_datasource(cls, datasource):
-        if datasource:
-            if ":" in datasource:
-                name, cols = datasource.split(":")
-                columns = map(int, cols.split(","))
-            else:
-                name = datasource
-                columns = 0, 0, -1
-            return name, columns
-        return "", []
+    def as_json(self, language=None):
+        return self.get_data(language or get_language())
 
 
 def clean_choices(value):

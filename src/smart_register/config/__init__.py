@@ -31,6 +31,7 @@ DEFAULTS = {
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
     "LOG_LEVEL": (str, "ERROR"),
     "ROOT_KEY": (str, uuid.uuid4().hex),
+    # "FERNET_KEY": (str, "Nl_puP2z0-OKVNKMtPXx4jEI-ox7sKLM7CgnGT-yAug="),
     "EMAIL_BACKEND": (str, "django.core.mail.backends.smtp.EmailBackend"),
     "EMAIL_HOST": (str, ""),
     "EMAIL_HOST_USER": (str, ""),
@@ -46,6 +47,7 @@ DEFAULTS = {
     "INTERNAL_IPS": (list, ["127.0.0.1", "localhost"]),
     "LANGUAGE_CODE": (str, "en-us"),
     "CACHE_DEFAULT": (str, "locmemcache://"),
+    "CONSTANCE_DATABASE_CACHE_BACKEND": (str, "default"),
     "MEDIA_ROOT": (str, "/tmp/media/"),
     "ROOT_TOKEN": (str, uuid.uuid4().hex),
     # Sentry - see CONTRIBUTING.md
@@ -56,13 +58,15 @@ DEFAULTS = {
     "SESSION_COOKIE_SECURE": (bool, "false"),
     "SESSION_COOKIE_NAME": (str, "reg_id"),
     "SMART_ADMIN_BOOKMARKS": (parse_bookmarks, ""),
-    "STATIC_ROOT": (str, "/tmp/static/"),
-    "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
+    # "STATIC_ROOT": (str, "/tmp/static/"),
+    # "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.StaticFilesStorage"),
+    "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "USE_HTTPS": (bool, False),
     "AZURE_CLIENT_ID": (str, None),
     "AZURE_CLIENT_SECRET": (str, None),
     "AZURE_TENANT_KEY": (str, None),
+    "WHITENOISE": (bool, False),
 }
 
 env = Env(**DEFAULTS)

@@ -59,6 +59,7 @@ check:
 			--build-arg BUILD_DATE=${BUILD_DATE} \
 			-t ${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
 			-f docker/${DOCKERFILE} .
+	docker tag ${DOCKER_REGISTRY}/${DOCKER_IMAGE} ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest
 	docker images | grep "${DOCKER_IMAGE_NAME}" | grep ${VERSION}
 
 build: check .build
@@ -91,7 +92,7 @@ dev:
 			-e DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
 			${RUN_OPTIONS} \
-			${DOCKER_REGISTRY}/${DOCKER_IMAGE} \
+			${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest \
 			${CMD}
 
 # 			-e STATICFILES_STORAGE="django.contrib.staticfiles.storage.ManifestStaticFilesStorage"\

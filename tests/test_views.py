@@ -1,5 +1,6 @@
 import base64
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from django.urls import reverse
@@ -12,6 +13,14 @@ LANGUAGES = {
     "japanese": "ファーストネーム",
     "arabic": "الاسم الأول",
 }
+
+
+@pytest.fixture(autouse=True)
+def mock_state():
+    from smart_register.state import state
+    from django.contrib.auth.models import AnonymousUser
+
+    state.request = Mock(user=AnonymousUser())
 
 
 @pytest.fixture()
@@ -76,7 +85,7 @@ def complex_registration(complex_form):
 
 @pytest.mark.django_db
 def test_register_simple(django_app, simple_registration):
-    url = reverse("register", args=[simple_registration.locale, simple_registration.slug])
+    url = reverse("register", args=[simple_registration.slug])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"
@@ -109,11 +118,12 @@ def add_extra_form_to_formset_with_data(form, prefix, field_names_and_values):
         form[input_field_name] = extra_field_value
         form.field_order.append((input_field_name, extra_field))
         form[total_forms_field_name].value = str(next_form_index + 1)
+    return form
 
 
 @pytest.mark.django_db
 def test_register_complex(django_app, complex_registration):
-    url = reverse("register", args=[complex_registration.locale, complex_registration.slug])
+    url = reverse("register", args=[complex_registration.slug])
     res = django_app.get(url)
     res.form["family_name"] = "HH #1"
 
@@ -136,7 +146,6 @@ def test_register_complex(django_app, complex_registration):
         },
     )
     res = res.form.submit()
-    # FIXME: remove me (res.showbrowser)
     res = res.follow()
     assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
     assert res.context["record"].data["form2s"][0]["last_name"] == "Last"
@@ -145,7 +154,7 @@ def test_register_complex(django_app, complex_registration):
 
 @pytest.mark.parametrize("first_name", LANGUAGES.values(), ids=LANGUAGES.keys())
 def test_register_encrypted(django_app, first_name, rsa_encrypted_registration):
-    url = reverse("register", args=[rsa_encrypted_registration.locale, rsa_encrypted_registration.slug])
+    url = reverse("register", args=[rsa_encrypted_registration.slug])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = first_name
@@ -161,7 +170,7 @@ def test_register_encrypted(django_app, first_name, rsa_encrypted_registration):
 
 @pytest.mark.django_db
 def test_upload_image(django_app, complex_registration, mock_storage):
-    url = reverse("register", args=[complex_registration.locale, complex_registration.slug])
+    url = reverse("register", args=[complex_registration.slug])
     res = django_app.get(url)
     res.form["family_name"] = "HH #1"
     IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
@@ -177,13 +186,14 @@ def test_upload_image(django_app, complex_registration, mock_storage):
         },
     )
     res = res.form.submit().follow()
-    assert res.context["record"].data["family_name"] == "HH #1"
-    assert res.context["record"].data["form2s"][0]["image"] == base64.b64encode(IMAGE.content).decode()
+    obj = res.context["record"]
+    assert obj.data["family_name"] == "HH #1"
+    assert obj.data["form2s"][0]["image"] == base64.b64encode(IMAGE.content).decode()
 
 
 @pytest.mark.django_db
 def test_upload_image_register_rsa_encrypted(django_app, rsa_encrypted_registration, mock_storage):
-    url = reverse("register", args=[rsa_encrypted_registration.locale, rsa_encrypted_registration.slug])
+    url = reverse("register", args=[rsa_encrypted_registration.slug])
     IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
 
     res = django_app.get(url)
@@ -203,7 +213,7 @@ def test_upload_image_register_rsa_encrypted(django_app, rsa_encrypted_registrat
 def test_upload_image_register_fernet_encrypted(django_app, fernet_encrypted_registration, mock_storage):
     from smart_register.registration.models import Record
 
-    url = reverse("register", args=[fernet_encrypted_registration.locale, fernet_encrypted_registration.slug])
+    url = reverse("register", args=[fernet_encrypted_registration.slug])
     IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
 
     res = django_app.get(url)

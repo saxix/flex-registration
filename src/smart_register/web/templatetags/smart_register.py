@@ -1,15 +1,18 @@
 import base64
 import io
+import json
 import logging
 import re
 
 import markdown as md
 from django.template import Library, Node
-from django.urls import reverse
+from django.urls import reverse, translate_url
 from django.utils.safestring import mark_safe
 from PIL import Image, UnidentifiedImageError
 
-from ...core.models import FormSet
+from smart_register.i18n.gettext import gettext as _
+from ...core.flags import parse_bool
+
 from ...core.utils import dict_get_nested, dict_setdefault
 from ...registration.models import Registration
 
@@ -67,12 +70,18 @@ def dump_dict(value):
 
 @register.filter(name="smart")
 def smart_attr(field, attr):
-    return field.field.flex_field.advanced.get("smart", {}).get(attr, "")
+    translate = False
+    if "," in attr:
+        attr, translate = attr.split(",")
+    value = field.field.flex_field.advanced.get("smart", {}).get(attr, "")
+    if parse_bool(translate):
+        value = _(str(value))
+    return str(value)
 
 
-@register.simple_tag()
-def formset_config(formset):
-    return formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
+@register.filter()
+def jsonfy(d):
+    return json.dumps(d)
 
 
 @register.filter(name="lookup")
@@ -114,7 +123,9 @@ def link(registration):
 
     if "class" not in attrs:
         widget["attrs"]["class"] = "button text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
-    widget["attrs"]["href"] = reverse("register", args=[registration.locale, registration.slug])
+    url = reverse("register", args=[registration.slug])
+    url = translate_url(url, registration.locale)
+    widget["attrs"]["href"] = url
     return {
         "reg": registration,
         "widget": widget,

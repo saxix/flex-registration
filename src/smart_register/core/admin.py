@@ -5,8 +5,10 @@ import tempfile
 from json import JSONDecodeError
 from pathlib import Path
 
-import jsonpickle
 import requests
+from django.core.cache import caches
+from reversion_compare.admin import CompareVersionAdmin
+
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -20,7 +22,7 @@ from django.contrib.admin import TabularInline, register
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
@@ -35,10 +37,14 @@ from .models import (
     FormSet,
     OptionSet,
     Validator,
+    FIELD_KWARGS,
 )
-from .utils import render
+from .utils import render, dict_setdefault
+from ..admin.mixin import LoadDumpMixin
 
 logger = logging.getLogger(__name__)
+
+cache = caches["default"]
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):
@@ -53,45 +59,80 @@ class ValidatorTestForm(forms.Form):
 
 
 @register(Validator)
-class ValidatorAdmin(SmartModelAdmin):
-    list_display = ("name", "target", "message")
+class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     form = ValidatorForm
-    search_fields = ("name",)
-    list_filter = ("target",)
+    list_editable = ("trace", "active", "draft")
+    list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
+    list_filter = ("target", "active", "draft", "trace")
     readonly_fields = ("version", "last_update_date")
+    search_fields = ("name",)
     DEFAULTS = {
         Validator.FORM: {},  # cleaned data
         Validator.FIELD: "",  # field value
         Validator.MODULE: [{}],
         Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
     }
+    # change_list_template = "reversion/change_list.html"
+    object_history_template = "reversion-compare/object_history.html"
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        cache.set(f"validator-{request.user.pk}-{obj.pk}-status", obj.STATUS_UNKNOWN)
 
     @view()
     def _test(self, request, pk):
         return {}
 
+    def used_by(self, obj):
+        if obj.target == Validator.FORM:
+            return ", ".join(obj.flexform_set.values_list("name", flat=True))
+        elif obj.target == Validator.FIELD:
+            return ", ".join(obj.flexformfield_set.values_list("name", flat=True))
+        elif obj.target == Validator.FORMSET:
+            return ", ".join(obj.formset_set.values_list("name", flat=True))
+
     @button()
     def test(self, request, pk):
-        ctx = self.get_common_context(request, pk, title="Test Validator")
-        param = self.DEFAULTS[self.object.target]
+        ctx = self.get_common_context(request, pk)
+        original = ctx["original"]
+        stored = cache.get(f"validator-{request.user.pk}-{original.pk}-payload")
+        ctx["traced"] = stored
+        ctx["title"] = f"Test {original.target} validator: {original.name}"
+        if stored:
+            param = json.loads(stored)
+        else:
+            param = self.DEFAULTS[self.object.target]
+
         if request.method == "POST":
             form = ValidatorTestForm(request.POST)
             if form.is_valid():
                 self.object.code = form.cleaned_data["code"]
                 self.object.save()
-                return HttpResponseRedirect("..")
+                # return HttpResponseRedirect("..")
         else:
             form = ValidatorTestForm(
-                initial={"code": self.object.code, "input": jsonpickle.encode(param)},
+                initial={"code": self.object.code, "input": original.jspickle(param)},
             )
 
+        ctx["jslib"] = Validator.LIB
         ctx["form"] = form
         return render(request, "admin/core/validator/test.html", ctx)
 
 
 @register(FormSet)
-class FormSetAdmin(SmartModelAdmin):
-    list_display = ("name", "title", "parent", "flex_form", "enabled", "validator", "min_num")
+class FormSetAdmin(LoadDumpMixin, SmartModelAdmin):
+    list_display = (
+        "name",
+        "title",
+        "parent",
+        "flex_form",
+        "enabled",
+        "validator",
+        "min_num",
+        "max_num",
+        "extra",
+        "dynamic",
+    )
     search_fields = ("name", "title")
     list_editable = ("enabled",)
     readonly_fields = ("version", "last_update_date")
@@ -128,11 +169,23 @@ class FlexFormFieldForm(forms.ModelForm):
         self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
 
 
+class FlexFormFieldForm2(forms.ModelForm):
+    class Meta:
+        model = FlexFormField
+        exclude = ()
+
+    def clean(self):
+        ret = super().clean()
+        dict_setdefault(ret["advanced"], FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
+        dict_setdefault(ret["advanced"], {"kwargs": FIELD_KWARGS.get(ret["field_type"], {})})
+        return ret
+
+
 @register(FlexFormField)
-class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
+class FlexFormFieldAdmin(LoadDumpMixin, CompareVersionAdmin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
-    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
-    list_editable = ["ordering", "required", "enabled"]
+    list_display = ("label", "name", "flex_form", "_type", "required", "enabled")
+    list_editable = ["required", "enabled"]
     list_filter = (
         ("flex_form", AutoCompleteFilter),
         ("field_type", Select2FieldComboFilter),
@@ -144,11 +197,17 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
+    form = FlexFormFieldForm2
     ordering_field = "ordering"
     order = "ordering"
 
+    # change_list_template = "reversion/change_list.html"
+
     def _type(self, obj):
-        return obj.field_type.__name__
+        if obj.field_type:
+            return obj.field_type.__name__
+        else:
+            return "[[ removed ]]"
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         if db_field.name == "field_type":
@@ -169,7 +228,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
             instance = fld.get_instance()
             ctx["debug_info"] = {
                 "instance": instance,
-                "kwargs": fld.advanced,
+                "kwargs": fld.get_field_kwargs(),
                 "options": getattr(instance, "options", None),
                 "choices": getattr(instance, "choices", None),
                 "widget": getattr(instance, "widget", None),
@@ -184,7 +243,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
                 form = formClass(request.POST)
                 if form.is_valid():
                     self.message_user(
-                        request, f"Form validation success. " f"You have selected: {form.cleaned_data['sample']}"
+                        request, f"Form validation success. You have selected: {form.cleaned_data['sample']}"
                     )
             else:
                 form = formClass()
@@ -197,7 +256,7 @@ class FlexFormFieldAdmin(OrderableAdmin, SmartModelAdmin):
         return render(request, "admin/core/flexformfield/test.html", ctx)
 
 
-class FlexFormFieldInline(OrderableAdmin, TabularInline):
+class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
     model = FlexFormField
     form = FlexFormFieldForm
     fields = ("ordering", "label", "name", "required", "enabled", "field_type")
@@ -226,8 +285,9 @@ class SyncForm(SyncConfigForm):
 
 
 @register(FlexForm)
-class FlexFormAdmin(SmartModelAdmin):
+class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
+    inlines = [FlexFormFieldInline, FormSetInline]
     list_display = ("name", "validator", "used_by", "childs", "parents")
     list_filter = (
         QueryStringFilter,
@@ -235,7 +295,7 @@ class FlexFormAdmin(SmartModelAdmin):
     )
     search_fields = ("name",)
     readonly_fields = ("version", "last_update_date")
-    inlines = [FlexFormFieldInline, FormSetInline]
+    ordering = ("name",)
     save_as = True
 
     def used_by(self, obj):
@@ -279,7 +339,12 @@ class FlexFormAdmin(SmartModelAdmin):
                 apps = frm.cleaned_data["apps"]
                 buf = io.StringIO()
                 call_command(
-                    "dumpdata", *apps, stdout=buf, use_natural_foreign_keys=True, use_natural_primary_keys=True
+                    "dumpdata",
+                    *apps,
+                    stdout=buf,
+                    exclude=["registration.Record"],
+                    use_natural_foreign_keys=True,
+                    use_natural_primary_keys=True,
                 )
                 return JsonResponse(json.loads(buf.getvalue()), safe=False)
             else:
@@ -332,8 +397,6 @@ class FlexFormAdmin(SmartModelAdmin):
                             with disable_concurrency():
                                 fixture = (workdir / fdst.name).absolute()
                                 call_command("loaddata", fixture, stdout=out, verbosity=3)
-                                for frm in FlexForm.objects.all():
-                                    frm.get_form.cache_clear()
 
                             message = out.getvalue()
                             self.message_user(request, message)
@@ -348,12 +411,13 @@ class FlexFormAdmin(SmartModelAdmin):
 
 
 @register(OptionSet)
-class OptionSetAdmin(SmartModelAdmin):
+class OptionSetAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     list_display = ("name", "id", "separator", "comment", "columns")
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
     save_as = True
     readonly_fields = ("version", "last_update_date")
+    object_history_template = "reversion-compare/object_history.html"
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
     def view_json(self, button):

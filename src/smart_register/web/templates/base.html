@@ -12,14 +12,20 @@
 
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
-    <link rel="preload" as="image" href="{% static "loading.gif" %}" />
     {% if project.debug or user.is_staff %}
         <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
-        <link rel="stylesheet" href="{% static "debug.css" %}">{% endif %}
+        <link rel="stylesheet" href="{% static "admin/debug.css" %}">{% endif %}
+    <link rel="preload" as="image" href="{% static "loading.gif" %}"/>
     {% block head %}
     {% endblock head %}
 </head>
 <body class="min-h-screen dark">
+<script>
+    {% if user.is_staff %}
+        const LANGUAGE_CODE = "{{ LANGUAGE_CODE }}";
+        const I18N_MESSAGE_URL = "{% url "admin:i18n_message_get_or_create" %}";
+    {% endif %}
+</script>
 {% block staff-toolbar %}{% include "_env_header.html" %}{% endblock %}
 {% block header %}
     <header class="text-gray-700 body-font border-b border-gray-200 header">
@@ -31,7 +37,7 @@
             </div>
             <div class="flex-grow"></div>
             <div>
-                <img alt="hope logo" src="{% static "hope1.webp" %}"  height="40">
+                <img alt="hope logo" src="{% static "hope1.webp" %}" height="40">
             </div>
         </div>
     </header>
@@ -40,21 +46,5 @@
 {% endblock body %}
 
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-<script nonce="{{request.csp_nonce}}">
-    {% flag_enabled 'SENTRY_JAVASCRIPT' as sentry %}
-    {% if sentry %}
-        Sentry.init({
-            dsn: "{{ project.sentry_dsn }}",
-            release: "{{ project.version }}",
-            tracesSampleRate: 1.0,
-            ignoreErrors: [
-                "datepicker.inputField.after is not a function",
-                "num.toString(...).padStart is not a function",
-                "Unexpected token =>",
-                "Unexpected identifier",
-            ]
-        });
-    {% endif %}
-</script>
 </body>
 </html>
