@@ -7,6 +7,7 @@ from pathlib import Path
 
 import requests
 from django.core.cache import caches
+from reversion_compare.admin import CompareVersionAdmin
 
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
@@ -58,7 +59,7 @@ class ValidatorTestForm(forms.Form):
 
 
 @register(Validator)
-class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
+class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     form = ValidatorForm
     list_editable = ("trace", "active", "draft")
     list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
@@ -71,10 +72,12 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
         Validator.MODULE: [{}],
         Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
     }
+    # change_list_template = "reversion/change_list.html"
+    object_history_template = "reversion-compare/object_history.html"
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        cache.set(f"validator-{request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
+        cache.set(f"validator-{request.user.pk}-{obj.pk}-status", obj.STATUS_UNKNOWN)
 
     @view()
     def _test(self, request, pk):
@@ -92,7 +95,7 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk)
         original = ctx["original"]
-        stored = cache.get(f"validator-{request.user.pk}-{original.pk}")
+        stored = cache.get(f"validator-{request.user.pk}-{original.pk}-payload")
         ctx["traced"] = stored
         ctx["title"] = f"Test {original.target} validator: {original.name}"
         if stored:
@@ -406,12 +409,13 @@ class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
 
 
 @register(OptionSet)
-class OptionSetAdmin(LoadDumpMixin, SmartModelAdmin):
+class OptionSetAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     list_display = ("name", "id", "separator", "comment", "columns")
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
     save_as = True
     readonly_fields = ("version", "last_update_date")
+    object_history_template = "reversion-compare/object_history.html"
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
     def view_json(self, button):

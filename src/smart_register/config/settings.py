@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     # -- dev --
     "debug_toolbar",
     # ---
+    "reversion",  # https://github.com/etianen/django-reversion
+    "reversion_compare",  # https://github.com/jedie/django-reversion-compare
+    # ---
     "smart_register.admin.apps.AuroraAdminUIConfig",
     "smart_register.admin.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
@@ -599,3 +602,9 @@ worker-src 'none';
 # CSP_REPORT_ONLY = env("CSP_REPORT_ONLY")
 # CSP_DEFAULT_SRC = env("CSP_DEFAULT_SRC")
 # CSP_SCRIPT_SRC = env("CSP_SCRIPT_SRC")
+
+# Add reversion models to admin interface:
+ADD_REVERSION_ADMIN = True
+# optional settings:
+REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = False
+REVERSION_COMPARE_IGNORE_NOT_REGISTERED = False

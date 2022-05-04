@@ -120,7 +120,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
             else:
                 error = self.jspickle({"Error": exc.messages})
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}", self.jspickle(value))
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-payload", self.jspickle(value))
 
     def validate(self, value):
         from py_mini_racer import MiniRacer

@@ -544,6 +544,29 @@ python-versions = "*"
 djangorestframework = "*"
 
 [[package]]
+name = "django-reversion"
+version = "5.0.0"
+description = "An extension to the Django web framework that provides version control for model instances."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+django = ">=2.0"
+
+[[package]]
+name = "django-reversion-compare"
+version = "0.15.0"
+description = "history compare for django-reversion"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0.0"
+
+[package.dependencies]
+diff-match-patch = "*"
+django-reversion = "*"
+
+[[package]]
 name = "django-simple-captcha"
 version = "0.5.17"
 description = "A very simple, yet powerful, Django captcha application"
@@ -2091,7 +2114,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "bb8acfaddfeb1168f47c889ac543d1935c83db76e7f0c78a5522f15e7451b271"
+content-hash = "2905954c740834224859cb58e97bd700213dbefb154e35e9d0b5e125bc9cfa6f"
 
 [metadata.files]
 appnope = [
@@ -2393,6 +2416,14 @@ django-regex = [
 ]
 django-rest-framework = [
     {file = "django-rest-framework-0.1.0.tar.gz", hash = "sha256:47a8f496fa69e3b6bd79f68dd7a1527d907d6b77f009e9db7cf9bb21cc565e4a"},
+]
+django-reversion = [
+    {file = "django-reversion-5.0.0.tar.gz", hash = "sha256:0bade3c399387451087f0c67835e0d3d186d767de6a5c5ba53a88eafc3f271c8"},
+    {file = "django_reversion-5.0.0-py3-none-any.whl", hash = "sha256:7bea725de7f56769d89a5a712cf7b7f1b02abc27655432f2eb1a703264986d99"},
+]
+django-reversion-compare = [
+    {file = "django-reversion-compare-0.15.0.tar.gz", hash = "sha256:ed0264a2852d9d867023f1874948b8234dad9c2d2fa22ea18cfd5f28f304d7a0"},
+    {file = "django_reversion_compare-0.15.0-py3-none-any.whl", hash = "sha256:d6f37b106aec287ae17a076bb7db1184ab02ab1898f0e8693f2779fbdaf71697"},
 ]
 django-simple-captcha = [
     {file = "django-simple-captcha-0.5.17.tar.gz", hash = "sha256:9649e66dab4e71efacbfef02f48b83b91684898352a1ab56f1686ce71033b328"},
