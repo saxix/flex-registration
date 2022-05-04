@@ -159,7 +159,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
             except ValidationError as e:
                 if self.trace:
                     logger.exception(e)
-                    self.monitor(self.STATUS_ERROR, e)
+                    self.monitor(self.STATUS_ERROR, value, e)
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
