@@ -32,12 +32,12 @@
             {% if user.is_staff %}
                 {% include "registration/_staff_edit_form.html" %}
             {% endif %}
-            <form class="w-full" method="post" enctype="multipart/form-data">
+            <form class="w-full" method="post" enctype="multipart/form-data" id="registrationForm">
                 {% csrf_token %}
                 <div class="form-container" data-page="0">
                     {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
                 </div>
-                {% for name, formset in formsets.items %}
+                {% for name, formset in formsets.items %}smart
                     {{ formset.non_form_errors }}
                     {% formset_config formset as config %}
                     <div class="formset-config">{{ config|json_script:name }}</div>
