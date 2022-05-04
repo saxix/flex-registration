@@ -182,7 +182,7 @@ class FlexFormFieldForm2(forms.ModelForm):
 
 
 @register(FlexFormField)
-class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
+class FlexFormFieldAdmin(LoadDumpMixin, CompareVersionAdmin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
     list_display = ("label", "name", "flex_form", "_type", "required", "enabled")
     list_editable = ["required", "enabled"]
@@ -200,6 +200,8 @@ class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
     form = FlexFormFieldForm2
     ordering_field = "ordering"
     order = "ordering"
+
+    # change_list_template = "reversion/change_list.html"
 
     def _type(self, obj):
         if obj.field_type:
@@ -283,7 +285,7 @@ class SyncForm(SyncConfigForm):
 
 
 @register(FlexForm)
-class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
+class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
     inlines = [FlexFormFieldInline, FormSetInline]
     list_display = ("name", "validator", "used_by", "childs", "parents")

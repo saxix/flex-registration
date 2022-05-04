@@ -38,7 +38,13 @@
                     {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
                 </div>
                 {% for name, formset in formsets.items %}
-                    {{ formset.non_form_errors }}
+                    {% if formset.non_form_errors %}
+                        <ul class="errorlist">
+                            {% for msg in formset.non_form_errors %}
+                                <li class="itrans">{{ msg }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                     {% formset_config formset as config %}
                     <div class="formset-config">{{ config|json_script:name }}</div>
                     <div class="shadow-md rounded bg-gray-100 p-2 sm:p-4" data-page="{{ forloop.counter }}">
@@ -49,8 +55,6 @@
                             {% endif %}
                             {% if formset.fs.title %}
                                 <div class="itrans w-full mt-4 text-sm leading-7 text-gray-500 font-regular i18n uppercase text-center title">
-{#                                    {% if user.is_staff %}#}
-{#                                        {% include "i18n/_staff_edit_i18n.html" with original=formset.fs.title %}{% endif %}#}
                                     {% trans formset.fs.title %}
                                 </div>
                             {% endif %}

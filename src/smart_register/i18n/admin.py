@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import get_language
 
-from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.decorators import button, view
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
 from dateutil.utils import today
@@ -91,15 +91,15 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
                     state.hit_messages = True
                     for flex_form in FlexForm.objects.all():
                         frm_cls = flex_form.get_form()
-                        frm = frm_cls()
-                        loader.render_to_string(
-                            "smart/_form.html",
-                            {
-                                "form": frm,
-                                "formsets": flex_form.get_formsets({}),
-                                "request": Mock(selected_language=lang),
-                            },
-                        )
+                        for frm in [frm_cls(), frm_cls({})]:
+                            loader.render_to_string(
+                                "smart/_form.html",
+                                {
+                                    "form": frm,
+                                    "formsets": flex_form.get_formsets({}),
+                                    "request": Mock(selected_language=lang),
+                                },
+                            )
                 except Exception as e:
                     logger.exception(e)
                 finally:
@@ -113,9 +113,9 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/i18n/message/translation.html", ctx)
 
-    @link()
-    def translate(self, button):
-        return button
+    # @link()
+    # def translate(self, button):
+    #     return button
 
     @view()
     def get_or_create(self, request):

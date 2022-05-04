@@ -26,7 +26,7 @@
             <a href="{% url "admin:constance_config_changelist" %}">MAINTENANCE MODE ACTIVE</a>
         </div>
     {% endif %}
-    <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+    <h1 id="site-name"><a href="{% url 'admin:index' %}">{{ project.env }}</a></h1>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
