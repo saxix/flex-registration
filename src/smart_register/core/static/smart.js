@@ -97,7 +97,7 @@ smart = {
         $(".question-visibility").on("click", function () {
             smart.handleQuestion(this);
         });
-        $(".question-visibility.error").each(function (i, e){
+        $(".errorlist").each(function (i, e){
             var $container = $(e).parents("fieldset").find(".field-container");
             $container.show();
         });
