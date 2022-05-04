@@ -39,6 +39,7 @@ cache = caches["default"]
 
 class Validator(NaturalKeyModel):
     STATUS_ERROR = "error"
+    STATUS_EXCEPTION = "exc"
     STATUS_SUCCESS = "success"
     STATUS_SKIP = "skip"
     STATUS_UNKNOWN = "unknown"
@@ -109,7 +110,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def jspickle(self, value):
         return json.dumps(value, cls=JSONEncoder, skip_files=True)
 
-    def monitor(self, status, value, exc: ValidationError = None):
+    def monitor(self, status, value, exc: Exception = None):
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", status)
         error = None
         if exc:
@@ -117,8 +118,10 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 error = self.jspickle(
                     exc.error_dict,
                 )
-            else:
+            elif isinstance(exc, ValidationError):
                 error = self.jspickle({"Error": exc.messages})
+            else:
+                error = self.jspickle({"Error": str(exc)})
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-payload", self.jspickle(value))
 
@@ -163,9 +166,11 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 return True
             except Exception as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 raise
             self.monitor(self.STATUS_SUCCESS, value)
 
