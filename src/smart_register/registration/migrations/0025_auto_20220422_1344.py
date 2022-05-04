@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="registration",
             name="slug",
-            field=models.SlugField(blank=True, max_length=500, null=True, unique=True),
+            field=models.SlugField(blank=True, max_length=500, null=True, unique=False),
         ),
         migrations.AlterField(
             model_name="registration",
