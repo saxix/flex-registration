@@ -37,7 +37,7 @@
                 <div class="form-container" data-page="0">
                     {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
                 </div>
-                {% for name, formset in formsets.items %}smart
+                {% for name, formset in formsets.items %}
                     {{ formset.non_form_errors }}
                     {% formset_config formset as config %}
                     <div class="formset-config">{{ config|json_script:name }}</div>
