@@ -14,7 +14,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.management import call_command
-from django.db import connections
+from django.db import connections, DEFAULT_DB_ALIAS
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -142,7 +142,10 @@ class AuroraAdminSite(SmartAdminSite):
                     cmd = form.cleaned_data["command"]
                     stm = urllib.parse.unquote(base64.b64decode(cmd).decode())
                     response["stm"] = sqlparse.format(stm)
-                    conn = connections["read_only"]
+                    if is_root(request):
+                        conn = connections[DEFAULT_DB_ALIAS]
+                    else:
+                        conn = connections["read_only"]
                     cursor = conn.cursor()
                     cursor.execute(stm)
                     if cursor.pgresult_ptr is not None:

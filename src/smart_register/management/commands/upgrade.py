@@ -75,6 +75,12 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
         from django.conf import settings
         from django.utils import translation
 
+        from smart_register.i18n.models import Message
+        from smart_register.registration.models import Registration
+
+        Message.objects.raw('ALTER TABLE i18n_message DROP COLUMN IF EXISTS orphan;')
+        Registration.objects.raw('DROP INDEX CONCURRENTLY IF EXISTS registration_registration_slug_d104c7ea_uniq;')
+
         django.setup()
         print(f"LANGUAGE_CODE: {settings.LANGUAGE_CODE}")
         print(f"LOCALE: {translation.to_locale(settings.LANGUAGE_CODE)}")
