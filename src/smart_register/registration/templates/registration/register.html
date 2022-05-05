@@ -15,7 +15,7 @@
 {% endblock head %}
 {% block header %}
     {{ block.super }}
-    {% if dataset.locales %}
+    {% if dataset.locales|length > 1 %}
     <div class="float-right absolute hidden">
         {% include "i18n/_select_language.html" with languages=dataset.languages %}
     </div>
@@ -27,9 +27,7 @@
 {% endblock staff-toolbar %}
 
 {% block body %}
-
     {% include "smart/_form.html" %}
-
 {% endblock body %}
 {% block footer %}
     {% if dataset.advanced.smart.wizard %}<script src="{% static "wizard.min.js" %}"></script>{% endif %}
