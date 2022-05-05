@@ -6,7 +6,7 @@ $("#set_language").on("change", function () {
         "<input type=\"hidden\" name=\"csrfmiddlewaretoken\" value=\"" + $("input[name=csrfmiddlewaretoken]").val() + "\">" +
         "</form>").appendTo("body").submit().remove();
 }).parent().show();
-if (I18N_MESSAGE_URL !== undefined) {
+if (I18N_MESSAGE_URL !== undefined && I18N_MESSAGE_URL !== "") {
 
     $("<script type=“text/template” id=\"i18n-template\">\n" +
         "        <span class=\"inline-flex staff-editor staff-i18n staff-tooltip align-left \">\n" +
