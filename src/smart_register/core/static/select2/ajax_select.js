@@ -47,7 +47,6 @@
                     }
                 }
             });
-
             if (parentName) {
                 if (!selected) {
                     $target.prop("disabled", true);

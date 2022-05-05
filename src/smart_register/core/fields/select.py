@@ -93,9 +93,8 @@ class AjaxSelectField(forms.Field):
         attrs = super().widget_attrs(widget)
         attrs["data-parent"] = self.parent
         try:
-            # name, columns = OptionSet.parse_datasource(self.datasource)
             attrs["data-source"] = self.datasource
-            # OptionSet.objects.get(name=name)
+            attrs["data-parent"] = self.parent
             attrs["data-ajax--url"] = reverse("optionset", args=[self.datasource])
         except (OptionSet.DoesNotExist, NoReverseMatch, TypeError) as e:
             logger.exception(e)
