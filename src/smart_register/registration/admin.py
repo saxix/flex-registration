@@ -206,7 +206,6 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         reg: Registration = ctx["original"]
         if request.method == "POST":
             form = CloneForm(request.POST)
-            created = set()
             if form.is_valid():
                 try:
                     for dip in [
@@ -223,7 +222,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                     with atomic():
                         source = Registration.objects.get(id=reg.pk)
                         title = form.cleaned_data["title"]
-                        reg, __ = clone_model(source, name=namify(title), title=title, slug=slugify(title))
+                        reg, __ = clone_model(source, name=namify(title), title=title, version=1, slug=slugify(title))
                         if form.cleaned_data["deep"]:
                             main_form, __ = clone_model(
                                 source.flex_form, name=f"{source.flex_form.name}-(clone: {reg.name})"

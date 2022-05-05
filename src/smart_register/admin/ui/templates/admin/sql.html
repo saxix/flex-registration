@@ -18,14 +18,37 @@
         <div id="changelist-filter" class="console-buttons">
             <ul class="submit-row">
                 <li><a class="button" href="https://www.postgresql.org/docs/current/plpgsql.html">Commands</a></li>
-                <li><a class="button quick-sql" href="#" data-cmd="SELECT * FROM information_schema.tables; ">Show
-                    Tables</a></li>
-                <li>
-                    <a class="button quick-sql" href="#"
-                       data-cmd="SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=[table_name];">
-                        Describe Table
-                    </a>
-                </li>
+                {% for label,stm in buttons.items %}
+                    <li><a class="button quick-sql" href="#" data-cmd="{{ stm }}">{{ label }}</a></li>
+                {% endfor %}
+                {#                <li><a class="button quick-sql" href="#" data-cmd="SELECT * FROM information_schema.tables; ">Show#}
+{#                    Tables</a></li>#}
+{#                <li>#}
+{#                    <a class="button quick-sql" href="#"#}
+{#                       data-cmd="SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=[table_name];">#}
+{#                        Describe Table#}
+{#                    </a>#}
+{#                </li>#}
+{#                <li>#}
+{#                    <a class="button quick-sql" href="#"#}
+{#                       data-cmd="SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname='public' ORDER BY tablename, indexname;">#}
+{#                        Show Indexes#}
+{#                    </a>#}
+{#                </li>#}
+{#                <li>#}
+{#                    <a class="button quick-sql" href="#"#}
+{#                       data-cmd="SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=[table_name];">#}
+{#                        Describe Table#}
+{#                    </a>#}
+{#                </li>#}
+{#                <li>#}
+{#                    <a class="button quick-sql" href="#"#}
+{#                       data-cmd="SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=[table_name];">#}
+{#                        Describe Table#}
+{#                    </a>#}
+{#                </li>#}
+{##}
+
             </ul>
             <ul class="submit-row">
             </ul>
@@ -34,7 +57,7 @@
     <script>
         $(".quick-sql").on("click", function () {
             $("#id_command").val($(this).data("cmd"));
-            $("FORM").submit();
+            $("#sqlForm").submit();
         });
         $("#sqlForm").on("submit", function (e) {
             e.preventDefault();

@@ -1,6 +1,8 @@
 {% extends "base.html" %}{% load smart_register formset l10n static itrans http2 %}
+{% block meta %}
+    <meta name="Description" content="Module: '{{ dataset.title}}' Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
+{% endblock meta %}
 {% block head %}
-    <meta name="Description" CONTENT="Module Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
     <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />
     <script src="{% url 'javascript-catalog' dataset.locale %}"></script>
     <script defer src="{% static 'i18n.min.js' %}"></script>

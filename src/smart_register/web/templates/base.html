@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="version" content="{{ project.version|slice:':7'|join:'' }}">
     <meta name="date" content="{{ project.build_date }}">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% block meta %}{% endblock meta %}
     <title>Registration</title>
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
@@ -15,8 +14,7 @@
     {% if project.debug or user.is_staff %}
         <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
         <link rel="stylesheet" href="{% static "admin/debug.css" %}">{% endif %}
-    {% block head %}
-    {% endblock head %}
+    {% block head %}{% endblock head %}
 </head>
 <body class="min-h-screen dark">
 <script>
