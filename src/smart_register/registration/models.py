@@ -71,7 +71,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("register", args=[self.slug])
+        return reverse("register", args=[self.slug, self.version])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:

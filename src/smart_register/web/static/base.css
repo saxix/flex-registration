@@ -66,11 +66,9 @@
   background-color: rgba(255, 255, 255, var(--bg-opacity));
 }
 
-.landing a {
+.landing input.button {
   color: #0da7e6;
   font-weight: bold;
-}
-.landing a.button {
   background-color: #01ADF1;
   color: white;
 }
@@ -142,12 +140,10 @@ input[type=submit], input[type=button] {
   font-weight: 700;
   border-radius: 0.25rem;
   background-color: rgba(66, 153, 225, var(--bg-opacity));
-  color: white;
   cursor: pointer;
 }
 input[type=submit]:hover, input[type=submit]:active, input[type=button]:hover, input[type=button]:active {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-  background-color: rgba(43, 108, 176, var(--bg-opacity));
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
@@ -166,12 +162,10 @@ input[type=submit] {
   font-weight: 700;
   border-radius: 0.25rem;
   background-color: rgba(66, 153, 225, var(--bg-opacity));
-  color: white;
   cursor: pointer;
 }
 input[type=submit]:hover, input[type=submit]:active {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-  background-color: rgba(43, 108, 176, var(--bg-opacity));
   outline: 2px solid transparent;
   outline-offset: 2px;
 }

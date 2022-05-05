@@ -9,20 +9,18 @@
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Registration</title>
-
+    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
     {% if project.debug or user.is_staff %}
         <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
         <link rel="stylesheet" href="{% static "admin/debug.css" %}">{% endif %}
-    <link rel="preload" as="image" href="{% static "loading.gif" %}"/>
     {% block head %}
     {% endblock head %}
 </head>
 <body class="min-h-screen dark">
 <script>
     const LANGUAGE_CODE = "{{ LANGUAGE_CODE }}";
-
     {% if user.is_staff %}
         const I18N_MESSAGE_URL = "{% url "admin:i18n_message_get_or_create" %}";
     {% else %}

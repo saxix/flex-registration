@@ -25,12 +25,15 @@ if (I18N_MESSAGE_URL !== undefined && I18N_MESSAGE_URL !== "") {
         "    </script>").appendTo("body");
 
     $(".itrans").each(function (i, e) {
-        var text=$(e).text().trim();
-        var html = $("#i18n-template").html()
-                                      .replace("{{ORIGINAL1}}", text)
-                                      .replace("{{ORIGINAL2}}", encodeURIComponent(text))
-                                      .replace("{{LANGUAGE_CODE}}", LANGUAGE_CODE);
-        $(e).prepend(html);
+        // var text=$(e).text().trim();
+        var original = $(e).data("msgid");
+        if (original) {
+            var html = $("#i18n-template").html()
+                                          .replace("{{ORIGINAL1}}", original)
+                                          .replace("{{ORIGINAL2}}", encodeURIComponent(original))
+                                          .replace("{{LANGUAGE_CODE}}", LANGUAGE_CODE);
+            $(e).prepend(html);
+        }
     });
 
     $("a.i18n").on("click", function (e) {

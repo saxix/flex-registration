@@ -90,6 +90,7 @@ def test_api(django_app, registration, monkeypatch):
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
     res = res.form.submit().follow()
+
     assert res.context["record"].pk
     api_url = reverse("api", args=[registration.pk, 1, 999999])
     res = django_app.get(api_url, expect_errors=True)
