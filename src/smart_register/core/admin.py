@@ -412,12 +412,27 @@ class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
 
 @register(OptionSet)
 class OptionSetAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
-    list_display = ("name", "id", "separator", "comment", "columns")
+    list_display = (
+        "name",
+        "id",
+        "separator",
+        "comment",
+        "pk_col",
+    )
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
     save_as = True
     readonly_fields = ("version", "last_update_date")
     object_history_template = "reversion-compare/object_history.html"
+
+    @button()
+    def display_data(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Data")
+        data = []
+        for line in self.object.data.split("\r\n"):
+            data.append(line.split(self.object.separator))
+        ctx["data"] = data
+        return render(request, "admin/core/optionset/table.html", ctx)
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
     def view_json(self, button):

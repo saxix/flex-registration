@@ -76,7 +76,9 @@ _.is_adult = function(d) { return !_.is_child(d)};
     last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=255, unique=True)
-    message = models.CharField(max_length=255, help_text="Default error message if validator return 'false'.")
+    message = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Default error message if validator return 'false'."
+    )
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -201,8 +203,8 @@ class FlexForm(I18NModel, NaturalKeyModel):
     )
 
     class Meta:
-        verbose_name = "FlexForm"
-        verbose_name_plural = "FlexForms"
+        verbose_name = "Flex Form"
+        verbose_name_plural = "Flex Forms"
 
     def __str__(self):
         return self.name
@@ -397,8 +399,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     class Meta:
         unique_together = (("flex_form", "name"),)
-        verbose_name = "FlexForm Field"
-        verbose_name_plural = "FlexForm Fields"
+        verbose_name = "Flex Field"
+        verbose_name_plural = "Flex Fields"
         ordering = ["ordering"]
 
     def __str__(self):
@@ -515,6 +517,9 @@ class OptionSet(NaturalKeyModel, models.Model):
     )
 
     objects = OptionSetManager()
+
+    def __str__(self):
+        return self.name
 
     def clean(self):
         if self.locale not in self.languages:
