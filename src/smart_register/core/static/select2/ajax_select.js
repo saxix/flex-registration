@@ -48,11 +48,11 @@
                 }
             });
 
-            if (parentName) {
-                if (!selected) {
-                    $target.prop("disabled", true);
-                }
-            }
+            // if (parentName) {
+            //     if (!selected) {
+            //         $target.prop("disabled", true);
+            //     }
+            // }
 
             if (selected) {
                 var url = $target.data("ajax--url");
