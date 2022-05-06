@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "smart_register.web",
     "smart_register.core",
     "smart_register.registration",
+    "smart_register.counters",
 ]
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 

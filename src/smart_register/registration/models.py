@@ -128,7 +128,7 @@ class RemoteIp(models.GenericIPAddressField):
 class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     remote_ip = RemoteIp(blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     storage = models.BinaryField(null=True, blank=True)
     ignored = models.BooleanField(default=False, blank=True)
 

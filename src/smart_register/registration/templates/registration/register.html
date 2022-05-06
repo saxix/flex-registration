@@ -4,7 +4,7 @@
 {% endblock meta %}
 {% block head %}
     <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />
-    <script src="{% url 'javascript-catalog' dataset.locale %}"></script>
+    <script src="{% url 'javascript-catalog' %}"></script>
     <script defer src="{% static 'i18n.min.js' %}"></script>
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <script src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
