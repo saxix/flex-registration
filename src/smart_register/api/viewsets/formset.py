@@ -1,6 +1,8 @@
-from rest_framework import serializers, viewsets
+from rest_framework import serializers
 
 from smart_register.core.models import FormSet
+
+from .base import SmartViewSet
 
 
 class FormSetSerializer(serializers.ModelSerializer):
@@ -9,7 +11,7 @@ class FormSetSerializer(serializers.ModelSerializer):
         exclude = ()
 
 
-class FormSetViewSet(viewsets.ModelViewSet):
+class FormSetViewSet(SmartViewSet):
     """
     This viewset automatically provides `list` and `retrieve` actions.
     """

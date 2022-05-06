@@ -20,7 +20,6 @@ urlpatterns = [
     path("", include("smart_register.web.urls")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
-    # path("i18n/", include("django.conf.urls.i18n")),
     path("i18n/setlang/", set_language, name="set_language"),
     path("__debug__/", include(debug_toolbar.urls)),
     path("jsi18n/<str:locale>/", SmartJavascriptCatalog.as_view(), name="javascript-catalog"),
