@@ -81,7 +81,7 @@ def test_api(django_app, registration, monkeypatch):
 
     monkeypatch.setattr(smart_register.registration.views.registration, "get_etag", lambda *a: time.time())
 
-    url = reverse("register", args=[registration.slug])
+    url = reverse("register", args=[registration.slug, registration.version])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"
