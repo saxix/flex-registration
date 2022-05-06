@@ -10,9 +10,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class RegistrationViewSet(viewsets.ModelViewSet):
-    """
-    This viewset automatically provides `list` and `retrieve` actions.
-    """
-
     queryset = Registration.objects.all()
     serializer_class = RegistrationSerializer
+    lookup_field = "slug"
