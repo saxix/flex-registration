@@ -5,6 +5,7 @@ import logging
 import random
 
 import djclick as click
+import pytz
 from django import forms
 
 from smart_register.core import fields
@@ -71,12 +72,18 @@ dt > limit;""",
 
     reg, __ = Registration.objects.get_or_create(name="Demo Registration1", defaults=dict(flex_form=hh), active=True)
     today = datetime.datetime.today()
+
+    last_month = datetime.datetime.combine(today - datetime.timedelta(days=31), datetime.datetime.min.time())
+
     Record.objects.all().delete()
+    ranges = (
+        range(0, 15),
+        range(0, 17),
+    )
     for d in range(1, 30):
-        for _ in range(50):
+        for _ in ranges[0]:
             h = random.randint(0, 23)
-            for _ in range(50):
+            for _ in ranges[1]:
                 m = random.randint(0, 59)
-                time = datetime.datetime(today.year, today.month, d, h, m)
-                Record.objects.create(registration=reg, timestamp=time)
-                # Record.objects.bulk_create(records)
+                ts = datetime.datetime(last_month.year, last_month.month, d, h, m, tzinfo=pytz.utc)
+                Record.objects.create(registration=reg, timestamp=ts)
