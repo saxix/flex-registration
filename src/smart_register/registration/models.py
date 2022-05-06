@@ -71,7 +71,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("register", args=[self.slug])
+        return reverse("register", args=[self.slug, self.version])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:
@@ -131,7 +131,7 @@ class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
     unique_field = models.CharField(blank=True, null=True, db_index=True)
     remote_ip = RemoteIp(blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     storage = models.BinaryField(null=True, blank=True)
     ignored = models.BooleanField(default=False, blank=True)
 

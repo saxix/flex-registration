@@ -7,14 +7,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytz
-from concurrency.api import disable_concurrency
-from django.db.models.signals import post_save, post_delete
-from django.utils.text import slugify
 
 from admin_extra_buttons.decorators import button, link, view
 from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
-from dateutil.relativedelta import relativedelta
+from concurrency.api import disable_concurrency
 from dateutil.utils import today
 from django import forms
 from django.conf import settings
@@ -23,26 +20,27 @@ from django.contrib.admin import SimpleListFilter, register
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.db import OperationalError
-from django.db.models import Count, JSONField, Q
-from django.db.models.functions import ExtractHour, TruncDay
+from django.db.models import JSONField, Q
+from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
-from .forms import CloneForm
-from ..admin.mixin import LoadDumpMixin
 
+from ..admin.mixin import LoadDumpMixin
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
-from ..core.utils import is_root, namify, clone_model
-from .models import Record, Registration
+from ..core.utils import clone_model, is_root, namify, last_day_of_month
 from ..i18n.forms import ImportForm
 from ..i18n.models import Message
+from .forms import CloneForm
+from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +53,6 @@ DATA = {
     "core.FlexFormField": [],
     "i18n.Message": [],
 }
-
-
-def last_day_of_month(date):
-    return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
 
 
 @register(Registration)
@@ -108,7 +102,9 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
 
     @view()
     def data(self, request, registration):
-        qs = Record.objects.filter(registration_id=registration)
+        from smart_register.counters.models import Counter
+
+        qs = Counter.objects.filter(registration_id=registration).order_by("day")
         param_day = request.GET.get("d", None)
         param_tz = request.GET.get("tz", None)
         total = 0
@@ -118,15 +114,12 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                 day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
             else:
                 day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
-            # day = day.astimezone(tz)
             start = day.astimezone(pytz.UTC)
             end = start + timedelta(days=1)
-            qs = qs.filter(timestamp__gte=start, timestamp__lt=end)
-            qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id"))
-            data = defaultdict(lambda: 0)
-            for record in qs.all():
-                data[record["hour"]] = record["c"]
-                total += record["c"]
+            record = qs.filter(day__gte=start, day__lt=end).first()
+            data = []
+            if record:
+                data = record.hourly
             hours = [f"{x:02d}:00" for x in list(range(0, 24))]
             data = {
                 "tz": str(tz),
@@ -137,19 +130,20 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                 "end": str(end),
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": hours,
-                "data": [data[x] for x in list(range(0, 24))],
+                "data": data,
             }
         elif param_month := request.GET.get("m", None):
             if param_month:
                 day = datetime.strptime(param_month, "%Y-%m-%d")
             else:
                 day = timezone.now().today()
-            qs = qs.filter(timestamp__month=day.month)
-            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
+            qs = qs.filter(day__month=day.month)
+            # qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
             data = defaultdict(lambda: 0)
             for record in qs.all():
-                data[record["day"].day] = record["c"]
-                total += data[record["day"].day]
+                data[record.day.day] = record.records
+                total += record.records
+
             last_day = last_day_of_month(day)
             days = list(range(1, 1 + last_day.day))
             labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
@@ -162,11 +156,10 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
             }
         else:
             qs = qs.all()
-            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id")).order_by("day")
             data = defaultdict(lambda: 0)
             for record in qs.all():
-                data[record["day"]] = record["c"]
-                total += data[record["day"]]
+                data[record.day] = record.records
+                total += record.records
             data = {
                 "label": "",
                 "day": timezone.now().today().strftime("%Y-%m-%d"),
@@ -206,7 +199,6 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         reg: Registration = ctx["original"]
         if request.method == "POST":
             form = CloneForm(request.POST)
-            created = set()
             if form.is_valid():
                 try:
                     for dip in [
@@ -223,7 +215,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                     with atomic():
                         source = Registration.objects.get(id=reg.pk)
                         title = form.cleaned_data["title"]
-                        reg, __ = clone_model(source, name=namify(title), title=title, slug=slugify(title))
+                        reg, __ = clone_model(source, name=namify(title), title=title, version=1, slug=slugify(title))
                         if form.cleaned_data["deep"]:
                             main_form, __ = clone_model(
                                 source.flex_form, name=f"{source.flex_form.name}-(clone: {reg.name})"
@@ -538,6 +530,11 @@ class RecordAdmin(SmartModelAdmin):
 
         ctx["form"] = form
         return render(request, "admin/registration/record/decrypt.html", ctx)
+
+    def get_readonly_fields(self, request, obj=None):
+        if is_root(request) or settings.DEBUG:
+            return []
+        return self.readonly_fields
 
     def has_view_permission(self, request, obj=None):
         return is_root(request) or settings.DEBUG

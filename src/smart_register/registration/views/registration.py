@@ -5,6 +5,7 @@ from hashlib import md5
 
 import sentry_sdk
 from constance import config
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import (
     InMemoryUploadedFile,
@@ -39,17 +40,7 @@ class QRVerify(TemplateView):
         return super().get_context_data(valid=valid, record=record, **kwargs)
 
 
-class FixedLocaleView:
-    @cached_property
-    def registration(self):
-        raise NotImplementedError
-
-    def dispatch(self, request, *args, **kwargs):
-        # translation.activate(self.registration.locale)
-        return super().dispatch(request, *args, **kwargs)
-
-
-class RegisterCompleteView(FixedLocaleView, TemplateView):
+class RegisterCompleteView(TemplateView):
     template_name = "registration/register_done.html"
 
     @cached_property
@@ -82,10 +73,36 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class RegisterView(FixedLocaleView, FormView):
+class RegisterRouter(FormView):
+    def post(self, request, *args, **kwargs):
+        r = Registration.objects.only("slug", "version", "locale").get(slug=request.POST["slug"])
+        args = [r.slug, r.version]
+        url = reverse("register", args=args)
+        if request.user.is_authenticated:
+            url += f"?{request.COOKIES[settings.SESSION_COOKIE_NAME]}"
+        return HttpResponseRedirect(url)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class RegisterView(FormView):
     template_name = "registration/register.html"
 
+    @cached_property
+    def registration(self):
+        filters = {}
+        if not self.request.user.is_staff and not state.collect_messages:
+            filters["active"] = True
+
+        base = Registration.objects.select_related("flex_form", "validator")
+        try:
+            return base.get(slug=self.kwargs["slug"], **filters)
+        except Registration.DoesNotExist:  # pragma: no coalidateer
+            raise Http404
+
     def get(self, request, *args, **kwargs):
+        if "version" not in kwargs:
+            return HttpResponseRedirect(reverse("index"))
+
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
         else:
@@ -100,18 +117,6 @@ class RegisterView(FixedLocaleView, FormView):
             response = super().get(request, *args, **kwargs)
             response.headers.setdefault("ETag", self.res_etag)
         return response
-
-    @cached_property
-    def registration(self):
-        filters = {}
-        if not self.request.user.is_staff and not state.collect_messages:
-            filters["active"] = True
-
-        base = Registration.objects.select_related("flex_form", "validator")
-        try:
-            return base.get(slug=self.kwargs["slug"], **filters)
-        except Registration.DoesNotExist:  # pragma: no coalidateer
-            raise Http404
 
     def get_form_class(self):
         return self.registration.flex_form.get_form()

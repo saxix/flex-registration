@@ -1,10 +1,15 @@
 {% extends "base.html" %}{% load smart_register formset l10n static itrans http2 %}
+{% block meta %}
+    <meta name="Description" content="Module: '{{ dataset.title}}' Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
+    <meta name="Survey" content="{{ dataset.slug }}">
+    <meta name="Version" content="1{{ dataset.version }}">
+{% endblock meta %}
 {% block head %}
-    <meta name="Description" CONTENT="Module Version: {{ dataset.version }} - Form version: {{ form.flex_form.version }}">
-    <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />
+{#    <link rel="preload" as="image" href="{% http2static "loading.gif" %}" />#}
+    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <script src="{% url 'javascript-catalog' dataset.locale %}"></script>
     <script defer src="{% static 'i18n.min.js' %}"></script>
-    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
+    <script src="{% static 'survey.min.js' %}"></script>
     <script src="https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
             integrity="sha384-V+jCLoAVKKml0VanRLGJGAdKk+Lzo1kRFe079J0majdfeGabOd32KG/2adGnr4N0"
             crossorigin="anonymous"></script>
@@ -15,7 +20,7 @@
 {% endblock head %}
 {% block header %}
     {{ block.super }}
-    {% if dataset.locales %}
+    {% if dataset.locales|length > 1 %}
     <div class="float-right absolute hidden">
         {% include "i18n/_select_language.html" with languages=dataset.languages %}
     </div>
@@ -27,9 +32,7 @@
 {% endblock staff-toolbar %}
 
 {% block body %}
-
     {% include "smart/_form.html" %}
-
 {% endblock body %}
 {% block footer %}
     {% if dataset.advanced.smart.wizard %}<script src="{% static "wizard.min.js" %}"></script>{% endif %}

@@ -1,6 +1,8 @@
-from rest_framework import viewsets, serializers
+from rest_framework import serializers
 
 from smart_register.core.models import Validator
+
+from .base import SmartViewSet
 
 
 class ValidatorSerializer(serializers.ModelSerializer):
@@ -9,7 +11,7 @@ class ValidatorSerializer(serializers.ModelSerializer):
         exclude = ()
 
 
-class ValidatorViewSet(viewsets.ModelViewSet):
+class ValidatorViewSet(SmartViewSet):
     """
     This viewset automatically provides `list` and `retrieve` actions.
     """

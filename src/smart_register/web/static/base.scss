@@ -89,14 +89,11 @@ $color-error: #ff9898;
 }
 
 .landing {
-  a {
+  input.button {
     color: $base-color;
     font-weight: bold;
-
-    &.button {
       background-color: #01ADF1;
       color: white;
-    }
   }
 
   ul {
@@ -192,12 +189,12 @@ input[type=submit], input[type=button], {
   font-weight: 700;
   border-radius: 0.25rem;
   background-color: rgba(66, 153, 225, var(--bg-opacity));
-  color: white;
+  //color: white;
   cursor: pointer;
 
   &:hover, &:active {
     box-shadow: 0 0 0 3px rgb(66 153 225 / 50%);
-    background-color: rgba(43, 108, 176, var(--bg-opacity));
+    //background-color: rgba(43, 108, 176, var(--bg-opacity));
     outline: 2px solid transparent;
     outline-offset: 2px;
   }
@@ -219,12 +216,12 @@ input[type=submit] {
   font-weight: 700;
   border-radius: 0.25rem;
   background-color: rgba(66, 153, 225, var(--bg-opacity));
-  color: white;
+  //color: white;
   cursor: pointer;
 
   &:hover, &:active {
     box-shadow: 0 0 0 3px rgb(66 153 225 / 50%);
-    background-color: rgba(43, 108, 176, var(--bg-opacity));
+    //background-color: rgba(43, 108, 176, var(--bg-opacity));
     outline: 2px solid transparent;
     outline-offset: 2px;
   }

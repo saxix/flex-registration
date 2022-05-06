@@ -53,6 +53,7 @@ django-redis = "^5.2.0"
 sqlparse = "^0.4.2"
 django-reversion = "^5.0.0"
 django-reversion-compare = "^0.15.0"
+celery = "^5.2.6"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"

@@ -16,8 +16,8 @@ def simple_registration(simple_form):
 
 @pytest.mark.django_db
 def test_register_simple(django_app, simple_registration):
-    url = reverse("register", args=[simple_registration.slug])
-    assert url == "/en-us/register/registration-1/"
+    url = reverse("register", args=[simple_registration.slug, simple_registration.version])
+    assert url == f"/en-us/register/registration-1/{simple_registration.version}/"
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"

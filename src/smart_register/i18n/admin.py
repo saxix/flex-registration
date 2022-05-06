@@ -39,6 +39,7 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
         "used",
         ("locale", ChoicesFieldComboFilter),
         ("msgid", ValueFilter),
+        ("msgstr", ValueFilter),
         ("msgcode", ValueFilter),
         ("md5", ValueFilter),
         "last_hit",
