@@ -80,7 +80,7 @@ dt > limit;""",
         (5, 20),
         (5, 30),
     )
-    for day in range(1, 30):
+    for day in range(1, 31):
         for _ in range(0, random.randint(*ranges[0])):
             hour = random.randint(0, 23)
             for _ in range(0, random.randint(*ranges[1])):

@@ -65,6 +65,7 @@ class CounterAdmin(SmartModelAdmin):
             labels = [d.strftime("%-d, %a") for d in values.keys()]
 
         data = {
+            "datapoints": qs.all().count(),
             "label": day.strftime("%B %Y"),
             "day": day.strftime("%Y-%m-%d"),
             "total": total,
