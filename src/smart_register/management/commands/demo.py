@@ -77,13 +77,13 @@ dt > limit;""",
 
     Record.objects.all().delete()
     ranges = (
-        range(0, 15),
-        range(0, 17),
+        (5, 20),
+        (5, 30),
     )
-    for d in range(1, 30):
-        for _ in ranges[0]:
-            h = random.randint(0, 23)
-            for _ in ranges[1]:
-                m = random.randint(0, 59)
-                ts = datetime.datetime(last_month.year, last_month.month, d, h, m, tzinfo=pytz.utc)
+    for day in range(1, 30):
+        for _ in range(0, random.randint(*ranges[0])):
+            hour = random.randint(0, 23)
+            for _ in range(0, random.randint(*ranges[1])):
+                minute = random.randint(0, 59)
+                ts = datetime.datetime(last_month.year, last_month.month, day, hour, minute, tzinfo=pytz.utc)
                 Record.objects.create(registration=reg, timestamp=ts)

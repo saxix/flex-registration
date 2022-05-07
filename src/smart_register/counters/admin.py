@@ -58,7 +58,7 @@ class CounterAdmin(SmartModelAdmin):
         labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
 
         for record in qs.all():
-            values[record.day] = record.records
+            values[record.day] = {"total": record.records, "pk": record.pk}
             total += record.records
 
         if not labels:
