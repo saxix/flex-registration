@@ -100,8 +100,8 @@ class RegisterView(FormView):
             raise Http404
 
     def get(self, request, *args, **kwargs):
-        if "version" not in kwargs:
-            return HttpResponseRedirect(reverse("index"))
+        # if "version" not in kwargs:
+        #     return HttpResponseRedirect(reverse("index"))
 
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
