@@ -16,5 +16,5 @@ class Config(AppConfig):
         try:
             for field in CustomFieldType.objects.all():
                 field_registry.register(field.get_class())
-        except (OperationalError, ProgrammingError):
+        except (OperationalError, ProgrammingError):  # pragma: no-cover
             pass

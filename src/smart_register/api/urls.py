@@ -6,10 +6,12 @@ from .viewsets import (
     FlexFormViewSet,
     FormSetViewSet,
     RegistrationViewSet,
+    UserViewSet,
     ValidatorViewSet,
 )
 
 router = DefaultRouter()
+router.register(r"user", UserViewSet)
 router.register(r"registration", RegistrationViewSet)
 router.register(r"form", FlexFormViewSet)
 router.register(r"formset", FormSetViewSet)

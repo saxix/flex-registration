@@ -4,7 +4,6 @@
         const slug = $("meta[name=\"Survey\"]").attr("content");
         $.get("/api/registration/" + slug + "/version/?" + Math.random(), function (data) {
             var parts = location.href.split("/");
-            console.log(1111, parts);
             const version = parseInt(parts[parts.length - 2]);
             if (version !== data.version) {
                 var url = null;
