@@ -12,8 +12,8 @@
         </span>
         <div class="hidden md:inline-flex ">
             <span>{% trans "Edit" %} </span>
-            <a href="{% url "admin:registration_registration_change" dataset.pk %}">Module</a>
-            <a href="{% url "admin:core_flexform_change" dataset.flex_form.pk %}">Form</a>
+            <a href="{% url "admin:registration_registration_change" registration.pk %}">Module</a>
+            <a href="{% url "admin:core_flexform_change" registration.flex_form.pk %}">Form</a>
             {% for name, formset in formsets.items %}
                 <a href="{% url "admin:core_flexform_change" formset.fs.flex_form.pk %}">{{ name }}</a>
             {% endfor %}

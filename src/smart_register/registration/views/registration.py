@@ -143,7 +143,9 @@ class RegisterView(FormView):
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
-        kwargs["dataset"] = self.registration
+        kwargs["registration"] = self.registration
+        kwargs["can_edit_inpage"] = self.request.user.is_staff
+        kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
         m = forms.Media()
