@@ -25,11 +25,12 @@ from strategy_field.utils import fqn
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
+from . import fields
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase, JSONEncoder
+from .utils import JSONEncoder, dict_setdefault, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ cache = caches["default"]
 
 class Validator(NaturalKeyModel):
     STATUS_ERROR = "error"
+    STATUS_EXCEPTION = "exc"
     STATUS_SUCCESS = "success"
     STATUS_SKIP = "skip"
     STATUS_UNKNOWN = "unknown"
@@ -62,7 +64,7 @@ dateutil = {today: TODAY,
 };
 _ = {is_child: function(d) { return d && Date.parse(d) < dateutil.years18 ? true: false},
      is_baby: function(d) { return d && Date.parse(d) > dateutil.years2 ? true: false},
-     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years2 ? true: false},
+     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years18 ? true: false},
      is_future: function(d) { return d  && Date.parse(d) > dateutil.Validatortoday ? true: false},
 };
 _.is_adult = function(d) { return !_.is_child(d)};
@@ -74,7 +76,9 @@ _.is_adult = function(d) { return !_.is_child(d)};
     last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=255, unique=True)
-    message = models.CharField(max_length=255, help_text="Default error message if validator return 'false'.")
+    message = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Default error message if validator return 'false'."
+    )
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -108,7 +112,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def jspickle(self, value):
         return json.dumps(value, cls=JSONEncoder, skip_files=True)
 
-    def monitor(self, status, value, exc: ValidationError = None):
+    def monitor(self, status, value, exc: Exception = None):
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", status)
         error = None
         if exc:
@@ -116,10 +120,12 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 error = self.jspickle(
                     exc.error_dict,
                 )
-            else:
+            elif isinstance(exc, ValidationError):
                 error = self.jspickle({"Error": exc.messages})
+            else:
+                error = self.jspickle({"Error": str(exc)})
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}", self.jspickle(value))
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-payload", self.jspickle(value))
 
     def validate(self, value):
         from py_mini_racer import MiniRacer
@@ -158,13 +164,15 @@ _.is_adult = function(d) { return !_.is_child(d)};
             except ValidationError as e:
                 if self.trace:
                     logger.exception(e)
-                    self.monitor(self.STATUS_ERROR, e)
+                    self.monitor(self.STATUS_ERROR, value, e)
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 return True
             except Exception as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 raise
             self.monitor(self.STATUS_SUCCESS, value)
 
@@ -172,7 +180,6 @@ _.is_adult = function(d) { return !_.is_child(d)};
             self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
         super().save(force_insert, force_update, using, update_fields)
 
 
@@ -196,8 +203,8 @@ class FlexForm(I18NModel, NaturalKeyModel):
     )
 
     class Meta:
-        verbose_name = "FlexForm"
-        verbose_name_plural = "FlexForms"
+        verbose_name = "Flex Form"
+        verbose_name_plural = "Flex Forms"
 
     def __str__(self):
         return self.name
@@ -257,8 +264,6 @@ class FlexForm(I18NModel, NaturalKeyModel):
 
     def get_formsets(self, attrs):
         formsets = {}
-        # attrs = self.get_form_kwargs().copy()
-        # attrs.pop("prefix")
         for name, fs in self.get_formsets_classes().items():
             formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets
@@ -350,6 +355,12 @@ FIELD_KWARGS = {
     forms.CharField: {"min_length": None, "max_length": None, "empty_value": "", "initial": None},
     forms.IntegerField: {"min_value": None, "max_value": None, "initial": None},
     forms.DateField: {"initial": None},
+    fields.LocationField: {},
+    fields.RemoteIpField: {},
+    fields.AjaxSelectField: {},
+    fields.SmartFileField: {},
+    fields.SelectField: {},
+    fields.WebcamField: {},
 }
 
 
@@ -388,8 +399,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     class Meta:
         unique_together = (("flex_form", "name"),)
-        verbose_name = "FlexForm Field"
-        verbose_name_plural = "FlexForm Fields"
+        verbose_name = "Flex Field"
+        verbose_name_plural = "Flex Fields"
         ordering = ["ordering"]
 
     def __str__(self):
@@ -422,9 +433,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             smart_attrs = advanced.pop("smart", {}).copy()
             # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
-            if smart_attrs.get("question", ""):
+            if not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
-            elif not smart_attrs.get("visible", True):
+            elif smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
@@ -461,6 +472,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     def clean(self):
         try:
+            # dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
+            # dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
             self.get_instance()
         except Exception as e:
             raise ValidationError(e)
@@ -470,9 +483,6 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             self.name = namify(self.label)[:100]
         else:
             self.name = namify(self.name)[:100]
-
-        dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
-        dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
 
         super().save(force_insert, force_update, using, update_fields)
 
@@ -507,6 +517,9 @@ class OptionSet(NaturalKeyModel, models.Model):
     )
 
     objects = OptionSetManager()
+
+    def __str__(self):
+        return self.name
 
     def clean(self):
         if self.locale not in self.languages:

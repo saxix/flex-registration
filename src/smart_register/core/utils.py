@@ -10,6 +10,7 @@ from pathlib import Path
 
 import qrcode
 from constance import config
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.files.utils import FileProxyMixin
 from django.core.serializers.json import DjangoJSONEncoder
@@ -251,18 +252,6 @@ def get_client_ip(request):
                 return ip.split(",")[0].strip()
 
 
-# def get_default_language(request, default="en-us"):
-#     lang = default
-#     if request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME):
-#         lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
-#     elif request.META.get("HTTP_ACCEPT_LANGUAGE", None):
-#         lang = request.META["HTTP_ACCEPT_LANGUAGE"]
-#     if lang not in [x[0] for x in settings.LANGUAGES]:
-#         lang = default
-#     return lang or "en-us"
-#
-
-
 def get_versioned_static_name(name):
     return name
 
@@ -272,8 +261,11 @@ def get_etag(request, *args):
         params = [time.time()]
     else:
         params = (VERSION,) + args
-    params = [time.time()]
     return "/".join(map(str, params))
+
+
+def last_day_of_month(date):
+    return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
 
 
 def apply_nested(cleaned_value, func=lambda v, k: v, key=None):

@@ -3,28 +3,4 @@
   color: #2c2c2c;
 }
 
-#container #header {
-  background-color: #a3e388;
-}
-#container #header * {
-  color: black;
-}
-#container #header #user-tools * {
-  color: black;
-}
-
-.console-buttons a {
-  color: white !important;
-}
-
-.redis-cli input[type=text] {
-  width: 100%;
-}
-.redis-cli .code {
-  background-color: black;
-  color: white;
-  height: 500px;
-  overflow-scrolling: auto;
-}
-
 /*# sourceMappingURL=debug.css.map */

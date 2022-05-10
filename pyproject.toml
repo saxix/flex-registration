@@ -50,6 +50,10 @@ Markdown = "^3.3.6"
 django-simple-math-captcha = "1.1.0"
 django-csp = "^3.7"
 django-redis = "^5.2.0"
+sqlparse = "^0.4.2"
+django-reversion = "^5.0.0"
+django-reversion-compare = "^0.15.0"
+celery = "^5.2.6"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"

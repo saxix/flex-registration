@@ -58,14 +58,14 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         selection = config.HOME_PAGE_REGISTRATIONS.split(";")
-        buttons = []
+        registrations = []
         for slug in selection:
             if slug.strip():
                 try:
-                    buttons.append(Registration.objects.get(active=True, slug=slug.strip()))
+                    registrations.append(Registration.objects.get(active=True, slug=slug.strip()))
                 except Exception as e:
                     logger.exception(e)
-        return super().get_context_data(buttons=buttons, **kwargs)
+        return super().get_context_data(registrations=registrations, **kwargs)
 
 
 class QRCodeView(TemplateView):

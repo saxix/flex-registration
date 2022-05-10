@@ -6,11 +6,12 @@ import re
 
 import markdown as md
 from django.template import Library, Node
-from django.urls import reverse, translate_url
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from PIL import Image, UnidentifiedImageError
 
 from smart_register.i18n.gettext import gettext as _
+from ...core.flags import parse_bool
 
 from ...core.utils import dict_get_nested, dict_setdefault
 from ...registration.models import Registration
@@ -73,7 +74,7 @@ def smart_attr(field, attr):
     if "," in attr:
         attr, translate = attr.split(",")
     value = field.field.flex_field.advanced.get("smart", {}).get(attr, "")
-    if translate:
+    if parse_bool(translate):
         value = _(str(value))
     return str(value)
 
@@ -123,7 +124,7 @@ def link(registration):
     if "class" not in attrs:
         widget["attrs"]["class"] = "button text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
     url = reverse("register", args=[registration.slug])
-    url = translate_url(url, registration.locale)
+    # url = translate_url(url, registration.locale)
     widget["attrs"]["href"] = url
     return {
         "reg": registration,

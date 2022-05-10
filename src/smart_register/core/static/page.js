@@ -12,5 +12,4 @@ window.addEventListener("load", function(event) {
             ]
         });
     }
-    $('#spinner').hide();
 });

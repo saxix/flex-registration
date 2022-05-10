@@ -1,7 +1,9 @@
-from rest_framework import viewsets, serializers
+from rest_framework import serializers
 from strategy_field.utils import fqn
 
 from smart_register.core.models import FlexForm
+
+from .base import SmartViewSet
 
 
 class FormSerializer(serializers.ModelSerializer):
@@ -24,7 +26,7 @@ class FormSerializer(serializers.ModelSerializer):
         return data
 
 
-class FlexFormViewSet(viewsets.ModelViewSet):
+class FlexFormViewSet(SmartViewSet):
     """
     This viewset automatically provides `list` and `retrieve` actions.
     """

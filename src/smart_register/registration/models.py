@@ -68,12 +68,13 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     class Meta:
         get_latest_by = "start"
         unique_together = (("name", "locale"),)
+        permissions = (("can_manage", "Can Manage"),)
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("register", args=[self.slug])
+        return reverse("register", args=[self.slug, self.version])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:

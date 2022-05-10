@@ -1,3 +1,9 @@
+TODAY = new Date();
+dateutil = {today: TODAY,
+    years18: new Date(new Date().setDate(TODAY.getDate() - (365*18))),
+    years2: new Date(new Date().setDate(TODAY.getDate() - (365*2))),
+
+};
 smart = {
     sameAs: function (sender, target) {
         var $sender = $(sender)
@@ -64,6 +70,9 @@ smart = {
             console.error(error);
         }
     },
+    is_adult: function(d) {
+        return d && Date.parse(d) <= dateutil.years18 ? true: false;
+    },
     handleQuestion: function (e) {
         var $container = $(e).parents("fieldset").find(".field-container");
         if ($(e).is(":checked")) {
@@ -79,6 +88,10 @@ smart = {
 
 (function ($) {
     $(function () {
+        $('#registrationForm').on('submit', function (e){
+            $(this).find('input[type=submit]').prop('disabled', 'disabled').val(gettext('Please wait...'));
+        });
+
         $("[data-visibility=hidden]").parents(".field-container").hide();
 
         $("[data-trigger=change]").each(function (i, e){
@@ -88,7 +101,7 @@ smart = {
         $(".question-visibility").on("click", function () {
             smart.handleQuestion(this);
         });
-        $(".question-visibility.error").each(function (i, e){
+        $(".errorlist").each(function (i, e){
             var $container = $(e).parents("fieldset").find(".field-container");
             $container.show();
         });

@@ -4,6 +4,8 @@ import pytest
 from django import forms
 from django.core.files.storage import get_storage_class
 
+from smart_register.core.fields import SmartFileField
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -87,16 +89,13 @@ def complex_form():
     )
 
     ind, __ = FlexForm.objects.get_or_create(name="Form2")
-    ind.fields.get_or_create(
-        label="First Name", defaults={"field_type": forms.CharField, "required": True, "validator": v1}
-    )
-    ind.fields.get_or_create(
-        label="Last Name", defaults={"field_type": forms.CharField, "required": True, "validator": v1}
-    )
-    ind.fields.get_or_create(label="Date Of Birth", defaults={"field_type": forms.DateField, "required": True})
+    ind.fields.create(label="First Name", **{"field_type": forms.CharField, "required": True, "validator": v1})
+    ind.fields.create(label="Last Name", **{"field_type": forms.CharField, "required": True, "validator": v1})
+    ind.fields.create(label="Date Of Birth", **{"field_type": forms.DateField, "required": True})
 
-    ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
-    ind.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})
+    # ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
+    ind.fields.create(label="Image", **{"field_type": SmartFileField, "required": False})
+    ind.fields.create(label="File", **{"field_type": SmartFileField, "required": False})
     hh.add_formset(ind)
     return hh
 

@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 from django.core.exceptions import ValidationError
 
@@ -22,6 +24,14 @@ if (value.cleaned_data.length===0){
     ret;
 }
 """
+
+
+@pytest.fixture(autouse=True)
+def mock_state():
+    from smart_register.state import state
+    from django.contrib.auth.models import AnonymousUser
+
+    state.request = Mock(user=AnonymousUser())
 
 
 def test_error_message(db):

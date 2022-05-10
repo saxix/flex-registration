@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import get_language
 
-from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.decorators import button, view
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
 from dateutil.utils import today
@@ -39,6 +39,7 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
         "used",
         ("locale", ChoicesFieldComboFilter),
         ("msgid", ValueFilter),
+        ("msgstr", ValueFilter),
         ("msgcode", ValueFilter),
         ("md5", ValueFilter),
         "last_hit",
@@ -91,15 +92,15 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
                     state.hit_messages = True
                     for flex_form in FlexForm.objects.all():
                         frm_cls = flex_form.get_form()
-                        frm = frm_cls()
-                        loader.render_to_string(
-                            "smart/_form.html",
-                            {
-                                "form": frm,
-                                "formsets": flex_form.get_formsets({}),
-                                "request": Mock(selected_language=lang),
-                            },
-                        )
+                        for frm in [frm_cls(), frm_cls({})]:
+                            loader.render_to_string(
+                                "smart/_form.html",
+                                {
+                                    "form": frm,
+                                    "formsets": flex_form.get_formsets({}),
+                                    "request": Mock(selected_language=lang),
+                                },
+                            )
                 except Exception as e:
                     logger.exception(e)
                 finally:
@@ -113,9 +114,9 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/i18n/message/translation.html", ctx)
 
-    @link()
-    def translate(self, button):
-        return button
+    # @link()
+    # def translate(self, button):
+    #     return button
 
     @view()
     def get_or_create(self, request):
@@ -145,6 +146,41 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
         obj = self.get_object(request, pk)
         cl = reverse("admin:i18n_message_changelist")
         return HttpResponseRedirect(f"{cl}?msgid__exact={obj.msgid}")
+
+    @button(label="Create Translation")
+    def create_translation_single(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Generate Translation",
+        )
+        if request.method == "POST":
+            form = TranslationForm(request.POST)
+            if form.is_valid():
+                locale = form.cleaned_data["locale"]
+                original = ctx["original"]
+                try:
+                    msg, created = Message.objects.get_or_create(
+                        msgid=original.msgid,
+                        locale=locale,
+                        defaults={"md5": Message.get_md5(locale, original.msgid), "draft": True},
+                    )
+                    if created:
+                        self.message_user(request, "Message created.")
+                    else:
+                        self.message_user(request, "Message found.", messages.WARNING)
+
+                except Exception as e:
+                    logger.exception(e)
+                    self.message_error_to_user(request, e)
+                return HttpResponseRedirect(reverse("admin:i18n_message_change", args=[msg.pk]))
+            else:
+                ctx["form"] = form
+        else:
+            form = TranslationForm()
+            ctx["form"] = form
+        return render(request, "admin/i18n/message/translation.html", ctx)
 
     @button()
     def create_translation(self, request):
