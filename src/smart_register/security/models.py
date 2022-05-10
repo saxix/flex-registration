@@ -8,3 +8,6 @@ class RegistrationRole(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     role = models.ForeignKey(Group, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (("registration", "user", "role"),)

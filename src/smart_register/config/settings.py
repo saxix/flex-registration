@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "smart_register.apps.Config",
     "smart_register.i18n",
     "smart_register.web",
+    "smart_register.security.apps.Config",
     "smart_register.core",
     "smart_register.registration",
     "smart_register.counters",
@@ -251,6 +252,7 @@ ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "smart_register.auth.backend.SmartBackend",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
