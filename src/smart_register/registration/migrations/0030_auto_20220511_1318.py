@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 limit_choices_to={"target": "module"},
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="validate",
+                related_name="validator_for",
                 to="core.validator",
             ),
         ),

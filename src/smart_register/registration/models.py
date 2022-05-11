@@ -57,7 +57,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     validator = models.ForeignKey(
         Validator,
         limit_choices_to={"target": Validator.MODULE},
-        related_name="validate",
+        related_name="validator_for",
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
