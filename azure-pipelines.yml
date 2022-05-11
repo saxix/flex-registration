@@ -87,7 +87,8 @@ stages:
               appName: $(appName)
               azureSubscription: $(azureSubscription)
               imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
-              appSettings: "-DJANGO_ADMIN_URL $(DJANGO_ADMIN_URL)
+              appSettings: "
+              -DJANGO_ADMIN_URL $(DJANGO_ADMIN_URL)
               -DJANGO_ADMIN_TITLE $(DJANGO_ADMIN_TITLE)
               -ALLOWED_HOSTS $(ALLOWED_HOSTS)
               -SECRET_KEY $(SECRET_KEY)
