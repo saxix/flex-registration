@@ -10,6 +10,8 @@ from .viewsets import (
     ValidatorViewSet,
 )
 
+app_name = "api"
+
 router = DefaultRouter()
 router.register(r"user", UserViewSet)
 router.register(r"registration", RegistrationViewSet)

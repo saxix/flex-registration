@@ -23,7 +23,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-# from smart_register.core.cache import cache_formset
 from smart_register.core.utils import get_qrcode, get_etag
 from smart_register.registration.models import Record, Registration
 from smart_register.state import state

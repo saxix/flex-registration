@@ -2,6 +2,7 @@
 {% block extrahead %}
     {{ block.super }}
     {{ form.media }}
+    <script src="/api/validator/{{ original.pk }}/script/"></script>
     <style>
         .message{
             display: flex;
@@ -63,7 +64,6 @@
             $(document).ready(function () {
                 {{ jslib }}
                 log = console.log = function () {
-                    {#$log.prepend(msg + "\n");#}
                     $log.prepend(Array.prototype.join.call(arguments, ', ') + "\n");
                 };
                 log1 = console.log1 = function (msg) {
@@ -104,15 +104,10 @@
                         console.log(error);
                     }
                 };
-                {#var key = "sample-{{ original.pk }}";#}
-                {#const cat = localStorage.getItem(key);#}
-                {#if (cat){#}
-                {#    input.setValue(cat);#}
-                {# }; #}
+
                 editor.on("change", updateHandler);
                 input.on("change", function (e){
                     updateHandler();
-                 {#localStorage.setItem(key, e.getValue())#}
                 });
                 updateSource();
             });

@@ -30,7 +30,7 @@
             {% if can_edit_inpage %}
                 {% include "registration/_staff_edit_form.html" %}
             {% endif %}
-            <form class="w-full" method="post" enctype="multipart/form-data" id="registrationForm">
+            <form data-smart-validator="{{ form.flexform.validator.name }}" class="w-full" method="post" enctype="multipart/form-data" id="registrationForm">
                 {% csrf_token %}
                 <div class="form-container" data-page="0">
                     {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}

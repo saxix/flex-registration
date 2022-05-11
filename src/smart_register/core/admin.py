@@ -62,7 +62,7 @@ class ValidatorTestForm(forms.Form):
 class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     form = ValidatorForm
     list_editable = ("trace", "active", "draft")
-    list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
+    list_display = ("label", "name", "target", "used_by", "trace", "active", "draft")
     list_filter = ("target", "active", "draft", "trace")
     readonly_fields = ("version", "last_update_date")
     search_fields = ("name",)

@@ -49,6 +49,9 @@ class Validator(NaturalKeyModel):
     FIELD = "field"
     MODULE = "module"
     FORMSET = "formset"
+    SCRIPT = "script"
+    HANDLER = "handler"
+
     CONSOLE = mark_safe(
         """
     console = {log: function(d) {}};
@@ -77,9 +80,6 @@ _.is_adult = function(d) { return !_.is_child(d)};
 
     label = CICharField(max_length=255)
     name = CICharField(verbose_name=_("Function Name"), max_length=255, unique=True, blank=True, null=True)
-    message = models.CharField(
-        max_length=255, blank=True, null=True, help_text="Default error message if validator return 'false'."
-    )
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -88,6 +88,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
             (FIELD, "Field"),
             (FORMSET, "Formset"),
             (MODULE, "Module"),
+            (HANDLER, "Handler"),
+            (SCRIPT, "Script"),
         ),
     )
     trace = models.BooleanField(
@@ -149,9 +151,6 @@ _.is_adult = function(d) { return !_.is_child(d)};
                         ret = jsonpickle.decode(result)
                     except (JSONDecodeError, TypeError):
                         ret = result
-                # if self.trace and state.request.user.is_staff:
-                #     cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
-                #     sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
                 if isinstance(ret, str):
                     raise ValidationError(_(ret))
                 elif isinstance(ret, (list, tuple)):
@@ -161,7 +160,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
                     errors = {k: _(v) for (k, v) in ret.items()}
                     raise ValidationError(errors)
                 elif isinstance(ret, bool) and not ret:
-                    raise ValidationError(_(self.message))
+                    raise ValidationError(_("Please insert a valid value"))
             except ValidationError as e:
                 if self.trace:
                     logger.exception(e)
@@ -184,6 +183,9 @@ _.is_adult = function(d) { return !_.is_child(d)};
         if not self.name:
             self.name = namify(self.label)
         super().save(force_insert, force_update, using, update_fields)
+
+    def get_script_url(self):
+        return reverse("api:validator-script", args=[self.name])
 
 
 def get_validators(field):
@@ -373,6 +375,11 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     ]
     I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
+        "widget_kwargs": {
+            "pattern": None,
+            "title": None,
+            "placeholder": None,
+        },
         "kwargs": {},
         "smart": {
             "hint": "",
@@ -431,6 +438,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             field_type = self.field_type
             advanced = self.advanced.copy()
             kwargs = self.advanced.get("kwargs", {}).copy()
+            widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             regex = self.regex
 
             smart_attrs = advanced.pop("smart", {}).copy()
@@ -456,6 +464,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
+        kwargs["widget_kwargs"] = widget_kwargs
         return kwargs
 
     def get_instance(self):
