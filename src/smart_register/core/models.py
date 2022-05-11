@@ -75,7 +75,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
-    name = CICharField(max_length=255, unique=True)
+    label = CICharField(max_length=255)
+    name = CICharField(verbose_name=_("Function Name"), max_length=255, unique=True, blank=True, null=True)
     message = models.CharField(
         max_length=255, blank=True, null=True, help_text="Default error message if validator return 'false'."
     )
@@ -99,7 +100,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     )
 
     def __str__(self):
-        return self.name
+        return self.label
 
     @staticmethod
     def js_type(value):
@@ -180,6 +181,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
             self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if not self.name:
+            self.name = namify(self.label)
         super().save(force_insert, force_update, using, update_fields)
 
 
