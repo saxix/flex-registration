@@ -45,5 +45,11 @@
     </div>
     <script>var VERSION="{{ project.version }}";var DSN="{{ project.sentry_dsn }}";</script>
     <script src="{% static "page.min.js" %}"></script>
+    {% if registration.client_validation %}
     <script src="{% static "validation.min.js" %}"></script>
+    {% endif %}
+    {{ registration.media }}
+{#    {% for script in registration.scripts %}#}
+{#        <script src="{{ script. }}"></script>#}
+{#    {% endfor %}#}
 {% endblock footer %}

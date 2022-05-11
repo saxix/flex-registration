@@ -14,7 +14,7 @@ handler404 = error_404
 urlpatterns = [
     path(settings.DJANGO_ADMIN_URL, admin.site.urls),
     re_path(r"sax-\d*/", admin.site.urls),
-    path("api/", include("smart_register.api.urls")),
+    path("api/", include("smart_register.api.urls", namespace="api")),
     path("", include("smart_register.web.urls")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),

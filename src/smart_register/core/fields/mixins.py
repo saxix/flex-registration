@@ -27,10 +27,12 @@ class SmartFieldMixin:
         self.flex_field = kwargs.pop("flex_field")
         self.smart_attrs = kwargs.pop("smart_attrs", {})
         self.data_attrs = kwargs.pop("data", {})
+        self.widget_kwargs = kwargs.pop("widget_kwargs", {})
         super().__init__(*args, **kwargs)
 
     def widget_attrs(self, widget):
         attrs = super().widget_attrs(widget)
+        attrs.update({k: v for k, v in self.widget_kwargs.items() if v is not None})
         for k, v in self.smart_attrs.items():
             if k.startswith("data-") or k.startswith("on"):
                 attrs[k] = v
@@ -38,7 +40,10 @@ class SmartFieldMixin:
             attrs[f"data-{k}"] = v
 
         if self.flex_field.validator:
-            attrs["data-smart-validator"] = self.flex_field.validator.function_name
+            attrs["data-smart-validator"] = self.flex_field.validator.name
+
+        if self.flex_field.required:
+            attrs["required"] = "required"
 
         widget.smart_attrs = self.smart_attrs
         widget.flex_field = self.flex_field

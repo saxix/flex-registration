@@ -256,7 +256,7 @@ def get_versioned_static_name(name):
     return name
 
 
-def get_etag(request, *args):
+def get_etag(request, *args, **kwargs):
     if state.collect_messages:
         params = [time.time()]
     else:

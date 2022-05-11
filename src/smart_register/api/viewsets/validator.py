@@ -3,7 +3,6 @@ from rest_framework import serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 
 from smart_register.core.models import Validator
 
@@ -19,16 +18,25 @@ class ValidatorSerializer(serializers.ModelSerializer):
 class ValidatorViewSet(SmartViewSet):
     queryset = Validator.objects.all()
     serializer_class = ValidatorSerializer
+    lookup_field = "name"
     WRAPPER = """
-;function {function_name}(value){{
+;function {name}(value){{
     return eval('{code}');
 }};
 """
 
     @action(detail=True, permission_classes=[AllowAny], authentication_classes=[SessionAuthentication])
-    def script(self, request, pk):
+    def validator(self, request, name):
         obj = self.get_object()
         return HttpResponse(
-            self.WRAPPER.format(function_name=obj.function_name, code=obj.code.replace("\n", "").replace("\r", "")),
+            self.WRAPPER.format(name=obj.name, code=obj.code.replace("\n", "").replace("\r", "")),
+            content_type="application/javascript",
+        )
+
+    @action(detail=True, permission_classes=[AllowAny], authentication_classes=[SessionAuthentication])
+    def script(self, request, name):
+        obj = self.get_object()
+        return HttpResponse(
+            obj.code,
             content_type="application/javascript",
         )

@@ -3,6 +3,7 @@ import logging
 
 from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
+from django import forms
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
@@ -52,8 +53,18 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
     intro = models.TextField(blank=True, null=True, default="")
     footer = models.TextField(blank=True, null=True, default="")
+    client_validation = models.BooleanField(blank=True, null=False, default=False)
     validator = models.ForeignKey(
-        Validator, limit_choices_to={"target": Validator.MODULE}, blank=True, null=True, on_delete=models.SET_NULL
+        Validator,
+        limit_choices_to={"target": Validator.MODULE},
+        related_name="validate",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+
+    scripts = models.ManyToManyField(
+        Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True, null=True
     )
 
     public_key = models.TextField(
@@ -67,6 +78,10 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         get_latest_by = "start"
         unique_together = (("name", "locale"),)
         permissions = (("can_manage", "Can Manage"),)
+
+    @property
+    def media(self):
+        return forms.Media(js=[script.get_script_url() for script in self.scripts.all()])
 
     def __str__(self):
         return self.name

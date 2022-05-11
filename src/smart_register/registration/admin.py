@@ -69,10 +69,11 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         JSONField: {"widget": JSONEditor},
     }
     change_form_template = None
+    filter_horizontal = ("scripts",)
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
         (None, {"fields": ("name", "title", "slug")}),
-        ("Config", {"fields": ("flex_form", "validator", "encrypt_data")}),
+        ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
         ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
