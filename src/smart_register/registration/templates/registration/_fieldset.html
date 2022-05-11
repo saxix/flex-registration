@@ -3,7 +3,9 @@
     {% if can_edit_inpage %}
         {% include "registration/_staff_edit_field.html" %}
     {% endif %}
-
+{#    {% if field.field.flex_field.validator %}#}
+{#        <script src="/api/validator/{{ field.field.flex_field.validator.pk }}/script/"></script>#}
+{#    {% endif %}#}
     {% if field.field.flex_field.advanced.smart.question %}
             <label for="question_{{ field.auto_id }}" class="cursor-pointer">
                 <input id="question_{{ field.auto_id }}"
@@ -30,11 +32,11 @@
             {% trans field.field.flex_field.advanced.description %}
         </div>
         {% endif %}
-        {{ field.errors }}
+        <span class="errors">{{ field.errors }}</span>
         {{ field }}
-        <div class="text-xs	italic" data-msgid="{{ field.field.flex_field.advanced.hint }}">
+        <div class="text-xs	italic" data-msgid="{{ field.field.flex_field.advanced.smart.hint }}">
 {#            {% if user.is_staff %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"hint,0" %}{% endif %}#}
-            {% trans field.field.flex_field.advanced.hint %}
+            {% trans field.field.flex_field.advanced.smart.hint %}
         </div>
     </div>
 </fieldset>

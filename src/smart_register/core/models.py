@@ -75,7 +75,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
-    name = CICharField(max_length=255, unique=True)
+    # label = CICharField(max_length=255, unique=True)
+    label = CICharField(max_length=255, unique=True, blank=True)
     message = models.CharField(
         max_length=255, blank=True, null=True, help_text="Default error message if validator return 'false'."
     )
@@ -180,6 +181,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
             self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.name = namify(self.label)
         super().save(force_insert, force_update, using, update_fields)
 
 
