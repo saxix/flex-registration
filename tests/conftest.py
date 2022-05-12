@@ -4,6 +4,8 @@ import pytest
 from django import forms
 from django.core.files.storage import get_storage_class
 
+from smart_register.core.fields import SmartFileField, CompilationTimeField
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -44,24 +46,23 @@ def simple_form(db):
     cache.clear()
 
     v1, __ = Validator.objects.update_or_create(
-        name="length_1_50",
+        label="length_1_50",
         defaults=dict(
-            message="String size 1 to 5",
             active=True,
             target=Validator.FIELD,
-            code="value.length>1 && value.length<=50;",
+            code="value.length>1 && value.length<=50 ? true: 'String size 1 to 5'",
         ),
     )
     v2, __ = Validator.objects.update_or_create(
-        name="length_2_10",
+        label="length_2_10",
         defaults=dict(
-            message="String size 2 to 10",
             active=True,
             target=Validator.FIELD,
-            code="value.length>2 && value.length<=10;",
+            code="value.length>2 && value.length<=10 ? true: 'String size 2 to 10';",
         ),
     )
     frm, __ = FlexForm.objects.update_or_create(name="Form1")
+    frm.fields.get_or_create(label="time", defaults={"field_type": CompilationTimeField})
     frm.fields.get_or_create(label="First Name", defaults={"field_type": forms.CharField, "required": True})
     frm.fields.get_or_create(
         label="Last Name", defaults={"field_type": forms.CharField, "required": True, "validator": v2}
@@ -78,7 +79,7 @@ def complex_form():
     v1, __ = Validator.objects.get_or_create(
         name="length_2_8",
         defaults=dict(
-            message="String size 1 to 8", active=True, target=Validator.FIELD, code="value.length>1 && value.length<=8;"
+            active=True, target=Validator.FIELD, code="value.length>1 && value.length<=8 ? true:'String size 1 to 8';"
         ),
     )
     hh, __ = FlexForm.objects.get_or_create(name="Form1")
@@ -87,16 +88,13 @@ def complex_form():
     )
 
     ind, __ = FlexForm.objects.get_or_create(name="Form2")
-    ind.fields.get_or_create(
-        label="First Name", defaults={"field_type": forms.CharField, "required": True, "validator": v1}
-    )
-    ind.fields.get_or_create(
-        label="Last Name", defaults={"field_type": forms.CharField, "required": True, "validator": v1}
-    )
-    ind.fields.get_or_create(label="Date Of Birth", defaults={"field_type": forms.DateField, "required": True})
+    ind.fields.create(label="First Name", **{"field_type": forms.CharField, "required": True, "validator": v1})
+    ind.fields.create(label="Last Name", **{"field_type": forms.CharField, "required": True, "validator": v1})
+    ind.fields.create(label="Date Of Birth", **{"field_type": forms.DateField, "required": True})
 
-    ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
-    ind.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})
+    # ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
+    ind.fields.create(label="Image", **{"field_type": SmartFileField, "required": False})
+    ind.fields.create(label="File", **{"field_type": SmartFileField, "required": False})
     hh.add_formset(ind)
     return hh
 

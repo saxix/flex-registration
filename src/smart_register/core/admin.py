@@ -7,6 +7,7 @@ from pathlib import Path
 
 import requests
 from django.core.cache import caches
+from reversion_compare.admin import CompareVersionAdmin
 
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
@@ -36,8 +37,9 @@ from .models import (
     FormSet,
     OptionSet,
     Validator,
+    FIELD_KWARGS,
 )
-from .utils import render
+from .utils import render, dict_setdefault
 from ..admin.mixin import LoadDumpMixin
 
 logger = logging.getLogger(__name__)
@@ -57,10 +59,10 @@ class ValidatorTestForm(forms.Form):
 
 
 @register(Validator)
-class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
+class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     form = ValidatorForm
     list_editable = ("trace", "active", "draft")
-    list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
+    list_display = ("label", "name", "target", "used_by", "trace", "active", "draft")
     list_filter = ("target", "active", "draft", "trace")
     readonly_fields = ("version", "last_update_date")
     search_fields = ("name",)
@@ -70,10 +72,12 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
         Validator.MODULE: [{}],
         Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
     }
+    # change_list_template = "reversion/change_list.html"
+    object_history_template = "reversion-compare/object_history.html"
 
-    @view()
-    def _test(self, request, pk):
-        return {}
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        cache.set(f"validator-{request.user.pk}-{obj.pk}-status", obj.STATUS_UNKNOWN)
 
     def used_by(self, obj):
         if obj.target == Validator.FORM:
@@ -87,7 +91,7 @@ class ValidatorAdmin(LoadDumpMixin, SmartModelAdmin):
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk)
         original = ctx["original"]
-        stored = cache.get(f"validator-{request.user.pk}-{original.pk}")
+        stored = cache.get(f"validator-{request.user.pk}-{original.pk}-payload")
         ctx["traced"] = stored
         ctx["title"] = f"Test {original.target} validator: {original.name}"
         if stored:
@@ -161,11 +165,23 @@ class FlexFormFieldForm(forms.ModelForm):
         self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
 
 
+class FlexFormFieldForm2(forms.ModelForm):
+    class Meta:
+        model = FlexFormField
+        exclude = ()
+
+    def clean(self):
+        ret = super().clean()
+        dict_setdefault(ret["advanced"], FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
+        dict_setdefault(ret["advanced"], {"kwargs": FIELD_KWARGS.get(ret["field_type"], {})})
+        return ret
+
+
 @register(FlexFormField)
-class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
+class FlexFormFieldAdmin(LoadDumpMixin, CompareVersionAdmin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
-    list_display = ("label", "name", "flex_form", "ordering", "_type", "required", "enabled")
-    list_editable = ["ordering", "required", "enabled"]
+    list_display = ("label", "name", "flex_form", "form_type", "required", "enabled")
+    list_editable = ["required", "enabled"]
     list_filter = (
         ("flex_form", AutoCompleteFilter),
         ("field_type", Select2FieldComboFilter),
@@ -177,10 +193,13 @@ class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
+    form = FlexFormFieldForm2
     ordering_field = "ordering"
     order = "ordering"
 
-    def _type(self, obj):
+    # change_list_template = "reversion/change_list.html"
+
+    def form_type(self, obj):
         if obj.field_type:
             return obj.field_type.__name__
         else:
@@ -214,16 +233,18 @@ class FlexFormFieldAdmin(LoadDumpMixin, OrderableAdmin, SmartModelAdmin):
             form_class_attrs = {
                 "sample": instance,
             }
-            formClass = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+            form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
 
             if request.method == "POST":
-                form = formClass(request.POST)
+                form = form_class(request.POST)
+
                 if form.is_valid():
+                    ctx["debug_info"]["cleaned_data"] = form.cleaned_data
                     self.message_user(
-                        request, f"Form validation success. " f"You have selected: {form.cleaned_data['sample']}"
+                        request, f"Form validation success. You have selected: {form.cleaned_data['sample']}"
                     )
             else:
-                form = formClass()
+                form = form_class()
             ctx["form"] = form
         except Exception as e:
             logger.exception(e)
@@ -243,9 +264,9 @@ class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
     ordering_field_hide_input = True
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
-        if db_field.name == "field_type":
-            kwargs["widget"] = Select2Widget()
-            return db_field.formfield(**kwargs)
+        # if db_field.name == "field_type":
+        #     kwargs["widget"] = Select2Widget()
+        #     return db_field.formfield(**kwargs)
         return super().formfield_for_choice_field(db_field, request, **kwargs)
 
 
@@ -262,7 +283,7 @@ class SyncForm(SyncConfigForm):
 
 
 @register(FlexForm)
-class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
+class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
     inlines = [FlexFormFieldInline, FormSetInline]
     list_display = ("name", "validator", "used_by", "childs", "parents")
@@ -302,7 +323,8 @@ class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
         if request.method == "POST":
             form = form_class(request.POST)
             if form.is_valid():
-                self.message_user(request, "Form in valid")
+                ctx["cleaned_data"] = form.cleaned_data
+                self.message_user(request, "Form is valid")
         else:
             form = form_class()
         ctx["form"] = form
@@ -388,12 +410,28 @@ class FlexFormAdmin(LoadDumpMixin, SmartModelAdmin):
 
 
 @register(OptionSet)
-class OptionSetAdmin(LoadDumpMixin, SmartModelAdmin):
-    list_display = ("name", "id", "separator", "comment", "columns")
+class OptionSetAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
+    list_display = (
+        "name",
+        "id",
+        "separator",
+        "comment",
+        "pk_col",
+    )
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
     save_as = True
     readonly_fields = ("version", "last_update_date")
+    object_history_template = "reversion-compare/object_history.html"
+
+    @button()
+    def display_data(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Data")
+        data = []
+        for line in self.object.data.split("\r\n"):
+            data.append(line.split(self.object.separator))
+        ctx["data"] = data
+        return render(request, "admin/core/optionset/table.html", ctx)
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
     def view_json(self, button):

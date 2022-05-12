@@ -21,6 +21,12 @@ class CustomFieldMixin:
 
 class FlexFormBaseForm(forms.Form):
     flex_form = None
+    compilation_time_field = None
+
+    def get_counters(self, data):
+        if self.compilation_time_field:
+            return data.pop(self.compilation_time_field, {})
+        return {}
 
     def is_valid(self):
         return super().is_valid()

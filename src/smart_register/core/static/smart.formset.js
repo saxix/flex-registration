@@ -1,12 +1,21 @@
 var configureFormsets = function (configs) {
     configs.forEach(function (c, i) {
         var config = {};
-        Object.assign(config, DEFAULT, c);;
+        // Object.assign(config, DEFAULT, c);
+        $.extend(true, config, DEFAULT, c);
         var $target = $("." + config.formCssClass);
         config.initialized = function ($$) {
             if ($$.options.showCounter) {
                 updateCounter($$, null);
             }
+            var $btn = $$.parent().find('div.formset-add-row a');
+            if ($btn.is(":visible")){
+                $btn.parent().attr('data-msgid', config.original.addText)
+            }
+            // console.log( $$.parent().children('div.formset-add-row a') );
+            // $$.parent().find('.formset-add-row').each(function(i,e){
+            //     console.log( $(e).find('a'));
+            // });
         };
         $target.formset(config);
     });
@@ -18,7 +27,7 @@ var updateCounter = function ($$, $row) {
         $fs.find(".fs-counter").each(function (i, e) {
             var idx = 1 + i;
             var alink = "<a class='aname' id=\"" + $$.options.prefix + "_member_" + idx + "\"></a>";
-            var pages = $$.options.counterPrefix + idx + "/" + forms;
+            var pages = $$.options.counterPrefix + ": " + idx + "/" + forms;
             var next = "<span class='disabled next'></span>";
             var prev = "<span class='disabled prev'></span>";
             if (idx > 1) {

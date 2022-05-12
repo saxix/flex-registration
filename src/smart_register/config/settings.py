@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     # -- dev --
     "debug_toolbar",
     # ---
+    "reversion",  # https://github.com/etianen/django-reversion
+    "reversion_compare",  # https://github.com/jedie/django-reversion-compare
+    # ---
     "smart_register.admin.apps.AuroraAdminUIConfig",
     "smart_register.admin.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
@@ -70,8 +73,10 @@ INSTALLED_APPS = [
     "smart_register.apps.Config",
     "smart_register.i18n",
     "smart_register.web",
+    "smart_register.security.apps.Config",
     "smart_register.core",
     "smart_register.registration",
+    "smart_register.counters",
 ]
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
@@ -146,8 +151,20 @@ WSGI_APPLICATION = "smart_register.config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["CONN_MAX_AGE"] = 60
+main_conn = env.db("DATABASE_URL")
+main_conn["CONN_MAX_AGE"] = 60
+ro_conn = main_conn.copy()
+ro_conn.update(
+    {
+        "OPTIONS": {"options": "-c default_transaction_read_only=on"},
+        "TEST": {
+            "READ_ONLY": True,  # Do not manage this database during tests
+        },
+    }
+)
+
+DATABASES = {"default": main_conn, "read_only": ro_conn}
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation
@@ -235,6 +252,7 @@ ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "smart_register.security.backend.SmartBackend",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -464,7 +482,9 @@ DEBUG_TOOLBAR_CONFIG = {
 INTERNAL_IPS = env.list("INTERNAL_IPS")
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
-    "debug_toolbar.panels.versions.VersionsPanel",
+    # "debug_toolbar.panels.versions.VersionsPanel",
+    "smart_register.ddt_panels.StatePanel",
+    "smart_register.ddt_panels.MigrationPanel",
     "debug_toolbar.panels.timer.TimerPanel",
     "flags.panels.FlagsPanel",
     "flags.panels.FlagChecksPanel",
@@ -585,3 +605,9 @@ worker-src 'none';
 # CSP_REPORT_ONLY = env("CSP_REPORT_ONLY")
 # CSP_DEFAULT_SRC = env("CSP_DEFAULT_SRC")
 # CSP_SCRIPT_SRC = env("CSP_SCRIPT_SRC")
+
+# Add reversion models to admin interface:
+ADD_REVERSION_ADMIN = True
+# optional settings:
+REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = False
+REVERSION_COMPARE_IGNORE_NOT_REGISTERED = False

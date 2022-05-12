@@ -5,6 +5,7 @@ from hashlib import md5
 
 import sentry_sdk
 from constance import config
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import (
     InMemoryUploadedFile,
@@ -22,7 +23,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-# from smart_register.core.cache import cache_formset
 from smart_register.core.utils import get_qrcode, get_etag
 from smart_register.registration.models import Record, Registration
 from smart_register.state import state
@@ -39,17 +39,7 @@ class QRVerify(TemplateView):
         return super().get_context_data(valid=valid, record=record, **kwargs)
 
 
-class FixedLocaleView:
-    @cached_property
-    def registration(self):
-        raise NotImplementedError
-
-    def dispatch(self, request, *args, **kwargs):
-        # translation.activate(self.registration.locale)
-        return super().dispatch(request, *args, **kwargs)
-
-
-class RegisterCompleteView(FixedLocaleView, TemplateView):
+class RegisterCompleteView(TemplateView):
     template_name = "registration/register_done.html"
 
     @cached_property
@@ -63,10 +53,12 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
                 registration__id=self.kwargs["reg"], id=self.kwargs["rec"]
             )
         except Record.DoesNotExist:
+            if state.collect_messages:
+                Record.objects.first()
             raise Http404
 
     def get_qrcode(self, record):
-        h = md5(record.storage).hexdigest()
+        h = md5(record.storage or b"").hexdigest()
         url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
         hashed_url = f"{url}/{h}"
         return get_qrcode(hashed_url), url
@@ -80,10 +72,36 @@ class RegisterCompleteView(FixedLocaleView, TemplateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class RegisterView(FixedLocaleView, FormView):
+class RegisterRouter(FormView):
+    def post(self, request, *args, **kwargs):
+        r = Registration.objects.only("slug", "version", "locale").get(slug=request.POST["slug"])
+        args = [r.slug, r.version]
+        url = reverse("register", args=args)
+        if request.user.is_authenticated:
+            url += f"?{request.COOKIES[settings.SESSION_COOKIE_NAME]}"
+        return HttpResponseRedirect(url)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class RegisterView(FormView):
     template_name = "registration/register.html"
 
+    @cached_property
+    def registration(self):
+        filters = {}
+        if not self.request.user.is_staff and not state.collect_messages:
+            filters["active"] = True
+
+        base = Registration.objects.select_related("flex_form", "validator")
+        try:
+            return base.get(slug=self.kwargs["slug"], **filters)
+        except Registration.DoesNotExist:  # pragma: no coalidateer
+            raise Http404
+
     def get(self, request, *args, **kwargs):
+        # if "version" not in kwargs:
+        #     return HttpResponseRedirect(reverse("index"))
+
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
         else:
@@ -99,26 +117,15 @@ class RegisterView(FixedLocaleView, FormView):
             response.headers.setdefault("ETag", self.res_etag)
         return response
 
-    @cached_property
-    def registration(self):
-        filters = {}
-        if not self.request.user.is_staff and not state.collect_messages:
-            filters["active"] = True
-
-        base = Registration.objects.select_related("flex_form", "validator")
-        try:
-            return base.get(slug=self.kwargs["slug"], **filters)
-        except Registration.DoesNotExist:  # pragma: no coalidateer
-            raise Http404
-
     def get_form_class(self):
         return self.registration.flex_form.get_form()
 
     # @cache_formset
     def get_formsets_classes(self):
+        #     return self.registration.flex_form.get_formsets_classes()
         formsets = {}
-        attrs = self.get_form_kwargs().copy()
-        attrs.pop("prefix")
+        # attrs = self.get_form_kwargs().copy()
+        # attrs.pop("prefix")
         for fs in self.registration.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
             formsets[fs.name] = fs.get_formset()
         return formsets
@@ -130,11 +137,14 @@ class RegisterView(FixedLocaleView, FormView):
         for name, fs in self.get_formsets_classes().items():
             formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets
+        # return self.registration.flex_form.get_formsets(attrs)
 
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
-        kwargs["dataset"] = self.registration
+        kwargs["registration"] = self.registration
+        kwargs["can_edit_inpage"] = self.request.user.is_staff
+        kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
         m = forms.Media()
@@ -177,6 +187,8 @@ class RegisterView(FixedLocaleView, FormView):
 
     def form_valid(self, form, formsets):
         data = form.cleaned_data
+        counters = form.get_counters(data)
+
         for name, fs in formsets.items():
             data[name] = []
             for f in fs:
@@ -197,6 +209,7 @@ class RegisterView(FixedLocaleView, FormView):
             return field
 
         data = {field_name: parse_field(field) for field_name, field in data.items()}
+        data["counters"] = counters
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)

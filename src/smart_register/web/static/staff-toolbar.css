@@ -103,6 +103,7 @@ span.staff-tooltip .tooltiptext {
 span.staff-tooltip .tooltiptext p .label {
   all: revert;
   text-transform: none;
+  font-weight: normal;
   color: #e8d48a;
   width: 65px;
   display: inline-block;

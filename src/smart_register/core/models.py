@@ -4,7 +4,6 @@ from datetime import date, datetime, time
 from json import JSONDecodeError
 
 import jsonpickle
-import sentry_sdk
 from admin_ordering.models import OrderableModel
 from concurrency.fields import AutoIncVersionField
 from django import forms
@@ -26,11 +25,12 @@ from strategy_field.utils import fqn
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
+from . import fields
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import dict_setdefault, jsonfy, namify, underscore_to_camelcase, JSONEncoder
+from .utils import JSONEncoder, dict_setdefault, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +39,19 @@ cache = caches["default"]
 
 class Validator(NaturalKeyModel):
     STATUS_ERROR = "error"
+    STATUS_EXCEPTION = "exc"
     STATUS_SUCCESS = "success"
     STATUS_SKIP = "skip"
     STATUS_UNKNOWN = "unknown"
+    STATUS_INACTIVE = "inactive"
 
     FORM = "form"
     FIELD = "field"
     MODULE = "module"
     FORMSET = "formset"
+    SCRIPT = "script"
+    HANDLER = "handler"
+
     CONSOLE = mark_safe(
         """
     console = {log: function(d) {}};
@@ -62,7 +67,7 @@ dateutil = {today: TODAY,
 };
 _ = {is_child: function(d) { return d && Date.parse(d) < dateutil.years18 ? true: false},
      is_baby: function(d) { return d && Date.parse(d) > dateutil.years2 ? true: false},
-     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years2 ? true: false},
+     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years18 ? true: false},
      is_future: function(d) { return d  && Date.parse(d) > dateutil.Validatortoday ? true: false},
 };
 _.is_adult = function(d) { return !_.is_child(d)};
@@ -73,8 +78,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
-    name = CICharField(max_length=255, unique=True)
-    message = models.CharField(max_length=255, help_text="Default error message if validator return 'false'.")
+    label = CICharField(max_length=255)
+    name = CICharField(verbose_name=_("Function Name"), max_length=255, unique=True, blank=True, null=True)
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -83,6 +88,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
             (FIELD, "Field"),
             (FORMSET, "Formset"),
             (MODULE, "Module"),
+            (HANDLER, "Handler"),
+            (SCRIPT, "Script"),
         ),
     )
     trace = models.BooleanField(
@@ -95,7 +102,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     )
 
     def __str__(self):
-        return self.name
+        return self.label
 
     @staticmethod
     def js_type(value):
@@ -108,7 +115,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def jspickle(self, value):
         return json.dumps(value, cls=JSONEncoder, skip_files=True)
 
-    def monitor(self, status, exc: ValidationError = None):
+    def monitor(self, status, value, exc: Exception = None):
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", status)
         error = None
         if exc:
@@ -116,18 +123,20 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 error = self.jspickle(
                     exc.error_dict,
                 )
-            else:
+            elif isinstance(exc, ValidationError):
                 error = self.jspickle({"Error": exc.messages})
+            else:
+                error = self.jspickle({"Error": str(exc)})
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}", "")
+        cache.set(f"validator-{state.request.user.pk}-{self.pk}-payload", self.jspickle(value))
 
     def validate(self, value):
         from py_mini_racer import MiniRacer
 
         if self.active:
-            self.monitor(self.STATUS_UNKNOWN)
+            self.monitor(self.STATUS_UNKNOWN, value)
         else:
-            self.monitor(self.STATUS_INACTIVE)
+            self.monitor(self.STATUS_INACTIVE, value)
 
         if self.active or (self.draft and state.request.user.is_staff):
             ctx = MiniRacer()
@@ -142,9 +151,6 @@ _.is_adult = function(d) { return !_.is_child(d)};
                         ret = jsonpickle.decode(result)
                     except (JSONDecodeError, TypeError):
                         ret = result
-                if self.trace and state.request.user.is_staff:
-                    cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
-                    sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
                 if isinstance(ret, str):
                     raise ValidationError(_(ret))
                 elif isinstance(ret, (list, tuple)):
@@ -154,26 +160,32 @@ _.is_adult = function(d) { return !_.is_child(d)};
                     errors = {k: _(v) for (k, v) in ret.items()}
                     raise ValidationError(errors)
                 elif isinstance(ret, bool) and not ret:
-                    raise ValidationError(_(self.message))
+                    raise ValidationError(_("Please insert a valid value"))
             except ValidationError as e:
                 if self.trace:
                     logger.exception(e)
-                    self.monitor(self.STATUS_ERROR, e)
+                    self.monitor(self.STATUS_ERROR, value, e)
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 return True
             except Exception as e:
                 logger.exception(e)
+                self.monitor(self.STATUS_EXCEPTION, value, e)
                 raise
-            self.monitor(self.STATUS_SUCCESS)
+            self.monitor(self.STATUS_SUCCESS, value)
 
         elif self.trace:
-            self.monitor(self.STATUS_SKIP)
+            self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        cache.set(f"validator-{state.request.user.pk}-{self.pk}-status", self.STATUS_UNKNOWN)
+        if not self.name:
+            self.name = namify(self.label)
         super().save(force_insert, force_update, using, update_fields)
+
+    def get_script_url(self):
+        return reverse("api:validator-script", args=[self.name])
 
 
 def get_validators(field):
@@ -196,8 +208,8 @@ class FlexForm(I18NModel, NaturalKeyModel):
     )
 
     class Meta:
-        verbose_name = "FlexForm"
-        verbose_name_plural = "FlexForms"
+        verbose_name = "Flex Form"
+        verbose_name_plural = "Flex Forms"
 
     def __str__(self):
         return self.name
@@ -236,18 +248,37 @@ class FlexForm(I18NModel, NaturalKeyModel):
 
     # @cache_form
     def get_form(self):
+        from smart_register.core.fields import CompilationTimeField
+
         fields = {}
+        compilation_time_field = None
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
             try:
-                fields[field.name] = field.get_instance()
+                fld = field.get_instance()
+                fields[field.name] = fld
+                if isinstance(fld, CompilationTimeField):
+                    compilation_time_field = field.name
             except TypeError:
                 pass
         form_class_attrs = {
             "flex_form": self,
+            "compilation_time_field": compilation_time_field,
             **fields,
         }
         flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
         return flexForm
+
+    def get_formsets_classes(self):
+        formsets = {}
+        for fs in self.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formsets[fs.name] = fs.get_formset()
+        return formsets
+
+    def get_formsets(self, attrs):
+        formsets = {}
+        for name, fs in self.get_formsets_classes().items():
+            formsets[name] = fs(prefix=f"{name}", **attrs)
+        return formsets
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
@@ -336,6 +367,12 @@ FIELD_KWARGS = {
     forms.CharField: {"min_length": None, "max_length": None, "empty_value": "", "initial": None},
     forms.IntegerField: {"min_value": None, "max_value": None, "initial": None},
     forms.DateField: {"initial": None},
+    fields.LocationField: {},
+    fields.RemoteIpField: {},
+    fields.AjaxSelectField: {},
+    fields.SmartFileField: {},
+    fields.SelectField: {},
+    fields.WebcamField: {},
 }
 
 
@@ -345,6 +382,11 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     ]
     I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
+        "widget_kwargs": {
+            "pattern": None,
+            "title": None,
+            "placeholder": None,
+        },
         "kwargs": {},
         "smart": {
             "hint": "",
@@ -374,8 +416,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     class Meta:
         unique_together = (("flex_form", "name"),)
-        verbose_name = "FlexForm Field"
-        verbose_name_plural = "FlexForm Fields"
+        verbose_name = "Flex Field"
+        verbose_name_plural = "Flex Fields"
         ordering = ["ordering"]
 
     def __str__(self):
@@ -403,14 +445,15 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             field_type = self.field_type
             advanced = self.advanced.copy()
             kwargs = self.advanced.get("kwargs", {}).copy()
+            widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             regex = self.regex
 
             smart_attrs = advanced.pop("smart", {}).copy()
             # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
-            if smart_attrs.get("question", ""):
+            if not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
-            elif not smart_attrs.get("visible", True):
+            elif smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
 
             kwargs.setdefault("smart_attrs", smart_attrs.copy())
@@ -428,6 +471,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
+        kwargs["widget_kwargs"] = widget_kwargs
         return kwargs
 
     def get_instance(self):
@@ -447,6 +491,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     def clean(self):
         try:
+            # dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
+            # dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
             self.get_instance()
         except Exception as e:
             raise ValidationError(e)
@@ -456,9 +502,6 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             self.name = namify(self.label)[:100]
         else:
             self.name = namify(self.name)[:100]
-
-        dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
-        dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
 
         super().save(force_insert, force_update, using, update_fields)
 
@@ -493,6 +536,9 @@ class OptionSet(NaturalKeyModel, models.Model):
     )
 
     objects = OptionSetManager()
+
+    def __str__(self):
+        return self.name
 
     def clean(self):
         if self.locale not in self.languages:

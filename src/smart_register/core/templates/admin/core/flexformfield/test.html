@@ -26,10 +26,11 @@
 
     </table>
 
-    <form method="post">
+    <form method="post" id="registrationForm">
         {% csrf_token %}
         {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
-    -------
-        <input class="button" type="submit" value="Submit">
+    <div lass="submit-row">
+        <input style="background-color: cornflowerblue" type="submit" value="Submit">
+    </div>
     </form>
 {% endblock action-content %}
