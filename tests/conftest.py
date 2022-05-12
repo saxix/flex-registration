@@ -4,7 +4,7 @@ import pytest
 from django import forms
 from django.core.files.storage import get_storage_class
 
-from smart_register.core.fields import SmartFileField
+from smart_register.core.fields import SmartFileField, CompilationTimeField
 
 
 def pytest_addoption(parser):
@@ -62,6 +62,7 @@ def simple_form(db):
         ),
     )
     frm, __ = FlexForm.objects.update_or_create(name="Form1")
+    frm.fields.get_or_create(label="time", defaults={"field_type": CompilationTimeField})
     frm.fields.get_or_create(label="First Name", defaults={"field_type": forms.CharField, "required": True})
     frm.fields.get_or_create(
         label="Last Name", defaults={"field_type": forms.CharField, "required": True, "validator": v2}

@@ -73,6 +73,7 @@ field_registry.register(fields.YesNoRadio)
 field_registry.register(fields.LabelOnlyField)
 field_registry.register(fields.LocationField)
 field_registry.register(fields.RemoteIpField)
+field_registry.register(fields.CompilationTimeField)
 field_registry.register(MathCaptchaField)
 
 form_registry = Registry(forms.BaseForm)

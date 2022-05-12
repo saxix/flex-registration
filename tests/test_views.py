@@ -93,8 +93,21 @@ def test_register_simple(django_app, simple_registration):
     res = res.form.submit()
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
+    res.form["time_0"] = "Thu May 12 2022 15:35:36 GMT+0200 (Central European Summer Time)"
+    res.form["time_1"] = "2000"
+    res.form["time_2"] = "1"
+    res.form["time_3"] = "2000"
+    res.form["last_name"] = "last"
+    res.form["last_name"] = "last"
+
     res = res.form.submit().follow()
     assert res.context["record"].data["first_name"] == "first"
+    assert res.context["record"].counters == {
+        "start": "Thu May 12 2022 15:35:36 GMT+0200 (Central European Summer Time)",
+        "elapsed": "2000",
+        "rounds": "1",
+        "total": "2000",
+    }
 
 
 def add_dynamic_field(form, name, value):
