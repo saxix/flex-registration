@@ -479,6 +479,7 @@ class RecordAdmin(SmartModelAdmin):
     search_fields = ("registration__name",)
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id")
+    autocomplete_fields = ("registration",)
     list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
     change_form_template = None
     change_list_template = None
@@ -494,6 +495,16 @@ class RecordAdmin(SmartModelAdmin):
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
+
+    @link(html_attrs={"class": "aeb-warn "}, change_form=True)
+    def receipt(self, button):
+        try:
+            if button.original:
+                base = reverse("register-done", args=[button.original.registration.pk, button.original.pk])
+                button.href = base
+                button.html_attrs["target"] = f"_{button.original.pk}"
+        except Exception as e:
+            logger.exception(e)
 
     @button()
     def truncate(self, request):

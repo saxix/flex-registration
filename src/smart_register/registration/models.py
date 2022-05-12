@@ -155,10 +155,19 @@ class Record(models.Model):
             return json.loads(Crypto(secret).decrypt(self.storage))
 
     @property
+    def unicef_id(self):
+        ts = self.timestamp.strftime("%Y%m%d")
+        return f"HOPE-{ts}-{self.registration.id}/{self.id}"
+
+    @property
     def data(self):
-        if self.registration.public_key:
-            return {"Forbidden": "Cannot access encrypted data"}
-        elif self.registration.encrypt_data:
-            return self.decrypt(secret=None)
-        else:
-            return json.loads(self.storage.tobytes().decode())
+        try:
+            if self.registration.public_key:
+                return {"Forbidden": "Cannot access encrypted data"}
+            elif self.registration.encrypt_data:
+                return self.decrypt(secret=None)
+            else:
+                return json.loads(self.storage.tobytes().decode())
+        except AttributeError as e:
+            logger.exception(e)
+            return {}

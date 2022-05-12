@@ -58,7 +58,7 @@ class RegisterCompleteView(TemplateView):
             raise Http404
 
     def get_qrcode(self, record):
-        h = md5(record.storage).hexdigest()
+        h = md5(record.storage or b"").hexdigest()
         url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
         hashed_url = f"{url}/{h}"
         return get_qrcode(hashed_url), url
