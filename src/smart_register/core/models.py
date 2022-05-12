@@ -248,14 +248,21 @@ class FlexForm(I18NModel, NaturalKeyModel):
 
     # @cache_form
     def get_form(self):
+        from smart_register.core.fields import CompilationTimeField
+
         fields = {}
+        compilation_time_field = None
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
             try:
-                fields[field.name] = field.get_instance()
+                fld = field.get_instance()
+                if isinstance(fld, CompilationTimeField):
+                    compilation_time_field = fld
+                fields[field.name] = fld
             except TypeError:
                 pass
         form_class_attrs = {
             "flex_form": self,
+            "compilation_time_field": compilation_time_field,
             **fields,
         }
         flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)

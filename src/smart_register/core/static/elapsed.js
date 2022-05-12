@@ -1,16 +1,29 @@
 ;(function ($) {
     $(function () {
-        var formInitializationTime = new Date()
-        // $('#registrationForm input').bind('keypress change click', function () {
-        // if (!formInitializationTime){ formInitializationTime = new Date()};
-        $('input.CompilationTimeField').attr("data-start", formInitializationTime);
-        // $('input.CompilationTimeField').val(formInitializationTime);
-        console.log(1111, formInitializationTime);
-        // });
+        const $start = $("input.CompilationTimeField.start");
+        const $round = $("input.CompilationTimeField.round");
+        const formInitializationTime = new Date();
+        var start = formInitializationTime;
+        var first = $start.val();
+        var currentVal = 0;
+        var elapsed = 0;
+        var total = 0;
 
-        $('#registrationForm').bind('submit', function () {
-            $('input.CompilationTimeField').val(new Date() - formInitializationTime);
+        if (first === undefined || first === '') {
+            $start.val( formInitializationTime );
+        } else {
+            currentVal = parseInt($round.val() || 0);
+            start = Date.parse( $start.val() )
+        }
+        $round.val(currentVal);
+
+        $("#registrationForm").bind("submit", function (e) {
+            currentVal++;
+            elapsed = new Date() - formInitializationTime;
+            total = new Date() - start;
+            $("input.CompilationTimeField.elapsed").val(elapsed);
+            $("input.CompilationTimeField.total").val(total);
+            $round.val(currentVal);
         });
-
     });
 })(jQuery);

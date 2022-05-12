@@ -187,6 +187,8 @@ class RegisterView(FormView):
 
     def form_valid(self, form, formsets):
         data = form.cleaned_data
+        counters = form.get_counters(data)
+
         for name, fs in formsets.items():
             data[name] = []
             for f in fs:
@@ -207,6 +209,7 @@ class RegisterView(FormView):
             return field
 
         data = {field_name: parse_field(field) for field_name, field in data.items()}
+        data["counters"] = counters
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)

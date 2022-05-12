@@ -116,12 +116,17 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         return crypt(value, self.public_key)
 
     def add_record(self, data):
+        fields = {
+            "size": 0,
+            "counters": data.get("counters", {}),
+        }
         if self.public_key:
-            fields = {"storage": self.encrypt(data)}
+            fields["storage"] = self.encrypt(data)
         elif self.encrypt_data:
-            fields = {"storage": Crypto().encrypt(data).encode()}
+            fields["storage"] = Crypto().encrypt(data).encode()
         else:
-            fields = {"storage": safe_json(data).encode()}
+            fields["storage"] = safe_json(data).encode()
+
         return Record.objects.create(registration=self, **fields)
 
     @cached_property
@@ -147,6 +152,8 @@ class Record(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     storage = models.BinaryField(null=True, blank=True)
     ignored = models.BooleanField(default=False, blank=True)
+    size = models.IntegerField(blank=True, null=True)
+    counters = models.JSONField(blank=True, null=True)
 
     def decrypt(self, private_key=undefined, secret=undefined):
         if private_key != undefined:
