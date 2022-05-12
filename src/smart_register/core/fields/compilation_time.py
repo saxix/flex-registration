@@ -4,7 +4,7 @@ from django.forms import widgets
 
 
 class CompilationTimeWidget(forms.MultiWidget):
-    def __init__(self, attrs=None, dt=None, mode=0):
+    def __init__(self, attrs=None):
         _widgets = (
             widgets.HiddenInput(
                 attrs={"class": "CompilationTimeField start"},
@@ -53,9 +53,10 @@ class CompilationTimeField(forms.CharField):
         kwargs["help_text"] = ""
         super().__init__(**kwargs)
 
+    def to_python(self, value):
+        return dict(zip(["start", "elapsed", "rounds", "total"], value))
+
     def widget_attrs(self, widget):
         attrs = super().widget_attrs(widget)
         attrs.pop("class", "")
-        # attrs.setdefault("class", "")
-        # attrs["class"] += self.__class__.__name__
         return attrs

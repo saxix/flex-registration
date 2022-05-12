@@ -255,9 +255,9 @@ class FlexForm(I18NModel, NaturalKeyModel):
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
             try:
                 fld = field.get_instance()
-                if isinstance(fld, CompilationTimeField):
-                    compilation_time_field = fld
                 fields[field.name] = fld
+                if isinstance(fld, CompilationTimeField):
+                    compilation_time_field = field.name
             except TypeError:
                 pass
         form_class_attrs = {
