@@ -152,7 +152,7 @@ input[type=submit]:disabled, input[type=button]:disabled {
   background-color: rgba(124, 124, 124, 0.67);
 }
 
-input[type=submit] {
+#registrationForm input[type=submit] {
   color: rgba(255, 255, 255, var(--text-opacity));
   padding-left: 1rem;
   padding-right: 1rem;
@@ -162,15 +162,18 @@ input[type=submit] {
   font-weight: 700;
   border-radius: 0.25rem;
   background-color: rgba(66, 153, 225, var(--bg-opacity));
+  color: white;
   cursor: pointer;
 }
-input[type=submit]:hover, input[type=submit]:active {
+#registrationForm input[type=submit]:hover, #registrationForm input[type=submit]:active {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
-input[type=submit]:disabled {
+#registrationForm input[type=submit]:disabled {
+  background-color: rgba(124, 124, 124, 0.67);
   cursor: not-allowed;
+  color: black;
 }
 
 /*# sourceMappingURL=base.css.map */

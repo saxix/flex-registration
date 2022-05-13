@@ -58,7 +58,6 @@ class AuroraAdminSite(SmartAdminSite):
 
     def loaddata(self, request):
         context = self.each_context(request)
-        form = ImportForm(request.POST, request.FILES)
         if request.method == "POST":
             form = ImportForm(request.POST, request.FILES)
             if form.is_valid():
@@ -89,7 +88,8 @@ class AuroraAdminSite(SmartAdminSite):
                         finally:
                             fixture.unlink()
                 except Exception as e:
-                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+                    messages.add_message(request, messages.ERROR, f"{e.__class__.__name__}: {e} {out.getvalue()}")
+
             else:
                 context["form"] = form
         else:

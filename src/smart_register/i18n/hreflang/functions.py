@@ -30,7 +30,7 @@ def reverse(view_name, lang=None, use_lang_prefix=True, *args, **kwargs):
     if not use_lang_prefix:
         if not url.startswith("/{0}".format(settings.LANGUAGE_CODE)):
             raise NoReverseMatch('could not find reverse match for "{}" with language "{}"'.format(view_name, lang))
-        url = url[1 + len(settings.LANGUAGE_CODE):]
+        url = url[1 + len(settings.LANGUAGE_CODE):]  # fmt: skip
     activate(cur_language)
     return url
 

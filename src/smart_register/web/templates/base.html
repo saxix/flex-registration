@@ -19,11 +19,6 @@
 <body class="min-h-screen dark">
 <script>
     const LANGUAGE_CODE = "{{ LANGUAGE_CODE }}";
-    {% if user.is_staff %}
-        const I18N_MESSAGE_URL = "{% url "admin:i18n_message_get_or_create" %}";
-    {% else %}
-        const I18N_MESSAGE_URL = "";
-    {% endif %}
 </script>
 {% block staff-toolbar %}{% include "_env_header.html" %}{% endblock %}
 {% block header %}
@@ -43,7 +38,6 @@
 {% endblock %}
 {% block body %}
 {% endblock body %}
-
 {% block footer %}{% include "_footer.html" %}{% endblock %}
 </body>
 </html>

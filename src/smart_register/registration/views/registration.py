@@ -23,7 +23,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-# from smart_register.core.cache import cache_formset
 from smart_register.core.utils import get_qrcode, get_etag
 from smart_register.registration.models import Record, Registration
 from smart_register.state import state
@@ -59,7 +58,7 @@ class RegisterCompleteView(TemplateView):
             raise Http404
 
     def get_qrcode(self, record):
-        h = md5(record.storage).hexdigest()
+        h = md5(record.storage or b"").hexdigest()
         url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
         hashed_url = f"{url}/{h}"
         return get_qrcode(hashed_url), url
@@ -100,8 +99,8 @@ class RegisterView(FormView):
             raise Http404
 
     def get(self, request, *args, **kwargs):
-        if "version" not in kwargs:
-            return HttpResponseRedirect(reverse("index"))
+        # if "version" not in kwargs:
+        #     return HttpResponseRedirect(reverse("index"))
 
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
@@ -143,7 +142,9 @@ class RegisterView(FormView):
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
-        kwargs["dataset"] = self.registration
+        kwargs["registration"] = self.registration
+        kwargs["can_edit_inpage"] = self.request.user.is_staff
+        kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
         m = forms.Media()
@@ -186,6 +187,8 @@ class RegisterView(FormView):
 
     def form_valid(self, form, formsets):
         data = form.cleaned_data
+        counters = form.get_counters(data)
+
         for name, fs in formsets.items():
             data[name] = []
             for f in fs:
@@ -206,6 +209,7 @@ class RegisterView(FormView):
             return field
 
         data = {field_name: parse_field(field) for field_name, field in data.items()}
+        data["counters"] = counters
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)

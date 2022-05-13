@@ -25,12 +25,14 @@ def formset_config(formset):
         "deleteText": "Remove",
         "deleteCssClass": "formset-delete-button",
         "keepFieldValues": False,
+        "original": {},
     }
     fs_config = formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
     override = {k: v for k, v in fs_config.items() if v}
     config = {**default, **override}
     for e in ["addText", "deleteText", "counterPrefix"]:
         config[e] = _(config[e])
+        config["original"][e] = config[e]
     return config
 
 

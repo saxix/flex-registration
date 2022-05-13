@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytz
 
-from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.decorators import button, link, view, choice
 from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
 from concurrency.api import disable_concurrency
@@ -69,10 +69,11 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         JSONField: {"widget": JSONEditor},
     }
     change_form_template = None
+    filter_horizontal = ("scripts",)
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
         (None, {"fields": ("name", "title", "slug")}),
-        ("Config", {"fields": ("flex_form", "validator", "encrypt_data")}),
+        ("Config", {"fields": ("flex_form", "validator", "unique_field", "scripts", "encrypt_data")}),
         ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
@@ -85,6 +86,14 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
 
     secure.boolean = True
 
+    @button()
+    def publish(self, request, pk):
+        pass
+
+    @view()
+    def _update(self, request):
+        pass
+
     @property
     def media(self):
         extra = "" if settings.DEBUG else ".min"
@@ -95,8 +104,12 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
             ]
         )
 
-    @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
-    def _invalidate_cache(self, request, pk):
+    @choice(change_list=False, label="Advanced", order=900)
+    def advanced(self, button):
+        button.choices = [self.inspect, self.clone, self.export]
+
+    @view(label="invalidate cache", html_attrs={"class": "aeb-warn"})
+    def invalidate_cache(self, request, pk):
         obj = self.get_object(request, pk)
         obj.save()
 
@@ -178,7 +191,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
         return render(request, "admin/registration/registration/chart.html", ctx)
 
-    @button()
+    @view()
     def inspect(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -188,7 +201,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         )
         return render(request, "admin/registration/registration/inspect.html", ctx)
 
-    @button()
+    @view()
     def clone(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -305,58 +318,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
 
-    @link(permission=is_root, html_attrs={"class": "aeb-warn "})
-    def view_collected_data(self, button):
-        try:
-            if button.original:
-                base = reverse("admin:registration_record_changelist")
-                button.href = f"{base}?registration__exact={button.original.pk}"
-                button.html_attrs["target"] = f"_{button.original.pk}"
-        except Exception as e:
-            logger.exception(e)
-
-    @button(label="import")
-    def _import(self, request):
-        ctx = self.get_common_context(
-            request,
-            media=self.media,
-            title="Import",
-        )
-        if request.method == "POST":
-            form = ImportForm(request.POST, request.FILES)
-            if form.is_valid():
-                try:
-                    f = request.FILES["file"]
-                    buf = io.BytesIO()
-                    for chunk in f.chunks():
-                        buf.write(chunk)
-                    buf.seek(0)
-                    data = json.load(buf)
-                    out = io.StringIO()
-                    workdir = Path(".").absolute()
-                    with disable_concurrency():
-                        for k, v in data.items():
-                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
-
-                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
-                                fdst.write(json.dumps(v).encode())
-                            fixture = (workdir / fdst.name).absolute()
-                            call_command("loaddata", fixture, stdout=out, verbosity=3)
-                            fixture.unlink()
-                            out.write("------\n")
-                            # ctx['out'] = out.getvalue()
-                            out.seek(0)
-                            ctx["out"] = out.readlines()
-                except Exception as e:
-                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
-            else:
-                ctx["form"] = form
-        else:
-            form = ImportForm()
-            ctx["form"] = form
-        return render(request, "admin/registration/registration/import.html", ctx)
-
-    @button()
+    @view()
     def export(self, request, pk):
         reg: Registration = self.get_object(request, pk)
         buffers = {}
@@ -419,6 +381,77 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
 
         return render(request, "admin/registration/registration/keys.html", ctx)
 
+    @link(permission=is_root, html_attrs={"class": "aeb-warn "})
+    def view_collected_data(self, button):
+        try:
+            if button.original:
+                base = reverse("admin:registration_record_changelist")
+                button.href = f"{base}?registration__exact={button.original.pk}"
+                button.html_attrs["target"] = f"_{button.original.pk}"
+        except Exception as e:
+            logger.exception(e)
+
+    @button(label="import")
+    def _import(self, request):
+        ctx = self.get_common_context(
+            request,
+            media=self.media,
+            title="Import",
+        )
+        if request.method == "POST":
+            form = ImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                try:
+                    f = request.FILES["file"]
+                    buf = io.BytesIO()
+                    for chunk in f.chunks():
+                        buf.write(chunk)
+                    buf.seek(0)
+                    data = json.load(buf)
+                    out = io.StringIO()
+                    workdir = Path(".").absolute()
+                    with disable_concurrency():
+                        for k, v in data.items():
+                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
+
+                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
+                                fdst.write(json.dumps(v).encode())
+                            fixture = (workdir / fdst.name).absolute()
+                            call_command("loaddata", fixture, stdout=out, verbosity=3)
+                            fixture.unlink()
+                            out.write("------\n")
+                            # ctx['out'] = out.getvalue()
+                            out.seek(0)
+                            ctx["out"] = out.readlines()
+                except Exception as e:
+                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+            else:
+                ctx["form"] = form
+        else:
+            form = ImportForm()
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/import.html", ctx)
+
+    @button()
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Test")
+        form = self.object.flex_form.get_form()
+        ctx["registration"] = self.object
+        ctx["form"] = form
+        return render(request, "admin/registration/registration/test.html", ctx)
+
+    def get_changeform_buttons(self, context):
+        return sorted(
+            [h for h in self.extra_button_handlers.values() if h.change_form in [True, None]],
+            key=lambda item: item.config.get("order", 1),
+        )
+
+    def get_changelist_buttons(self, context):
+        return sorted(
+            [h for h in self.extra_button_handlers.values() if h.change_list in [True, None]],
+            key=lambda item: item.config.get("order", 1),
+        )
+
 
 class DecryptForm(forms.Form):
     key = forms.CharField(widget=forms.Textarea)
@@ -454,6 +487,7 @@ class RecordAdmin(SmartModelAdmin):
     search_fields = ("registration__name",)
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id")
+    autocomplete_fields = ("registration",)
     list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
     change_form_template = None
     change_list_template = None
@@ -469,6 +503,16 @@ class RecordAdmin(SmartModelAdmin):
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
+
+    @link(html_attrs={"class": "aeb-warn "}, change_form=True)
+    def receipt(self, button):
+        try:
+            if button.original:
+                base = reverse("register-done", args=[button.original.registration.pk, button.original.pk])
+                button.href = base
+                button.html_attrs["target"] = f"_{button.original.pk}"
+        except Exception as e:
+            logger.exception(e)
 
     @button()
     def truncate(self, request):

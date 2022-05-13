@@ -3,6 +3,7 @@ import logging
 
 from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
+from django import forms
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
@@ -52,10 +53,22 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
     intro = models.TextField(blank=True, null=True, default="")
     footer = models.TextField(blank=True, null=True, default="")
+    client_validation = models.BooleanField(blank=True, null=False, default=False)
     validator = models.ForeignKey(
-        Validator, limit_choices_to={"target": Validator.MODULE}, blank=True, null=True, on_delete=models.SET_NULL
+        Validator,
+        limit_choices_to={"target": Validator.MODULE},
+        related_name="validator_for",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
     )
-    unique_field = models.CharField(blank=True, null=True, help_text="Form field to be used as unique key")
+
+    scripts = models.ManyToManyField(
+        Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True, null=True
+    )
+    unique_field = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Form field to be used as unique key"
+    )
     public_key = models.TextField(
         blank=True,
         null=True,
@@ -66,6 +79,11 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     class Meta:
         get_latest_by = "start"
         unique_together = (("name", "locale"),)
+        permissions = (("can_manage", "Can Manage"),)
+
+    @property
+    def media(self):
+        return forms.Media(js=[script.get_script_url() for script in self.scripts.all()])
 
     def __str__(self):
         return self.name
@@ -100,14 +118,19 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         return crypt(value, self.public_key)
 
     def add_record(self, data):
+        fields = {
+            "size": 0,
+            "counters": data.get("counters", {}),
+        }
         if self.public_key:
-            fields = {"storage": self.encrypt(data)}
+            fields["storage"] = self.encrypt(data)
         elif self.encrypt_data:
-            fields = {"storage": Crypto().encrypt(data).encode()}
+            fields["storage"] = Crypto().encrypt(data).encode()
         else:
-            fields = {"storage": safe_json(data).encode()}
+            fields["storage"] = safe_json(data).encode()
         if self.unique_field and self.unique_field in data:
             fields["unique_field"] = data.get(self.unique_field)
+
         return Record.objects.create(registration=self, **fields)
 
     @cached_property
@@ -129,11 +152,13 @@ class RemoteIp(models.GenericIPAddressField):
 
 class Record(models.Model):
     registration = models.ForeignKey(Registration, on_delete=models.PROTECT)
-    unique_field = models.CharField(blank=True, null=True, db_index=True)
+    unique_field = models.CharField(blank=True, null=True, max_length=255, db_index=True)
     remote_ip = RemoteIp(blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     storage = models.BinaryField(null=True, blank=True)
     ignored = models.BooleanField(default=False, blank=True)
+    size = models.IntegerField(blank=True, null=True)
+    counters = models.JSONField(blank=True, null=True)
 
     class Meta:
         unique_together = ("registration", "unique_field")
@@ -145,10 +170,19 @@ class Record(models.Model):
             return json.loads(Crypto(secret).decrypt(self.storage))
 
     @property
+    def unicef_id(self):
+        ts = self.timestamp.strftime("%Y%m%d")
+        return f"HOPE-{ts}-{self.registration.id}/{self.id}"
+
+    @property
     def data(self):
-        if self.registration.public_key:
-            return {"Forbidden": "Cannot access encrypted data"}
-        elif self.registration.encrypt_data:
-            return self.decrypt(secret=None)
-        else:
-            return json.loads(self.storage.tobytes().decode())
+        try:
+            if self.registration.public_key:
+                return {"Forbidden": "Cannot access encrypted data"}
+            elif self.registration.encrypt_data:
+                return self.decrypt(secret=None)
+            else:
+                return json.loads(self.storage.tobytes().decode())
+        except AttributeError as e:
+            logger.exception(e)
+            return {}

@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "smart_register.apps.Config",
     "smart_register.i18n",
     "smart_register.web",
+    "smart_register.security.apps.Config",
     "smart_register.core",
     "smart_register.registration",
     "smart_register.counters",
@@ -251,6 +252,7 @@ ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "smart_register.security.backend.SmartBackend",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -609,3 +611,6 @@ ADD_REVERSION_ADMIN = True
 # optional settings:
 REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = False
 REVERSION_COMPARE_IGNORE_NOT_REGISTERED = False
+
+PRODUCTION_SERVER = env("PRODUCTION_SERVER")
+PRODUCTION_TOKEN = env("PRODUCTION_TOKEN")

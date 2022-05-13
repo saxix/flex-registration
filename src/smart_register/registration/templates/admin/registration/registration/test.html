@@ -1,15 +1,8 @@
-{% extends "admin_extra_buttons/action_page.html" %}
-{% block action-content %}
-    {% if form %}
-        <form method="post">
-            {% csrf_token %}
-            {{ form.errors }}
-            <table>
-                {{ form }}
-            </table>
-            <input type="submit" value="Create">
-        </form>
-    {% else %}
+{% extends "base.html" %}
+{% block body %}
+    {% include "smart/_form.html" %}
+{% endblock body %}
+{% block footer %}
+--
 
-    {% endif %}
-{% endblock action-content %}
+{% endblock footer %}
