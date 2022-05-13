@@ -56,6 +56,15 @@ class AuroraAdminSite(SmartAdminSite):
         context["extra_pages"] = self.extra_pages
         return context
 
+    def migrations(self, request):
+        out = io.StringIO()
+        call_command("showmigrations", stdout=out, no_color=True)
+        context = {
+            "stdout": out.getvalue(),
+        }
+
+        return render(request, "admin/migrations.html", context)
+
     def loaddata(self, request):
         context = self.each_context(request)
         if request.method == "POST":
@@ -256,6 +265,7 @@ class AuroraAdminSite(SmartAdminSite):
             path("console/", wrap(self.console), name="console"),
             path("redis_cli/", wrap(self.redis_cli), name="redis_cli"),
             path("sql/", wrap(self.sql), name="sql"),
+            path("migrations/", wrap(self.migrations), name="migrations"),
             path("error/<int:code>/", wrap(self.error), name="error"),
         ]
         self.extra_pages = [("Console", reverse_lazy("admin:console"))]

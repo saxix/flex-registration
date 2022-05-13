@@ -64,7 +64,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     )
 
     scripts = models.ManyToManyField(
-        Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True, null=True
+        Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True
     )
     unique_field = models.CharField(
         max_length=255, blank=True, null=True, help_text="Form field to be used as unique key"
@@ -159,6 +159,9 @@ class Record(models.Model):
     ignored = models.BooleanField(default=False, blank=True)
     size = models.IntegerField(blank=True, null=True)
     counters = models.JSONField(blank=True, null=True)
+
+    fields = models.JSONField(default=dict, null=True, blank=True)
+    files = models.BinaryField(null=True, blank=True)
 
     class Meta:
         unique_together = ("registration", "unique_field")

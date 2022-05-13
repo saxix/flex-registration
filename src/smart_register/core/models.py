@@ -303,6 +303,8 @@ class FormSet(NaturalKeyModel, OrderableModel):
                 "deleteText": "Remove",
                 "deleteCssClass": None,
                 "keepFieldValues": False,
+                "onAdd": None,
+                "onRemove": None,
             },
         }
     }
