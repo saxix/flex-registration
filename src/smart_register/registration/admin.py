@@ -73,7 +73,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
         (None, {"fields": ("name", "title", "slug")}),
-        ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
+        ("Config", {"fields": ("flex_form", "validator", "unique_field", "scripts", "encrypt_data")}),
         ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
@@ -85,6 +85,14 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         return bool(obj.public_key)
 
     secure.boolean = True
+
+    @button()
+    def publish(self, request, pk):
+        pass
+
+    @view()
+    def _update(self, request):
+        pass
 
     @property
     def media(self):

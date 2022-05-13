@@ -13,6 +13,7 @@ from .remote_ip import RemoteIpField
 from .select import AjaxSelectField, SelectField, SmartSelectWidget
 from .webcam import WebcamField
 from .mixins import SmartFieldMixin
+from .hidden import HiddenField
 from .compilation_time import CompilationTimeField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
