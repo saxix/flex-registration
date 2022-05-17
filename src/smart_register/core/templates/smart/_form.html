@@ -13,6 +13,7 @@
             {% endfor %}
             </ul>
         {% endif %}
+        <div class="edit-module" data-module="{{ registration.pk }}" data-validator="{{ registration.validator }}"></div>
         {% if can_edit_inpage %}
             {% include "registration/_staff_edit_module.html" %}
         {% endif %}

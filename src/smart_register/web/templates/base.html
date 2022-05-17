@@ -11,16 +11,17 @@
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
-    {% if project.debug or user.is_staff %}
+{#    {% if project.debug or user.is_staff %}#}
         <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
-        <link rel="stylesheet" href="{% static "admin/debug.css" %}">{% endif %}
+        <link rel="stylesheet" href="{% static "admin/debug.css" %}">
+{#    {% endif %}#}
     {% block head %}{% endblock head %}
 </head>
 <body class="min-h-screen dark">
 <script>
     const LANGUAGE_CODE = "{{ LANGUAGE_CODE }}";
 </script>
-{% block staff-toolbar %}{% include "_env_header.html" %}{% endblock %}
+{#{% block staff-toolbar %}{% include "_env_header.html" %}{% endblock %}#}
 {% block header %}
     <header class="text-gray-700 body-font border-b border-gray-200 header">
         <div class="container-fluid w-100 mx-auto flex flex-wrap p-5 md:flex-row items-center">

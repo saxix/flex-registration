@@ -1,3 +1,5 @@
+from django.urls import reverse
+from django.utils.translation import get_language
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -30,4 +32,24 @@ class UserViewSet(SmartViewSet):
 
     @action(detail=False, permission_classes=[AllowAny], authentication_classes=[SessionAuthentication])
     def me(self, request):
-        return Response({"perms": request.user.get_all_permissions(), "authenticated": request.user.is_authenticated})
+        response = {
+            "perms": [],
+            "staff": False,
+            "canTranslate": False,
+            "languageCode": get_language(),
+            "editUrl": "",
+            "adminUrl": "",
+            "authenticated": request.user.is_authenticated,
+        }
+        if request.user.is_authenticated:
+            response.update(
+                {
+                    "perms": request.user.get_all_permissions(),
+                    "staff": request.user.is_staff,
+                    "canTranslate": request.user.is_staff,
+                    "editUrl": reverse("admin:i18n_message_get_or_create"),
+                    "adminUrl": reverse("admin:index"),
+                    "authenticated": request.user.is_authenticated,
+                }
+            )
+        return Response(response)
