@@ -28,8 +28,9 @@ if (value.cleaned_data.length===0){
 
 @pytest.fixture(autouse=True)
 def mock_state():
-    from smart_register.state import state
     from django.contrib.auth.models import AnonymousUser
+
+    from smart_register.state import state
 
     state.request = Mock(user=AnonymousUser())
 

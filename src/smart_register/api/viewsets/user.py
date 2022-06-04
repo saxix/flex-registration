@@ -1,11 +1,10 @@
 from django.urls import reverse
 from django.utils.translation import get_language
 from rest_framework import serializers
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
-
 from smart_admin.smart_auth.admin import User
 
 from .base import SmartViewSet

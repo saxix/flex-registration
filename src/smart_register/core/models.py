@@ -247,7 +247,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
     # @cache_form
-    def get_form(self):
+    def get_form_class(self):
         from smart_register.core.fields import CompilationTimeField
 
         fields = {}
@@ -339,7 +339,7 @@ class FormSet(NaturalKeyModel, OrderableModel):
         return self.name
 
     def get_form(self):
-        return self.flex_form.get_form()
+        return self.flex_form.get_form_class()
 
     def save(self, *args, **kwargs):
         self.name = slugify(self.name)

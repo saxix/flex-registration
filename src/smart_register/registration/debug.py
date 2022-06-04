@@ -1,11 +1,11 @@
 import base64
 
 import requests
+from admin_extra_buttons.decorators import button
 from django import forms
 from django.template.response import TemplateResponse
 from requests.auth import HTTPBasicAuth
 
-from admin_extra_buttons.decorators import button
 from smart_register.core.utils import is_root
 from smart_register.registration.models import Record
 

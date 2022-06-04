@@ -1,4 +1,3 @@
-import base64
 import logging
 import time
 from hashlib import md5
@@ -7,11 +6,6 @@ import sentry_sdk
 from constance import config
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import (
-    InMemoryUploadedFile,
-    TemporaryUploadedFile,
-    UploadedFile,
-)
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
@@ -23,7 +17,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-from smart_register.core.utils import get_qrcode, get_etag
+from smart_register.core.utils import get_etag, get_qrcode
+from smart_register.i18n.gettext import gettext as _
 from smart_register.registration.models import Record, Registration
 from smart_register.state import state
 
@@ -58,7 +53,7 @@ class RegisterCompleteView(TemplateView):
             raise Http404
 
     def get_qrcode(self, record):
-        h = md5(record.storage or b"").hexdigest()
+        h = md5(str(record.fields).encode()).hexdigest()
         url = self.request.build_absolute_uri(reverse("register-done", args=[record.registration.pk, record.pk]))
         hashed_url = f"{url}/{h}"
         return get_qrcode(hashed_url), url
@@ -69,6 +64,11 @@ class RegisterCompleteView(TemplateView):
         else:
             qrcode, url = None, None
         return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
+
+
+class BinaryFile:
+    def __init__(self, content):
+        self.content = content
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -118,7 +118,7 @@ class RegisterView(FormView):
         return response
 
     def get_form_class(self):
-        return self.registration.flex_form.get_form()
+        return self.registration.flex_form.get_form_class()
 
     # @cache_formset
     def get_formsets_classes(self):
@@ -161,6 +161,17 @@ class RegisterView(FormView):
             except ValidationError as e:
                 self.errors.append(e)
                 return False
+
+        try:
+            if self.registration.unique_field:
+                if unique_value := cleaned_data.get(self.registration.unique_field, None):
+                    r = Record(registration=self.registration,
+                               unique_field=unique_value)
+                    r.validate_unique()
+        except ValidationError:
+            self.errors.append(ValidationError(_(self.registration.unique_field_error)))
+            return False
+
         return True
 
     def post(self, request, *args, **kwargs):
@@ -176,39 +187,26 @@ class RegisterView(FormView):
             else:
                 all_cleaned_data[fs.fs.name] = []
                 is_valid = False
-
+        form_valid = form.is_valid()
+        all_cleaned_data.update(**form.cleaned_data)
         # if is_valid:
         is_valid = self.validate(all_cleaned_data) and is_valid
-
-        if form.is_valid() and is_valid:
+        if form_valid and is_valid:
             return self.form_valid(form, formsets)
         else:
             return self.form_invalid(form, formsets)
 
     def form_valid(self, form, formsets):
+        # mapping = form.get_storage_mapping()
         data = form.cleaned_data
         counters = form.get_counters(data)
 
         for name, fs in formsets.items():
             data[name] = []
+            # mapping[name] = fs.form().get_storage_mapping()
             for f in fs:
                 data[name].append(f.cleaned_data)
 
-        def parse_field(field):
-            if isinstance(field, (UploadedFile, InMemoryUploadedFile, TemporaryUploadedFile)):
-                content = field.read()
-                if not content:
-                    return ""
-                return base64.b64encode(content)
-            elif isinstance(field, dict):
-                return {item[0]: parse_field(item[1]) for item in field.items()}
-            elif isinstance(field, list):
-                return [parse_field(item) for item in field]
-            elif field is None:
-                field = ""
-            return field
-
-        data = {field_name: parse_field(field) for field_name, field in data.items()}
         data["counters"] = counters
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])

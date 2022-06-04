@@ -14,7 +14,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.management import call_command
-from django.db import connections, DEFAULT_DB_ALIAS
+from django.db import DEFAULT_DB_ALIAS, connections
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -22,11 +22,10 @@ from django.urls import path, reverse, reverse_lazy
 from django.utils.functional import lazy
 from django_redis import get_redis_connection
 from redis import ResponseError
-
 from smart_admin.site import SmartAdminSite
 
-from smart_register import get_full_version, VERSION
-from smart_register.admin.forms import ExportForm, ConsoleForm, RedisCLIForm, SQLForm
+from smart_register import VERSION, get_full_version
+from smart_register.admin.forms import ConsoleForm, ExportForm, RedisCLIForm, SQLForm
 from smart_register.admin.mixin import ImportForm
 from smart_register.core.utils import is_root
 

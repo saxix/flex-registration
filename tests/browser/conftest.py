@@ -1,6 +1,7 @@
 import contextlib
-import pytest
 from collections import namedtuple
+
+import pytest
 
 Proxy = namedtuple("Proxy", "host,port")
 

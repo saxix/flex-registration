@@ -9,8 +9,7 @@ from django.urls.base import resolve
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 
-from smart_register.i18n.hreflang import languages, get_hreflang_info, reverse
-
+from smart_register.i18n.hreflang import get_hreflang_info, languages, reverse
 
 register = template.Library()
 

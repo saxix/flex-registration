@@ -2,11 +2,6 @@ import logging
 from unittest.mock import Mock
 from urllib.parse import unquote
 
-from django.template import loader
-from django.urls import reverse
-from django.utils import translation
-from django.utils.translation import get_language
-
 from admin_extra_buttons.decorators import button, view
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
@@ -16,14 +11,18 @@ from django.contrib import messages
 from django.contrib.admin import register
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.template import loader
+from django.urls import reverse
+from django.utils import translation
+from django.utils.translation import get_language
 from smart_admin.modeladmin import SmartModelAdmin
-from .engine import translator
-from .forms import TranslationForm
 
 from ..admin.mixin import LoadDumpMixin
-from .models import Message
 from ..core.models import FlexForm
 from ..state import state
+from .engine import translator
+from .forms import TranslationForm
+from .models import Message
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
                     state.collect_messages = True
                     state.hit_messages = True
                     for flex_form in FlexForm.objects.all():
-                        frm_cls = flex_form.get_form()
+                        frm_cls = flex_form.get_form_class()
                         for frm in [frm_cls(), frm_cls({})]:
                             loader.render_to_string(
                                 "smart/_form.html",
