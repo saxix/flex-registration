@@ -69,6 +69,7 @@ class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     DEFAULTS = {
         Validator.FORM: {},  # cleaned data
         Validator.FIELD: "",  # field value
+        Validator.SCRIPT: "",  # field value
         Validator.MODULE: [{}],
         Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
     }
@@ -111,6 +112,8 @@ class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
             )
 
         ctx["jslib"] = Validator.LIB
+        ctx["is_script"] = self.object.target in [Validator.SCRIPT]
+        ctx["is_validator"] = self.object.target not in [Validator.SCRIPT]
         ctx["form"] = form
         return render(request, "admin/core/validator/test.html", ctx)
 

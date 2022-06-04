@@ -102,7 +102,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     )
 
     def __str__(self):
-        return self.label
+        return f"{self.label} ({self.target})"
 
     @staticmethod
     def js_type(value):

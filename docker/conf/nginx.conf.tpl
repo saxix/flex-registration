@@ -17,7 +17,12 @@ http {
         access_log /dev/stdout;
         listen 80;
         proxy_cache one;
+        error_page 502 504 /error/504.html;
 
+        location = /error/504.html {
+            root /conf/nginx;
+            internal;
+        }
         location /favicon.ico {
             alias ${STATIC_URL}favicon/favicon.ico;
             etag off;
