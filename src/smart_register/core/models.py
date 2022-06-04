@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
+from unittest.mock import Mock
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
@@ -252,17 +253,21 @@ class FlexForm(I18NModel, NaturalKeyModel):
 
         fields = {}
         compilation_time_field = None
+        indexes = FlexFormBaseForm.indexes.copy()
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
             try:
                 fld = field.get_instance()
                 fields[field.name] = fld
                 if isinstance(fld, CompilationTimeField):
                     compilation_time_field = field.name
+                if index := field.advanced.get('smart', {}).get('index'):
+                    indexes[str(index)] = field.name
             except TypeError:
                 pass
         form_class_attrs = {
             "flex_form": self,
             "compilation_time_field": compilation_time_field,
+            "indexes": indexes,
             **fields,
         }
         flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
@@ -396,6 +401,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             "onchange": "",
             "question": "",
             "description": "",
+            "index": None,
             "fieldset": "",
         },
     }
