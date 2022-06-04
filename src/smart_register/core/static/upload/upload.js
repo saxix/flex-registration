@@ -107,13 +107,14 @@ if (!Array.prototype.includes) {
 
             $field.on("change", function (e) {
                 var file = e.target.files[0];
-                var size = returnFileSize(file.size);
-                if (file.size > sizeLimit) {
-                    $field.attr("type", "text");
-                    $field.attr("type", "file");
-                    $error.html("<ul class=\"errorlist\"><li>" + sizeLimitMessage + "</li></ul>");
-                } else {
-                    $error.html("");
+                $error.html("");
+                if (file !== undefined) {
+                    // var size = returnFileSize(file.size);
+                    if (file.size > sizeLimit) {
+                        $field.attr("type", "text");
+                        $field.attr("type", "file");
+                        $error.html("<ul class=\"errorlist\"><li>" + sizeLimitMessage + "</li></ul>");
+                    }
                 }
             });
         };
