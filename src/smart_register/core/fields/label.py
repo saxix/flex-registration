@@ -8,6 +8,6 @@ class LabelOnlyWidget(TailWindMixin, forms.TextInput):
     template_name = "django/forms/widgets/label.html"
 
 
-class LabelOnlyField(SmartFieldMixin, forms.CharField):
+class LabelOnlyField(forms.CharField):
     widget = LabelOnlyWidget
     storage = None
