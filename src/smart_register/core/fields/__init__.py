@@ -2,18 +2,18 @@ from django import forms
 
 from . import widgets
 from .captcha import SmartCaptchaField
-from .custom import CustomField
+from .compilation_time import CompilationTimeField
 from .document import DocumentField
 from .file import SmartFileField
 from .gis import LocationField
+from .hidden import HiddenField
 from .label import LabelOnlyField
+from .mixins import SmartFieldMixin
 from .multi_checkbox import MultiCheckboxField
 from .radio import RadioField, YesNoChoice, YesNoRadio
 from .remote_ip import RemoteIpField
 from .select import AjaxSelectField, SelectField, SmartSelectWidget
 from .webcam import WebcamField
-from .mixins import SmartFieldMixin
-from .compilation_time import CompilationTimeField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},

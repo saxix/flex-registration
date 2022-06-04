@@ -53,8 +53,6 @@
              * Indicates whether delete link(s) can be displayed - when total forms > min forms
              */
             showDeleteLinks = function () {
-                // console.log(11111, options.prefix, minForms.val(), totalForms.val(), totalForms.val() -
-                // minForms.val());
                 return (minForms.val() === "" || (totalForms.val() - minForms.val() > 0));
             },
 

@@ -23,12 +23,20 @@ class SmartWidgetMixin:
 
 
 class SmartFieldMixin:
+    NONE = None
+    PRIMARY = 1
+    BLOB = 2
+    storage = PRIMARY
+
     def __init__(self, *args, **kwargs) -> None:
         self.flex_field = kwargs.pop("flex_field")
         self.smart_attrs = kwargs.pop("smart_attrs", {})
         self.data_attrs = kwargs.pop("data", {})
         self.widget_kwargs = kwargs.pop("widget_kwargs", {})
         super().__init__(*args, **kwargs)
+
+    def is_stored(self):
+        return self.storage in [self.PRIMARY, self.BLOB]
 
     def widget_attrs(self, widget):
         attrs = super().widget_attrs(widget)

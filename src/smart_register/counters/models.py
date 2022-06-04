@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 
 from django.db import models
 from django.db.models import Count
-from django.db.models.functions import TruncDay, ExtractHour
+from django.db.models.functions import ExtractHour, TruncDay
 from django.utils.functional import cached_property
 
-from smart_register.registration.models import Registration, Record
+from smart_register.registration.models import Record, Registration
 
 
 class CounterManager(models.Manager):

@@ -11,8 +11,8 @@ from django.utils.safestring import mark_safe
 from PIL import Image, UnidentifiedImageError
 
 from smart_register.i18n.gettext import gettext as _
-from ...core.flags import parse_bool
 
+from ...core.flags import parse_bool
 from ...core.utils import dict_get_nested, dict_setdefault
 from ...registration.models import Registration
 

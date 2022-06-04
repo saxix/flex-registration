@@ -2,7 +2,6 @@
 {% block extrahead %}
     {{ block.super }}
     {{ form.media }}
-    <script src="/api/validator/{{ original.pk }}/script/"></script>
     <style>
         .message{
             display: flex;
@@ -33,10 +32,12 @@
     </style>
 {% endblock %}
 {% block action-content %}
+    {% if is_validator %}
     <div class="message">
         <div class="icon"></div>
         <pre id="messages"></pre>
     </div>
+    {% endif%}
     <form method="post">
         {% csrf_token %}
         <table width="100%">
@@ -46,9 +47,11 @@
                 </td>
             </tr>
             <tr>
+                {% if is_validator %}
                 <td  style="width: 200px">
                     {{ form.input }}
                 </td>
+                {% endif %}
                 <td style="width: 500px">
 <pre id="log" style="width: 100%"></pre>
                 </td>
@@ -59,6 +62,11 @@
 {% endblock action-content %}
 {% block document_ready %}
     {{ block.super }}
+    <script>
+        $ = django.jQuery;
+    </script>
+    <script src="{{ original.get_script_url }}"></script>
+    {% if is_validator %}
     <script>
         (function ($) {
             $(document).ready(function () {
@@ -113,4 +121,5 @@
             });
         })(django.jQuery);
     </script>
+    {% endif %}
 {% endblock %}

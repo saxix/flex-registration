@@ -5,6 +5,7 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.i18n import set_language
+
 from smart_register.web.views.site import error_404
 
 actions.add_to_site(admin.site)

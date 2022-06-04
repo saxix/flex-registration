@@ -1,4 +1,5 @@
 import base64
+import json
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -17,8 +18,9 @@ LANGUAGES = {
 
 @pytest.fixture(autouse=True)
 def mock_state():
-    from smart_register.state import state
     from django.contrib.auth.models import AnonymousUser
+
+    from smart_register.state import state
 
     state.request = Mock(user=AnonymousUser())
 
@@ -31,6 +33,21 @@ def simple_registration(simple_form):
         locale="en-us",
         name="registration #1",
         defaults={"flex_form": simple_form, "encrypt_data": False, "active": True},
+    )
+    return reg
+
+
+@pytest.fixture()
+def unique_first_name_registration(simple_form):
+    from smart_register.registration.models import Registration
+
+    reg, __ = Registration.objects.get_or_create(
+        locale="en-us",
+        name="registration #3",
+        defaults={"flex_form": simple_form,
+                  "unique_field": "last_name",
+                  "unique_field_error": "last_name is not unique",
+                  "encrypt_data": False, "active": True},
     )
     return reg
 
@@ -97,8 +114,6 @@ def test_register_simple(django_app, simple_registration):
     res.form["time_1"] = "2000"
     res.form["time_2"] = "1"
     res.form["time_3"] = "2000"
-    res.form["last_name"] = "last"
-    res.form["last_name"] = "last"
 
     res = res.form.submit().follow()
     assert res.context["record"].data["first_name"] == "first"
@@ -108,6 +123,26 @@ def test_register_simple(django_app, simple_registration):
         "rounds": "1",
         "total": "2000",
     }
+
+
+
+@pytest.mark.django_db
+def test_register_unique(django_app, unique_first_name_registration):
+    url = reverse("register", args=[unique_first_name_registration.slug,
+                                    unique_first_name_registration.version])
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["first_name"] = "first"
+    res.form["last_name"] = "last"
+    res = res.form.submit().follow()
+    assert res.context["record"].data["first_name"] == "first"
+
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["first_name"] = "first"
+    res.form["last_name"] = "last"
+    res = res.form.submit()
+    assert res.context['errors'][0].message == unique_first_name_registration.unique_field_error
 
 
 def add_dynamic_field(form, name, value):
@@ -160,9 +195,12 @@ def test_register_complex(django_app, complex_registration):
     )
     res = res.form.submit()
     res = res.follow()
-    assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
-    assert res.context["record"].data["form2s"][0]["last_name"] == "Last"
-    assert res.context["record"].data["form2s"][1]["first_name"] == "First2"
+    from smart_register.registration.models import Record
+
+    r: Record = res.context["record"]
+    assert r.data["form2s"][0]["first_name"] == "First1"
+    assert r.data["form2s"][0]["last_name"] == "Last"
+    assert r.data["form2s"][1]["first_name"] == "First2"
 
 
 @pytest.mark.parametrize("first_name", LANGUAGES.values(), ids=LANGUAGES.keys())
@@ -186,7 +224,10 @@ def test_upload_image(django_app, complex_registration, mock_storage):
     url = reverse("register", args=[complex_registration.slug, complex_registration.version])
     res = django_app.get(url)
     res.form["family_name"] = "HH #1"
-    IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
+    # IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
+    # IMAGE = SimpleUploadedFile("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
+    content = Path("tests/data/image.png").read_bytes()
+    IMAGE = Upload("tests/data/image.jpeg", content)
 
     add_extra_form_to_formset_with_data(
         res.form,
@@ -201,12 +242,20 @@ def test_upload_image(django_app, complex_registration, mock_storage):
     res = res.form.submit().follow()
     obj = res.context["record"]
     assert obj.data["family_name"] == "HH #1"
-    assert obj.data["form2s"][0]["image"] == base64.b64encode(IMAGE.content).decode()
+    assert obj.data["form2s"][0]["image"] == base64.b64encode(content).decode()
+    ff = json.loads(obj.files.tobytes().decode())
+    assert ff['form2s'][0]["image"] == base64.b64encode(content).decode()
+    # from smart_register.registration.models import Record
+    #
+    # r: Record = res.context["record"]
+    # assert r.data["family_name"] == "HH #1"
+    # assert r.data["form2s"][0]["image"].read().decode() == base64.b64encode(content).decode()
 
 
 @pytest.mark.django_db
 def test_upload_image_register_rsa_encrypted(django_app, rsa_encrypted_registration, mock_storage):
     url = reverse("register", args=[rsa_encrypted_registration.slug, rsa_encrypted_registration.version])
+    content = Path("tests/data/image.png").read_bytes()
     IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
 
     res = django_app.get(url)
@@ -219,7 +268,7 @@ def test_upload_image_register_rsa_encrypted(django_app, rsa_encrypted_registrat
     data = record.decrypt(rsa_encrypted_registration._private_pem)
 
     assert data["first_name"] == "first"
-    assert data["image"] == base64.b64encode(IMAGE.content).decode()
+    assert data["image"].read().decode() == base64.b64encode(content).decode()
 
 
 @pytest.mark.django_db
@@ -227,7 +276,8 @@ def test_upload_image_register_fernet_encrypted(django_app, fernet_encrypted_reg
     from smart_register.registration.models import Record
 
     url = reverse("register", args=[fernet_encrypted_registration.slug, fernet_encrypted_registration.version])
-    IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
+    content = Path("tests/data/image.png").read_bytes()
+    IMAGE = Upload("tests/data/image.jpeg", content)
 
     res = django_app.get(url)
     res.form["first_name"] = "first"
@@ -241,5 +291,5 @@ def test_upload_image_register_fernet_encrypted(django_app, fernet_encrypted_reg
     data = record.decrypt(secret=None)
 
     assert data["first_name"] == "first"
-    assert data["image"] == base64.b64encode(IMAGE.content).decode()
-    assert data["file"] == base64.b64encode(IMAGE.content).decode()
+    assert data["image"].read().decode() == base64.b64encode(content).decode()
+    assert data["file"].read().decode() == base64.b64encode(content).decode()

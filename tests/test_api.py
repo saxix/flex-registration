@@ -103,5 +103,6 @@ def test_api(django_app, registration, monkeypatch):
     records = res.json["data"]
     for r in records:
         storage = r["storage"]
+        storage = str(r["fields"]).encode()
         data = base64.urlsafe_b64decode(storage)
         decrypt(data, registration._private_pem)

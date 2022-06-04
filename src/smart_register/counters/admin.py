@@ -1,20 +1,19 @@
 import logging
 from datetime import datetime
 
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.utils import timezone
-
 from admin_extra_buttons.decorators import button, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
 from django.db.transaction import atomic
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
 from smart_admin.modeladmin import SmartModelAdmin
-from .forms import ChartForm
 
-from .models import Counter
 from ..core.utils import is_root
 from ..registration.admin import last_day_of_month
+from .forms import ChartForm
+from .models import Counter
 
 logger = logging.getLogger(__name__)
 

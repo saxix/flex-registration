@@ -1,6 +1,5 @@
 import django.contrib.admin
 from django.apps import AppConfig
-
 from smart_admin.apps import SmartConfig
 
 

@@ -6,9 +6,6 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import requests
-from django.core.cache import caches
-from reversion_compare.admin import CompareVersionAdmin
-
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -19,6 +16,7 @@ from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
+from django.core.cache import caches
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
@@ -26,21 +24,22 @@ from django.http import JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
+from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
+from ..admin.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
 from .forms import Select2Widget, ValidatorForm
 from .models import (
+    FIELD_KWARGS,
     CustomFieldType,
     FlexForm,
     FlexFormField,
     FormSet,
     OptionSet,
     Validator,
-    FIELD_KWARGS,
 )
-from .utils import render, dict_setdefault
-from ..admin.mixin import LoadDumpMixin
+from .utils import dict_setdefault, render
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +68,7 @@ class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     DEFAULTS = {
         Validator.FORM: {},  # cleaned data
         Validator.FIELD: "",  # field value
+        Validator.SCRIPT: "",  # field value
         Validator.MODULE: [{}],
         Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
     }
@@ -111,6 +111,8 @@ class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
             )
 
         ctx["jslib"] = Validator.LIB
+        ctx["is_script"] = self.object.target in [Validator.SCRIPT]
+        ctx["is_validator"] = self.object.target not in [Validator.SCRIPT]
         ctx["form"] = form
         return render(request, "admin/core/validator/test.html", ctx)
 
@@ -319,7 +321,7 @@ class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk)
-        form_class = self.object.get_form()
+        form_class = self.object.get_form_class()
         if request.method == "POST":
             form = form_class(request.POST)
             if form.is_valid():

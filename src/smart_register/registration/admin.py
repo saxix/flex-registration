@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytz
-
-from admin_extra_buttons.decorators import button, link, view, choice
+from admin_extra_buttons.decorators import button, choice, link, view
 from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
+from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
 from dateutil.utils import today
 from django import forms
@@ -36,7 +36,7 @@ from smart_admin.truncate import truncate_model_table
 
 from ..admin.mixin import LoadDumpMixin
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
-from ..core.utils import clone_model, is_root, namify, last_day_of_month
+from ..core.utils import clone_model, is_root, last_day_of_month, namify
 from ..i18n.forms import ImportForm
 from ..i18n.models import Message
 from .forms import CloneForm
@@ -73,6 +73,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
         (None, {"fields": ("name", "title", "slug")}),
+        ("Unique", {"fields": ("unique_field", "unique_field_error")}),
         ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
         ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
@@ -85,6 +86,14 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         return bool(obj.public_key)
 
     secure.boolean = True
+
+    @button()
+    def publish(self, request, pk):
+        pass
+
+    @view()
+    def _update(self, request):
+        pass
 
     @property
     def media(self):
@@ -427,7 +436,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Test")
-        form = self.object.flex_form.get_form()
+        form = self.object.flex_form.get_form_class()
         ctx["registration"] = self.object
         ctx["form"] = form
         return render(request, "admin/registration/registration/test.html", ctx)
@@ -477,10 +486,13 @@ class HourFilter(SimpleListFilter):
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
-    list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
+    list_display = ("timestamp", "remote_ip", "id", "registration", "ignored", "unique_field")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id")
     autocomplete_fields = ("registration",)
-    list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
+    list_filter = (("registration", AutoCompleteFilter),
+                   HourFilter,
+                   ("unique_field", ValueFilter),
+                   "ignored")
     change_form_template = None
     change_list_template = None
 
@@ -546,7 +558,14 @@ class RecordAdmin(SmartModelAdmin):
     @button(label="Preview", permission=is_root)
     def preview(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Preview")
+
         return render(request, "admin/registration/record/preview.html", ctx)
+
+    @button(label="inspect", permission=is_root)
+    def inspect(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Inspect")
+        ctx['files_as_dict'] = json.loads(self.object.files.tobytes().decode())
+        return render(request, "admin/registration/record/inspect.html", ctx)
 
     @button(permission=is_root)
     def decrypt(self, request, pk):

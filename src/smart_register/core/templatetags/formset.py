@@ -26,6 +26,8 @@ def formset_config(formset):
         "deleteCssClass": "formset-delete-button",
         "keepFieldValues": False,
         "original": {},
+        "onAdd": None,
+        "onRemove": None,
     }
     fs_config = formset.fs.advanced.get("smart", {}).get("widget", FormSet.FORMSET_DEFAULT_ATTRS["smart"]["widget"])
     override = {k: v for k, v in fs_config.items() if v}

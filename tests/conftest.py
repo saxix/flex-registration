@@ -4,7 +4,7 @@ import pytest
 from django import forms
 from django.core.files.storage import get_storage_class
 
-from smart_register.core.fields import SmartFileField, CompilationTimeField
+from smart_register.core.fields import CompilationTimeField, SmartFileField
 
 
 def pytest_addoption(parser):
@@ -33,15 +33,15 @@ def pytest_configure(config):
     if not config.option.enable_selenium:
         setattr(config.option, "markexpr", "not selenium")
 
-    from django.conf import settings, global_settings
+    from django.conf import global_settings, settings
 
     settings.STATICFILES_STORAGE = global_settings.STATICFILES_STORAGE
 
 
 @pytest.fixture()
 def simple_form(db):
-    from smart_register.core.models import FlexForm, Validator
     from smart_register.core.cache import cache
+    from smart_register.core.models import FlexForm, Validator
 
     cache.clear()
 

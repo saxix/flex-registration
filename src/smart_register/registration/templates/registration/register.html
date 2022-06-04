@@ -25,9 +25,9 @@
     {% endif %}
 {% endblock %}
 
-{% block staff-toolbar %}
-    {% include "registration/_staff_toolbar.html" %}
-{% endblock staff-toolbar %}
+{#{% block staff-toolbar %}#}
+{#    {% include "registration/_staff_toolbar.html" %}#}
+{#{% endblock staff-toolbar %}#}
 
 {% block body %}
     {% include "smart/_form.html" %}
@@ -38,6 +38,7 @@
     {% endif %}
     {% if can_translate %}
         <script src="{% static 'i18n/i18n_edit.js' %}"></script>
+        <script defer src="{% static "edit.min.js" %}"></script>
     {% endif %}
     {% if registration.advanced.smart.wizard %}<script src="{% static "wizard.min.js" %}"></script>{% endif %}
     <div class="flex justify-center text-xs footer m-auto pt-1 pb-2 border-t-2 text-gray-400 border-gray-400">

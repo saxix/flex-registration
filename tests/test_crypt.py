@@ -98,7 +98,9 @@ def test_crypt_complex(data, public_pem, private_pem):
 
 @pytest.mark.parametrize("data", [LANGUAGES], ids=["json"])
 def test_crypt_field(data, registration):
-    record = registration.add_record(data)
+    from smart_register.registration.models import Record
+
+    record: Record = registration.add_record(data)
     decrypted = record.decrypt(registration._private_pem)
     assert decrypted == data
 
