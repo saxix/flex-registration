@@ -17,8 +17,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-# from smart_register.core.cache import cache_formset
-from smart_register.core.utils import get_qrcode, get_etag
+from smart_register.core.utils import get_etag, get_qrcode
+from smart_register.i18n.gettext import gettext as _
 from smart_register.registration.models import Record, Registration
 from smart_register.state import state
 
@@ -118,7 +118,7 @@ class RegisterView(FormView):
         return response
 
     def get_form_class(self):
-        return self.registration.flex_form.get_form()
+        return self.registration.flex_form.get_form_class()
 
     # @cache_formset
     def get_formsets_classes(self):
@@ -161,6 +161,17 @@ class RegisterView(FormView):
             except ValidationError as e:
                 self.errors.append(e)
                 return False
+
+        try:
+            if self.registration.unique_field:
+                if unique_value := cleaned_data.get(self.registration.unique_field, None):
+                    r = Record(registration=self.registration,
+                               unique_field=unique_value)
+                    r.validate_unique()
+        except ValidationError:
+            self.errors.append(ValidationError(_(self.registration.unique_field_error)))
+            return False
+
         return True
 
     def post(self, request, *args, **kwargs):
@@ -176,24 +187,27 @@ class RegisterView(FormView):
             else:
                 all_cleaned_data[fs.fs.name] = []
                 is_valid = False
-
+        form_valid = form.is_valid()
+        all_cleaned_data.update(**form.cleaned_data)
         # if is_valid:
         is_valid = self.validate(all_cleaned_data) and is_valid
-
-        if form.is_valid() and is_valid:
+        if form_valid and is_valid:
             return self.form_valid(form, formsets)
         else:
             return self.form_invalid(form, formsets)
 
     def form_valid(self, form, formsets):
-        mapping = form.get_storage_mapping()
+        # mapping = form.get_storage_mapping()
         data = form.cleaned_data
+        counters = form.get_counters(data)
+
         for name, fs in formsets.items():
             data[name] = []
-            mapping[name] = fs.form().get_storage_mapping()
+            # mapping[name] = fs.form().get_storage_mapping()
             for f in fs:
                 data[name].append(f.cleaned_data)
 
+        data["counters"] = counters
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)

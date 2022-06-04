@@ -19,6 +19,12 @@
   background-repeat: no-repeat;
   background-size: cover;
 }
+.fs-counter-container .fs-counter .nav *.remove {
+  background-image: url("delete-25.png");
+  height: 25px;
+  width: 25px;
+  margin-top: 2px;
+}
 .fs-counter-container .fs-counter .nav *.next {
   background-image: url("next.webp");
 }

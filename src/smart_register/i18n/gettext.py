@@ -12,7 +12,8 @@ def gettext(message):
     message will be run through the default translation object.
     """
     global _default
-
+    if not message:
+        return message
     eol_message = message.replace("\r\n", "\n").replace("\r", "\n")
 
     if eol_message:

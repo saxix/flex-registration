@@ -8,7 +8,10 @@ from .viewsets import (
     RegistrationViewSet,
     UserViewSet,
     ValidatorViewSet,
+    project_info,
 )
+
+app_name = "api"
 
 router = DefaultRouter()
 router.register(r"user", UserViewSet)
@@ -20,4 +23,5 @@ router.register(r"validator", ValidatorViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("project/", project_info),
 ]

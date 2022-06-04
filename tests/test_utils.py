@@ -3,7 +3,12 @@ import base64
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from smart_register.core.utils import namify, underscore_to_camelcase, merge_data, extract_content
+from smart_register.core.utils import (
+    extract_content,
+    merge_data,
+    namify,
+    underscore_to_camelcase,
+)
 from smart_register.registration.storage import Router
 
 
@@ -31,7 +36,7 @@ def test_storage_router_flat():
     data = {"name": "pippo", "file": f}
     r = Router()
     fields, files = r.decompress(data)
-    assert fields == {"name": "pippo", "file": "::file::"}, "fields do not match"
+    assert fields == {"name": "pippo"}, "fields do not match"
     assert files == {"file": c}, "files do not match"
     assert extract_content(r.compress(fields, files)) == extract_content(data)
 
@@ -43,7 +48,7 @@ def test_storage_router_nested1():
 
     r = Router()
     fields, files = r.decompress(data)
-    assert fields == {"name": "pippo", "childs": [{"file": "::file::"}]}, "fields do not match"
+    assert fields == {"name": "pippo", "childs": [{}]}, "fields do not match"
     assert files == {"childs": [{"file": c}]}, "files do not match"
     assert extract_content(r.compress(fields, files)) == extract_content(data)
 
@@ -57,8 +62,8 @@ def test_storage_router_nested2():
     fields, files = r.decompress(data)
     assert fields == {
         "name": "pippo",
-        "childs": [{"file": "::file::"}],
-        "el": [{"file": "::file::"}],
+        "childs": [{}],
+        "el": [{}],
     }, "fields do not match"
     assert files == {"childs": [{"file": c}], "el": [{"file": c}]}, "files do not match"
     assert extract_content(r.compress(fields, files)) == extract_content(data)

@@ -11,7 +11,7 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
-from smart_register.core.utils import get_qrcode, get_etag
+from smart_register.core.utils import get_etag, get_qrcode
 from smart_register.registration.models import Registration
 
 logger = logging.getLogger(__name__)

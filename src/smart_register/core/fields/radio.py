@@ -1,6 +1,6 @@
 from django import forms
 
-from .widgets import YesNoRadioWidget, RadioWidget
+from .widgets import RadioWidget, YesNoRadioWidget
 
 
 class RadioField(forms.ChoiceField):

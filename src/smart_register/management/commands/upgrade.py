@@ -35,6 +35,11 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
     from smart_register.config import env
 
     extra = {"no_input": prompt, "verbosity": verbosity - 1, "stdout": None}
+
+    #
+
+    #
+
     if migrate:
         if verbosity >= 1:
             click.echo("Run migrations")

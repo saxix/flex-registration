@@ -4,8 +4,9 @@
 #  Written by Stefano Apostolico <s.apostolico@gmail.com>, December 2020
 import contextlib
 import json
-from django.urls import reverse
 from pathlib import Path
+
+from django.urls import reverse
 
 
 def payload(filename, section=None):
@@ -79,13 +80,10 @@ def set_flag(flag_name, on_off):
 
 
 def force_login(user, driver, base_url):
-    from django.conf import settings
-    from django.contrib.auth import (
-        BACKEND_SESSION_KEY,
-        HASH_SESSION_KEY,
-        SESSION_KEY,
-    )
     from importlib import import_module
+
+    from django.conf import settings
+    from django.contrib.auth import BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY
 
     SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
     # selenium_login_start_page = getattr(settings, 'SELENIUM_LOGIN_START_PAGE', '/')

@@ -4,7 +4,6 @@ import logging
 import re
 
 from django.template import Library, Node
-
 from PIL import Image, UnidentifiedImageError
 
 logger = logging.getLogger(__name__)

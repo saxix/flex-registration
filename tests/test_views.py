@@ -1,4 +1,5 @@
 import base64
+import json
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -17,8 +18,9 @@ LANGUAGES = {
 
 @pytest.fixture(autouse=True)
 def mock_state():
-    from smart_register.state import state
     from django.contrib.auth.models import AnonymousUser
+
+    from smart_register.state import state
 
     state.request = Mock(user=AnonymousUser())
 
@@ -93,8 +95,21 @@ def test_register_simple(django_app, simple_registration):
     res = res.form.submit()
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
+    res.form["time_0"] = "Thu May 12 2022 15:35:36 GMT+0200 (Central European Summer Time)"
+    res.form["time_1"] = "2000"
+    res.form["time_2"] = "1"
+    res.form["time_3"] = "2000"
+    res.form["last_name"] = "last"
+    res.form["last_name"] = "last"
+
     res = res.form.submit().follow()
     assert res.context["record"].data["first_name"] == "first"
+    assert res.context["record"].counters == {
+        "start": "Thu May 12 2022 15:35:36 GMT+0200 (Central European Summer Time)",
+        "elapsed": "2000",
+        "rounds": "1",
+        "total": "2000",
+    }
 
 
 def add_dynamic_field(form, name, value):
@@ -194,7 +209,9 @@ def test_upload_image(django_app, complex_registration, mock_storage):
     res = res.form.submit().follow()
     obj = res.context["record"]
     assert obj.data["family_name"] == "HH #1"
-    assert obj.data["form2s"][0]["image"].read().decode() == base64.b64encode(content).decode()
+    assert obj.data["form2s"][0]["image"] == base64.b64encode(content).decode()
+    ff = json.loads(obj.files.tobytes().decode())
+    assert ff['form2s'][0]["image"] == base64.b64encode(content).decode()
     # from smart_register.registration.models import Record
     #
     # r: Record = res.context["record"]

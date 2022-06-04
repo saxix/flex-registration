@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 
 class SmartViewSet(viewsets.ReadOnlyModelViewSet):

@@ -1,6 +1,12 @@
 from django.urls import path
 
-from .views import QRVerify, RegisterCompleteView, RegisterView, RegistrationDataApi, RegisterRouter
+from .views import (
+    QRVerify,
+    RegisterCompleteView,
+    RegisterRouter,
+    RegisterView,
+    RegistrationDataApi,
+)
 
 urlpatterns = [
     path("route/", RegisterRouter.as_view(), name="registration-router"),

@@ -32,10 +32,12 @@
     </style>
 {% endblock %}
 {% block action-content %}
+    {% if is_validator %}
     <div class="message">
         <div class="icon"></div>
         <pre id="messages"></pre>
     </div>
+    {% endif%}
     <form method="post">
         {% csrf_token %}
         <table width="100%">
@@ -45,9 +47,11 @@
                 </td>
             </tr>
             <tr>
+                {% if is_validator %}
                 <td  style="width: 200px">
                     {{ form.input }}
                 </td>
+                {% endif %}
                 <td style="width: 500px">
 <pre id="log" style="width: 100%"></pre>
                 </td>
@@ -59,11 +63,15 @@
 {% block document_ready %}
     {{ block.super }}
     <script>
+        $ = django.jQuery;
+    </script>
+    <script src="{{ original.get_script_url }}"></script>
+    {% if is_validator %}
+    <script>
         (function ($) {
             $(document).ready(function () {
                 {{ jslib }}
                 log = console.log = function () {
-                    {#$log.prepend(msg + "\n");#}
                     $log.prepend(Array.prototype.join.call(arguments, ', ') + "\n");
                 };
                 log1 = console.log1 = function (msg) {
@@ -104,18 +112,14 @@
                         console.log(error);
                     }
                 };
-                {#var key = "sample-{{ original.pk }}";#}
-                {#const cat = localStorage.getItem(key);#}
-                {#if (cat){#}
-                {#    input.setValue(cat);#}
-                {# }; #}
+
                 editor.on("change", updateHandler);
                 input.on("change", function (e){
                     updateHandler();
-                 {#localStorage.setItem(key, e.getValue())#}
                 });
                 updateSource();
             });
         })(django.jQuery);
     </script>
+    {% endif %}
 {% endblock %}

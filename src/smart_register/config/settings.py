@@ -252,7 +252,7 @@ ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
-    "smart_register.auth.backend.SmartBackend",
+    "smart_register.security.backend.SmartBackend",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -369,7 +369,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     ],
 }
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-CONSTANCE_DATABASE_CACHE_BACKEND = env("CONSTANCE_DATABASE_CACHE_BACKEND")
+# CONSTANCE_DATABASE_CACHE_BACKEND = env("CONSTANCE_DATABASE_CACHE_BACKEND")
 CONSTANCE_CONFIG = OrderedDict(
     {
         "CACHE_FORMS": (False, "", bool),
@@ -611,3 +611,8 @@ ADD_REVERSION_ADMIN = True
 # optional settings:
 REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = False
 REVERSION_COMPARE_IGNORE_NOT_REGISTERED = False
+
+PRODUCTION_SERVER = env("PRODUCTION_SERVER")
+PRODUCTION_TOKEN = env("PRODUCTION_TOKEN")
+
+SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W006", "urls.W005", "admin_extra_buttons.PERM"]
