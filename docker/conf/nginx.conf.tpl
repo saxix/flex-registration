@@ -1,3 +1,6 @@
+load_module /usr/lib/nginx/modules/ndk_http_module.so;
+load_module /usr/lib/nginx/modules/ngx_http_lua_module.so;
+
 worker_processes 1;
 events {
 #  worker_connections 1024;
