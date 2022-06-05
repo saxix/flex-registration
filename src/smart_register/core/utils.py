@@ -32,7 +32,8 @@ UNDEFINED = object()
 
 
 def has_token(request, *args, **kwargs):
-    return request.headers.get("x-session") == settings.ROOT_TOKEN
+    return (request.headers.get("x-session") == settings.ROOT_TOKEN
+            or request.COOKIES.get("x-session") == settings.ROOT_TOKEN)
 
 
 def is_root(request, *args, **kwargs):
@@ -325,12 +326,12 @@ def total_size(o, handlers={}, verbose=False):
                     set: iter,
                     frozenset: iter,
                     }
-    all_handlers.update(handlers)     # user handlers take precedence
-    seen = set()                      # track which object id's have already been seen
-    default_size = getsizeof(0)       # estimate sizeof object without __sizeof__
+    all_handlers.update(handlers)  # user handlers take precedence
+    seen = set()  # track which object id's have already been seen
+    default_size = getsizeof(0)  # estimate sizeof object without __sizeof__
 
     def sizeof(o):
-        if id(o) in seen:       # do not double count the same object
+        if id(o) in seen:  # do not double count the same object
             return 0
         seen.add(id(o))
         s = getsizeof(o, default_size)
