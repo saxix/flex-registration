@@ -189,7 +189,7 @@ class RegisterView(FormView):
                 is_valid = False
         form_valid = form.is_valid()
         all_cleaned_data.update(**form.cleaned_data)
-        # if is_valid:
+
         is_valid = self.validate(all_cleaned_data) and is_valid
         if form_valid and is_valid:
             return self.form_valid(form, formsets)
@@ -197,9 +197,7 @@ class RegisterView(FormView):
             return self.form_invalid(form, formsets)
 
     def form_valid(self, form, formsets):
-        # mapping = form.get_storage_mapping()
         data = form.cleaned_data
-        counters = form.get_counters(data)
 
         for name, fs in formsets.items():
             data[name] = []
@@ -207,7 +205,13 @@ class RegisterView(FormView):
             for f in fs:
                 data[name].append(f.cleaned_data)
 
-        data["counters"] = counters
+        data["counters"] = form.get_counters(data)
+        if form.indexes['1']:
+            data["index1"] = data[ form.indexes['1'] ]
+        if form.indexes['2']:
+            data["index2"] = data[ form.indexes['2'] ]
+        if form.indexes['3']:
+            data["index3"] = data[ form.indexes['3'] ]
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)

@@ -164,7 +164,8 @@ class FlexFormFieldForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # if self.instance and self.instance.pk:
-        self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
+        self.fields["name"].widget.attrs = {"readonly": True,
+                                            "style": "background-color:#f8f8f8;border:none"}
 
 
 class FlexFormFieldForm2(forms.ModelForm):
@@ -287,7 +288,10 @@ class SyncForm(SyncConfigForm):
 @register(FlexForm)
 class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
-    inlines = [FlexFormFieldInline, FormSetInline]
+    inlines = [
+        FlexFormFieldInline,
+        FormSetInline
+    ]
     list_display = ("name", "validator", "used_by", "childs", "parents")
     list_filter = (
         QueryStringFilter,
@@ -392,7 +396,7 @@ class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
                             raise Exception(str(res))
                         ctx["url"] = url
                         with tempfile.NamedTemporaryFile(
-                            dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
+                                dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
                         ) as fdst:
                             fdst.write(res.content)
                             with disable_concurrency():

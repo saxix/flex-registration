@@ -16,7 +16,7 @@ from natural_keys import NaturalKeyModel
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
-from smart_register.core.utils import dict_setdefault, get_client_ip, jsonfy, safe_json
+from smart_register.core.utils import dict_setdefault, get_client_ip, jsonfy, safe_json, total_size
 from smart_register.i18n.models import I18NModel
 from smart_register.registration.fields import ChoiceArrayField
 from smart_register.registration.storage import router
@@ -147,8 +147,9 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         if self.unique_field and self.unique_field in fields:
             kwargs["unique_field"] = fields.get(self.unique_field, None) or None
         kwargs.update({
-            "size": 0,
+            "size": total_size(fields) + total_size(files),
             "counters": fields_data.get("counters", {}),
+            "index1": fields_data.get("index1", None),
         })
         return Record.objects.create(registration=self, **kwargs)
 
@@ -182,9 +183,9 @@ class Record(models.Model):
     fields = models.JSONField(null=True, blank=True)
     files = models.BinaryField(null=True, blank=True)
 
-    # index1 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
-    # index2 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
-    # index3 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
+    index1 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
+    index2 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
+    index3 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
 
     class Meta:
         unique_together = ("registration", "unique_field")

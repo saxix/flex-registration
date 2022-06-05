@@ -86,20 +86,6 @@ def complex_registration(complex_form):
     return reg
 
 
-# @pytest.mark.parametrize("first_name", LANGUAGES.values(), ids=LANGUAGES.keys())
-# def test_register_latest(django_app, first_name, simple_registration):
-#     url = reverse("register-latest")
-#     res = django_app.get(url)
-#     res = res.form.submit()
-#     res.form["first_name"] = first_name
-#     res.form["last_name"] = "l"
-#     res = res.form.submit()
-#     res.form["first_name"] = first_name
-#     res.form["last_name"] = "last"
-#     res = res.form.submit().follow()
-#     assert res.context["record"].data["first_name"] == first_name
-
-
 @pytest.mark.django_db
 def test_register_simple(django_app, simple_registration):
     url = reverse("register", args=[simple_registration.slug, simple_registration.version])
@@ -124,6 +110,19 @@ def test_register_simple(django_app, simple_registration):
         "total": "2000",
     }
 
+@pytest.mark.django_db
+def test_register_indexed(django_app, simple_registration):
+    url = reverse("register", args=[simple_registration.slug, simple_registration.version])
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["first_name"] = "first"
+    res.form["last_name"] = "last"
+
+    res = res.form.submit().follow()
+    assert res.context["record"].data["last_name"] == "last"
+    assert res.context["record"].index1 == "last"
+    assert res.context["record"].index2 is None
+    assert res.context["record"].index3 is None
 
 
 @pytest.mark.django_db

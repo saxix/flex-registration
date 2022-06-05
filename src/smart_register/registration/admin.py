@@ -87,13 +87,13 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
 
     secure.boolean = True
 
-    @button()
-    def publish(self, request, pk):
-        pass
+    # @button()
+    # def publish(self, request, pk):
+    #     pass
 
-    @view()
-    def _update(self, request):
-        pass
+    # @view()
+    # def _update(self, request):
+    #     pass
 
     @property
     def media(self):
@@ -107,7 +107,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
 
     @choice(change_list=False, label="Advanced", order=900)
     def advanced(self, button):
-        button.choices = [self.inspect, self.clone, self.export]
+        button.choices = [self.inspect, self.clone]
 
     @view(label="invalidate cache", html_attrs={"class": "aeb-warn"})
     def invalidate_cache(self, request, pk):
@@ -392,47 +392,47 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @button(label="import")
-    def _import(self, request):
-        ctx = self.get_common_context(
-            request,
-            media=self.media,
-            title="Import",
-        )
-        if request.method == "POST":
-            form = ImportForm(request.POST, request.FILES)
-            if form.is_valid():
-                try:
-                    f = request.FILES["file"]
-                    buf = io.BytesIO()
-                    for chunk in f.chunks():
-                        buf.write(chunk)
-                    buf.seek(0)
-                    data = json.load(buf)
-                    out = io.StringIO()
-                    workdir = Path(".").absolute()
-                    with disable_concurrency():
-                        for k, v in data.items():
-                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
-
-                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
-                                fdst.write(json.dumps(v).encode())
-                            fixture = (workdir / fdst.name).absolute()
-                            call_command("loaddata", fixture, stdout=out, verbosity=3)
-                            fixture.unlink()
-                            out.write("------\n")
-                            # ctx['out'] = out.getvalue()
-                            out.seek(0)
-                            ctx["out"] = out.readlines()
-                except Exception as e:
-                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
-            else:
-                ctx["form"] = form
-        else:
-            form = ImportForm()
-            ctx["form"] = form
-        return render(request, "admin/registration/registration/import.html", ctx)
-
+    # @button(label="import")
+    # def _import(self, request):
+    #     ctx = self.get_common_context(
+    #         request,
+    #         media=self.media,
+    #         title="Import",
+    #     )
+    #     if request.method == "POST":
+    #         form = ImportForm(request.POST, request.FILES)
+    #         if form.is_valid():
+    #             try:
+    #                 f = request.FILES["file"]
+    #                 buf = io.BytesIO()
+    #                 for chunk in f.chunks():
+    #                     buf.write(chunk)
+    #                 buf.seek(0)
+    #                 data = json.load(buf)
+    #                 out = io.StringIO()
+    #                 workdir = Path(".").absolute()
+    #                 with disable_concurrency():
+    #                     for k, v in data.items():
+    #                         kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
+    #
+    #                         with tempfile.NamedTemporaryFile(**kwargs) as fdst:
+    #                             fdst.write(json.dumps(v).encode())
+    #                         fixture = (workdir / fdst.name).absolute()
+    #                         call_command("loaddata", fixture, stdout=out, verbosity=3)
+    #                         fixture.unlink()
+    #                         out.write("------\n")
+    #                         # ctx['out'] = out.getvalue()
+    #                         out.seek(0)
+    #                         ctx["out"] = out.readlines()
+    #             except Exception as e:
+    #                 self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+    #         else:
+    #             ctx["form"] = form
+    #     else:
+    #         form = ImportForm()
+    #         ctx["form"] = form
+    #     return render(request, "admin/registration/registration/import.html", ctx)
+    #
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Test")
