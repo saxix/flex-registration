@@ -35,15 +35,15 @@ class Migration(migrations.Migration):
         #     'CREATE INDEX CONCURRENTLY "registration_record_unique_field_5edac906" '
         #     'ON "registration_record" ("unique_field");'
         # ),
-        migrations.RunSQL(
-            'CREATE INDEX CONCURRENTLY "registration_record_unique_field_5edac906_like" '
-            'ON "registration_record" ("unique_field" varchar_pattern_ops);'
-        ),
-        migrations.RunSQL(
-            'ALTER TABLE "registration_record" '
-            'ADD CONSTRAINT "registration_record_registration_id_unique_field_2701a3c6_uniq" '
-            'UNIQUE ("registration_id", "unique_field");'
-        ),
+        # migrations.RunSQL(
+        #     'CREATE INDEX CONCURRENTLY "registration_record_unique_field_5edac906_like" '
+        #     'ON "registration_record" ("unique_field" varchar_pattern_ops);'
+        # ),
+        # migrations.RunSQL(
+        #     'ALTER TABLE "registration_record" '
+        #     'ADD CONSTRAINT "registration_record_registration_id_unique_field_2701a3c6_uniq" '
+        #     'UNIQUE ("registration_id", "unique_field");'
+        # ),
         # migrations.AddField(
         #     model_name='record',
         #     name='fields',
