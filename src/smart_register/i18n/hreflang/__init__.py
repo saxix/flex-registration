@@ -2,8 +2,8 @@ from logging import warning
 
 from django.conf import settings
 
-from .functions import language_codes, reverse, languages, get_hreflang_info
-from .header import hreflang_headers, AddHreflangToResponse
+from .functions import get_hreflang_info, language_codes, languages, reverse
+from .header import AddHreflangToResponse, hreflang_headers
 
 if not getattr(settings, "DISABLE_LOCALE_MIDDLEWARE_CHECK", False):
     if not any("LocaleMiddleware" in mw for mw in settings.MIDDLEWARE):

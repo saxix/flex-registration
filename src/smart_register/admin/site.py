@@ -14,7 +14,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.management import call_command
-from django.db import connections
+from django.db import DEFAULT_DB_ALIAS, connections
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -22,15 +22,27 @@ from django.urls import path, reverse, reverse_lazy
 from django.utils.functional import lazy
 from django_redis import get_redis_connection
 from redis import ResponseError
-
 from smart_admin.site import SmartAdminSite
 
-from smart_register import get_full_version, VERSION
-from smart_register.admin.forms import ExportForm, ConsoleForm, RedisCLIForm, SQLForm
+from smart_register import VERSION, get_full_version
+from smart_register.admin.forms import ConsoleForm, ExportForm, RedisCLIForm, SQLForm
 from smart_register.admin.mixin import ImportForm
 from smart_register.core.utils import is_root
 
 logger = logging.getLogger(__name__)
+
+QUICK_SQL = {
+    "Show Tables": "SELECT * FROM information_schema.tables;",
+    "Show Indexes": "SELECT tablename, indexname, indexdef FROM pg_indexes "
+    "WHERE schemaname='public' ORDER BY tablename, indexname;",
+    "Describe Table": "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=[table_name];",
+    "Show Contraints": """SELECT con.*
+       FROM pg_catalog.pg_constraint con
+            INNER JOIN pg_catalog.pg_class rel
+                       ON rel.oid = con.conrelid
+            INNER JOIN pg_catalog.pg_namespace nsp
+                       ON nsp.oid = connamespace;""",
+}
 
 
 class AuroraAdminSite(SmartAdminSite):
@@ -43,9 +55,17 @@ class AuroraAdminSite(SmartAdminSite):
         context["extra_pages"] = self.extra_pages
         return context
 
+    def migrations(self, request):
+        out = io.StringIO()
+        call_command("showmigrations", stdout=out, no_color=True)
+        context = {
+            "stdout": out.getvalue(),
+        }
+
+        return render(request, "admin/migrations.html", context)
+
     def loaddata(self, request):
         context = self.each_context(request)
-        form = ImportForm(request.POST, request.FILES)
         if request.method == "POST":
             form = ImportForm(request.POST, request.FILES)
             if form.is_valid():
@@ -76,7 +96,8 @@ class AuroraAdminSite(SmartAdminSite):
                         finally:
                             fixture.unlink()
                 except Exception as e:
-                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+                    messages.add_message(request, messages.ERROR, f"{e.__class__.__name__}: {e} {out.getvalue()}")
+
             else:
                 context["form"] = form
         else:
@@ -134,6 +155,7 @@ class AuroraAdminSite(SmartAdminSite):
         if not is_root(request):
             raise PermissionDenied
         context = self.each_context(request)
+        context["buttons"] = QUICK_SQL
         if request.method == "POST":
             form = SQLForm(request.POST)
             response = {"result": [], "error": None, "stm": ""}
@@ -142,7 +164,10 @@ class AuroraAdminSite(SmartAdminSite):
                     cmd = form.cleaned_data["command"]
                     stm = urllib.parse.unquote(base64.b64decode(cmd).decode())
                     response["stm"] = sqlparse.format(stm)
-                    conn = connections["read_only"]
+                    if is_root(request):
+                        conn = connections[DEFAULT_DB_ALIAS]
+                    else:
+                        conn = connections["read_only"]
                     cursor = conn.cursor()
                     cursor.execute(stm)
                     if cursor.pgresult_ptr is not None:
@@ -239,6 +264,7 @@ class AuroraAdminSite(SmartAdminSite):
             path("console/", wrap(self.console), name="console"),
             path("redis_cli/", wrap(self.redis_cli), name="redis_cli"),
             path("sql/", wrap(self.sql), name="sql"),
+            path("migrations/", wrap(self.migrations), name="migrations"),
             path("error/<int:code>/", wrap(self.error), name="error"),
         ]
         self.extra_pages = [("Console", reverse_lazy("admin:console"))]

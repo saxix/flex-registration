@@ -81,7 +81,7 @@ def test_api(django_app, registration, monkeypatch):
 
     monkeypatch.setattr(smart_register.registration.views.registration, "get_etag", lambda *a: time.time())
 
-    url = reverse("register", args=[registration.slug])
+    url = reverse("register", args=[registration.slug, registration.version])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"
@@ -90,6 +90,7 @@ def test_api(django_app, registration, monkeypatch):
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
     res = res.form.submit().follow()
+
     assert res.context["record"].pk
     api_url = reverse("api", args=[registration.pk, 1, 999999])
     res = django_app.get(api_url, expect_errors=True)
@@ -102,5 +103,6 @@ def test_api(django_app, registration, monkeypatch):
     records = res.json["data"]
     for r in records:
         storage = r["storage"]
+        storage = str(r["fields"]).encode()
         data = base64.urlsafe_b64decode(storage)
         decrypt(data, registration._private_pem)

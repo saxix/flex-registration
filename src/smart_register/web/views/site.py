@@ -11,7 +11,7 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
-from smart_register.core.utils import get_qrcode, get_etag
+from smart_register.core.utils import get_etag, get_qrcode
 from smart_register.registration.models import Registration
 
 logger = logging.getLogger(__name__)
@@ -44,6 +44,9 @@ class PageView(TemplateView):
 class HomeView(TemplateView):
     template_name = "ua.html"
 
+    def get_template_names(self):
+        return [config.HOME_TEMPLATE, self.template_name]
+
     def get(self, request, *args, **kwargs):
         res_etag = get_etag(
             request,
@@ -58,14 +61,14 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         selection = config.HOME_PAGE_REGISTRATIONS.split(";")
-        buttons = []
+        registrations = []
         for slug in selection:
             if slug.strip():
                 try:
-                    buttons.append(Registration.objects.get(active=True, slug=slug.strip()))
+                    registrations.append(Registration.objects.get(active=True, slug=slug.strip()))
                 except Exception as e:
                     logger.exception(e)
-        return super().get_context_data(buttons=buttons, **kwargs)
+        return super().get_context_data(registrations=registrations, **kwargs)
 
 
 class QRCodeView(TemplateView):

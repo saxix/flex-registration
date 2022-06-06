@@ -1,8 +1,6 @@
 from django.urls import path
 
-from .views import (
-    OptionsListView,
-)
+from .views import OptionsListView
 
 urlpatterns = [
     # path("options/<str:name>/", OptionsListView.as_view(), name="optionset"),

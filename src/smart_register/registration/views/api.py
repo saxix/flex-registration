@@ -22,7 +22,10 @@ class RegistrationDataApi(ListView):
         reg = get_object_or_404(Registration, id=self.kwargs["pk"])
         start = int(self.kwargs["start"])
         end = int(self.kwargs["end"])
-        # signer = Signer()
 
-        data = list(reg.record_set.filter(id__gte=start, id__lte=end).values("id", "timestamp", "storage")[:1000])
+        data = list(
+            reg.record_set.filter(id__gte=start, id__lte=end).values(
+                "id", "remote_ip", "timestamp", "files", "fields", "storage"
+            )[:1000]
+        )
         return JsonResponse({"reg": reg.pk, "start": start, "end": end, "data": data}, encoder=JSONEncoder)

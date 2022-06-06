@@ -7,14 +7,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytz
-from concurrency.api import disable_concurrency
-from django.db.models.signals import post_save, post_delete
-from django.utils.text import slugify
-
-from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.decorators import button, choice, link, view
 from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
-from dateutil.relativedelta import relativedelta
+from adminfilters.value import ValueFilter
+from concurrency.api import disable_concurrency
 from dateutil.utils import today
 from django import forms
 from django.conf import settings
@@ -23,26 +20,27 @@ from django.contrib.admin import SimpleListFilter, register
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.db import OperationalError
-from django.db.models import Count, JSONField, Q
-from django.db.models.functions import ExtractHour, TruncDay
+from django.db.models import JSONField, Q
+from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
-from .forms import CloneForm
-from ..admin.mixin import LoadDumpMixin
 
+from ..admin.mixin import LoadDumpMixin
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
-from ..core.utils import is_root, namify, clone_model
-from .models import Record, Registration
+from ..core.utils import clone_model, is_root, last_day_of_month, namify
 from ..i18n.forms import ImportForm
 from ..i18n.models import Message
+from .forms import CloneForm
+from .models import Record, Registration
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +55,8 @@ DATA = {
 }
 
 
-def last_day_of_month(date):
-    return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
-
-
 @register(Registration)
-class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
+class RegistrationAdmin(SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
@@ -75,10 +69,12 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         JSONField: {"widget": JSONEditor},
     }
     change_form_template = None
+    filter_horizontal = ("scripts",)
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
         (None, {"fields": ("name", "title", "slug")}),
-        ("Config", {"fields": ("flex_form", "validator", "encrypt_data")}),
+        ("Unique", {"fields": ("unique_field", "unique_field_error")}),
+        ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
         ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
@@ -91,6 +87,14 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
 
     secure.boolean = True
 
+    # @button()
+    # def publish(self, request, pk):
+    #     pass
+
+    # @view()
+    # def _update(self, request):
+    #     pass
+
     @property
     def media(self):
         extra = "" if settings.DEBUG else ".min"
@@ -101,14 +105,20 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
             ]
         )
 
-    @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
-    def _invalidate_cache(self, request, pk):
+    @choice(change_list=False, label="Advanced", order=900)
+    def advanced(self, button):
+        button.choices = [self.inspect, self.clone, self.export]
+
+    @view(label="invalidate cache", html_attrs={"class": "aeb-warn"})
+    def invalidate_cache(self, request, pk):
         obj = self.get_object(request, pk)
         obj.save()
 
     @view()
     def data(self, request, registration):
-        qs = Record.objects.filter(registration_id=registration)
+        from smart_register.counters.models import Counter
+
+        qs = Counter.objects.filter(registration_id=registration).order_by("day")
         param_day = request.GET.get("d", None)
         param_tz = request.GET.get("tz", None)
         total = 0
@@ -118,15 +128,12 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                 day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
             else:
                 day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
-            # day = day.astimezone(tz)
             start = day.astimezone(pytz.UTC)
             end = start + timedelta(days=1)
-            qs = qs.filter(timestamp__gte=start, timestamp__lt=end)
-            qs = qs.annotate(hour=ExtractHour("timestamp")).values("hour").annotate(c=Count("id"))
-            data = defaultdict(lambda: 0)
-            for record in qs.all():
-                data[record["hour"]] = record["c"]
-                total += record["c"]
+            record = qs.filter(day__gte=start, day__lt=end).first()
+            data = []
+            if record:
+                data = record.hourly
             hours = [f"{x:02d}:00" for x in list(range(0, 24))]
             data = {
                 "tz": str(tz),
@@ -137,19 +144,20 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                 "end": str(end),
                 "day": day.strftime("%Y-%m-%d"),
                 "labels": hours,
-                "data": [data[x] for x in list(range(0, 24))],
+                "data": data,
             }
         elif param_month := request.GET.get("m", None):
             if param_month:
                 day = datetime.strptime(param_month, "%Y-%m-%d")
             else:
                 day = timezone.now().today()
-            qs = qs.filter(timestamp__month=day.month)
-            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
+            qs = qs.filter(day__month=day.month)
+            # qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
             data = defaultdict(lambda: 0)
             for record in qs.all():
-                data[record["day"].day] = record["c"]
-                total += data[record["day"].day]
+                data[record.day.day] = record.records
+                total += record.records
+
             last_day = last_day_of_month(day)
             days = list(range(1, 1 + last_day.day))
             labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
@@ -162,11 +170,10 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
             }
         else:
             qs = qs.all()
-            qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id")).order_by("day")
             data = defaultdict(lambda: 0)
             for record in qs.all():
-                data[record["day"]] = record["c"]
-                total += data[record["day"]]
+                data[record.day] = record.records
+                total += record.records
             data = {
                 "label": "",
                 "day": timezone.now().today().strftime("%Y-%m-%d"),
@@ -185,7 +192,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         ctx["today"] = datetime.now().strftime("%Y-%m-%d")
         return render(request, "admin/registration/registration/chart.html", ctx)
 
-    @button()
+    @view()
     def inspect(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -195,7 +202,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         )
         return render(request, "admin/registration/registration/inspect.html", ctx)
 
-    @button()
+    @view()
     def clone(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -206,7 +213,6 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         reg: Registration = ctx["original"]
         if request.method == "POST":
             form = CloneForm(request.POST)
-            created = set()
             if form.is_valid():
                 try:
                     for dip in [
@@ -223,7 +229,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                     with atomic():
                         source = Registration.objects.get(id=reg.pk)
                         title = form.cleaned_data["title"]
-                        reg, __ = clone_model(source, name=namify(title), title=title, slug=slugify(title))
+                        reg, __ = clone_model(source, name=namify(title), title=title, version=1, slug=slugify(title))
                         if form.cleaned_data["deep"]:
                             main_form, __ = clone_model(
                                 source.flex_form, name=f"{source.flex_form.name}-(clone: {reg.name})"
@@ -313,6 +319,34 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
 
+    @view()
+    def removekey(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Remove Encryption Key")
+        if request.method == "POST":
+            self.object = self.get_object(request, pk)
+            self.object.public_key = ""
+            self.object.save()
+            self.message_user(request, "Encryption key removed", messages.WARNING)
+            self.log_change(request, self.object, "Encryption Key has been removed")
+            return HttpResponseRedirect("..")
+        else:
+            return render(request, "admin/registration/registration/keys_remove.html", ctx)
+
+    @view()
+    def generate_keys(self, request, pk):
+        ctx = self.get_common_context(
+            request, pk, media=self.media, title="Generate Private/Public Key pair to encrypt this Registration data"
+        )
+
+        if request.method == "POST":
+            ctx["title"] = "Key Pair Generated"
+            private_pem, public_pem = self.object.setup_encryption_keys()
+            ctx["private_key"] = private_pem
+            ctx["public_key"] = public_pem
+            self.log_change(request, self.object, "Encryption Keys have been generated")
+
+        return render(request, "admin/registration/registration/keys.html", ctx)
+
     @link(permission=is_root, html_attrs={"class": "aeb-warn "})
     def view_collected_data(self, button):
         try:
@@ -322,6 +356,41 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
                 button.html_attrs["target"] = f"_{button.original.pk}"
         except Exception as e:
             logger.exception(e)
+
+    @view()
+    def export(self, request, pk):
+        reg: Registration = self.get_object(request, pk)
+        buffers = {}
+        buffers["registration"] = io.StringIO()
+        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
+        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
+        validators = Validator.objects.values_list("pk", flat=True)
+        options = OptionSet.objects.values_list("pk", flat=True)
+        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
+        data = DATA.copy()
+        data["registration.Registration"] = [reg.pk]
+        data["core.FlexForm"] = [f.pk for f in forms]
+        data["core.FormSet"] = [f.pk for f in formsets]
+        data["core.Validator"] = validators
+        data["core.OptionSet"] = options
+        data["core.FlexFormField"] = fields
+        data["i18n.Message"] = Message.objects.values_list("pk", flat=True)
+
+        for k, f in data.items():
+            data[k] = io.StringIO()
+            call_command(
+                "dumpdata",
+                [k],
+                stdout=data[k],
+                primary_keys=",".join(map(str, f)),
+                use_natural_foreign_keys=True,
+                use_natural_primary_keys=True,
+            )
+        return JsonResponse(
+            {k: json.loads(v.getvalue()) for k, v in data.items()},
+            safe=False,
+            headers={"Content-Disposition": f"attachment; filename={reg.slug}.json"},
+        )
 
     @button(label="import")
     def _import(self, request):
@@ -365,67 +434,24 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         return render(request, "admin/registration/registration/import.html", ctx)
 
     @button()
-    def export(self, request, pk):
-        reg: Registration = self.get_object(request, pk)
-        buffers = {}
-        buffers["registration"] = io.StringIO()
-        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
-        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
-        validators = Validator.objects.values_list("pk", flat=True)
-        options = OptionSet.objects.values_list("pk", flat=True)
-        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
-        data = DATA.copy()
-        data["registration.Registration"] = [reg.pk]
-        data["core.FlexForm"] = [f.pk for f in forms]
-        data["core.FormSet"] = [f.pk for f in formsets]
-        data["core.Validator"] = validators
-        data["core.OptionSet"] = options
-        data["core.FlexFormField"] = fields
-        data["i18n.Message"] = Message.objects.values_list("pk", flat=True)
+    def test(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Test")
+        form = self.object.flex_form.get_form_class()
+        ctx["registration"] = self.object
+        ctx["form"] = form
+        return render(request, "admin/registration/registration/test.html", ctx)
 
-        for k, f in data.items():
-            data[k] = io.StringIO()
-            call_command(
-                "dumpdata",
-                [k],
-                stdout=data[k],
-                primary_keys=",".join(map(str, f)),
-                use_natural_foreign_keys=True,
-                use_natural_primary_keys=True,
-            )
-        return JsonResponse(
-            {k: json.loads(v.getvalue()) for k, v in data.items()},
-            safe=False,
-            headers={"Content-Disposition": f"attachment; filename={reg.slug}.json"},
+    def get_changeform_buttons(self, context):
+        return sorted(
+            [h for h in self.extra_button_handlers.values() if h.change_form in [True, None]],
+            key=lambda item: item.config.get("order", 1),
         )
 
-    @view()
-    def removekey(self, request, pk):
-        ctx = self.get_common_context(request, pk, title="Remove Encryption Key")
-        if request.method == "POST":
-            self.object = self.get_object(request, pk)
-            self.object.public_key = ""
-            self.object.save()
-            self.message_user(request, "Encryption key removed", messages.WARNING)
-            self.log_change(request, self.object, "Encryption Key has been removed")
-            return HttpResponseRedirect("..")
-        else:
-            return render(request, "admin/registration/registration/keys_remove.html", ctx)
-
-    @view()
-    def generate_keys(self, request, pk):
-        ctx = self.get_common_context(
-            request, pk, media=self.media, title="Generate Private/Public Key pair to encrypt this Registration data"
+    def get_changelist_buttons(self, context):
+        return sorted(
+            [h for h in self.extra_button_handlers.values() if h.change_list in [True, None]],
+            key=lambda item: item.config.get("order", 1),
         )
-
-        if request.method == "POST":
-            ctx["title"] = "Key Pair Generated"
-            private_pem, public_pem = self.object.setup_encryption_keys()
-            ctx["private_key"] = private_pem
-            ctx["public_key"] = public_pem
-            self.log_change(request, self.object, "Encryption Keys have been generated")
-
-        return render(request, "admin/registration/registration/keys.html", ctx)
 
 
 class DecryptForm(forms.Form):
@@ -460,9 +486,13 @@ class HourFilter(SimpleListFilter):
 class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
-    list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
+    list_display = ("timestamp", "remote_ip", "id", "registration", "ignored", "unique_field")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id")
-    list_filter = (("registration", AutoCompleteFilter), HourFilter, "ignored")
+    autocomplete_fields = ("registration",)
+    list_filter = (("registration", AutoCompleteFilter),
+                   HourFilter,
+                   ("unique_field", ValueFilter),
+                   "ignored")
     change_form_template = None
     change_list_template = None
 
@@ -477,6 +507,16 @@ class RecordAdmin(SmartModelAdmin):
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
+
+    @link(html_attrs={"class": "aeb-warn "}, change_form=True)
+    def receipt(self, button):
+        try:
+            if button.original:
+                base = reverse("register-done", args=[button.original.registration.pk, button.original.pk])
+                button.href = base
+                button.html_attrs["target"] = f"_{button.original.pk}"
+        except Exception as e:
+            logger.exception(e)
 
     @button()
     def truncate(self, request):
@@ -518,7 +558,14 @@ class RecordAdmin(SmartModelAdmin):
     @button(label="Preview", permission=is_root)
     def preview(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Preview")
+
         return render(request, "admin/registration/record/preview.html", ctx)
+
+    @button(label="inspect", permission=is_root)
+    def inspect(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Inspect")
+        ctx['files_as_dict'] = json.loads(self.object.files.tobytes().decode())
+        return render(request, "admin/registration/record/inspect.html", ctx)
 
     @button(permission=is_root)
     def decrypt(self, request, pk):
@@ -538,6 +585,11 @@ class RecordAdmin(SmartModelAdmin):
 
         ctx["form"] = form
         return render(request, "admin/registration/record/decrypt.html", ctx)
+
+    def get_readonly_fields(self, request, obj=None):
+        if is_root(request) or settings.DEBUG:
+            return []
+        return self.readonly_fields
 
     def has_view_permission(self, request, obj=None):
         return is_root(request) or settings.DEBUG

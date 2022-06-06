@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
+from unittest.mock import Mock
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
@@ -49,6 +50,9 @@ class Validator(NaturalKeyModel):
     FIELD = "field"
     MODULE = "module"
     FORMSET = "formset"
+    SCRIPT = "script"
+    HANDLER = "handler"
+
     CONSOLE = mark_safe(
         """
     console = {log: function(d) {}};
@@ -75,8 +79,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
-    name = CICharField(max_length=255, unique=True)
-    message = models.CharField(max_length=255, help_text="Default error message if validator return 'false'.")
+    label = CICharField(max_length=255)
+    name = CICharField(verbose_name=_("Function Name"), max_length=255, unique=True, blank=True, null=True)
     code = models.TextField(blank=True, null=True)
     target = models.CharField(
         max_length=10,
@@ -85,6 +89,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
             (FIELD, "Field"),
             (FORMSET, "Formset"),
             (MODULE, "Module"),
+            (HANDLER, "Handler"),
+            (SCRIPT, "Script"),
         ),
     )
     trace = models.BooleanField(
@@ -97,7 +103,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.label} ({self.target})"
 
     @staticmethod
     def js_type(value):
@@ -146,9 +152,6 @@ _.is_adult = function(d) { return !_.is_child(d)};
                         ret = jsonpickle.decode(result)
                     except (JSONDecodeError, TypeError):
                         ret = result
-                # if self.trace and state.request.user.is_staff:
-                #     cache.set(f"validator-{state.request.user.pk}-{self.pk}", pickled)
-                #     sentry_sdk.capture_message(f"Invoking validator '{self.name}'")
                 if isinstance(ret, str):
                     raise ValidationError(_(ret))
                 elif isinstance(ret, (list, tuple)):
@@ -158,7 +161,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
                     errors = {k: _(v) for (k, v) in ret.items()}
                     raise ValidationError(errors)
                 elif isinstance(ret, bool) and not ret:
-                    raise ValidationError(_(self.message))
+                    raise ValidationError(_("Please insert a valid value"))
             except ValidationError as e:
                 if self.trace:
                     logger.exception(e)
@@ -178,7 +181,12 @@ _.is_adult = function(d) { return !_.is_child(d)};
             self.monitor(self.STATUS_SKIP, value)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if not self.name:
+            self.name = namify(self.label)
         super().save(force_insert, force_update, using, update_fields)
+
+    def get_script_url(self):
+        return reverse("api:validator-script", args=[self.name])
 
 
 def get_validators(field):
@@ -201,8 +209,8 @@ class FlexForm(I18NModel, NaturalKeyModel):
     )
 
     class Meta:
-        verbose_name = "FlexForm"
-        verbose_name_plural = "FlexForms"
+        verbose_name = "Flex Form"
+        verbose_name_plural = "Flex Forms"
 
     def __str__(self):
         return self.name
@@ -240,15 +248,26 @@ class FlexForm(I18NModel, NaturalKeyModel):
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
     # @cache_form
-    def get_form(self):
+    def get_form_class(self):
+        from smart_register.core.fields import CompilationTimeField
+
         fields = {}
+        compilation_time_field = None
+        indexes = FlexFormBaseForm.indexes.copy()
         for field in self.fields.filter(enabled=True).select_related("validator").order_by("ordering"):
             try:
-                fields[field.name] = field.get_instance()
+                fld = field.get_instance()
+                fields[field.name] = fld
+                if isinstance(fld, CompilationTimeField):
+                    compilation_time_field = field.name
+                if index := field.advanced.get('smart', {}).get('index'):
+                    indexes[str(index)] = field.name
             except TypeError:
                 pass
         form_class_attrs = {
             "flex_form": self,
+            "compilation_time_field": compilation_time_field,
+            "indexes": indexes,
             **fields,
         }
         flexForm = type(f"{self.name}FlexForm", (self.base_type,), form_class_attrs)
@@ -289,6 +308,8 @@ class FormSet(NaturalKeyModel, OrderableModel):
                 "deleteText": "Remove",
                 "deleteCssClass": None,
                 "keepFieldValues": False,
+                "onAdd": None,
+                "onRemove": None,
             },
         }
     }
@@ -323,7 +344,7 @@ class FormSet(NaturalKeyModel, OrderableModel):
         return self.name
 
     def get_form(self):
-        return self.flex_form.get_form()
+        return self.flex_form.get_form_class()
 
     def save(self, *args, **kwargs):
         self.name = slugify(self.name)
@@ -368,6 +389,11 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     ]
     I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
+        "widget_kwargs": {
+            "pattern": None,
+            "title": None,
+            "placeholder": None,
+        },
         "kwargs": {},
         "smart": {
             "hint": "",
@@ -375,6 +401,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             "onchange": "",
             "question": "",
             "description": "",
+            "index": None,
             "fieldset": "",
         },
     }
@@ -397,8 +424,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     class Meta:
         unique_together = (("flex_form", "name"),)
-        verbose_name = "FlexForm Field"
-        verbose_name_plural = "FlexForm Fields"
+        verbose_name = "Flex Field"
+        verbose_name_plural = "Flex Fields"
         ordering = ["ordering"]
 
     def __str__(self):
@@ -426,6 +453,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             field_type = self.field_type
             advanced = self.advanced.copy()
             kwargs = self.advanced.get("kwargs", {}).copy()
+            widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             regex = self.regex
 
             smart_attrs = advanced.pop("smart", {}).copy()
@@ -451,6 +479,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
             kwargs["validators"].append(RegexValidator(regex))
+        kwargs["widget_kwargs"] = widget_kwargs
         return kwargs
 
     def get_instance(self):
@@ -515,6 +544,9 @@ class OptionSet(NaturalKeyModel, models.Model):
     )
 
     objects = OptionSetManager()
+
+    def __str__(self):
+        return self.name
 
     def clean(self):
         if self.locale not in self.languages:

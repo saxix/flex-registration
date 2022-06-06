@@ -4,7 +4,7 @@ import pytest
 from django import forms
 from django.core.files.storage import get_storage_class
 
-from smart_register.core.fields import SmartFileField
+from smart_register.core.fields import CompilationTimeField, SmartFileField
 
 
 def pytest_addoption(parser):
@@ -33,40 +33,42 @@ def pytest_configure(config):
     if not config.option.enable_selenium:
         setattr(config.option, "markexpr", "not selenium")
 
-    from django.conf import settings, global_settings
+    from django.conf import global_settings, settings
 
     settings.STATICFILES_STORAGE = global_settings.STATICFILES_STORAGE
 
 
 @pytest.fixture()
 def simple_form(db):
-    from smart_register.core.models import FlexForm, Validator
     from smart_register.core.cache import cache
+    from smart_register.core.models import FlexForm, Validator
 
     cache.clear()
 
     v1, __ = Validator.objects.update_or_create(
-        name="length_1_50",
+        label="length_1_50",
         defaults=dict(
-            message="String size 1 to 5",
             active=True,
             target=Validator.FIELD,
-            code="value.length>1 && value.length<=50;",
+            code="value.length>1 && value.length<=50 ? true: 'String size 1 to 5'",
         ),
     )
     v2, __ = Validator.objects.update_or_create(
-        name="length_2_10",
+        label="length_2_10",
         defaults=dict(
-            message="String size 2 to 10",
             active=True,
             target=Validator.FIELD,
-            code="value.length>2 && value.length<=10;",
+            code="value.length>2 && value.length<=10 ? true: 'String size 2 to 10';",
         ),
     )
     frm, __ = FlexForm.objects.update_or_create(name="Form1")
+    frm.fields.get_or_create(label="time", defaults={"field_type": CompilationTimeField})
     frm.fields.get_or_create(label="First Name", defaults={"field_type": forms.CharField, "required": True})
     frm.fields.get_or_create(
-        label="Last Name", defaults={"field_type": forms.CharField, "required": True, "validator": v2}
+        label="Last Name", defaults={"field_type": forms.CharField,
+                                     "required": True,
+                                     "validator": v2,
+                                     "advanced": {"smart": {"index": 1}}}
     )
     frm.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     frm.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})
@@ -80,7 +82,7 @@ def complex_form():
     v1, __ = Validator.objects.get_or_create(
         name="length_2_8",
         defaults=dict(
-            message="String size 1 to 8", active=True, target=Validator.FIELD, code="value.length>1 && value.length<=8;"
+            active=True, target=Validator.FIELD, code="value.length>1 && value.length<=8 ? true:'String size 1 to 8';"
         ),
     )
     hh, __ = FlexForm.objects.get_or_create(name="Form1")

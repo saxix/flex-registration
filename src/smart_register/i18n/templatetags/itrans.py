@@ -44,6 +44,7 @@ class TranslateNode(Node):
 
         if self.asvar:
             context[self.asvar] = value
+            context[f"{self.asvar}_msgid"] = msgid
             return ""
         else:
             return value

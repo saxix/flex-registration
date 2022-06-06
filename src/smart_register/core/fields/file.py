@@ -1,5 +1,6 @@
 from django import forms
 from django.conf import settings
+
 from smart_register.i18n.gettext import gettext as _
 
 

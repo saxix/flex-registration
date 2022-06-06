@@ -6,10 +6,14 @@ import json
 import re
 import time
 import unicodedata
+from collections import deque
+from itertools import chain
 from pathlib import Path
+from sys import getsizeof, stderr
 
 import qrcode
 from constance import config
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.files.utils import FileProxyMixin
 from django.core.serializers.json import DjangoJSONEncoder
@@ -28,7 +32,8 @@ UNDEFINED = object()
 
 
 def has_token(request, *args, **kwargs):
-    return request.headers.get("x-session") == settings.ROOT_TOKEN
+    return (request.headers.get("x-session") == settings.ROOT_TOKEN
+            or request.COOKIES.get("x-session") == settings.ROOT_TOKEN)
 
 
 def is_root(request, *args, **kwargs):
@@ -251,26 +256,93 @@ def get_client_ip(request):
                 return ip.split(",")[0].strip()
 
 
-# def get_default_language(request, default="en-us"):
-#     lang = default
-#     if request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME):
-#         lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
-#     elif request.META.get("HTTP_ACCEPT_LANGUAGE", None):
-#         lang = request.META["HTTP_ACCEPT_LANGUAGE"]
-#     if lang not in [x[0] for x in settings.LANGUAGES]:
-#         lang = default
-#     return lang or "en-us"
-#
-
-
 def get_versioned_static_name(name):
     return name
 
 
-def get_etag(request, *args):
+def get_etag(request, *args, **kwargs):
     if state.collect_messages:
         params = [time.time()]
     else:
         params = (VERSION,) + args
-    params = [time.time()]
     return "/".join(map(str, params))
+
+
+def last_day_of_month(date):
+    return date.replace(day=1) + relativedelta(months=1) - relativedelta(days=1)
+
+
+def apply_nested(cleaned_value, func=lambda v, k: v, key=None):
+    # if isinstance(cleaned_value, FileProxyMixin):
+    #     return base64.b64encode(cleaned_value.read())
+    if isinstance(cleaned_value, dict):
+        return {item[0]: apply_nested(item[1], func, item[0]) for item in cleaned_value.items()}
+    elif isinstance(cleaned_value, list):
+        return [apply_nested(item, func, key) for item in cleaned_value]
+    # elif cleaned_value is None:
+    #     cleaned_value = ""
+    return func(cleaned_value, key)
+
+
+def extract_content(r):
+    return apply_nested(r, lambda k, v: v.read() if isinstance(v, FileProxyMixin) else v)
+
+
+def merge_data(d1, d2):
+    if isinstance(d2, dict):
+        ret = {} or d1.copy()
+        for k, v in d2.items():
+            if isinstance(v, list):
+                if k not in d1:
+                    d1[k] = [None for e in v]
+                ret[k] = [merge_data(d1[k][i], e) for i, e in enumerate(v)]
+            elif isinstance(v, dict):
+                if k not in d1:
+                    d1[k] = {}
+                ret[k] = merge_data(d1[k], v)
+            else:
+                ret[k] = d2[k]
+        return ret
+    else:
+        return d2
+
+
+def total_size(o, handlers={}, verbose=False):
+    """ Returns the approximate memory footprint an object and all of its contents.
+
+    Automatically finds the contents of the following builtin containers and
+    their subclasses:  tuple, list, deque, dict, set and frozenset.
+    To search other containers, add handlers to iterate over their contents:
+
+        handlers = {SomeContainerClass: iter,
+                    OtherContainerClass: OtherContainerClass.get_elements}
+
+    """
+    dict_handler = lambda d: chain.from_iterable(d.items())
+    all_handlers = {tuple: iter,
+                    list: iter,
+                    deque: iter,
+                    dict: dict_handler,
+                    set: iter,
+                    frozenset: iter,
+                    }
+    all_handlers.update(handlers)  # user handlers take precedence
+    seen = set()  # track which object id's have already been seen
+    default_size = getsizeof(0)  # estimate sizeof object without __sizeof__
+
+    def sizeof(o):
+        if id(o) in seen:  # do not double count the same object
+            return 0
+        seen.add(id(o))
+        s = getsizeof(o, default_size)
+
+        if verbose:
+            print(s, type(o), repr(o), file=stderr)
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o)

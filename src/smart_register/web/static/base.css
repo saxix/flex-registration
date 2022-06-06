@@ -19,6 +19,12 @@
   background-repeat: no-repeat;
   background-size: cover;
 }
+.fs-counter-container .fs-counter .nav *.remove {
+  background-image: url("delete-25.png");
+  height: 25px;
+  width: 25px;
+  margin-top: 2px;
+}
 .fs-counter-container .fs-counter .nav *.next {
   background-image: url("next.webp");
 }
@@ -66,11 +72,9 @@
   background-color: rgba(255, 255, 255, var(--bg-opacity));
 }
 
-.landing a {
+.landing input.button {
   color: #0da7e6;
   font-weight: bold;
-}
-.landing a.button {
   background-color: #01ADF1;
   color: white;
 }
@@ -142,12 +146,10 @@ input[type=submit], input[type=button] {
   font-weight: 700;
   border-radius: 0.25rem;
   background-color: rgba(66, 153, 225, var(--bg-opacity));
-  color: white;
   cursor: pointer;
 }
 input[type=submit]:hover, input[type=submit]:active, input[type=button]:hover, input[type=button]:active {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-  background-color: rgba(43, 108, 176, var(--bg-opacity));
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
@@ -156,7 +158,7 @@ input[type=submit]:disabled, input[type=button]:disabled {
   background-color: rgba(124, 124, 124, 0.67);
 }
 
-input[type=submit] {
+#registrationForm input[type=submit] {
   color: rgba(255, 255, 255, var(--text-opacity));
   padding-left: 1rem;
   padding-right: 1rem;
@@ -169,14 +171,15 @@ input[type=submit] {
   color: white;
   cursor: pointer;
 }
-input[type=submit]:hover, input[type=submit]:active {
+#registrationForm input[type=submit]:hover, #registrationForm input[type=submit]:active {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-  background-color: rgba(43, 108, 176, var(--bg-opacity));
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
-input[type=submit]:disabled {
+#registrationForm input[type=submit]:disabled {
+  background-color: rgba(124, 124, 124, 0.67);
   cursor: not-allowed;
+  color: black;
 }
 
 /*# sourceMappingURL=base.css.map */

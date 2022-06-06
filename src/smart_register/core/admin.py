@@ -6,9 +6,6 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import requests
-from django.core.cache import caches
-from reversion_compare.admin import CompareVersionAdmin
-
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -19,6 +16,7 @@ from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
+from django.core.cache import caches
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
@@ -26,21 +24,22 @@ from django.http import JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
+from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
+from ..admin.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
 from .forms import Select2Widget, ValidatorForm
 from .models import (
+    FIELD_KWARGS,
     CustomFieldType,
     FlexForm,
     FlexFormField,
     FormSet,
     OptionSet,
     Validator,
-    FIELD_KWARGS,
 )
-from .utils import render, dict_setdefault
-from ..admin.mixin import LoadDumpMixin
+from .utils import dict_setdefault, render
 
 logger = logging.getLogger(__name__)
 
@@ -62,13 +61,14 @@ class ValidatorTestForm(forms.Form):
 class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     form = ValidatorForm
     list_editable = ("trace", "active", "draft")
-    list_display = ("name", "message", "target", "used_by", "trace", "active", "draft")
+    list_display = ("label", "name", "target", "used_by", "trace", "active", "draft")
     list_filter = ("target", "active", "draft", "trace")
     readonly_fields = ("version", "last_update_date")
     search_fields = ("name",)
     DEFAULTS = {
         Validator.FORM: {},  # cleaned data
         Validator.FIELD: "",  # field value
+        Validator.SCRIPT: "",  # field value
         Validator.MODULE: [{}],
         Validator.FORMSET: {"total_form_count": 2, "errors": {}, "non_form_errors": {}, "cleaned_data": []},
     }
@@ -78,10 +78,6 @@ class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         cache.set(f"validator-{request.user.pk}-{obj.pk}-status", obj.STATUS_UNKNOWN)
-
-    @view()
-    def _test(self, request, pk):
-        return {}
 
     def used_by(self, obj):
         if obj.target == Validator.FORM:
@@ -115,6 +111,8 @@ class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
             )
 
         ctx["jslib"] = Validator.LIB
+        ctx["is_script"] = self.object.target in [Validator.SCRIPT]
+        ctx["is_validator"] = self.object.target not in [Validator.SCRIPT]
         ctx["form"] = form
         return render(request, "admin/core/validator/test.html", ctx)
 
@@ -166,7 +164,8 @@ class FlexFormFieldForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # if self.instance and self.instance.pk:
-        self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
+        self.fields["name"].widget.attrs = {"readonly": True,
+                                            "style": "background-color:#f8f8f8;border:none"}
 
 
 class FlexFormFieldForm2(forms.ModelForm):
@@ -184,7 +183,7 @@ class FlexFormFieldForm2(forms.ModelForm):
 @register(FlexFormField)
 class FlexFormFieldAdmin(LoadDumpMixin, CompareVersionAdmin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
-    list_display = ("label", "name", "flex_form", "_type", "required", "enabled")
+    list_display = ("label", "name", "flex_form", "form_type", "required", "enabled")
     list_editable = ["required", "enabled"]
     list_filter = (
         ("flex_form", AutoCompleteFilter),
@@ -203,7 +202,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, CompareVersionAdmin, OrderableAdmin, Sma
 
     # change_list_template = "reversion/change_list.html"
 
-    def _type(self, obj):
+    def form_type(self, obj):
         if obj.field_type:
             return obj.field_type.__name__
         else:
@@ -237,16 +236,18 @@ class FlexFormFieldAdmin(LoadDumpMixin, CompareVersionAdmin, OrderableAdmin, Sma
             form_class_attrs = {
                 "sample": instance,
             }
-            formClass = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+            form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
 
             if request.method == "POST":
-                form = formClass(request.POST)
+                form = form_class(request.POST)
+
                 if form.is_valid():
+                    ctx["debug_info"]["cleaned_data"] = form.cleaned_data
                     self.message_user(
                         request, f"Form validation success. You have selected: {form.cleaned_data['sample']}"
                     )
             else:
-                form = formClass()
+                form = form_class()
             ctx["form"] = form
         except Exception as e:
             logger.exception(e)
@@ -266,9 +267,9 @@ class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
     ordering_field_hide_input = True
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
-        if db_field.name == "field_type":
-            kwargs["widget"] = Select2Widget()
-            return db_field.formfield(**kwargs)
+        # if db_field.name == "field_type":
+        #     kwargs["widget"] = Select2Widget()
+        #     return db_field.formfield(**kwargs)
         return super().formfield_for_choice_field(db_field, request, **kwargs)
 
 
@@ -287,7 +288,10 @@ class SyncForm(SyncConfigForm):
 @register(FlexForm)
 class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
-    inlines = [FlexFormFieldInline, FormSetInline]
+    inlines = [
+        FlexFormFieldInline,
+        FormSetInline
+    ]
     list_display = ("name", "validator", "used_by", "childs", "parents")
     list_filter = (
         QueryStringFilter,
@@ -321,11 +325,12 @@ class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk)
-        form_class = self.object.get_form()
+        form_class = self.object.get_form_class()
         if request.method == "POST":
             form = form_class(request.POST)
             if form.is_valid():
-                self.message_user(request, "Form in valid")
+                ctx["cleaned_data"] = form.cleaned_data
+                self.message_user(request, "Form is valid")
         else:
             form = form_class()
         ctx["form"] = form
@@ -391,7 +396,7 @@ class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
                             raise Exception(str(res))
                         ctx["url"] = url
                         with tempfile.NamedTemporaryFile(
-                            dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
+                                dir=workdir, prefix="~SYNC", suffix=".json", delete=not settings.DEBUG
                         ) as fdst:
                             fdst.write(res.content)
                             with disable_concurrency():
@@ -412,12 +417,27 @@ class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
 
 @register(OptionSet)
 class OptionSetAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
-    list_display = ("name", "id", "separator", "comment", "columns")
+    list_display = (
+        "name",
+        "id",
+        "separator",
+        "comment",
+        "pk_col",
+    )
     search_fields = ("name",)
     list_filter = (("data", ValueFilter.factory(lookup_name="icontains")),)
     save_as = True
     readonly_fields = ("version", "last_update_date")
     object_history_template = "reversion-compare/object_history.html"
+
+    @button()
+    def display_data(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Data")
+        data = []
+        for line in self.object.data.split("\r\n"):
+            data.append(line.split(self.object.separator))
+        ctx["data"] = data
+        return render(request, "admin/core/optionset/table.html", ctx)
 
     @link(change_form=True, change_list=False, html_attrs={"target": "_new"})
     def view_json(self, button):

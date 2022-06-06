@@ -10,14 +10,7 @@
 {% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
 {% block userlinks %}{{ block.super }}
     {% if enable_switch %} / {% smart_toggler %}{% endif %}
-    {% for page in  extra_pages %}
-        / <a href="{{ page.1 }}">{{ page.0 }}</a>
-    {% endfor %}
-{#    {% if user.is_superuser %} / <a href="{{ sysinfo }}">System Info</a> {% endif %}#}
-{#    {% if profile_link %} / <a href="{{ profile_link }}">Profile</a> {% endif %}#}
-{#    {% if profile_link %} / <a href="{% url "qrcode" %}">qrcode</a> {% endif %}#}
-{#    {{ project.version|slice:':7'|join:'' }} / {{ project.build_date }}#}
-{#    {% if project.has_token %} &Omega; {% else %} N/A {% endif %}#}
+    {% for page in  extra_pages %}/ <a href="{{ page.1 }}">{{ page.0 }}</a>{% endfor %}
 {% endblock %}
 
 {% block branding %}
@@ -32,5 +25,15 @@
 {% block nav-global %}{% endblock %}
 {% block footer %}
     {{ block.super }}
-{#    <script src="{% static "waf.js" %}"></script>#}
+    <div style="margin-bottom: 10px; text-align: center; border-top: 1px solid black; padding-top: 4px;">
+        <form action="{% url "set_language" %}" method="post" name="setLocale">
+            {% csrf_token %}
+            {{ project.build_date }} - {{ project.version }} - {{ LANGUAGE_CODE }}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <select name="language" onchange="setLocale.submit()">
+                {% for k,v in LANGUAGES %}
+                    <option value="{{ k }}" {% if k == LANGUAGE_CODE %}selected{% endif %}>{{ v }}</option>{% endfor %}
+            </select>
+        </form>
+    </div>
 {% endblock %}

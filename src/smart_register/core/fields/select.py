@@ -91,10 +91,9 @@ class AjaxSelectField(forms.Field):
         from smart_register.core.models import OptionSet
 
         attrs = super().widget_attrs(widget)
-        attrs["data-parent"] = self.parent
+        # attrs["data-parent"] = self.parent
         try:
             attrs["data-source"] = self.datasource
-            attrs["data-parent"] = self.parent
             attrs["data-ajax--url"] = reverse("optionset", args=[self.datasource])
         except (OptionSet.DoesNotExist, NoReverseMatch, TypeError) as e:
             logger.exception(e)

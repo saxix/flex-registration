@@ -21,6 +21,13 @@ class CustomFieldMixin:
 
 class FlexFormBaseForm(forms.Form):
     flex_form = None
+    compilation_time_field = None
+    indexes = {'1': None, '2': None, '3': None}
+
+    def get_counters(self, data):
+        if self.compilation_time_field:
+            return data.pop(self.compilation_time_field, {})
+        return {}
 
     def is_valid(self):
         return super().is_valid()
@@ -34,6 +41,18 @@ class FlexFormBaseForm(forms.Form):
                 static("smart%s.js" % extra),
             ]
         )
+
+    def get_storage_mapping(self):
+        return {name: field.storage for name, field in self.fields.items()}
+
+    def _clean_fields(self):
+        super()._clean_fields()
+        for name, field in self.fields.items():
+            if not field.is_stored():
+                del self.cleaned_data[name]
+
+    def full_clean(self):
+        return super().full_clean()
 
     def clean(self):
         cleaned_data = self.cleaned_data
