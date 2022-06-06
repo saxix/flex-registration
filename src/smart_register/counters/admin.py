@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from dateutil.relativedelta import relativedelta
+
 from admin_extra_buttons.decorators import button, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
@@ -44,18 +46,20 @@ class CounterAdmin(SmartModelAdmin):
     def data(self, request, registration):
         qs = Counter.objects.filter(registration_id=registration).order_by("day")
         param_month = request.GET.get("m", None)
-        values = {}
         total = 0
         if param_month:
-            day = datetime.strptime(param_month, "%Y-%m-%d")
+            date = datetime.strptime(param_month, "%Y-%m-%d")
         else:
-            day = timezone.now()
+            date = timezone.now()
 
-        qs = qs.filter(day__month=day.month)
-        last_day = last_day_of_month(day)
+        qs = qs.filter(day__month=date.month)
+        last_day = last_day_of_month(date)
         days = list(range(1, 1 + last_day.day))
         labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
-
+        values = {}
+        for d in range(1, last_day.day+1):
+            dt = date.replace(day=d).date()
+            values[dt] = {"total": 0, "pk": 0}
         for record in qs.all():
             values[record.day] = {"total": record.records, "pk": record.pk}
             total += record.records
@@ -65,8 +69,8 @@ class CounterAdmin(SmartModelAdmin):
 
         data = {
             "datapoints": qs.all().count(),
-            "label": day.strftime("%B %Y"),
-            "day": day.strftime("%Y-%m-%d"),
+            "label": date.strftime("%B %Y"),
+            "day": date.strftime("%Y-%m-%d"),
             "total": total,
             "labels": labels,
             "data": list(values.values()),

@@ -83,7 +83,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     class Meta:
         get_latest_by = "start"
-        unique_together = (("name", "locale"),)
         permissions = (("can_manage", "Can Manage"),)
 
     @property
