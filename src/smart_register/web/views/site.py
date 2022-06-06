@@ -51,6 +51,7 @@ class HomeView(TemplateView):
     def get(self, request, *args, **kwargs):
         res_etag = get_etag(
             request,
+            config.HOME_TEMPLATE,
             VERSION,
             get_language(),
             {True: "staff", False: ""}[request.user.is_staff],
