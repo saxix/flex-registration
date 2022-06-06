@@ -31,10 +31,10 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(SQL, REVERSE),
-        migrations.RunSQL(
-            'CREATE INDEX CONCURRENTLY "registration_record_unique_field_5edac906" '
-            'ON "registration_record" ("unique_field");'
-        ),
+        # migrations.RunSQL(
+        #     'CREATE INDEX CONCURRENTLY "registration_record_unique_field_5edac906" '
+        #     'ON "registration_record" ("unique_field");'
+        # ),
         migrations.RunSQL(
             'CREATE INDEX CONCURRENTLY "registration_record_unique_field_5edac906_like" '
             'ON "registration_record" ("unique_field" varchar_pattern_ops);'
