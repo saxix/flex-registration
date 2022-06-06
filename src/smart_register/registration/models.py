@@ -183,9 +183,9 @@ class Record(models.Model):
     fields = models.JSONField(null=True, blank=True)
     files = models.BinaryField(null=True, blank=True)
 
-    index1 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
-    index2 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
-    index3 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
+    # index1 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
+    # index2 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
+    # index3 = models.CharField(null=True, blank=True, max_length=255, db_index=True)
 
     class Meta:
         unique_together = ("registration", "unique_field")
