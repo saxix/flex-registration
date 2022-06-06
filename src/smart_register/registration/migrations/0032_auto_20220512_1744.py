@@ -7,7 +7,7 @@ BEGIN;
 ALTER TABLE "registration_record" ADD COLUMN IF NOT EXISTS  "fields" jsonb NULL;
 ALTER TABLE "registration_record" ADD COLUMN IF NOT EXISTS  "files" bytea NULL;
 ALTER TABLE "registration_record" ADD COLUMN IF NOT EXISTS  "unique_field" varchar(255) NULL;
-ALTER TABLE "registration_registration" ADD COLUMN "unique_field" varchar(255) NULL;
+ALTER TABLE "registration_registration" ADD COLUMN IF NOT EXISTS "unique_field" varchar(255) NULL;
 COMMIT;
 """
 
