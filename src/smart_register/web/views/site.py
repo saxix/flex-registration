@@ -11,6 +11,7 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
+from smart_register import VERSION
 from smart_register.core.utils import get_etag, get_qrcode
 from smart_register.registration.models import Registration
 
@@ -50,6 +51,8 @@ class HomeView(TemplateView):
     def get(self, request, *args, **kwargs):
         res_etag = get_etag(
             request,
+            config.HOME_TEMPLATE,
+            VERSION,
             get_language(),
             {True: "staff", False: ""}[request.user.is_staff],
         )
