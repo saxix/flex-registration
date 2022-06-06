@@ -56,7 +56,7 @@ DATA = {
 
 
 @register(Registration)
-class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
+class RegistrationAdmin(SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
@@ -107,7 +107,7 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
 
     @choice(change_list=False, label="Advanced", order=900)
     def advanced(self, button):
-        button.choices = [self.inspect, self.clone]
+        button.choices = [self.inspect, self.clone, self.export]
 
     @view(label="invalidate cache", html_attrs={"class": "aeb-warn"})
     def invalidate_cache(self, request, pk):
@@ -320,41 +320,6 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         return render(request, "admin/registration/registration/translation.html", ctx)
 
     @view()
-    def export(self, request, pk):
-        reg: Registration = self.get_object(request, pk)
-        buffers = {}
-        buffers["registration"] = io.StringIO()
-        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
-        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
-        validators = Validator.objects.values_list("pk", flat=True)
-        options = OptionSet.objects.values_list("pk", flat=True)
-        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
-        data = DATA.copy()
-        data["registration.Registration"] = [reg.pk]
-        data["core.FlexForm"] = [f.pk for f in forms]
-        data["core.FormSet"] = [f.pk for f in formsets]
-        data["core.Validator"] = validators
-        data["core.OptionSet"] = options
-        data["core.FlexFormField"] = fields
-        data["i18n.Message"] = Message.objects.values_list("pk", flat=True)
-
-        for k, f in data.items():
-            data[k] = io.StringIO()
-            call_command(
-                "dumpdata",
-                [k],
-                stdout=data[k],
-                primary_keys=",".join(map(str, f)),
-                use_natural_foreign_keys=True,
-                use_natural_primary_keys=True,
-            )
-        return JsonResponse(
-            {k: json.loads(v.getvalue()) for k, v in data.items()},
-            safe=False,
-            headers={"Content-Disposition": f"attachment; filename={reg.slug}.json"},
-        )
-
-    @view()
     def removekey(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Remove Encryption Key")
         if request.method == "POST":
@@ -392,47 +357,82 @@ class RegistrationAdmin(LoadDumpMixin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    # @button(label="import")
-    # def _import(self, request):
-    #     ctx = self.get_common_context(
-    #         request,
-    #         media=self.media,
-    #         title="Import",
-    #     )
-    #     if request.method == "POST":
-    #         form = ImportForm(request.POST, request.FILES)
-    #         if form.is_valid():
-    #             try:
-    #                 f = request.FILES["file"]
-    #                 buf = io.BytesIO()
-    #                 for chunk in f.chunks():
-    #                     buf.write(chunk)
-    #                 buf.seek(0)
-    #                 data = json.load(buf)
-    #                 out = io.StringIO()
-    #                 workdir = Path(".").absolute()
-    #                 with disable_concurrency():
-    #                     for k, v in data.items():
-    #                         kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
-    #
-    #                         with tempfile.NamedTemporaryFile(**kwargs) as fdst:
-    #                             fdst.write(json.dumps(v).encode())
-    #                         fixture = (workdir / fdst.name).absolute()
-    #                         call_command("loaddata", fixture, stdout=out, verbosity=3)
-    #                         fixture.unlink()
-    #                         out.write("------\n")
-    #                         # ctx['out'] = out.getvalue()
-    #                         out.seek(0)
-    #                         ctx["out"] = out.readlines()
-    #             except Exception as e:
-    #                 self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
-    #         else:
-    #             ctx["form"] = form
-    #     else:
-    #         form = ImportForm()
-    #         ctx["form"] = form
-    #     return render(request, "admin/registration/registration/import.html", ctx)
-    #
+    @view()
+    def export(self, request, pk):
+        reg: Registration = self.get_object(request, pk)
+        buffers = {}
+        buffers["registration"] = io.StringIO()
+        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
+        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
+        validators = Validator.objects.values_list("pk", flat=True)
+        options = OptionSet.objects.values_list("pk", flat=True)
+        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
+        data = DATA.copy()
+        data["registration.Registration"] = [reg.pk]
+        data["core.FlexForm"] = [f.pk for f in forms]
+        data["core.FormSet"] = [f.pk for f in formsets]
+        data["core.Validator"] = validators
+        data["core.OptionSet"] = options
+        data["core.FlexFormField"] = fields
+        data["i18n.Message"] = Message.objects.values_list("pk", flat=True)
+
+        for k, f in data.items():
+            data[k] = io.StringIO()
+            call_command(
+                "dumpdata",
+                [k],
+                stdout=data[k],
+                primary_keys=",".join(map(str, f)),
+                use_natural_foreign_keys=True,
+                use_natural_primary_keys=True,
+            )
+        return JsonResponse(
+            {k: json.loads(v.getvalue()) for k, v in data.items()},
+            safe=False,
+            headers={"Content-Disposition": f"attachment; filename={reg.slug}.json"},
+        )
+
+    @button(label="import")
+    def _import(self, request):
+        ctx = self.get_common_context(
+            request,
+            media=self.media,
+            title="Import",
+        )
+        if request.method == "POST":
+            form = ImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                try:
+                    f = request.FILES["file"]
+                    buf = io.BytesIO()
+                    for chunk in f.chunks():
+                        buf.write(chunk)
+                    buf.seek(0)
+                    data = json.load(buf)
+                    out = io.StringIO()
+                    workdir = Path(".").absolute()
+                    with disable_concurrency():
+                        for k, v in data.items():
+                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
+
+                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
+                                fdst.write(json.dumps(v).encode())
+                            fixture = (workdir / fdst.name).absolute()
+                            call_command("loaddata", fixture, stdout=out, verbosity=3)
+                            fixture.unlink()
+                            out.write("------\n")
+                            # ctx['out'] = out.getvalue()
+                            out.seek(0)
+                            ctx["out"] = out.readlines()
+                except Exception as e:
+                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
+            else:
+                ctx["form"] = form
+        else:
+            form = ImportForm()
+            ctx["form"] = form
+        return render(request, "admin/registration/registration/import.html", ctx)
+
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Test")
