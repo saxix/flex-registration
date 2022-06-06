@@ -44,6 +44,9 @@ class PageView(TemplateView):
 class HomeView(TemplateView):
     template_name = "ua.html"
 
+    def get_template_names(self):
+        return [config.HOME_TEMPLATE, self.template_name]
+
     def get(self, request, *args, **kwargs):
         res_etag = get_etag(
             request,
