@@ -1,8 +1,6 @@
 import logging
 from datetime import datetime
 
-from dateutil.relativedelta import relativedelta
-
 from admin_extra_buttons.decorators import button, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
@@ -57,7 +55,7 @@ class CounterAdmin(SmartModelAdmin):
         days = list(range(1, 1 + last_day.day))
         labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
         values = {}
-        for d in range(1, last_day.day+1):
+        for d in range(1, last_day.day + 1):
             dt = date.replace(day=d).date()
             values[dt] = {"total": 0, "pk": 0}
         for record in qs.all():

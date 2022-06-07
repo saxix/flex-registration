@@ -34,7 +34,6 @@ from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.truncate import truncate_model_table
 
-from ..admin.mixin import LoadDumpMixin
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
 from ..core.utils import clone_model, is_root, last_day_of_month, namify
 from ..i18n.forms import ImportForm

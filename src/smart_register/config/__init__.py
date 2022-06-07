@@ -1,5 +1,5 @@
 import uuid
-from urllib.parse import urlparse, urlencode
+from urllib.parse import urlencode, urlparse
 
 from environ import Env
 
@@ -97,5 +97,6 @@ class SmartEnv(Env):
                 backend=backend
             )
         return super().cache_url(var, default, backend)
+
 
 env = SmartEnv(**DEFAULTS)

@@ -207,11 +207,11 @@ class RegisterView(FormView):
 
         data["counters"] = form.get_counters(data)
         if form.indexes['1']:
-            data["index1"] = data[ form.indexes['1'] ]
+            data["index1"] = data[form.indexes['1']]
         if form.indexes['2']:
-            data["index2"] = data[ form.indexes['2'] ]
+            data["index2"] = data[form.indexes['2']]
         if form.indexes['3']:
-            data["index3"] = data[ form.indexes['3'] ]
+            data["index3"] = data[form.indexes['3']]
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)

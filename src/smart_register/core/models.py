@@ -2,7 +2,6 @@ import json
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
-from unittest.mock import Mock
 
 import jsonpickle
 from admin_ordering.models import OrderableModel

@@ -6,8 +6,6 @@ from pathlib import Path
 
 from django_regex.utils import RegexList
 
-import smart_register
-
 from . import env
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -277,11 +275,10 @@ STATICFILES_DIRS = [
 
 # -------- Added Settings
 ADMINS = env("ADMINS")
-AUTHENTICATION_BACKENDS = [
-                              "django.contrib.auth.backends.ModelBackend",
-                              "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
-                              "smart_register.security.backend.SmartBackend",
-                          ] + env("AUTHENTICATION_BACKENDS")
+AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend",
+                           "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+                           "smart_register.security.backend.SmartBackend",
+                           ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
@@ -363,12 +360,11 @@ DATE_INPUT_FORMATS = [
 
 MAX_OBSERVED = 1
 
-CORS_ALLOWED_ORIGINS = [
-                           "https://excubo.unicef.io",
-                           "http://localhost:8000",
-                           "https://browser.sentry-cdn.com",
-                           "https://cdnjs.cloudflare.com",
-                       ] + env("CORS_ALLOWED_ORIGINS")
+CORS_ALLOWED_ORIGINS = ["https://excubo.unicef.io",
+                        "http://localhost:8000",
+                        "https://browser.sentry-cdn.com",
+                        "https://cdnjs.cloudflare.com",
+                        ] + env("CORS_ALLOWED_ORIGINS")
 
 CONSTANCE_ADDITIONAL_FIELDS = {
     "html_minify_select": [
