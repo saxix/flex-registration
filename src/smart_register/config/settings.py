@@ -170,12 +170,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
-# try:
-#     if REDIS_CONNSTR := env('REDIS_CONNSTR'):
-#         os.environ['REDIS_CACHE'] = f'redisraw://{REDIS_CONNSTR}'
-#         PP = env.cache_url('REDIS_CACHE')
-# except Exception as e:
-#     logging.exception(e)
+try:
+    if REDIS_CONNSTR := env('REDIS_CONNSTR'):
+        os.environ['REDIS_CACHE'] = f'redisraw://{REDIS_CONNSTR}'
+        PP = env.cache_url('REDIS_CACHE')
+except Exception as e:
+    logging.exception(e)
 
 CACHES = {
     "default": env.cache_url("CACHE_DEFAULT"),
