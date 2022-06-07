@@ -25,3 +25,8 @@ services:
       - db:/var/lib/postgresql/data
     env_file:
       - .env
+  redis:
+    image: redis:4.0.11-alpine3.8
+    restart: unless-stopped
+    expose:
+      - "6379"
