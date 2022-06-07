@@ -6,6 +6,8 @@ from pathlib import Path
 
 from django_regex.utils import RegexList
 
+import smart_register
+
 from . import env
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,28 +18,6 @@ mimetypes.add_type("image/svg+xml", ".svgz", True)
 PACKAGE_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = PACKAGE_DIR.parent
 DEV_DIR = SRC_DIR.parent
-
-SENTRY_DSN = env("SENTRY_DSN")
-if SENTRY_DSN:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    from sentry_sdk.integrations.logging import LoggingIntegration
-
-    sentry_logging = LoggingIntegration(
-        level=logging.INFO,  # Capture info and above as breadcrumbs
-        event_level=logging.ERROR,  # Send errors as events
-    )
-
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        environment=os.environ.get('WEBSITE_SLOT_NAME'),
-        integrations=[
-            DjangoIntegration(transaction_style="url"),
-            sentry_logging,
-        ],
-        release=env("VERSION"),
-        send_default_pii=True,
-    )
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
@@ -189,12 +169,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
-try:
-    if REDIS_CONNSTR := env('REDIS_CONNSTR'):
-        os.environ['REDIS_CACHE'] = f'redisraw://{REDIS_CONNSTR}'
-        PP = env.cache_url('REDIS_CACHE')
-except Exception as e:
-    logging.exception(e)
+
+# try:
+#     if REDIS_CONNSTR := env('REDIS_CONNSTR'):
+#         os.environ['REDIS_CACHE'] = f'redisraw://{REDIS_CONNSTR}'
+#         PP = env.cache_url('REDIS_CACHE')
+# except Exception as e:
+#     logging.exception(e)
 
 CACHES = {
     "default": env.cache_url("CACHE_DEFAULT"),
@@ -275,10 +256,11 @@ STATICFILES_DIRS = [
 
 # -------- Added Settings
 ADMINS = env("ADMINS")
-AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend",
-                           "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
-                           "smart_register.security.backend.SmartBackend",
-                           ] + env("AUTHENTICATION_BACKENDS")
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "smart_register.security.backend.SmartBackend",
+] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
@@ -359,12 +341,33 @@ DATE_INPUT_FORMATS = [
 ]
 
 MAX_OBSERVED = 1
+SENTRY_DSN = env("SENTRY_DSN")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
 
-CORS_ALLOWED_ORIGINS = ["https://excubo.unicef.io",
-                        "http://localhost:8000",
-                        "https://browser.sentry-cdn.com",
-                        "https://cdnjs.cloudflare.com",
-                        ] + env("CORS_ALLOWED_ORIGINS")
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,  # Capture info and above as breadcrumbs
+        event_level=logging.ERROR,  # Send errors as events
+    )
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment="production",
+        integrations=[
+            DjangoIntegration(transaction_style="url"),
+            sentry_logging,
+        ],
+        release=smart_register.VERSION,
+        send_default_pii=True,
+    )
+CORS_ALLOWED_ORIGINS = [
+    "https://excubo.unicef.io",
+    "http://localhost:8000",
+    "https://browser.sentry-cdn.com",
+    "https://cdnjs.cloudflare.com",
+] + env("CORS_ALLOWED_ORIGINS")
 
 CONSTANCE_ADDITIONAL_FIELDS = {
     "html_minify_select": [
@@ -373,7 +376,7 @@ CONSTANCE_ADDITIONAL_FIELDS = {
     ],
 }
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
-# CONSTANCE_DATABASE_CACHE_BACKEND = env("CONSTANCE_DATABASE_CACHE_BACKEND")
+CONSTANCE_DATABASE_CACHE_BACKEND = env("CONSTANCE_DATABASE_CACHE_BACKEND")
 CONSTANCE_CONFIG = OrderedDict(
     {
         "CACHE_FORMS": (False, "", bool),
