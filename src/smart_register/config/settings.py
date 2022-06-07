@@ -172,8 +172,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 try:
     if REDIS_CONNSTR := env('REDIS_CONNSTR'):
-        os.environ['REDIS_CACHE'] = f'redisraw://{REDIS_CONNSTR}'
-        PP = env.cache_url('REDIS_CACHE')
+        os.environ['CACHE_DEFAULT'] = f'redisraw://{REDIS_CONNSTR}'
 except Exception as e:
     logging.exception(e)
 
