@@ -19,6 +19,28 @@ PACKAGE_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = PACKAGE_DIR.parent
 DEV_DIR = SRC_DIR.parent
 
+SENTRY_DSN = env("SENTRY_DSN")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,  # Capture info and above as breadcrumbs
+        event_level=logging.ERROR,  # Send errors as events
+    )
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=os.environ.get('WEBSITE_SLOT_NAME'),
+        integrations=[
+            DjangoIntegration(transaction_style="url"),
+            sentry_logging,
+        ],
+        release=env("VERSION"),
+        send_default_pii=True,
+    )
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
 FERNET_KEY = env("FERNET_KEY")
@@ -334,27 +356,7 @@ DATE_INPUT_FORMATS = [
 ]
 
 MAX_OBSERVED = 1
-SENTRY_DSN = env("SENTRY_DSN")
-if SENTRY_DSN:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    from sentry_sdk.integrations.logging import LoggingIntegration
 
-    sentry_logging = LoggingIntegration(
-        level=logging.INFO,  # Capture info and above as breadcrumbs
-        event_level=logging.ERROR,  # Send errors as events
-    )
-
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        environment="production",
-        integrations=[
-            DjangoIntegration(transaction_style="url"),
-            sentry_logging,
-        ],
-        release=smart_register.VERSION,
-        send_default_pii=True,
-    )
 CORS_ALLOWED_ORIGINS = [
     "https://excubo.unicef.io",
     "http://localhost:8000",
