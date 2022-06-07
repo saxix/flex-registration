@@ -91,23 +91,11 @@ class SmartEnv(Env):
             credentials = [config.pop('user', ''), config.pop('password', '')]
             if credentials[0] or credentials[1]:
                 auth = f"{':'.join(credentials)}@"
-
             new_url = f"{scheme}://{auth}{host}/?{urlencode(config)}"
-            # FIXME: remove me (print)
-            print(111, "__init__.py:92 (cache_url)", 1111, new_url)
             return self.cache_url_config(
                 urlparse(new_url),
                 backend=backend
             )
         return super().cache_url(var, default, backend)
-
-    # @classmethod
-    # def cache_url_config(cls, url, backend=None):
-    #     if url.scheme in ['redisraw']:
-    #         # FIXME: remove me (print)
-    #         print(111, "__init__.py:82 (cache_url_config)", url)
-    #         host, *parts = url.split(",")
-    #         return super().cache_url_config(url, backend)
-
 
 env = SmartEnv(**DEFAULTS)

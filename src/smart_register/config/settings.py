@@ -191,6 +191,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
+try:
+    if REDIS_CONNSTR := env('REDIS_CONNSTR'):
+        os.environ['REDIS_CACHE'] = f'redisraw://{REDIS_CONNSTR}'
+        PP = env.cache_url('REDIS_CACHE')
+except Exception as e:
+    logging.exception(e)
 
 CACHES = {
     "default": env.cache_url("CACHE_DEFAULT"),
@@ -272,10 +278,10 @@ STATICFILES_DIRS = [
 # -------- Added Settings
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
-    "smart_register.security.backend.SmartBackend",
-] + env("AUTHENTICATION_BACKENDS")
+                              "django.contrib.auth.backends.ModelBackend",
+                              "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+                              "smart_register.security.backend.SmartBackend",
+                          ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
@@ -358,11 +364,11 @@ DATE_INPUT_FORMATS = [
 MAX_OBSERVED = 1
 
 CORS_ALLOWED_ORIGINS = [
-    "https://excubo.unicef.io",
-    "http://localhost:8000",
-    "https://browser.sentry-cdn.com",
-    "https://cdnjs.cloudflare.com",
-] + env("CORS_ALLOWED_ORIGINS")
+                           "https://excubo.unicef.io",
+                           "http://localhost:8000",
+                           "https://browser.sentry-cdn.com",
+                           "https://cdnjs.cloudflare.com",
+                       ] + env("CORS_ALLOWED_ORIGINS")
 
 CONSTANCE_ADDITIONAL_FIELDS = {
     "html_minify_select": [
