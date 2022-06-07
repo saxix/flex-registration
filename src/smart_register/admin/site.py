@@ -140,7 +140,11 @@ class AuroraAdminSite(SmartAdminSite):
                 try:
                     r = get_redis_connection("default")
                     stdout = r.execute_command(form.cleaned_data["command"])
-                    context["stdout"] = stdout
+                    if hasattr(stdout, '__iter__'):
+                        context["stdout"] = map(str, stdout)
+                    else:
+                        context["stdout"] = [str(stdout)]
+
                 except ResponseError as e:
                     messages.add_message(request, messages.ERROR, str(e))
                 except Exception as e:
