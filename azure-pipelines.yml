@@ -89,6 +89,8 @@ stages:
               imageName: $(Docker.registry).azurecr.io/$(Docker.repository):$(Build.SourceVersion)
               appSettings: "-DJANGO_ADMIN_URL $(DJANGO_ADMIN_URL)
                             -DJANGO_ADMIN_TITLE $(DJANGO_ADMIN_TITLE)
+                            -CACHE_DEFAULT $(CACHE_DEFAULT)
+                            -CONSTANCE_DATABASE_CACHE_BACKEND $(CONSTANCE_DATABASE_CACHE_BACKEND)
                             -ALLOWED_HOSTS $(ALLOWED_HOSTS)
                             -SECRET_KEY $(SECRET_KEY)
                             -SENTRY_DSN $(SENTRY_DSN)

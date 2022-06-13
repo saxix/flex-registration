@@ -1,6 +1,5 @@
 from django import forms
 
-from .mixins import SmartFieldMixin
 from .widgets.mixins import TailWindMixin
 
 

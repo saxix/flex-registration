@@ -2,7 +2,6 @@ import json
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
-from unittest.mock import Mock
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
@@ -66,9 +65,8 @@ dateutil = {today: TODAY,
             years2: new Date(new Date().setDate(TODAY.getDate() - (365*2))),
 
 };
-_ = {is_child: function(d) { return d && Date.parse(d) < dateutil.years18 ? true: false},
+_ = {is_child: function(d) { return d && Date.parse(d) > dateutil.years18 ? true: false},
      is_baby: function(d) { return d && Date.parse(d) > dateutil.years2 ? true: false},
-     is_adult: function(d) { return d  && Date.parse(d) > dateutil.years18 ? true: false},
      is_future: function(d) { return d  && Date.parse(d) > dateutil.Validatortoday ? true: false},
 };
 _.is_adult = function(d) { return !_.is_child(d)};
