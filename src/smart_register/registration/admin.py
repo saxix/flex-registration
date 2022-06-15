@@ -486,7 +486,7 @@ class RecordAdmin(SmartModelAdmin):
     date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored", "unique_field")
-    readonly_fields = ("registration", "timestamp", "remote_ip", "id")
+    readonly_fields = ("registration", "timestamp", "remote_ip", "id", "fields", "counters")
     autocomplete_fields = ("registration",)
     list_filter = (("registration", AutoCompleteFilter),
                    HourFilter,
