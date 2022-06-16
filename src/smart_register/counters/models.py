@@ -25,13 +25,14 @@ class CounterManager(models.Manager):
         for registration in selection:
             result["registration"] += 1
             result["details"][registration.slug] = {"range": [],
-                                                    "days": []}
+                                                    "days": 0}
             latest = Counter.objects.filter(registration=registration).order_by("-day").first()
             if latest:
                 latest = latest.day + timedelta(days=1)
             else:
                 latest = datetime.min
-            result["details"][registration.slug]["range"] = (latest, yesterday)
+            result["details"][registration.slug]["range"] = (latest.strftime("%Y-%B-%d"),
+                                                             yesterday.strftime("%Y-%B-%d"))
             qs = Record.objects.filter(registration=registration, timestamp__range=(latest, yesterday))
             qs = (
                 qs.annotate(hour=ExtractHour("timestamp"), day=TruncDay("timestamp"))
@@ -56,7 +57,7 @@ class CounterManager(models.Manager):
                         "details": {"hours": values["extra"]},
                     },
                 )
-            return result
+        return result
 
 
 class Counter(models.Model):
