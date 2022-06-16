@@ -60,13 +60,15 @@ class Validator(NaturalKeyModel):
     LIB = mark_safe(
         """
 TODAY = new Date();
-dateutil = {today: TODAY,
-            years18: new Date(new Date().setDate(TODAY.getDate() - (365*18))),
-            years2: new Date(new Date().setDate(TODAY.getDate() - (365*2))),
+dateutil = {today: TODAY};
 
-};
-_ = {is_child: function(d) { return d && Date.parse(d) > dateutil.years18 ? true: false},
-     is_baby: function(d) { return d && Date.parse(d) > dateutil.years2 ? true: false},
+function getAge(birthDate){
+    return Math.floor((new Date() - new Date(birthDate).getTime()) / 3.15576e+10);
+}
+
+
+_ = {is_child: function(d) { return d && getAge(birthDate) < 18 ? true: false},
+     is_baby: function(d) { return d && getAge(birthDate) <= 2 ? true: false},
      is_future: function(d) { return d  && Date.parse(d) > dateutil.Validatortoday ? true: false},
 };
 _.is_adult = function(d) { return !_.is_child(d)};
@@ -95,6 +97,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
         default=False,
         help_text="Debug/Testing purposes: trace validator invocation on Sentry.",
     )
+    count_errors = models.BooleanField(default=False, help_text="Count failures")
     active = models.BooleanField(default=False, blank=True, help_text="Enable/Disable validator.")
     draft = models.BooleanField(
         default=False, blank=True, help_text="Testing purposes: draft validator are enabled only for staff users."
@@ -129,7 +132,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-error", error)
         cache.set(f"validator-{state.request.user.pk}-{self.pk}-payload", self.jspickle(value))
 
-    def validate(self, value):
+    def validate(self, value, registration=None):
         from py_mini_racer import MiniRacer
 
         if self.active:
@@ -164,6 +167,12 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 if self.trace:
                     logger.exception(e)
                     self.monitor(self.STATUS_ERROR, value, e)
+                if self.count_errors:
+                    import sentry_sdk
+                    with sentry_sdk.push_scope() as scope:
+                        scope.set_tag("validator", self.slug)
+                        scope.set_extra("registration", registration)
+                        sentry_sdk.capture_message(f'{self.slug}', level="info")
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)

@@ -73,6 +73,10 @@ class BinaryFile:
 
 @method_decorator(csrf_exempt, name="dispatch")
 class RegisterRouter(FormView):
+
+    def get_form(self, form_class=None):
+        return None
+
     def post(self, request, *args, **kwargs):
         r = Registration.objects.only("slug", "version", "locale").get(slug=request.POST["slug"])
         args = [r.slug, r.version]
@@ -157,7 +161,7 @@ class RegisterView(FormView):
     def validate(self, cleaned_data):
         if self.registration.validator:
             try:
-                self.registration.validator.validate(cleaned_data)
+                self.registration.validator.validate(cleaned_data, registration=self)
             except ValidationError as e:
                 self.errors.append(e)
                 return False

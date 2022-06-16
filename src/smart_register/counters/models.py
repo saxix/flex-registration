@@ -15,6 +15,7 @@ class CounterManager(models.Manager):
             "registration": 0,
             "records": 0,
             "days": 0,
+            "details": {}
         }
         today = datetime.today()
         yesterday = datetime.combine(today - timedelta(days=1), datetime.min.time())
@@ -23,12 +24,14 @@ class CounterManager(models.Manager):
             selection = selection.filter(id__in=registrations)
         for registration in selection:
             result["registration"] += 1
+            result["details"][registration.slug] = {"range": [],
+                                                    "days": []}
             latest = Counter.objects.filter(registration=registration).order_by("-day").first()
             if latest:
                 latest = latest.day + timedelta(days=1)
             else:
                 latest = datetime.min
-
+            result["details"][registration.slug]["range"] = (latest, yesterday)
             qs = Record.objects.filter(registration=registration, timestamp__range=(latest, yesterday))
             qs = (
                 qs.annotate(hour=ExtractHour("timestamp"), day=TruncDay("timestamp"))
@@ -44,6 +47,7 @@ class CounterManager(models.Manager):
 
             for day, values in counter.items():
                 result["records"] += values["records"]
+                result["details"][registration.slug]["days"].append(day)
                 Counter.objects.get_or_create(
                     registration=registration,
                     day=day,
