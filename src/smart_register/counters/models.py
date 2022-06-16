@@ -48,7 +48,7 @@ class CounterManager(models.Manager):
 
             for day, values in counter.items():
                 result["records"] += values["records"]
-                result["details"][registration.slug]["days"].append(day)
+                result["details"][registration.slug]["days"] += 1
                 Counter.objects.get_or_create(
                     registration=registration,
                     day=day,
