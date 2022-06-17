@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytz
 from admin_extra_buttons.decorators import button, choice, link, view
-from admin_extra_buttons.mixins import confirm_action
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
@@ -17,9 +16,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
-from django.db import OperationalError
 from django.db.models import JSONField, Q
 from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
@@ -27,12 +24,10 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils import timezone
-from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
-from smart_admin.truncate import truncate_model_table
 
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
 from ..core.utils import clone_model, is_root, last_day_of_month, namify
@@ -507,6 +502,24 @@ class RecordAdmin(SmartModelAdmin):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
 
+    @button()
+    def fix_tax_id(self, request):
+        results = {"updated": []}
+        for record in Record.objects.filter(unique_field__isnull=True,
+                                            timestamp__gt="2022-06-15"):
+            try:
+                for individual in record.fields['individuals']:
+                    if individual['role_i_c'] == 'y':
+                        record.unique_field = individual['tax_id_no_i_c']
+                        record.save()
+                        break
+                results["updated"].append(record.pk)
+
+            except Exception as e:
+                results[record.pk] = str(e)
+
+        return JsonResponse(results)
+
     @link(html_attrs={"class": "aeb-warn "}, change_form=True)
     def receipt(self, button):
         try:
@@ -517,42 +530,42 @@ class RecordAdmin(SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @button()
-    def truncate(self, request):
-        if request.method == "POST":
-            from django.contrib.admin.models import DELETION, LogEntry
-
-            with atomic():
-                LogEntry.objects.log_action(
-                    user_id=request.user.pk,
-                    content_type_id=ContentType.objects.get_for_model(self.model).pk,
-                    object_id=None,
-                    object_repr=f"truncate table {self.model._meta.verbose_name}",
-                    action_flag=DELETION,
-                    change_message="truncate table",
-                )
-
-                try:
-                    truncate_model_table(self.model)
-                    return HttpResponseRedirect("..")
-                except OperationalError:
-                    self.get_queryset(request).delete()
-        else:
-            return confirm_action(
-                self,
-                request,
-                self.truncate,
-                mark_safe(
-                    """
-<h1 class="color-red"><b>This is a low level system feature</b></h1>
-<h1 class="color-red"><b>Continuing irreversibly delete all table content</b></h1>
-
-                                       """
-                ),
-                "Successfully executed",
-                title="Truncate table",
-                extra_context={"original": None, "add": False},
-            )
+    #     @button()
+    #     def truncate(self, request):
+    #         if request.method == "POST":
+    #             from django.contrib.admin.models import DELETION, LogEntry
+    #
+    #             with atomic():
+    #                 LogEntry.objects.log_action(
+    #                     user_id=request.user.pk,
+    #                     content_type_id=ContentType.objects.get_for_model(self.model).pk,
+    #                     object_id=None,
+    #                     object_repr=f"truncate table {self.model._meta.verbose_name}",
+    #                     action_flag=DELETION,
+    #                     change_message="truncate table",
+    #                 )
+    #
+    #                 try:
+    #                     truncate_model_table(self.model)
+    #                     return HttpResponseRedirect("..")
+    #                 except OperationalError:
+    #                     self.get_queryset(request).delete()
+    #         else:
+    #             return confirm_action(
+    #                 self,
+    #                 request,
+    #                 self.truncate,
+    #                 mark_safe(
+    #                     """
+    # <h1 class="color-red"><b>This is a low level system feature</b></h1>
+    # <h1 class="color-red"><b>Continuing irreversibly delete all table content</b></h1>
+    #
+    #                                        """
+    #                 ),
+    #                 "Successfully executed",
+    #                 title="Truncate table",
+    #                 extra_context={"original": None, "add": False},
+    #             )
 
     @button(label="Preview", permission=is_root)
     def preview(self, request, pk):
