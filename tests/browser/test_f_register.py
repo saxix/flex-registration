@@ -242,3 +242,45 @@ def test_birth_date_validation2(live_server, selenium, language, url):
         error_message = gettext('Date Of Birth seems too old')
         assert gettext('please fix the errors below') in page
         assert error_message in page
+
+
+@pytest.mark.selenium
+def test_only_one_head(live_server, selenium, language, url):
+    # url = '/en-us/register/test1/'
+    selenium.get(f"{live_server.url}{url}")
+
+    selenium.find_by_css("input[name=household-0-size_h_c").send_keys("2")
+
+    selenium.wait_for(By.CSS_SELECTOR, "label[for=id_household-0-residence_status_h_c_0]").click()
+    set_locations(selenium, language)
+    individual(selenium, 0, birth_date="2000-01-01", tax_id="1234567890")
+
+    selenium.find_by_css('.formset.formset-individuals a.formset-add-button').click()
+    individual(selenium, 1, birth_date="2000-01-01", tax_id="1234567890")
+
+    submit(selenium)
+    page = selenium.page_source
+    with translation.override(language):
+        error_message = gettext('Only one member can be set as Head Of Household')
+        assert error_message in page
+
+
+@pytest.mark.selenium
+def test_one_collector(live_server, selenium, language, url):
+    # url = '/en-us/register/test1/'
+    selenium.get(f"{live_server.url}{url}")
+
+    selenium.find_by_css("input[name=household-0-size_h_c").send_keys("2")
+
+    selenium.wait_for(By.CSS_SELECTOR, "label[for=id_household-0-residence_status_h_c_0]").click()
+    set_locations(selenium, language)
+    individual(selenium, 0, birth_date="2000-01-01", tax_id="1234567890", role="head")
+
+    submit(selenium)
+    page = selenium.page_source
+    with translation.override(language):
+        error_message = gettext("At least one member must be set as 'Main Recipient'")
+        assert error_message in page
+
+
+
