@@ -67,9 +67,9 @@ function getAge(birthDate){
 }
 
 
-_ = {is_child: function(d) { return d && getAge(birthDate) < 18 ? true: false},
-     is_baby: function(d) { return d && getAge(birthDate) <= 2 ? true: false},
-     is_future: function(d) { return d  && Date.parse(d) > dateutil.Validatortoday ? true: false},
+_ = {is_child: function(d) { return d && getAge(d) < 18 ? true: false},
+     is_baby: function(d) { return d && getAge(d) <= 2 ? true: false},
+     is_future: function(d) { return d  && Date.parse(d) > dateutil.today ? true: false},
 };
 _.is_adult = function(d) { return !_.is_child(d)};
 
@@ -164,15 +164,18 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 elif isinstance(ret, bool) and not ret:
                     raise ValidationError(_("Please insert a valid value"))
             except ValidationError as e:
+                import sentry_sdk
                 if self.trace:
-                    logger.exception(e)
-                    self.monitor(self.STATUS_ERROR, value, e)
-                if self.count_errors:
-                    import sentry_sdk
                     with sentry_sdk.push_scope() as scope:
-                        scope.set_tag("validator", self.slug)
+                        scope.set_tag("validator", self.name)
                         scope.set_extra("registration", registration)
-                        sentry_sdk.capture_message(f'{self.slug}', level="info")
+                        logger.exception(e)
+                    self.monitor(self.STATUS_ERROR, value, e)
+                elif self.count_errors:
+                    with sentry_sdk.push_scope() as scope:
+                        scope.set_tag("validator", self.name)
+                        scope.set_extra("registration", registration)
+                        sentry_sdk.capture_message(f'{self.name}', level="info")
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)

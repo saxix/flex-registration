@@ -56,6 +56,10 @@ class Cache:
     def __init__(self):
         self.locales = {}
 
+    def reset(self):
+        for __, locale in self.locales.items():
+            locale.reset()
+
     def activate(self, locale):
         e = self[locale]
         e.load_all()

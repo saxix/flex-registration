@@ -99,8 +99,8 @@ if (!Array.prototype.includes) {
             return deferred.promise();
         };
         var UploadHandler = function ($field) {
-            if (typeof window.gettext === undefined) {
-                var gettext = function (str) {
+            if (typeof window.gettext === "undefined") {
+                gettext = function (str) {
                     return str;
                 };
             }
