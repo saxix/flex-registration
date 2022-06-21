@@ -489,6 +489,7 @@ class RecordAdmin(SmartModelAdmin):
                    "ignored")
     change_form_template = None
     change_list_template = None
+    actions = ['fix_tax_id']
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -502,23 +503,27 @@ class RecordAdmin(SmartModelAdmin):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
 
-    @button()
-    def fix_tax_id(self, request):
-        results = {"updated": []}
-        for record in Record.objects.filter(unique_field__isnull=True,
-                                            timestamp__gt="2022-06-15"):
+    def fix_tax_id(self, request, queryset):
+        results = {"updated": [], "processed": []}
+        for record in queryset:
             try:
                 for individual in record.fields['individuals']:
                     if individual['role_i_c'] == 'y':
                         record.unique_field = individual['tax_id_no_i_c']
                         record.save()
+                        results["updated"].append(record.pk)
                         break
-                results["updated"].append(record.pk)
+                results["processed"].append(record.pk)
 
             except Exception as e:
-                results[record.pk] = str(e)
-
+                results[record.pk] = f"{e.__class__.__name__}: {str(e)}"
         return JsonResponse(results)
+
+    @button(label="Fix TaxID")
+    def _fix_tax_id(self, request):
+        queryset = Record.objects.filter(unique_field__isnull=True,
+                                         timestamp__gt="2022-06-15")
+        return self.fix_tax_id(request, queryset)
 
     @link(html_attrs={"class": "aeb-warn "}, change_form=True)
     def receipt(self, button):
