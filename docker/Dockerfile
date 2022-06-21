@@ -58,6 +58,7 @@ RUN poetry config virtualenvs.create false \
 
 EXPOSE 8000
 
+ADD ./docker/conf/nginx/* /var/nginx/
 ADD ./docker/conf/* /conf/
 ADD ./docker/bin/* /usr/local/bin/
 

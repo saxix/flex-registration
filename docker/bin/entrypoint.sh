@@ -8,7 +8,7 @@ export REDIS_MAXMEMORY_POLICY="${REDIS_MAXMEMORY_POLICY:-volatile-ttl}"
 
 export DOLLAR='$'
 
-mkdir -p /var/run ${NGINX_CACHE_DIR} ${MEDIA_ROOT} ${STATIC_ROOT}
+mkdir -p /var/run /var/nginx ${NGINX_CACHE_DIR} ${MEDIA_ROOT} ${STATIC_ROOT}
 echo "created support dirs /var/run ${MEDIA_ROOT} ${STATIC_ROOT}"
 
 
