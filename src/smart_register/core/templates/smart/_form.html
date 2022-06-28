@@ -19,10 +19,10 @@
         {% endif %}
         {% if registration.intro %}
             <div class="py-6 px-6 my-6 bg-white shadow-md rounded">
-                <div class="intro itrans">
+                <div class="intro itrans" data-msgid="{{ registration.intro }}">
 {#                    {% if can_translate %}#}
 {#                        {% include "i18n/_staff_edit_i18n.html" with original=registration.intro %}{% endif %}#}
-{#                    {% trans registration.intro as intro %}#}
+                    {% trans registration.intro as intro %}
                     {{ intro|default_if_none:""|markdown }}
                 </div>
             </div>

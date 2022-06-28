@@ -86,6 +86,10 @@ class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
             return ", ".join(obj.flexformfield_set.values_list("name", flat=True))
         elif obj.target == Validator.FORMSET:
             return ", ".join(obj.formset_set.values_list("name", flat=True))
+        elif obj.target == Validator.MODULE:
+            return ", ".join(obj.validator_for.values_list("name", flat=True))
+        elif obj.target == Validator.SCRIPT:
+            return ", ".join(obj.script_for.values_list("name", flat=True))
 
     @button()
     def test(self, request, pk):

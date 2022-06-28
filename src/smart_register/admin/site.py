@@ -20,6 +20,7 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import path, reverse, reverse_lazy
 from django.utils.functional import lazy
+from django.views.decorators.cache import cache_page
 from django_redis import get_redis_connection
 from redis import ResponseError
 from smart_admin.site import SmartAdminSite
@@ -234,6 +235,7 @@ class AuroraAdminSite(SmartAdminSite):
         else:
             raise Exception("Raw Exception")
 
+    @cache_page(86400)
     def admin_sysinfo(self, request):
         from django_sysinfo.api import get_sysinfo
 

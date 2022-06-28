@@ -110,6 +110,7 @@ def test_register_simple(django_app, simple_registration):
         "total": "2000",
     }
 
+
 @pytest.mark.django_db
 def test_register_indexed(django_app, simple_registration):
     url = reverse("register", args=[simple_registration.slug, simple_registration.version])

@@ -65,7 +65,7 @@ http {
           ssi on;
           internal;
           auth_basic off;
-          root /conf/nginx;
+          root /var/nginx/;
         }
         location /error/502  {
             return 502;

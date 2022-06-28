@@ -99,6 +99,11 @@ if (!Array.prototype.includes) {
             return deferred.promise();
         };
         var UploadHandler = function ($field) {
+            if (typeof window.gettext === "undefined") {
+                gettext = function (str) {
+                    return str;
+                };
+            }
             var $error = $field.parents(".field-container").find(".size-error");
             var sizeLimit = $field.data("max-size") || M * 10;
             var sizeLimitFormat = gettext("File too big. Max %s ");

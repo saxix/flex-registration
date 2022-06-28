@@ -28,6 +28,18 @@ def error_404(request, exception):
     return TemplateResponse(request, "404.html", status=404, headers={"Session-Token": settings.DJANGO_ADMIN_URL})
 
 
+def get_active_registrations():
+    selection = config.HOME_PAGE_REGISTRATIONS.split(";")
+    registrations = []
+    for slug in selection:
+        if slug.strip():
+            try:
+                registrations.append(Registration.objects.get(active=True, slug=slug.strip()))
+            except Exception as e:
+                logger.exception(e)
+    return registrations
+
+
 class PageView(TemplateView):
     template_name = "index.html"
 
@@ -37,7 +49,9 @@ class PageView(TemplateView):
     def get_context_data(self, **kwargs):
         from smart_register.i18n.gettext import gettext as _
 
-        return super().get_context_data(title="Title", title2=_("Title2"), **kwargs)
+        return super().get_context_data(title="Title",
+                                        registrations=get_active_registrations(),
+                                        title2=_("Title2"), **kwargs)
 
 
 # @method_decorator(condition(etag_func=get_etag, last_modified_func=None), name="dispatch")
@@ -63,15 +77,7 @@ class HomeView(TemplateView):
         return response
 
     def get_context_data(self, **kwargs):
-        selection = config.HOME_PAGE_REGISTRATIONS.split(";")
-        registrations = []
-        for slug in selection:
-            if slug.strip():
-                try:
-                    registrations.append(Registration.objects.get(active=True, slug=slug.strip()))
-                except Exception as e:
-                    logger.exception(e)
-        return super().get_context_data(registrations=registrations, **kwargs)
+        return super().get_context_data(registrations=get_active_registrations(), **kwargs)
 
 
 class QRCodeView(TemplateView):
