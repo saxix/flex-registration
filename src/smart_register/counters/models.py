@@ -33,7 +33,7 @@ class CounterManager(models.Manager):
                 latest = datetime.min
             result["details"][registration.slug]["range"] = (latest.strftime("%Y-%B-%d"),
                                                              yesterday.strftime("%Y-%B-%d"))
-            qs = Record.objects.filter(registration=registration, timestamp__range=(latest, yesterday))
+            qs = Record.objects.filter(registration=registration, timestamp__range=(latest, today))
             qs = (
                 qs.annotate(hour=ExtractHour("timestamp"), day=TruncDay("timestamp"))
                 .values("day", "hour")
