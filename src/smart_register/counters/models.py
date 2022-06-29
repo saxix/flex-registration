@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from django.db import models
 from django.db.models import Count
@@ -18,10 +18,11 @@ class CounterManager(models.Manager):
             "details": {}
         }
         today = datetime.today()
-        yesterday = datetime.combine(today - timedelta(days=1), datetime.min.time())
+        yesterday = datetime.combine(today - timedelta(days=1), datetime.max.time())
         selection = Registration.objects.filter(active=True)
         if registrations:
             selection = selection.filter(id__in=registrations)
+        querysets = []
         for registration in selection:
             result["registration"] += 1
             result["details"][registration.slug] = {"range": [],
@@ -33,13 +34,14 @@ class CounterManager(models.Manager):
                 latest = datetime.min
             result["details"][registration.slug]["range"] = (latest.strftime("%Y-%B-%d"),
                                                              yesterday.strftime("%Y-%B-%d"))
-            qs = Record.objects.filter(registration=registration, timestamp__range=(latest, today))
+            qs = Record.objects.filter(registration=registration, timestamp__range=(latest, yesterday))
             qs = (
                 qs.annotate(hour=ExtractHour("timestamp"), day=TruncDay("timestamp"))
                 .values("day", "hour")
                 .annotate(c=Count("id"))
                 .order_by("day", "hour")
             )
+            querysets.append(qs)
             counter = defaultdict(lambda: {"records": 0, "extra": {}})
             for match in qs.all():
                 counter[match["day"]]["records"] += match["c"]
@@ -57,7 +59,7 @@ class CounterManager(models.Manager):
                         "details": {"hours": values["extra"]},
                     },
                 )
-        return result
+        return querysets, result
 
 
 class Counter(models.Model):
