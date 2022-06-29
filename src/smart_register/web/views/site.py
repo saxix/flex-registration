@@ -54,7 +54,6 @@ class PageView(TemplateView):
                                         title2=_("Title2"), **kwargs)
 
 
-# @method_decorator(condition(etag_func=get_etag, last_modified_func=None), name="dispatch")
 @method_decorator(cache_control(public=True), name="dispatch")
 class HomeView(TemplateView):
     template_name = "ua.html"

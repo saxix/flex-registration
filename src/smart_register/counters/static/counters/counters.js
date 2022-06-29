@@ -1,5 +1,6 @@
 (function ($) {
     const baseUrl = $("#counters").data("url");
+    const token = $("#counters").data("token");
     const getLineData = (initialData, lengthOfDataChunks) => {
         const numOfChunks = Math.ceil(initialData.length / lengthOfDataChunks);
         const dataChunks = [];
@@ -23,6 +24,18 @@
     var m = moment();
     var currentDay = m.format("YYYY-MM-DD");
     var ctx = document.getElementById("myChart");
+    var averageDataset = {
+        datalabels: {
+            labels: {
+                title: null
+            }
+        },
+        type: "line",
+        borderColor: "#FF312D",
+        fill: false,
+        borderWidth: 1,
+        order: 1
+    };
     var config = {
         type: "bar",
         options: {
@@ -57,23 +70,7 @@
                 backgroundColor: "#2861c555",
                 borderColor: "#2861c5",
                 borderWidth: 1
-            },
-                {
-                    // datalabels: {
-                    //     labels: {
-                    //         title: null
-                    //     }
-                    // },
-                    data: [],
-                    label: "",
-                    type: "line",
-                    borderColor: "#FF312D",
-                    fill: false,
-                    borderWidth: 1,
-                    order: 1
-                }
-
-            ]
+            }]
         }
     };
     Chart.register(ChartDataLabels);
@@ -92,23 +89,26 @@
     ajax_chart({});
 
     function ajax_chart(params) {
-        params.rnd = Math.random();
+        params.rnd = token || Math.random();
         const qs = new URLSearchParams(params).toString();
         $.getJSON(baseUrl + "?" + qs).done(function (response) {
             var chartData = response.data.map(a => a.total);
-            var lineData = 0;[]
+            // reset dataset
+            myChart.data.datasets = [myChart.data.datasets[0]]
             if (chartData.length > 0) {
                 const lineData = getLineData(chartData, chartData.length);
-                myChart.data.datasets[1].data = lineData;
-            } else {
-                myChart.data.datasets[1].data = [];
+                var average = lineData[0];
+                if (average>0){
+                    myChart.data.datasets[1] = Object.assign({}, averageDataset);
+                    myChart.data.datasets[1].data = lineData;
+                    myChart.data.datasets[1].label = "Daily Average: " + average;
+                }
             }
 
             myChart.data.labels = response.labels;
             myChart.data.datasets[0].data = chartData;
             myChart.data.datasets[0].rawData = response.data;
             myChart.data.datasets[0].label = "Total Registrations: " + response.total.toLocaleString();
-            myChart.data.datasets[1].label = "Daily Average: " + lineData;
 
             myChart.options.plugins.title.text = response.label;
             myChart.update(); // finally update our chart
