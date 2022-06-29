@@ -74,6 +74,9 @@ class BinaryFile:
 @method_decorator(csrf_exempt, name="dispatch")
 class RegisterRouter(FormView):
 
+    def get_template_names(self):
+        return []
+
     def get_form(self, form_class=None):
         return None
 

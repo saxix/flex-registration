@@ -1,5 +1,5 @@
 (function ($) {
-    const baseUrl = $('#counters').data('url');
+    const baseUrl = $("#counters").data("url");
     const getLineData = (initialData, lengthOfDataChunks) => {
         const numOfChunks = Math.ceil(initialData.length / lengthOfDataChunks);
         const dataChunks = [];
@@ -45,14 +45,13 @@
                     display: true,
                 },
                 legend: {
-                    display: false,
+                    display: true,
                 }
             }
         },
         data: {
             labels: [],
             datasets: [{
-
                 label: "",
                 data: [],
                 backgroundColor: "#2861c555",
@@ -60,12 +59,13 @@
                 borderWidth: 1
             },
                 {
-                    datalabels: {
-                        labels: {
-                            title: null
-                        }
-                    },
+                    // datalabels: {
+                    //     labels: {
+                    //         title: null
+                    //     }
+                    // },
                     data: [],
+                    label: "",
                     type: "line",
                     borderColor: "#FF312D",
                     fill: false,
@@ -86,7 +86,6 @@
             const label = myChart.data.labels[firstPoint.index];
             const slabel = myChart.data.datasets[firstPoint.datasetIndex].label;
             const value = myChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-            console.log(label, slabel, value, (firstPoint.index + 1));
         }
     };
 
@@ -95,8 +94,9 @@
     function ajax_chart(params) {
         params.rnd = Math.random();
         const qs = new URLSearchParams(params).toString();
-        $.getJSON( baseUrl + "?" + qs).done(function (response) {
+        $.getJSON(baseUrl + "?" + qs).done(function (response) {
             var chartData = response.data.map(a => a.total);
+            var lineData = 0;[]
             if (chartData.length > 0) {
                 const lineData = getLineData(chartData, chartData.length);
                 myChart.data.datasets[1].data = lineData;
@@ -107,8 +107,10 @@
             myChart.data.labels = response.labels;
             myChart.data.datasets[0].data = chartData;
             myChart.data.datasets[0].rawData = response.data;
+            myChart.data.datasets[0].label = "Total Registrations: " + response.total.toLocaleString();
+            myChart.data.datasets[1].label = "Daily Average: " + lineData;
 
-            myChart.options.plugins.title.text = response.label + " - Total Registrations: " + response.total.toLocaleString();
+            myChart.options.plugins.title.text = response.label;
             myChart.update(); // finally update our chart
             currentDay = moment(response.day, "YYYY-MM-DD").format("YYYY-MM-DD");
         });

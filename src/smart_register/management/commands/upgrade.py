@@ -55,6 +55,8 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
             click.echo("Run collectstatic")
         call_command("collectstatic", **extra)
 
+    call_command("createinitialrevisions")
+
     if admin_email:
         from django.contrib.auth import get_user_model
 

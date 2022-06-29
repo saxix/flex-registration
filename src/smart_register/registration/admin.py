@@ -28,6 +28,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
+from ..core.admin import ConcurrencyVersionAdmin
 
 from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
 from ..core.utils import clone_model, is_root, last_day_of_month, namify
@@ -50,7 +51,7 @@ DATA = {
 
 
 @register(Registration)
-class RegistrationAdmin(SmartModelAdmin):
+class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
@@ -75,6 +76,10 @@ class RegistrationAdmin(SmartModelAdmin):
         ("Advanced", {"fields": ("advanced",)}),
         ("Others", {"fields": ("__others__",)}),
     ]
+
+    def reversion_register(self, model, **options):
+        options["exclude"] = ("version",)
+        super().reversion_register(model, **options)
 
     def secure(self, obj):
         return bool(obj.public_key)

@@ -6,6 +6,8 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import requests
+from reversion.admin import VersionAdmin
+
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -46,6 +48,20 @@ logger = logging.getLogger(__name__)
 cache = caches["default"]
 
 
+class ConcurrencyVersionAdmin(VersionAdmin):
+    def reversion_register(self, model, **options):
+        options["exclude"] = ("version",)
+        super().reversion_register(model, **options)
+
+    def revision_view(self, request, object_id, version_id, extra_context=None):
+        with disable_concurrency():
+            return super().revision_view(request, object_id, version_id, extra_context)
+
+    def recover_view(self, request, version_id, extra_context=None):
+        with disable_concurrency():
+            return super().recover_view(request, version_id, extra_context)
+
+
 class Select2FieldComboFilter(ChoicesFieldComboFilter):
     template = "adminfilters/select2.html"
 
@@ -58,7 +74,7 @@ class ValidatorTestForm(forms.Form):
 
 
 @register(Validator)
-class ValidatorAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
+class ValidatorAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     form = ValidatorForm
     list_editable = ("trace", "active", "draft")
     list_display = ("label", "name", "target", "used_by", "trace", "active", "draft")
@@ -185,7 +201,7 @@ class FlexFormFieldForm2(forms.ModelForm):
 
 
 @register(FlexFormField)
-class FlexFormFieldAdmin(LoadDumpMixin, CompareVersionAdmin, OrderableAdmin, SmartModelAdmin):
+class FlexFormFieldAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
     list_display = ("label", "name", "flex_form", "form_type", "required", "enabled")
     list_editable = ["required", "enabled"]
@@ -290,7 +306,7 @@ class SyncForm(SyncConfigForm):
 
 
 @register(FlexForm)
-class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
+class FlexFormAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
     inlines = [
         FlexFormFieldInline,
@@ -420,7 +436,7 @@ class FlexFormAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
 
 
 @register(OptionSet)
-class OptionSetAdmin(LoadDumpMixin, CompareVersionAdmin, SmartModelAdmin):
+class OptionSetAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     list_display = (
         "name",
         "id",

@@ -42,7 +42,7 @@ class CounterAdmin(SmartModelAdmin):
 
     @view()
     def data(self, request, registration):
-        qs = Counter.objects.filter(registration_id=registration).order_by("day")
+        qs = Counter.objects.select_related('registration').filter(registration_id=registration).order_by("day")
         param_month = request.GET.get("m", None)
         total = 0
         if param_month:
@@ -59,15 +59,16 @@ class CounterAdmin(SmartModelAdmin):
             dt = date.replace(day=d).date()
             values[dt] = {"total": 0, "pk": 0}
         for record in qs.all():
+            registration = record.registration
             values[record.day] = {"total": record.records, "pk": record.pk}
             total += record.records
 
         if not labels:
             labels = [d.strftime("%-d, %a") for d in values.keys()]
-
+        period = date.strftime("%B %Y")
         data = {
             "datapoints": qs.all().count(),
-            "label": date.strftime("%B %Y"),
+            "label": f"{registration} {period}",
             "day": date.strftime("%Y-%m-%d"),
             "total": total,
             "labels": labels,
