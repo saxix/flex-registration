@@ -97,7 +97,7 @@ class CounterAdmin(SmartModelAdmin):
     def collect(self, request):
         try:
             with atomic():
-                result = Counter.objects.collect()
+                querysets, result = Counter.objects.collect()
                 self.message_user(request, str(result))
         except Exception as e:
             logger.exception(e)
