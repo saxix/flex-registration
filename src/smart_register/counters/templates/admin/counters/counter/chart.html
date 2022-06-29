@@ -21,6 +21,7 @@
 {% endblock %}
 
 {% block action-content %}
+    {{ s }}
     {% if registration %}
         <div style="margin-bottom: 50px;">
             <button class="btn button" id="prev"> <<</button>
@@ -29,7 +30,7 @@
         <div class="chart-container">
             <canvas id="myChart" style="width: 100%;height: 100%"></canvas>
         </div>
-        <script id="counters" data-url="{% url "admin:counters_counter_data" registration.pk %}" src="{% static "counters/counters.min.js" %}"></script>
+        <script id="counters" data-token="{{ token }}" data-url="{% url "admin:counters_counter_data" registration.pk %}" src="{% static "counters/counters.js" %}"></script>
     {% else %}
         <form method="post">
             {% csrf_token %}

@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+from django.conf import settings
+
 from admin_extra_buttons.decorators import button, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
@@ -14,8 +16,13 @@ from ..core.utils import is_root
 from ..registration.admin import last_day_of_month
 from .forms import ChartForm
 from .models import Counter
+from ..registration.models import Registration
 
 logger = logging.getLogger(__name__)
+
+
+def get_token(request):
+    return str(request.user.last_login.utcnow().timestamp())
 
 
 @register(Counter)
@@ -41,8 +48,9 @@ class CounterAdmin(SmartModelAdmin):
         return is_root(request)
 
     @view()
-    def data(self, request, registration):
-        qs = Counter.objects.select_related('registration').filter(registration_id=registration).order_by("day")
+    def data(self, request, registration_id):
+        registration = Registration.objects.get(id=registration_id)
+        qs = Counter.objects.filter(registration_id=registration_id).order_by("day")
         param_month = request.GET.get("m", None)
         total = 0
         if param_month:
@@ -58,8 +66,8 @@ class CounterAdmin(SmartModelAdmin):
         for d in range(1, last_day.day + 1):
             dt = date.replace(day=d).date()
             values[dt] = {"total": 0, "pk": 0}
+
         for record in qs.all():
-            registration = record.registration
             values[record.day] = {"total": record.records, "pk": record.pk}
             total += record.records
 
@@ -76,7 +84,10 @@ class CounterAdmin(SmartModelAdmin):
         }
 
         response = JsonResponse(data)
-        response["Cache-Control"] = "max-age=5"
+        response["Cache-Control"] = "max-age=315360000"
+        # response["Cache-Control"] = "public, max-age=315360000"
+        # response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}-{columns}-{obj.version}"
+        response["ETag"] = get_token(request)
         return response
 
     @button()
@@ -88,6 +99,7 @@ class CounterAdmin(SmartModelAdmin):
                 registration = form.cleaned_data["registration"]
                 ctx["title"] = registration.title
                 ctx["registration"] = registration
+                ctx["token"] = get_token(request)
         else:
             form = ChartForm()
         ctx["form"] = form
