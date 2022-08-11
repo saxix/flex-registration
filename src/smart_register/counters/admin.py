@@ -85,8 +85,6 @@ class CounterAdmin(SmartModelAdmin):
 
         response = JsonResponse(data)
         response["Cache-Control"] = "max-age=315360000"
-        # response["Cache-Control"] = "public, max-age=315360000"
-        # response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}-{columns}-{obj.version}"
         response["ETag"] = get_token(request)
         return response
 
