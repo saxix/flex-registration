@@ -1,8 +1,6 @@
 import logging
 from datetime import datetime
 
-from django.conf import settings
-
 from admin_extra_buttons.decorators import button, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
