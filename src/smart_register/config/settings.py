@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "social_django",
     "corsheaders",
     "simplemathcaptcha",
+    "dbtemplates",
     # ---
     "smart_register.apps.Config",
     "smart_register.i18n",
@@ -120,9 +121,10 @@ TEMPLATES = [
             PACKAGE_DIR / "core/templates",
             PACKAGE_DIR / "web/templates",
         ],
-        # 'APP_DIRS': True,
+        'APP_DIRS': False,
         "OPTIONS": {
             "loaders": [
+                "dbtemplates.loader.Loader",
                 "django.template.loaders.filesystem.Loader",
                 "django.template.loaders.app_directories.Loader",
             ],
@@ -622,3 +624,6 @@ PRODUCTION_SERVER = env("PRODUCTION_SERVER")
 PRODUCTION_TOKEN = env("PRODUCTION_TOKEN")
 
 SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W006", "urls.W005", "admin_extra_buttons.PERM"]
+
+DBTEMPLATES_USE_REVERSION = True
+DBTEMPLATES_USE_CODEMIRROR = True

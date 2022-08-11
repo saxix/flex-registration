@@ -54,6 +54,7 @@ sqlparse = "^0.4.2"
 django-reversion = "^5.0.0"
 django-reversion-compare = "^0.15.0"
 celery = "^5.2.6"
+django-appconf = "^1.0.5"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"
