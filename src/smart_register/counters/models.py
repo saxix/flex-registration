@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 from django.db import models
 from django.db.models import Count

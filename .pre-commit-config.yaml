@@ -42,11 +42,11 @@ repos:
           - /print\(111/
         stages: [commit]
 
-  - repo: https://github.com/psf/black
-    rev: 22.1.0
-    hooks:
-      - id: black
-        stages: [ commit ]
+#  - repo: https://github.com/psf/black
+#    rev: 22.1.0
+#    hooks:
+#      - id: black
+#        stages: [ commit ]
 
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
