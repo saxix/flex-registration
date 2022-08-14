@@ -1,23 +1,19 @@
-import io
 import json
 import logging
-import tempfile
 from collections import defaultdict
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pytz
-from admin_extra_buttons.decorators import button, choice, link, view
+
+from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.value import ValueFilter
-from concurrency.api import disable_concurrency
 from dateutil.utils import today
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
-from django.core.management import call_command
-from django.db.models import JSONField, Q
+from django.db.models import JSONField
 from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -30,12 +26,12 @@ from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 from ..core.admin import ConcurrencyVersionAdmin
 
-from ..core.models import FlexForm, FlexFormField, FormSet, OptionSet, Validator
+from ..core.models import FormSet
 from ..core.utils import clone_model, is_root, last_day_of_month, namify
-from ..i18n.forms import ImportForm
-from ..i18n.models import Message
 from .forms import CloneForm
 from .models import Record, Registration
+from ..publish.mixin import PublishMixin
+from ..publish.utils import get_registration_data
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +47,7 @@ DATA = {
 
 
 @register(Registration)
-class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
+class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active",)
@@ -64,6 +60,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
         JSONField: {"widget": JSONEditor},
     }
     change_form_template = None
+    change_list_template = None
     filter_horizontal = ("scripts",)
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
@@ -86,14 +83,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
 
     secure.boolean = True
 
-    # @button()
-    # def publish(self, request, pk):
-    #     pass
-
-    # @view()
-    # def _update(self, request):
-    #     pass
-
     @property
     def media(self):
         extra = "" if settings.DEBUG else ".min"
@@ -103,10 +92,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
                 "/static/clipboard%s.js" % extra,
             ]
         )
-
-    @choice(change_list=False, label="Advanced", order=900)
-    def advanced(self, button):
-        button.choices = [self.inspect, self.clone, self.export]
 
     @view(label="invalidate cache", html_attrs={"class": "aeb-warn"})
     def invalidate_cache(self, request, pk):
@@ -185,13 +170,13 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
         response["Cache-Control"] = "max-age=5"
         return response
 
-    @button(label="Chart")
-    def chart(self, request, pk):
-        ctx = self.get_common_context(request, pk, title="chart")
-        ctx["today"] = datetime.now().strftime("%Y-%m-%d")
-        return render(request, "admin/registration/registration/chart.html", ctx)
+    # @button(label="Chart")
+    # def chart(self, request, pk):
+    #     ctx = self.get_common_context(request, pk, title="chart")
+    #     ctx["today"] = datetime.now().strftime("%Y-%m-%d")
+    #     return render(request, "admin/registration/registration/chart.html", ctx)
 
-    @view()
+    @button()
     def inspect(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -356,82 +341,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
         except Exception as e:
             logger.exception(e)
 
-    @view()
-    def export(self, request, pk):
-        reg: Registration = self.get_object(request, pk)
-        buffers = {}
-        buffers["registration"] = io.StringIO()
-        formsets = FormSet.objects.filter(Q(parent=reg.flex_form) | Q(flex_form=reg.flex_form))
-        forms = FlexForm.objects.filter(Q(pk=reg.flex_form.pk) | Q(pk__in=[f.flex_form.pk for f in formsets]))
-        validators = Validator.objects.values_list("pk", flat=True)
-        options = OptionSet.objects.values_list("pk", flat=True)
-        fields = FlexFormField.objects.filter(flex_form__in=forms).values_list("pk", flat=True)
-        data = DATA.copy()
-        data["registration.Registration"] = [reg.pk]
-        data["core.FlexForm"] = [f.pk for f in forms]
-        data["core.FormSet"] = [f.pk for f in formsets]
-        data["core.Validator"] = validators
-        data["core.OptionSet"] = options
-        data["core.FlexFormField"] = fields
-        data["i18n.Message"] = Message.objects.values_list("pk", flat=True)
-
-        for k, f in data.items():
-            data[k] = io.StringIO()
-            call_command(
-                "dumpdata",
-                [k],
-                stdout=data[k],
-                primary_keys=",".join(map(str, f)),
-                use_natural_foreign_keys=True,
-                use_natural_primary_keys=True,
-            )
-        return JsonResponse(
-            {k: json.loads(v.getvalue()) for k, v in data.items()},
-            safe=False,
-            headers={"Content-Disposition": f"attachment; filename={reg.slug}.json"},
-        )
-
-    @button(label="import")
-    def _import(self, request):
-        ctx = self.get_common_context(
-            request,
-            media=self.media,
-            title="Import",
-        )
-        if request.method == "POST":
-            form = ImportForm(request.POST, request.FILES)
-            if form.is_valid():
-                try:
-                    f = request.FILES["file"]
-                    buf = io.BytesIO()
-                    for chunk in f.chunks():
-                        buf.write(chunk)
-                    buf.seek(0)
-                    data = json.load(buf)
-                    out = io.StringIO()
-                    workdir = Path(".").absolute()
-                    with disable_concurrency():
-                        for k, v in data.items():
-                            kwargs = {"dir": workdir, "prefix": f"~IMPORT-{k}", "suffix": ".json", "delete": False}
-
-                            with tempfile.NamedTemporaryFile(**kwargs) as fdst:
-                                fdst.write(json.dumps(v).encode())
-                            fixture = (workdir / fdst.name).absolute()
-                            call_command("loaddata", fixture, stdout=out, verbosity=3)
-                            fixture.unlink()
-                            out.write("------\n")
-                            # ctx['out'] = out.getvalue()
-                            out.seek(0)
-                            ctx["out"] = out.readlines()
-                except Exception as e:
-                    self.message_user(request, f"{e.__class__.__name__}: {e} {out.getvalue()}", messages.ERROR)
-            else:
-                ctx["form"] = form
-        else:
-            form = ImportForm()
-            ctx["form"] = form
-        return render(request, "admin/registration/registration/import.html", ctx)
-
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Test")
@@ -451,6 +360,9 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SmartModelAdmin):
             [h for h in self.extra_button_handlers.values() if h.change_list in [True, None]],
             key=lambda item: item.config.get("order", 1),
         )
+
+    def _get_data(self, record):
+        return get_registration_data(record)
 
 
 class DecryptForm(forms.Form):
@@ -539,43 +451,6 @@ class RecordAdmin(SmartModelAdmin):
                 button.html_attrs["target"] = f"_{button.original.pk}"
         except Exception as e:
             logger.exception(e)
-
-    #     @button()
-    #     def truncate(self, request):
-    #         if request.method == "POST":
-    #             from django.contrib.admin.models import DELETION, LogEntry
-    #
-    #             with atomic():
-    #                 LogEntry.objects.log_action(
-    #                     user_id=request.user.pk,
-    #                     content_type_id=ContentType.objects.get_for_model(self.model).pk,
-    #                     object_id=None,
-    #                     object_repr=f"truncate table {self.model._meta.verbose_name}",
-    #                     action_flag=DELETION,
-    #                     change_message="truncate table",
-    #                 )
-    #
-    #                 try:
-    #                     truncate_model_table(self.model)
-    #                     return HttpResponseRedirect("..")
-    #                 except OperationalError:
-    #                     self.get_queryset(request).delete()
-    #         else:
-    #             return confirm_action(
-    #                 self,
-    #                 request,
-    #                 self.truncate,
-    #                 mark_safe(
-    #                     """
-    # <h1 class="color-red"><b>This is a low level system feature</b></h1>
-    # <h1 class="color-red"><b>Continuing irreversibly delete all table content</b></h1>
-    #
-    #                                        """
-    #                 ),
-    #                 "Successfully executed",
-    #                 title="Truncate table",
-    #                 extra_context={"original": None, "add": False},
-    #             )
 
     @button(label="Preview", permission=is_root)
     def preview(self, request, pk):

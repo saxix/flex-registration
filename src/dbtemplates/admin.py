@@ -1,10 +1,10 @@
+import logging
 import posixpath
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ungettext, ugettext_lazy as _
 from django.utils.safestring import mark_safe
-
 from dbtemplates.conf import settings
 from dbtemplates.models import (Template, remove_cached_template,
                                 add_template_to_cache)
@@ -12,18 +12,22 @@ from dbtemplates.utils.template import check_template_syntax
 
 # Check if django-reversion is installed and use reversions' VersionAdmin
 # as the base admin class if yes
+from smart_register.publish.mixin import PublishMixin
+
 if settings.DBTEMPLATES_USE_REVERSION:
     from reversion.admin import VersionAdmin as TemplateModelAdmin
 else:
     from django.contrib.admin import ModelAdmin as TemplateModelAdmin  # noqa
 
+logger = logging.getLogger(__name__)
+
 
 class CodeMirrorTextArea(forms.Textarea):
-
     """
     A custom widget for the CodeMirror browser editor to be used with the
     content field of the Template model.
     """
+
     class Media:
         css = dict(screen=[posixpath.join(
             settings.DBTEMPLATES_MEDIA_PREFIX, 'css/editor.css')])
@@ -69,14 +73,15 @@ if settings.DBTEMPLATES_USE_CODEMIRROR and settings.DBTEMPLATES_USE_TINYMCE:
 
 if settings.DBTEMPLATES_USE_TINYMCE:
     from tinymce.widgets import AdminTinyMCE
+
     TemplateContentTextArea = AdminTinyMCE
 elif settings.DBTEMPLATES_USE_REDACTOR:
     from redactor.widgets import RedactorEditor
+
     TemplateContentTextArea = RedactorEditor
 
 
 class TemplateAdminForm(forms.ModelForm):
-
     """
     Custom AdminForm to make the content textarea wider.
     """
@@ -90,7 +95,7 @@ class TemplateAdminForm(forms.ModelForm):
         fields = "__all__"
 
 
-class TemplateAdmin(TemplateModelAdmin):
+class TemplateAdmin(PublishMixin, TemplateModelAdmin):
     form = TemplateAdminForm
     fieldsets = (
         (None, {
@@ -121,6 +126,7 @@ class TemplateAdmin(TemplateModelAdmin):
             "Cache of %(count)d templates successfully invalidated.",
             count)
         self.message_user(request, message % {'count': count})
+
     invalidate_cache.short_description = _("Invalidate cache of "
                                            "selected templates")
 
@@ -133,6 +139,7 @@ class TemplateAdmin(TemplateModelAdmin):
             "Cache successfully repopulated with %(count)d templates.",
             count)
         self.message_user(request, message % {'count': count})
+
     repopulate_cache.short_description = _("Repopulate cache with "
                                            "selected templates")
 
@@ -156,10 +163,12 @@ class TemplateAdmin(TemplateModelAdmin):
                 "Template syntax OK.",
                 "Template syntax OK for %(count)d templates.", count)
             self.message_user(request, message % {'count': count})
+
     check_syntax.short_description = _("Check template syntax")
 
     def site_list(self, template):
         return ", ".join([site.name for site in template.sites.all()])
+
     site_list.short_description = _('sites')
 
 

@@ -48,7 +48,7 @@ class Command(BaseCommand):
             action="store_true", dest="delete", default=False,
             help="Delete templates after syncing")
 
-    def handle(self, **options):
+    def handle(self, **options):  # noqa C901
         extension = options.get('ext')
         force = options.get('force')
         overwrite = options.get('overwrite')

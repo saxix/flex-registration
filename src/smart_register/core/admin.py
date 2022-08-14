@@ -6,7 +6,7 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import requests
-from reversion.admin import VersionAdmin
+from reversion_compare.admin import CompareVersionAdmin
 
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
@@ -41,13 +41,14 @@ from .models import (
     Validator,
 )
 from .utils import dict_setdefault, render
+from ..publish.utils import is_editor
 
 logger = logging.getLogger(__name__)
 
 cache = caches["default"]
 
 
-class ConcurrencyVersionAdmin(VersionAdmin):
+class ConcurrencyVersionAdmin(CompareVersionAdmin):
     def reversion_register(self, model, **options):
         options["exclude"] = ("version",)
         super().reversion_register(model, **options)
@@ -59,6 +60,9 @@ class ConcurrencyVersionAdmin(VersionAdmin):
     def recover_view(self, request, version_id, extra_context=None):
         with disable_concurrency():
             return super().recover_view(request, version_id, extra_context)
+
+    def has_change_permission(self, request, obj=None):
+        return is_editor(request)
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):
