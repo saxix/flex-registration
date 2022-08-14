@@ -15,6 +15,7 @@ from django.core.management import call_command
 from django.core.serializers import get_serializer
 from django.db.models import Model, Q
 from django.db.transaction import atomic
+from django.http import Http404
 from django.utils.text import slugify
 
 from smart_register.core.models import (
@@ -35,7 +36,7 @@ def is_editor(request):
 
 
 def is_production(request):
-    return request.get_absolute_uri('').startswith(config.PRODUCTION_SERVER)
+    return not is_editor(request)
 
 
 def get_data_structure(reg: Model) -> str:
@@ -72,6 +73,10 @@ def loaddata_from_url(url, auth, user=None, comment=None):
     # server = config.PRODUCTION_SERVER
     # basic = HTTPBasicAuth(*config.PRODUCTION_CREDENTIALS.split('/'))
     ret = requests.get(config.PRODUCTION_SERVER + url, auth=auth)
+    if ret.status_code == 403:
+        raise PermissionError
+    if ret.status_code == 404:
+        raise Http404(config.PRODUCTION_SERVER + url)
     out = io.StringIO()
     payload = unwrap(ret.content)
     workdir = Path(".").absolute()
