@@ -1,12 +1,16 @@
 {% extends "admin_extra_buttons/action_page.html" %}
 {% block action-content %}
+    <div style="margin:10px">
+        Proceeding you will download production configuration from <strong>{{ server }}</strong>
+    </div>
 
-<h3>Proceeding you will download production configuration from {{ server }} </h3>
     {% if prod_credentials.username %}
-        <h3> You are currently logged in as <pre>{{ prod_credentials.username }}</pre></h3>
-        <a href="{{ prod_logout }}">Change user</a>
+        <div style="margin:10px">
+            You are currently logged in as <strong>{{ prod_credentials.username }}</strong>
+            (<a href="{{ prod_logout }}">Change user</a>)
+        </div>
     {% endif %}
-    <div>
+    <div style="margin-top:50px">
     <form method="post">
         {% csrf_token %}
         <input type="submit" value="Load">

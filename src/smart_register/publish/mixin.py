@@ -103,7 +103,7 @@ class PublishMixin(ExtraButtonsMixin):
                                          f"loaddata from {config.PRODUCTION_SERVER}")
                 context["stdout"] = {"details": info}
                 self.message_user(request, "Success", messages.SUCCESS)
-                return render(request, "admin/publish/response.html", context)
+                return render(request, "admin/publish/loaddata_done.html", context)
             except PermissionError:
                 url = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
                 return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
