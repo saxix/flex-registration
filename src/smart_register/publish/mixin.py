@@ -85,13 +85,12 @@ class PublishMixin(ExtraButtonsMixin):
 
     @button(enabled=is_editor, change_list=True)
     def loaddata(self, request):
-        if not is_logged_to_prod(request):
-            url = reverse(admin_urlname(self.model._meta, "login_to_prod"))
-            return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
         context = self.get_common_context(request,
                                           title="Load data from PRODUCTION",
                                           server=config.PRODUCTION_SERVER)
         try:
+            if not is_logged_to_prod(request):
+                raise PermissionError
             url = reverse(admin_urlname(self.model._meta, "dumpdata"))
             basic = HTTPBasicAuth(**get_prod_credentials(request))
 
@@ -100,6 +99,9 @@ class PublishMixin(ExtraButtonsMixin):
             context["stdout"] = {"details": info}
             self.message_user(request, "Success", messages.SUCCESS)
             return render(request, "admin/publish/response.html", context)
+        except PermissionError:
+            url = reverse(admin_urlname(self.model._meta, "login_to_prod"))
+            return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
         except Exception as e:
             logger.exception(e)
             self.message_error_to_user(request, e)
