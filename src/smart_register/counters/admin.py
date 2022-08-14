@@ -1,8 +1,6 @@
 import logging
 from datetime import datetime
 
-from django.conf import settings
-
 from admin_extra_buttons.decorators import button, view
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
@@ -85,8 +83,6 @@ class CounterAdmin(SmartModelAdmin):
 
         response = JsonResponse(data)
         response["Cache-Control"] = "max-age=315360000"
-        # response["Cache-Control"] = "public, max-age=315360000"
-        # response["ETag"] = f"{obj.get_cache_key()}-{term}-{parent}-{columns}-{obj.version}"
         response["ETag"] = get_token(request)
         return response
 

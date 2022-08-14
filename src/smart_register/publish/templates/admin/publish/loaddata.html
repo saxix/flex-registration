@@ -1,0 +1,19 @@
+{% extends "admin_extra_buttons/action_page.html" %}
+{% block action-content %}
+    <div style="margin:10px">
+        Proceeding you will download production configuration from <strong>{{ server }}</strong>
+    </div>
+
+    {% if prod_credentials.username %}
+        <div style="margin:10px">
+            You are currently logged in as <strong>{{ prod_credentials.username }}</strong>
+            (<a href="{{ prod_logout }}">Change user</a>)
+        </div>
+    {% endif %}
+    <div style="margin-top:50px">
+    <form method="post">
+        {% csrf_token %}
+        <input type="submit" value="Load">
+    </form>
+    </div>
+{% endblock %}

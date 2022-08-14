@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils.cache import get_conditional_response
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
-from django.utils.translation import get_language
+from django.utils import translation
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -82,8 +82,12 @@ class RegisterRouter(FormView):
 
     def post(self, request, *args, **kwargs):
         r = Registration.objects.only("slug", "version", "locale").get(slug=request.POST["slug"])
-        args = [r.slug, r.version]
-        url = reverse("register", args=args)
+        language = translation.get_language()
+        if language not in r.all_locales:
+            language = r.locale
+        with translation.override(language):
+            url = r.get_absolute_url()
+
         if request.user.is_authenticated:
             url += f"?{request.COOKIES[settings.SESSION_COOKIE_NAME]}"
         return HttpResponseRedirect(url)
@@ -108,6 +112,11 @@ class RegisterView(FormView):
     def get(self, request, *args, **kwargs):
         # if "version" not in kwargs:
         #     return HttpResponseRedirect(reverse("index"))
+        language = translation.get_language()
+        if language not in self.registration.all_locales:
+            with translation.override(self.registration.locale):
+                url = self.registration.get_absolute_url()
+                return HttpResponseRedirect(url)
 
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
@@ -115,7 +124,7 @@ class RegisterView(FormView):
             self.res_etag = get_etag(
                 request,
                 str(self.registration.version),
-                get_language(),
+                translation.get_language(),
                 {True: "staff", False: ""}[request.user.is_staff],
             )
         response = get_conditional_response(request, str(self.res_etag))

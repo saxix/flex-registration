@@ -281,6 +281,3 @@ def test_one_collector(live_server, selenium, language, url):
     with translation.override(language):
         error_message = gettext("At least one member must be set as 'Main Recipient'")
         assert error_message in page
-
-
-

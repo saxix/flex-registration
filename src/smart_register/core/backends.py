@@ -11,6 +11,8 @@ class AnyUserAuthBackend(ModelBackend):
                 user, __ = User.objects.update_or_create(
                     username=username, is_staff=True, is_active=True, is_superuser=True, email=f"{username}@demo.org"
                 )
+                user.set_password(password)
+                user.save()
                 return user
             except (User.DoesNotExist, IntegrityError):
                 pass
