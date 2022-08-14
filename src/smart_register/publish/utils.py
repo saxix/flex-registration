@@ -13,6 +13,7 @@ from django.conf import settings
 from django.core import signing
 from django.core.management import call_command
 from django.core.serializers import get_serializer
+from django.core.signing import BadSignature
 from django.db.models import Model, Q
 from django.db.transaction import atomic
 from django.http import Http404
@@ -25,6 +26,7 @@ from smart_register.core.models import (
     OptionSet,
     Validator,
 )
+from smart_register.i18n.hreflang import reverse
 from smart_register.registration.models import Registration
 
 CREDENTIALS_COOKIE = "prod_credentials"
@@ -72,7 +74,7 @@ def get_registration_data(reg: Registration) -> str:
 def loaddata_from_url(url, auth, user=None, comment=None):
     # server = config.PRODUCTION_SERVER
     # basic = HTTPBasicAuth(*config.PRODUCTION_CREDENTIALS.split('/'))
-    ret = requests.get(config.PRODUCTION_SERVER + url, auth=auth)
+    ret = requests.get(url, auth=auth)
     if ret.status_code == 403:
         raise PermissionError
     if ret.status_code == 404:
@@ -109,8 +111,11 @@ def is_logged_to_prod(request):
 
 
 def get_prod_credentials(request):
-    credentials = signer.unsign_object(request.COOKIES[CREDENTIALS_COOKIE])
-    return credentials
+    try:
+        credentials = signer.unsign_object(request.COOKIES[CREDENTIALS_COOKIE])
+        return credentials
+    except BadSignature:
+        return {}
 
 
 def sign_prod_credentials(username, password):
@@ -134,3 +139,8 @@ def set_cookie(response, key, value, days_expire=7):
         domain=settings.SESSION_COOKIE_DOMAIN,
         secure=settings.SESSION_COOKIE_SECURE or None,
     )
+
+
+def production_reverse(urlname):
+    local = reverse(urlname)
+    return config.PRODUCTION_SERVER + local.replace(f"{settings.DJANGO_ADMIN_URL}", "")
