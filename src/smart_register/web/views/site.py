@@ -97,9 +97,8 @@ class ProbeView(View):
     def get(self, request, *args, **kwargs):
         return HttpResponse("Ok")
 
-
-def post(self, request, *args, **kwargs):
-    return self.get(request, *args, **kwargs)
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
 
 
 class MaintenanceView(TemplateView):
