@@ -5,3 +5,5 @@ from .project import project_info
 from .registration import RegistrationViewSet
 from .user import UserViewSet
 from .validator import ValidatorViewSet
+from .template import TemplateViewSet
+from .sync import extract, load

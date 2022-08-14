@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "smart_register.apps.Config",
     "smart_register.i18n",
     "smart_register.web",
+    "smart_register.publish",
     "smart_register.security.apps.Config",
     "smart_register.core",
     "smart_register.registration",
@@ -388,6 +389,7 @@ CONSTANCE_CONFIG = OrderedDict(
             str,
         ),
         "PRODUCTION_SERVER": ("", "production server url", str),
+        "PRODUCTION_CREDENTIALS": ("", "production url credentials", str),
         "LOG_POST_ERRORS": (False, "", bool),
         "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
         "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
@@ -627,3 +629,5 @@ SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W006", "urls.W005", "admin_extra_button
 
 DBTEMPLATES_USE_REVERSION = True
 DBTEMPLATES_USE_CODEMIRROR = True
+
+CONCURRENCY_ENABLED = False
