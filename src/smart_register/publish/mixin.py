@@ -15,11 +15,11 @@ from django.contrib import messages
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from django.core.management import call_command
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from requests.auth import HTTPBasicAuth
 
 from smart_register.core.utils import get_client_ip, render
+from smart_register.i18n.hreflang import reverse as local_reverse
 from smart_register.publish.forms import ProductionLoginForm
 from smart_register.publish.utils import (
     CREDENTIALS_COOKIE,
@@ -32,7 +32,7 @@ from smart_register.publish.utils import (
     set_cookie,
     sign_prod_credentials,
     unwrap,
-    wraps,
+    wraps, production_reverse,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,19 +55,23 @@ class PublishMixin(ExtraButtonsMixin):
         return response
 
     def get_common_context(self, request, pk=None, **kwargs):
-        kwargs['prod_logout'] = reverse(admin_urlname(self.model._meta, "production_logout"))
+        kwargs['server'] = config.PRODUCTION_SERVER
+        kwargs['prod_logout'] = local_reverse(admin_urlname(self.model._meta, "production_logout"))
+        kwargs['prod_credentials'] = get_prod_credentials(request)
+        kwargs['prod_login'] = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
         return super().get_common_context(request, pk, **kwargs)
 
     @view(enabled=is_editor)
     def login_to_prod(self, request):
-        context = self.get_common_context(request, title="Login to production")
+        context = self.get_common_context(request,
+                                          title=f"Login to production ({config.PRODUCTION_SERVER})")
         cookies = {}
         if request.method == 'POST':
             form = ProductionLoginForm(data=request.POST)
             if form.is_valid():
                 basic = HTTPBasicAuth(**form.cleaned_data)
-                url = reverse(admin_urlname(self.model._meta, "check_login"))
-                ret = requests.post(config.PRODUCTION_SERVER + url, auth=basic)
+                url = production_reverse(admin_urlname(self.model._meta, "check_login"))
+                ret = requests.post(url, auth=basic)
                 if ret.status_code == 200:
                     cookies[CREDENTIALS_COOKIE] = sign_prod_credentials(**form.cleaned_data)
                     data = ret.json()
@@ -77,7 +81,7 @@ class PublishMixin(ExtraButtonsMixin):
                         response = HttpResponseRedirect(redir_url)
                         response.set_cookie(CREDENTIALS_COOKIE, cookies[CREDENTIALS_COOKIE])
                 else:
-                    self.message_user(request, "Login failed", messages.ERROR)
+                    self.message_user(request, f"Login failed {ret} - {url}", messages.ERROR)
         else:
             form = ProductionLoginForm()
         context['form'] = form
@@ -88,23 +92,26 @@ class PublishMixin(ExtraButtonsMixin):
         context = self.get_common_context(request,
                                           title="Load data from PRODUCTION",
                                           server=config.PRODUCTION_SERVER)
-        try:
-            if not is_logged_to_prod(request):
-                raise PermissionError
-            url = reverse(admin_urlname(self.model._meta, "dumpdata"))
-            basic = HTTPBasicAuth(**get_prod_credentials(request))
+        if request.method == 'POST':
+            try:
+                if not is_logged_to_prod(request):
+                    raise PermissionError
+                url = production_reverse(admin_urlname(self.model._meta, "dumpdata"))
+                basic = HTTPBasicAuth(**get_prod_credentials(request))
 
-            info = loaddata_from_url(url, basic, request.user,
-                                     f"loaddata from {config.PRODUCTION_SERVER}")
-            context["stdout"] = {"details": info}
-            self.message_user(request, "Success", messages.SUCCESS)
-            return render(request, "admin/publish/response.html", context)
-        except PermissionError:
-            url = reverse(admin_urlname(self.model._meta, "login_to_prod"))
-            return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
-        except Exception as e:
-            logger.exception(e)
-            self.message_error_to_user(request, e)
+                info = loaddata_from_url(url, basic, request.user,
+                                         f"loaddata from {config.PRODUCTION_SERVER}")
+                context["stdout"] = {"details": info}
+                self.message_user(request, "Success", messages.SUCCESS)
+                return render(request, "admin/publish/response.html", context)
+            except PermissionError:
+                url = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
+                return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
+            except Exception as e:
+                logger.exception(e)
+                self.message_error_to_user(request, e)
+        else:
+            return render(request, "admin/publish/loaddata.html", context)
 
     @view(decorators=[csrf_exempt], http_basic_auth=True, enabled=is_production)
     def dumpdata(self, request):
@@ -120,30 +127,35 @@ class PublishMixin(ExtraButtonsMixin):
 
     @button(enabled=is_editor)
     def publish(self, request, pk):
-        if not is_logged_to_prod(request):
-            url = reverse(admin_urlname(self.model._meta, "login_to_prod"))
-            return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
-        context = self.get_common_context(request, title="Publish to PRODUCTION",
+        context = self.get_common_context(request, pk, title="Publish to PRODUCTION",
                                           server=config.PRODUCTION_SERVER)
-        try:
-            url = reverse(admin_urlname(self.model._meta, "receive"))
-            basic = HTTPBasicAuth(**get_prod_credentials(request))
-            record = self.get_object(request, pk)
-            payload = self._get_data(record)
+        if request.method == 'POST':
+            try:
+                if not is_logged_to_prod(request):
+                    raise PermissionError
+                url = production_reverse(admin_urlname(self.model._meta, "receive"))
+                basic = HTTPBasicAuth(**get_prod_credentials(request))
+                record = self.get_object(request, pk)
+                payload = self._get_data(record)
 
-            ret = requests.post(config.PRODUCTION_SERVER + url,
-                                data=wraps(payload),
-                                auth=basic)
-            result = ret.json()
-            context["stdout"] = result
-            if ret.status_code == 200:
-                self.message_user(request, "Success", messages.SUCCESS)
-            else:
-                self.message_user(request, "Error", messages.ERROR)
-            return render(request, "admin/publish/response.html", context)
-        except Exception as e:
-            logger.exception(e)
-            self.message_error_to_user(request, e)
+                ret = requests.post(url,
+                                    data=wraps(payload),
+                                    auth=basic)
+                result = ret.json()
+                context["stdout"] = result
+                if ret.status_code == 200:
+                    self.message_user(request, "Success", messages.SUCCESS)
+                else:
+                    self.message_user(request, "Error", messages.ERROR)
+                return render(request, "admin/publish/publish_done.html", context)
+            except PermissionError:
+                url = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
+                return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
+            except Exception as e:
+                logger.exception(e)
+                self.message_error_to_user(request, e)
+        else:
+            return render(request, "admin/publish/publish.html", context)
 
     @view(decorators=[csrf_exempt], http_basic_auth=True)
     def receive(self, request):
