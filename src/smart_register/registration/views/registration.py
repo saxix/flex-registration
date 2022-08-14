@@ -83,8 +83,8 @@ class RegisterRouter(FormView):
     def post(self, request, *args, **kwargs):
         r = Registration.objects.only("slug", "version", "locale").get(slug=request.POST["slug"])
         language = translation.get_language()
-        if language not in r.locales:
-            language = r.locales[0]
+        if language not in r.all_locales:
+            language = r.locale
         with translation.override(language):
             url = r.get_absolute_url()
 
@@ -113,8 +113,8 @@ class RegisterView(FormView):
         # if "version" not in kwargs:
         #     return HttpResponseRedirect(reverse("index"))
         language = translation.get_language()
-        if language not in self.registration.locales:
-            with translation.override(self.registration.locales[0]):
+        if language not in self.registration.all_locales:
+            with translation.override(self.registration.locale):
                 url = self.registration.get_absolute_url()
                 return HttpResponseRedirect(url)
 

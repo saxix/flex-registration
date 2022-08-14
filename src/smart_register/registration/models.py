@@ -154,11 +154,14 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     @cached_property
     def languages(self):
+        return [(k, v) for k, v in settings.LANGUAGES if k in self.all_locales]
+
+    @cached_property
+    def all_locales(self):
         locales = [self.locale]
         if self.locales:
             locales += self.locales
-
-        return [(k, v) for k, v in settings.LANGUAGES if k in locales]
+        return set(locales)
 
 
 class RemoteIp(models.GenericIPAddressField):
