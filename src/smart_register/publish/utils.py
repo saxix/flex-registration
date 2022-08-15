@@ -15,7 +15,6 @@ from django.core.management import call_command
 from django.core.serializers import get_serializer
 from django.core.signing import BadSignature
 from django.db.models import Model, Q
-from django.db.transaction import atomic
 from django.http import Http404
 from django.utils.text import slugify
 
