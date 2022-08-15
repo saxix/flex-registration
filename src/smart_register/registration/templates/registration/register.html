@@ -4,6 +4,7 @@
     <meta name="Survey" content="{{ registration.slug }}">
     <meta name="Version" content="1{{ registration.version }}">
 {% endblock meta %}
+{% block cache %}{% endblock %}
 {% block head %}
     <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
     <script src="{% url 'javascript-catalog' registration.locale %}"></script>

@@ -1,5 +1,6 @@
 import os
 
+from constance import config
 from django.conf import settings
 from django.http import JsonResponse
 
@@ -13,6 +14,7 @@ def project_info(request):
         "debug": settings.DEBUG,
         "env": settings.SMART_ADMIN_HEADER,
         "sentry_dsn": settings.SENTRY_DSN,
+        "cache": config.CACHE_VERSION,
         "has_token": has_token(request),
     }
     return JsonResponse(data)
