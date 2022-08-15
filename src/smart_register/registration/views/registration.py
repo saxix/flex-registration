@@ -120,6 +120,7 @@ class RegisterView(FormView):
         else:
             self.res_etag = get_etag(
                 request,
+                self.registration.active,
                 str(self.registration.version),
                 os.environ.get("BUILD_DATE", ""),
                 translation.get_language(),
