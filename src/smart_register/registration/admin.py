@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -32,6 +33,7 @@ from .forms import CloneForm
 from .models import Record, Registration
 from ..publish.mixin import PublishMixin
 from ..publish.utils import get_registration_data
+from ..state import state
 
 logger = logging.getLogger(__name__)
 

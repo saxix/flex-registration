@@ -87,9 +87,6 @@ class RegisterRouter(FormView):
             language = r.locale
         with translation.override(language):
             url = r.get_absolute_url()
-
-        if request.user.is_authenticated:
-            url += f"?{request.COOKIES[settings.SESSION_COOKIE_NAME]}"
         return HttpResponseRedirect(url)
 
 

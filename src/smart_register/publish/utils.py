@@ -62,7 +62,7 @@ def get_registration_data(reg: Registration) -> str:
     objs = []
     for qs in [options, validators, forms, fields, formsets]:
         objs.extend(qs)
-    # objs.extend(reg.__class__.objects.filter(pk=reg.pk))
+    objs.extend(reg.__class__.objects.filter(pk=reg.pk))
     c.collect(objs)
     serializer = get_serializer('json')()
     return serializer.serialize(c.data,
@@ -88,12 +88,11 @@ def loaddata_from_url(url, auth, user=None, comment=None):
         assert isinstance(fdst.write, object)
         fdst.write(payload.encode())
     fixture = (workdir / fdst.name).absolute()
-    with atomic():
-        with reversion.create_revision():
-            if user:
-                reversion.set_user(user)
-                reversion.set_comment(comment)
-            call_command("loaddata", fixture, stdout=out, verbosity=3)
+    with reversion.create_revision():
+        if user:
+            reversion.set_user(user)
+            reversion.set_comment(comment)
+        call_command("loaddata", fixture, stdout=out, verbosity=3)
     return out.getvalue()
 
 
@@ -114,7 +113,7 @@ def get_prod_credentials(request):
     try:
         credentials = signer.unsign_object(request.COOKIES[CREDENTIALS_COOKIE])
         return credentials
-    except BadSignature:
+    except (BadSignature, KeyError):
         return {}
 
 
