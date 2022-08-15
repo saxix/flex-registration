@@ -1,4 +1,5 @@
 import logging
+import os
 
 from constance import config
 from django.conf import settings
@@ -11,7 +12,6 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
-from smart_register import VERSION
 from smart_register.core.utils import get_etag, get_qrcode
 from smart_register.registration.models import Registration
 
@@ -65,7 +65,8 @@ class HomeView(TemplateView):
         res_etag = get_etag(
             request,
             config.HOME_TEMPLATE,
-            VERSION,
+            config.CACHE_VERSION,
+            os.environ.get("BUILD_DATE", ""),
             get_language(),
             {True: "staff", False: ""}[request.user.is_staff],
         )

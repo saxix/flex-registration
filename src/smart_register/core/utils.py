@@ -19,6 +19,7 @@ from django.core.files.utils import FileProxyMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.template import loader
+from django.urls import reverse
 from django.utils.functional import keep_lazy_text
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -346,3 +347,10 @@ def total_size(o, handlers={}, verbose=False):
         return s
 
     return sizeof(o)
+
+
+def cache_aware_reverse(viewname, urlconf=None, args=None, kwargs=None, current_app=None):
+    url = reverse(viewname, urlconf, args, kwargs, current_app)
+    if state.request.user.is_authenticated:
+        url += f"?{state.request.COOKIES[settings.SESSION_COOKIE_NAME]}"
+    return url

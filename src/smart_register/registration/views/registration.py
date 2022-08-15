@@ -1,10 +1,10 @@
 import logging
+import os
 import time
 from hashlib import md5
 
 import sentry_sdk
 from constance import config
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect
@@ -87,9 +87,6 @@ class RegisterRouter(FormView):
             language = r.locale
         with translation.override(language):
             url = r.get_absolute_url()
-
-        if request.user.is_authenticated:
-            url += f"?{request.COOKIES[settings.SESSION_COOKIE_NAME]}"
         return HttpResponseRedirect(url)
 
 
@@ -124,6 +121,7 @@ class RegisterView(FormView):
             self.res_etag = get_etag(
                 request,
                 str(self.registration.version),
+                os.environ.get("BUILD_DATE", ""),
                 translation.get_language(),
                 {True: "staff", False: ""}[request.user.is_staff],
             )

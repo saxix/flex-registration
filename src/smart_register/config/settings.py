@@ -382,6 +382,7 @@ CONSTANCE_DATABASE_CACHE_BACKEND = env("CONSTANCE_DATABASE_CACHE_BACKEND")
 CONSTANCE_CONFIG = OrderedDict(
     {
         "CACHE_FORMS": (False, "", bool),
+        "CACHE_VERSION": (False, 1, int),
         "HOME_PAGE_REGISTRATIONS": ("", "", str),
         "SMART_ADMIN_BOOKMARKS": (
             "",

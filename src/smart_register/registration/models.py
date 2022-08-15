@@ -8,7 +8,6 @@ from django import forms
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
 from django.db import models
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.text import slugify
@@ -16,7 +15,7 @@ from natural_keys import NaturalKeyModel
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
-from smart_register.core.utils import dict_setdefault, get_client_ip, jsonfy, safe_json, total_size
+from smart_register.core.utils import dict_setdefault, get_client_ip, jsonfy, safe_json, total_size, cache_aware_reverse
 from smart_register.i18n.models import I18NModel
 from smart_register.registration.fields import ChoiceArrayField
 from smart_register.registration.storage import router
@@ -93,7 +92,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("register", args=[self.slug, self.version])
+        return cache_aware_reverse("register", args=[self.slug, self.version])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:
