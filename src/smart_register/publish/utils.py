@@ -142,3 +142,7 @@ def set_cookie(response, key, value, days_expire=7):
 def production_reverse(urlname):
     local = reverse(urlname)
     return config.PRODUCTION_SERVER + local.replace(f"{settings.DJANGO_ADMIN_URL}", "")
+
+
+def invalidate_cache():
+    config.CACHE_VERSION = config.CACHE_VERSION + 1

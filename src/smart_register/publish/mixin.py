@@ -32,7 +32,7 @@ from smart_register.publish.utils import (
     set_cookie,
     sign_prod_credentials,
     unwrap,
-    wraps, production_reverse,
+    wraps, production_reverse, invalidate_cache,
 )
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,9 @@ class PublishMixin(ExtraButtonsMixin):
 
                 info = loaddata_from_url(url, basic, request.user,
                                          f"loaddata from {config.PRODUCTION_SERVER}")
+
                 context["stdout"] = {"details": info}
+                invalidate_cache()
                 self.message_user(request, "Success", messages.SUCCESS)
                 return render(request, "admin/publish/loaddata_done.html", context)
             except PermissionError:
@@ -176,6 +178,7 @@ class PublishMixin(ExtraButtonsMixin):
                     reversion.set_user(request.user)
                     reversion.set_comment(f"loaddata from {remote_ip}")
                     call_command("loaddata", fixture, stdout=out, stderr=out, verbosity=3)
+            invalidate_cache()
             return JsonResponse({"message": "Done",
                                  "details": out.getvalue(),
                                  }, status=200)
