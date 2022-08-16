@@ -2,6 +2,8 @@ import logging
 from unittest.mock import Mock
 from urllib.parse import unquote
 
+from natural_keys import NaturalKeyModel
+
 from admin_extra_buttons.decorators import button, view
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
@@ -19,6 +21,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from ..admin.mixin import LoadDumpMixin
 from ..core.models import FlexForm
+from ..publish.mixin import PublishMixin
 from ..state import state
 from .engine import translator
 from .forms import TranslationForm
@@ -28,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @register(Message)
-class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
+class MessageAdmin(PublishMixin, LoadDumpMixin, SmartModelAdmin):
     search_fields = ("msgid__icontains",)
     list_display = ("id", "msgid", "locale", "msgstr", "draft", "used")
     list_editable = ("draft",)
@@ -75,7 +78,9 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
         ctx = self.get_common_context(
             request,
             media=self.media,
-            title="Generate Translation",
+            title="Check Orphans",
+            pre={},
+            post={}
         )
         if request.method == "POST":
             form = TranslationForm(request.POST)
@@ -85,6 +90,9 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
                 translator.activate(lang)
                 translation.activate(lang)
                 translator[lang].reset()
+                ctx["pre"]["total_messages"] = Message.objects.all().count()
+                ctx["pre"]["used"] = Message.objects.filter(used=True).count()
+                ctx["pre"]["unused"] = Message.objects.filter(used=False).count()
                 Message.objects.update(last_hit=None, used=False)
                 try:
                     state.collect_messages = True
@@ -103,15 +111,18 @@ class MessageAdmin(LoadDumpMixin, SmartModelAdmin):
                 except Exception as e:
                     logger.exception(e)
                 finally:
+                    ctx["post"]["total_messages"] = Message.objects.all().count()
+                    ctx["post"]["used"] = Message.objects.filter(used=True).count()
+                    ctx["post"]["unused"] = Message.objects.filter(used=False).count()
                     translator.activate(locale)
                     translation.activate(locale)
                     state.collect_messages = False
                     state.hit_messages = False
-                    return HttpResponseRedirect("..")
+                    # return render(request, "admin/i18n/message/check_orphans.html", ctx)
         else:
             form = TranslationForm()
             ctx["form"] = form
-        return render(request, "admin/i18n/message/translation.html", ctx)
+        return render(request, "admin/i18n/message/check_orphans.html", ctx)
 
     # @link()
     # def translate(self, button):

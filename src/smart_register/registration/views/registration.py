@@ -107,17 +107,16 @@ class RegisterView(FormView):
             raise Http404
 
     def get(self, request, *args, **kwargs):
-        # if "version" not in kwargs:
-        #     return HttpResponseRedirect(reverse("index"))
-        language = translation.get_language()
-        if language not in self.registration.all_locales:
-            with translation.override(self.registration.locale):
-                url = self.registration.get_absolute_url()
-                return HttpResponseRedirect(url)
 
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
         else:
+            language = translation.get_language()
+            if language not in self.registration.all_locales:
+                with translation.override(self.registration.locale):
+                    url = self.registration.get_absolute_url()
+                    return HttpResponseRedirect(url)
+
             self.res_etag = get_etag(
                 request,
                 self.registration.active,
@@ -152,7 +151,6 @@ class RegisterView(FormView):
         for name, fs in self.get_formsets_classes().items():
             formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets
-        # return self.registration.flex_form.get_formsets(attrs)
 
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
@@ -216,7 +214,6 @@ class RegisterView(FormView):
 
         for name, fs in formsets.items():
             data[name] = []
-            # mapping[name] = fs.form().get_storage_mapping()
             for f in fs:
                 data[name].append(f.cleaned_data)
 

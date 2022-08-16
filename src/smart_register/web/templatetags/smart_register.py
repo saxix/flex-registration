@@ -81,7 +81,7 @@ def smart_attr(field, attr):
 
 @register.filter()
 def jsonfy(d):
-    return json.dumps(d)
+    return json.dumps(d, indent=3)
 
 
 @register.filter(name="lookup")

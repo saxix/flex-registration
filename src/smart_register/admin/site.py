@@ -157,8 +157,8 @@ class AuroraAdminSite(SmartAdminSite):
         return render(request, "admin/redis.html", context)
 
     def sql(self, request, extra_context=None):
-        if not is_root(request):
-            raise PermissionDenied
+        # if not is_root(request):
+        #     raise PermissionDenied
         context = self.each_context(request)
         context["buttons"] = QUICK_SQL
         if request.method == "POST":
@@ -194,9 +194,8 @@ class AuroraAdminSite(SmartAdminSite):
         form = ConsoleForm(request.POST)
         context["form"] = form
 
-        if not is_root(request):
-            raise PermissionDenied
-
+        # if not is_root(request):
+        #     raise PermissionDenied
         if request.method == "POST":
             form = ConsoleForm(request.POST)
             if form.is_valid():
@@ -235,7 +234,6 @@ class AuroraAdminSite(SmartAdminSite):
         else:
             raise Exception("Raw Exception")
 
-    @cache_page(86400)
     def admin_sysinfo(self, request):
         from django_sysinfo.api import get_sysinfo
 

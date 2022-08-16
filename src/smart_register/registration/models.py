@@ -2,20 +2,30 @@ import base64
 import json
 import logging
 
+import jmespath
 from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.text import slugify
+from django.utils.translation import gettext as _
 from natural_keys import NaturalKeyModel
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
 from smart_register.core.models import FlexForm, Validator
-from smart_register.core.utils import dict_setdefault, get_client_ip, jsonfy, safe_json, total_size, cache_aware_reverse
+from smart_register.core.utils import (
+    cache_aware_reverse,
+    dict_setdefault,
+    get_client_ip,
+    jsonfy,
+    safe_json,
+    total_size,
+)
 from smart_register.i18n.models import I18NModel
 from smart_register.registration.fields import ChoiceArrayField
 from smart_register.registration.storage import router
@@ -68,7 +78,12 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True
     )
     unique_field = models.CharField(
-        max_length=255, blank=True, null=True, help_text="Form field to be used as unique key"
+        max_length=255, blank=True, null=True,
+        help_text="Form field to be used as unique key"
+    )
+    unique_field_path = models.CharField(
+        max_length=1000, blank=True, null=True,
+        help_text="JMESPath expression to retrieve unique field"
     )
     unique_field_error = models.CharField(
         max_length=255, blank=True, null=True, help_text="Error message in case of duplicate 'unique_field'"
@@ -143,7 +158,23 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
             }
 
         if self.unique_field and self.unique_field in fields:
-            kwargs["unique_field"] = fields.get(self.unique_field, None) or None
+            unique_value = fields.get(self.unique_field, None)
+            if not unique_value:
+                try:
+                    result = jmespath.search(self.unique_field_path,
+                                             fields)
+                    kwargs["unique_field"] = result
+                except Exception as e:
+                    logger.exception(e)
+
+            if not kwargs["unique_field"]:
+                for individual in fields.get('individuals'):
+                    if individual['role_i_c'] == 'y':
+                        kwargs["unique_field"] = individual['tax_id_no_i_c']
+                        break
+            # except Exception as e:
+            #     logger.exception(e)
+
         kwargs.update({
             "size": total_size(fields) + total_size(files),
             "counters": fields_data.get("counters", {}),

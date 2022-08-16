@@ -3,7 +3,10 @@ import datetime
 import decimal
 import io
 import json
+import os
+import random
 import re
+import sys
 import time
 import unicodedata
 from collections import deque
@@ -11,15 +14,18 @@ from itertools import chain
 from pathlib import Path
 from sys import getsizeof, stderr
 
+import faker
 import qrcode
 from constance import config
 from dateutil.relativedelta import relativedelta
+from django import forms
 from django.conf import settings
 from django.core.files.utils import FileProxyMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 from django.template import loader
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import keep_lazy_text
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -354,3 +360,51 @@ def cache_aware_reverse(viewname, urlconf=None, args=None, kwargs=None, current_
     if state.request.user.is_authenticated:
         url += f"?{state.request.COOKIES[settings.SESSION_COOKIE_NAME]}"
     return url
+
+
+def get_fake_value(field):
+    from smart_register.core.fields import CompilationTimeField, RemoteIpField, AjaxSelectField
+    fake = faker.Faker()
+    ret = str(field)
+    if hasattr(field, "choices"):
+      ret = random.choice(field.choices)[0]
+    elif isinstance(field, AjaxSelectField):
+        from smart_register.core.models import OptionSet
+        obj = OptionSet.objects.get(name=field.datasource)
+        ret = random.choice(obj.get_data())['pk']
+
+    elif isinstance(field, (forms.GenericIPAddressField, RemoteIpField)):
+        ret = fake.ipv4()
+    elif isinstance(field, CompilationTimeField):
+        ret =[timezone.now().isoformat(), 1658187, 1, 1658187]
+    elif isinstance(field, forms.CharField):
+        ret = fake.name()
+    elif isinstance(field, forms.IntegerField):
+        ret = random.randint(1, sys.maxsize)
+    elif isinstance(field, forms.DateField):
+        ret = fake.date()
+    return ret
+
+
+def build_form_fake_data(form_class):
+    initials = {}
+    form = form_class()
+    for field_name, field in form.fields.items():
+        initials[field_name] = get_fake_value(field)
+        for fs in form.flex_form.formsets.select_related("flex_form", "parent").filter(enabled=True):
+            formset_data = []
+            num = random.randint(fs.min_num, fs.max_num or 5)
+            for i in range(num):
+                form_data = {}
+                for field_name, field in fs.get_form()().fields.items():
+                    form_data[field_name] = get_fake_value(field)
+                formset_data.append(form_data)
+            initials[fs.name] = formset_data
+
+    return initials
+
+
+def get_system_cache_version():
+    return "/".join(map(str, [config.CACHE_VERSION,
+                              os.environ.get("VERSION", ""),
+                              os.environ.get("BUILD_DATE", "")]))

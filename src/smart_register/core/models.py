@@ -572,8 +572,8 @@ class OptionSet(NaturalKeyModel, models.Model):
     def get_api_url(self):
         return reverse("optionset", args=[self.name])
 
-    def get_data(self, requested_language):
-        if self.separator:
+    def get_data(self, requested_language=None):
+        if self.separator and requested_language:
             try:
                 label_col = self.languages.split(",").index(requested_language)
             except ValueError:

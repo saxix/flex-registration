@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 import pytz
+from django.core.cache import cache
 
 from admin_extra_buttons.decorators import button, link, view
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -27,7 +28,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 from ..core.admin import ConcurrencyVersionAdmin
 
 from ..core.models import FormSet
-from ..core.utils import clone_model, is_root, last_day_of_month, namify
+from ..core.utils import clone_model, is_root, last_day_of_month, namify, build_form_fake_data, get_system_cache_version
 from .forms import CloneForm
 from .models import Record, Registration
 from ..publish.mixin import PublishMixin
@@ -44,6 +45,21 @@ DATA = {
     "core.FlexFormField": [],
     "i18n.Message": [],
 }
+
+
+class JamesForm(forms.ModelForm):
+    unique_field_path = forms.CharField(label="JMESPath expression",
+                                        widget=forms.TextInput(attrs={'style': "width:90%"}))
+    data = forms.CharField(widget=forms.Textarea, required=False)
+
+    class Meta:
+        model = Registration
+        fields = ("unique_field_path", "unique_field", "data")
+
+    class Media:
+        js = ["https://cdnjs.cloudflare.com/ajax/libs/jmespath/0.16.0/jmespath.min.js",
+
+              ]
 
 
 @register(Registration)
@@ -65,7 +81,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
         (None, {"fields": ("name", "title", "slug")}),
-        ("Unique", {"fields": ("unique_field", "unique_field_error")}),
+        ("Unique", {"fields": ("unique_field", "unique_field_path", "unique_field_error",)}),
         ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
         ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
@@ -186,7 +202,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         )
         return render(request, "admin/registration/registration/inspect.html", ctx)
 
-    @view()
+    @button()
     def clone(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -266,7 +282,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
             if form.is_valid():
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
-                uri = reverse("register", args=[instance.slug])
+                uri = reverse("register", args=[instance.slug, instance.version])
                 uri = translate_url(uri, locale)
                 from django.test import Client
 
@@ -278,14 +294,17 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
                     # uri = request.build_absolute_uri(reverse("register", args=[instance.slug]))
                     # uri = translate_url(uri, locale)
                     # r1 = requests.get(uri, headers={"Accept-Language": locale, "I18N": "true"})
+                    if r1.status_code == 302:
+                        # return HttpResponse(r1.content, status=r1.status_code)
+                        raise Exception(f"GET: {uri} - {r1.status_code}: {r1.headers['location']}")
                     if r1.status_code != 200:
-                        return HttpResponse(r1.content, status_code=r1.status_code)
-                        # raise Exception(f"GET: {uri} - {status_code}")
+                        # return HttpResponse(r1.content, status=r1.status_code)
+                        raise Exception(f"GET: {uri} - {r1.status_code}")
                     # r2 = requests.post(uri, {}, headers={"Accept-Language": locale, "I18N": "true"})
                     r2 = client.post(uri, {}, **headers)
                     if r2.status_code != 200:
-                        return HttpResponse(r2.content, status_code=r2.status_code)
-                        # raise Exception(f"POST: {uri} - {status_code}")
+                        # return HttpResponse(r2.content, status=r2.status_code)
+                        raise Exception(f"POST: {uri} - {r2.status_code}")
                 except Exception as e:
                     logger.exception(e)
                     self.message_error_to_user(request, e)
@@ -340,6 +359,34 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
                 button.html_attrs["target"] = f"_{button.original.pk}"
         except Exception as e:
             logger.exception(e)
+
+    @view()
+    def james_fake_data(self, request, pk):
+        reg = self.get_object(request, pk)
+        data = cache.get(f"james_{pk}", version=get_system_cache_version())
+        if not data:
+            form_class = reg.flex_form.get_form_class()
+            data = build_form_fake_data(form_class)
+            cache.set(f"james_{pk}", data, version=get_system_cache_version())
+
+        return JsonResponse(data, safe=False)
+
+    @button()
+    def james_editor(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="JAMESPath Editor")
+        if request.method == 'POST':
+            form = JamesForm(request.POST, instance=ctx["original"])
+            if form.is_valid():
+                form.save()
+                cache.set(f"james_{pk}",
+                          form.cleaned_data["data"],
+                          version=get_system_cache_version())
+                return HttpResponseRedirect(".")
+        else:
+            data = cache.get(f"james_{pk}", version=get_system_cache_version())
+            form = JamesForm(instance=ctx["original"], initial={"data": data})
+        ctx["form"] = form
+        return render(request, "admin/registration/registration/james_editor.html", ctx)
 
     @button()
     def test(self, request, pk):

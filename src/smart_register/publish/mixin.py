@@ -88,7 +88,7 @@ class PublishMixin(ExtraButtonsMixin):
         return render(request, "admin/publish/login_prod.html", context, cookies=cookies)
 
     @button(enabled=is_editor, change_list=True)
-    def loaddata(self, request):
+    def get_data(self, request):
         context = self.get_common_context(request,
                                           title="Load data from PRODUCTION",
                                           server=config.PRODUCTION_SERVER)

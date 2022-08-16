@@ -55,6 +55,8 @@ django-reversion = "^5.0"
 django-reversion-compare = "^0.15"
 celery = "^5.2.6"
 django-appconf = "^1.0.5"
+jmespath = "^1.0.1"
+Faker = "^14.0.0"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"

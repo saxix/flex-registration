@@ -72,6 +72,7 @@ def simple_form(db):
     )
     frm.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     frm.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})
+    frm.fields.get_or_create(label="index_no", defaults={"field_type": forms.CharField, "required": False})
     return frm
 
 
