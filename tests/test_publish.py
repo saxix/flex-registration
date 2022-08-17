@@ -1,6 +1,6 @@
 import json
 
-from smart_register.publish.utils import wraps, unwrap
+from aurora.publish.utils import wraps, unwrap
 
 
 def test_wrappers():

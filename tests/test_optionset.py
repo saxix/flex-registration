@@ -1,6 +1,6 @@
 import json
 
-from smart_register.core.models import OptionSet
+from aurora.core.models import OptionSet
 
 
 def test_base(db):

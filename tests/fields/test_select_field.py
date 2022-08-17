@@ -1,7 +1,7 @@
 import pytest
 
-from smart_register.core.fields import SelectField
-from smart_register.core.models import OptionSet
+from aurora.core.fields import SelectField
+from aurora.core.models import OptionSet
 
 
 @pytest.fixture

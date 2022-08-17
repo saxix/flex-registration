@@ -1,4 +1,4 @@
 def test_wsgi():
-    from smart_register.config.wsgi import application
+    from aurora.config.wsgi import application
 
     assert application

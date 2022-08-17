@@ -4,7 +4,7 @@ import pytest
 from django import forms
 from django.core.files.storage import get_storage_class
 
-from smart_register.core.fields import CompilationTimeField, SmartFileField
+from aurora.core.fields import CompilationTimeField, SmartFileField
 
 
 def pytest_addoption(parser):
@@ -40,8 +40,8 @@ def pytest_configure(config):
 
 @pytest.fixture()
 def simple_form(db):
-    from smart_register.core.cache import cache
-    from smart_register.core.models import FlexForm, Validator
+    from aurora.core.cache import cache
+    from aurora.core.models import FlexForm, Validator
 
     cache.clear()
 
@@ -81,7 +81,7 @@ def simple_form(db):
 
 @pytest.fixture()
 def complex_form():
-    from smart_register.core.models import FlexForm, Validator
+    from aurora.core.models import FlexForm, Validator
 
     v1, __ = Validator.objects.get_or_create(
         name="length_2_8",

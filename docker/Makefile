@@ -17,7 +17,7 @@ CONTAINER_NAME?=flex-form-cnt
 LAZO?=$(shell which lazo)
 
 DOCKER_REGISTRY=ghcr.io
-DOCKER_IMAGE_NAME=saxix/smart_register
+DOCKER_IMAGE_NAME=saxix/aurora
 DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:${VERSION}
 DOCKER_TARGET=${DOCKER_REGISTRY}/${DOCKER_IMAGE}
 DOCKERFILE?=Dockerfile
@@ -90,7 +90,7 @@ dev:
 			-e ALLOWED_HOSTS="*" \
 			-e DATABASE_URL="${DATABASE_URL}" \
 			-e DEBUG="0" \
-			-e DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
+			-e DJANGO_SETTINGS_MODULE="aurora.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
 			${RUN_OPTIONS} \
 			${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest \

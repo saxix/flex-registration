@@ -9,8 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.select import Select
 
-from smart_register.i18n.gettext import gettext
-from smart_register.registration.models import Record
+from aurora.i18n.gettext import gettext
+from aurora.registration.models import Record
 
 
 @pytest.fixture()

@@ -711,7 +711,7 @@ python-versions = "*"
 
 [[package]]
 name = "django-smart-admin"
-version = "2.2.0"
+version = "2.2.1"
 description = ""
 category = "main"
 optional = false
@@ -822,7 +822,7 @@ doc = ["sphinx", "sphinx-rtd-theme", "sphinxcontrib-spelling"]
 
 [[package]]
 name = "faker"
-version = "14.0.0"
+version = "14.1.0"
 description = "Faker is a Python package that generates fake data for you."
 category = "main"
 optional = false
@@ -2288,7 +2288,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "8e0a2f5c9fae35da44aed2e570c2c1479d78787f6fa972d62ed1b706f18bf6b7"
+content-hash = "b4b945fad2260ed758572b03ab3106eccf60a84d027ee5f3deddee78a2d1ea14"
 
 [metadata.files]
 amqp = [

@@ -1,6 +1,6 @@
 import pytest
 
-from smart_register.core.fields.captcha import CaptchaTextInput, SmartCaptchaField
+from aurora.core.fields.captcha import CaptchaTextInput, SmartCaptchaField
 
 
 @pytest.mark.django_db()

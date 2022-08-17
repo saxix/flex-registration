@@ -3,13 +3,13 @@ import base64
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from smart_register.core.utils import (
+from aurora.core.utils import (
     extract_content,
     merge_data,
     namify,
     underscore_to_camelcase,
 )
-from smart_register.registration.storage import Router
+from aurora.registration.storage import Router
 
 
 @pytest.mark.parametrize("v", ["underscore_to_camelcase", "underscore to camelcase", "underscore__to_camelcase"])

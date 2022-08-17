@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from decimal import Decimal
 
-from smart_register.core.utils import jsonfy, safe_json
+from aurora.core.utils import jsonfy, safe_json
 
 LANGUAGES = {
     "english": "first",

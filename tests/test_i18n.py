@@ -4,7 +4,7 @@ from django.urls import reverse
 
 @pytest.fixture()
 def simple_registration(simple_form):
-    from smart_register.registration.models import Registration
+    from aurora.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
         locale="en-us",

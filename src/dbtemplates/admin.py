@@ -11,7 +11,7 @@ from dbtemplates.utils.template import check_template_syntax
 
 # Check if django-reversion is installed and use reversions' VersionAdmin
 # as the base admin class if yes
-from smart_register.publish.mixin import PublishMixin
+from aurora.publish.mixin import PublishMixin
 
 if settings.DBTEMPLATES_USE_REVERSION:
     from reversion.admin import VersionAdmin as TemplateModelAdmin
