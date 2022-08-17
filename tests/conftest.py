@@ -65,10 +65,13 @@ def simple_form(db):
     frm.fields.get_or_create(label="time", defaults={"field_type": CompilationTimeField})
     frm.fields.get_or_create(label="First Name", defaults={"field_type": forms.CharField, "required": True})
     frm.fields.get_or_create(
-        label="Last Name", defaults={"field_type": forms.CharField,
-                                     "required": True,
-                                     "validator": v2,
-                                     "advanced": {"smart": {"index": 1}}}
+        label="Last Name",
+        defaults={
+            "field_type": forms.CharField,
+            "required": True,
+            "validator": v2,
+            "advanced": {"smart": {"index": 1}},
+        },
     )
     frm.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     frm.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})

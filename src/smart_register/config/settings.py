@@ -122,7 +122,7 @@ TEMPLATES = [
             PACKAGE_DIR / "core/templates",
             PACKAGE_DIR / "web/templates",
         ],
-        'APP_DIRS': False,
+        "APP_DIRS": False,
         "OPTIONS": {
             "loaders": [
                 "dbtemplates.loader.Loader",
@@ -174,8 +174,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
 try:
-    if REDIS_CONNSTR := env('REDIS_CONNSTR'):
-        os.environ['CACHE_DEFAULT'] = f'redisraw://{REDIS_CONNSTR}'
+    if REDIS_CONNSTR := env("REDIS_CONNSTR"):
+        os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR}"
 except Exception as e:
     logging.exception(e)
 

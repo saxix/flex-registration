@@ -6,24 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0046_alter_validator_target'),
-        ('registration', '0033_auto_20220604_1314'),
+        ("core", "0046_alter_validator_target"),
+        ("registration", "0033_auto_20220604_1314"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='record',
-            name='index1',
+            model_name="record",
+            name="index1",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='record',
-            name='index2',
+            model_name="record",
+            name="index2",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='record',
-            name='index3',
+            model_name="record",
+            name="index3",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

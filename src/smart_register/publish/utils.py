@@ -43,11 +43,8 @@ def is_production(request):
 def get_data_structure(reg: Model) -> str:
     c = ForeignKeysCollector(None)
     c.collect(reg.__class__.objects.filter(pk=reg.pk))
-    json = get_serializer('json')()
-    return json.serialize(c.data,
-                          use_natural_foreign_keys=True,
-                          use_natural_primary_keys=True,
-                          indent=3)
+    json = get_serializer("json")()
+    return json.serialize(c.data, use_natural_foreign_keys=True, use_natural_primary_keys=True, indent=3)
 
 
 def get_registration_data(reg: Registration) -> str:
@@ -63,11 +60,8 @@ def get_registration_data(reg: Registration) -> str:
         objs.extend(qs)
     objs.extend(reg.__class__.objects.filter(pk=reg.pk))
     c.collect(objs)
-    serializer = get_serializer('json')()
-    return serializer.serialize(c.data,
-                                use_natural_foreign_keys=True,
-                                use_natural_primary_keys=True,
-                                indent=3)
+    serializer = get_serializer("json")()
+    return serializer.serialize(c.data, use_natural_foreign_keys=True, use_natural_primary_keys=True, indent=3)
 
 
 def loaddata_from_url(url, auth, user=None, comment=None):
@@ -81,8 +75,7 @@ def loaddata_from_url(url, auth, user=None, comment=None):
     out = io.StringIO()
     payload = unwrap(ret.content)
     workdir = Path(".").absolute()
-    kwargs = {"dir": workdir, "prefix": f"~LOADDATA-{slugify(url)}",
-              "suffix": ".json", "delete": False}
+    kwargs = {"dir": workdir, "prefix": f"~LOADDATA-{slugify(url)}", "suffix": ".json", "delete": False}
     with tempfile.NamedTemporaryFile(**kwargs) as fdst:
         assert isinstance(fdst.write, object)
         fdst.write(payload.encode())
@@ -101,7 +94,7 @@ def wraps(data: str) -> str:
 
 def unwrap(payload: str) -> str:
     data = json.loads(payload)
-    return unquote(data['data'])
+    return unquote(data["data"])
 
 
 def is_logged_to_prod(request):

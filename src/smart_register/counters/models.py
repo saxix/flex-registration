@@ -11,12 +11,7 @@ from smart_register.registration.models import Record, Registration
 
 class CounterManager(models.Manager):
     def collect(self, *, registrations=None):
-        result = {
-            "registration": 0,
-            "records": 0,
-            "days": 0,
-            "details": {}
-        }
+        result = {"registration": 0, "records": 0, "days": 0, "details": {}}
         today = datetime.today()
         yesterday = datetime.combine(today - timedelta(days=1), datetime.max.time())
         selection = Registration.objects.filter(active=True)
@@ -25,15 +20,16 @@ class CounterManager(models.Manager):
         querysets = []
         for registration in selection:
             result["registration"] += 1
-            result["details"][registration.slug] = {"range": [],
-                                                    "days": 0}
+            result["details"][registration.slug] = {"range": [], "days": 0}
             latest = Counter.objects.filter(registration=registration).order_by("-day").first()
             if latest:
                 latest = latest.day + timedelta(days=1)
             else:
                 latest = datetime.min
-            result["details"][registration.slug]["range"] = (latest.strftime("%Y-%B-%d"),
-                                                             yesterday.strftime("%Y-%B-%d"))
+            result["details"][registration.slug]["range"] = (
+                latest.strftime("%Y-%B-%d"),
+                yesterday.strftime("%Y-%B-%d"),
+            )
             qs = Record.objects.filter(registration=registration, timestamp__range=(latest, yesterday))
             qs = (
                 qs.annotate(hour=ExtractHour("timestamp"), day=TruncDay("timestamp"))

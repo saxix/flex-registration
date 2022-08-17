@@ -2,8 +2,6 @@ import logging
 from unittest.mock import Mock
 from urllib.parse import unquote
 
-from natural_keys import NaturalKeyModel
-
 from admin_extra_buttons.decorators import button, view
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
@@ -75,13 +73,7 @@ class MessageAdmin(PublishMixin, LoadDumpMixin, SmartModelAdmin):
 
     @button()
     def check_orphans(self, request):
-        ctx = self.get_common_context(
-            request,
-            media=self.media,
-            title="Check Orphans",
-            pre={},
-            post={}
-        )
+        ctx = self.get_common_context(request, media=self.media, title="Check Orphans", pre={}, post={})
         if request.method == "POST":
             form = TranslationForm(request.POST)
             locale = get_language()

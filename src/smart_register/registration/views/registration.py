@@ -73,7 +73,6 @@ class BinaryFile:
 
 @method_decorator(csrf_exempt, name="dispatch")
 class RegisterRouter(FormView):
-
     def get_template_names(self):
         return []
 
@@ -178,8 +177,7 @@ class RegisterView(FormView):
         try:
             if self.registration.unique_field:
                 if unique_value := cleaned_data.get(self.registration.unique_field, None):
-                    r = Record(registration=self.registration,
-                               unique_field=unique_value)
+                    r = Record(registration=self.registration, unique_field=unique_value)
                     r.validate_unique()
         except ValidationError:
             self.errors.append(ValidationError(_(self.registration.unique_field_error)))
@@ -218,12 +216,12 @@ class RegisterView(FormView):
                 data[name].append(f.cleaned_data)
 
         data["counters"] = form.get_counters(data)
-        if form.indexes['1']:
-            data["index1"] = data[form.indexes['1']]
-        if form.indexes['2']:
-            data["index2"] = data[form.indexes['2']]
-        if form.indexes['3']:
-            data["index3"] = data[form.indexes['3']]
+        if form.indexes["1"]:
+            data["index1"] = data[form.indexes["1"]]
+        if form.indexes["2"]:
+            data["index2"] = data[form.indexes["2"]]
+        if form.indexes["3"]:
+            data["index3"] = data[form.indexes["3"]]
         record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)

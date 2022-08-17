@@ -17,7 +17,7 @@ from django.contrib.admin import SimpleListFilter, register
 from django.db.models import JSONField
 from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils import timezone
@@ -48,8 +48,9 @@ DATA = {
 
 
 class JamesForm(forms.ModelForm):
-    unique_field_path = forms.CharField(label="JMESPath expression",
-                                        widget=forms.TextInput(attrs={'style': "width:90%"}))
+    unique_field_path = forms.CharField(
+        label="JMESPath expression", widget=forms.TextInput(attrs={"style": "width:90%"})
+    )
     data = forms.CharField(widget=forms.Textarea, required=False)
 
     class Meta:
@@ -57,9 +58,9 @@ class JamesForm(forms.ModelForm):
         fields = ("unique_field_path", "unique_field", "data")
 
     class Media:
-        js = ["https://cdnjs.cloudflare.com/ajax/libs/jmespath/0.16.0/jmespath.min.js",
-
-              ]
+        js = [
+            "https://cdnjs.cloudflare.com/ajax/libs/jmespath/0.16.0/jmespath.min.js",
+        ]
 
 
 @register(Registration)
@@ -81,7 +82,16 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     fieldsets = [
         (None, {"fields": (("version", "last_update_date", "active"),)}),
         (None, {"fields": ("name", "title", "slug")}),
-        ("Unique", {"fields": ("unique_field", "unique_field_path", "unique_field_error",)}),
+        (
+            "Unique",
+            {
+                "fields": (
+                    "unique_field",
+                    "unique_field_path",
+                    "unique_field_error",
+                )
+            },
+        ),
         ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
         ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
@@ -374,13 +384,11 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     @button()
     def james_editor(self, request, pk):
         ctx = self.get_common_context(request, pk, title="JAMESPath Editor")
-        if request.method == 'POST':
+        if request.method == "POST":
             form = JamesForm(request.POST, instance=ctx["original"])
             if form.is_valid():
                 form.save()
-                cache.set(f"james_{pk}",
-                          form.cleaned_data["data"],
-                          version=get_system_cache_version())
+                cache.set(f"james_{pk}", form.cleaned_data["data"], version=get_system_cache_version())
                 return HttpResponseRedirect(".")
         else:
             data = cache.get(f"james_{pk}", version=get_system_cache_version())
@@ -447,13 +455,10 @@ class RecordAdmin(SmartModelAdmin):
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored", "unique_field")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id", "fields", "counters")
     autocomplete_fields = ("registration",)
-    list_filter = (("registration", AutoCompleteFilter),
-                   HourFilter,
-                   ("unique_field", ValueFilter),
-                   "ignored")
+    list_filter = (("registration", AutoCompleteFilter), HourFilter, ("unique_field", ValueFilter), "ignored")
     change_form_template = None
     change_list_template = None
-    actions = ['fix_tax_id']
+    actions = ["fix_tax_id"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -471,9 +476,9 @@ class RecordAdmin(SmartModelAdmin):
         results = {"updated": [], "processed": []}
         for record in queryset:
             try:
-                for individual in record.fields['individuals']:
-                    if individual['role_i_c'] == 'y':
-                        record.unique_field = individual['tax_id_no_i_c']
+                for individual in record.fields["individuals"]:
+                    if individual["role_i_c"] == "y":
+                        record.unique_field = individual["tax_id_no_i_c"]
                         record.save()
                         results["updated"].append(record.pk)
                         break
@@ -485,8 +490,7 @@ class RecordAdmin(SmartModelAdmin):
 
     @button(label="Fix TaxID")
     def _fix_tax_id(self, request):
-        queryset = Record.objects.filter(unique_field__isnull=True,
-                                         timestamp__gt="2022-06-15")
+        queryset = Record.objects.filter(unique_field__isnull=True, timestamp__gt="2022-06-15")
         return self.fix_tax_id(request, queryset)
 
     @link(html_attrs={"class": "aeb-warn "}, change_form=True)
@@ -508,7 +512,7 @@ class RecordAdmin(SmartModelAdmin):
     @button(label="inspect", permission=is_root)
     def inspect(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Inspect")
-        ctx['files_as_dict'] = json.loads(self.object.files.tobytes().decode())
+        ctx["files_as_dict"] = json.loads(self.object.files.tobytes().decode())
         return render(request, "admin/registration/record/inspect.html", ctx)
 
     @button(permission=is_root)

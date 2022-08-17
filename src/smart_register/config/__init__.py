@@ -76,26 +76,22 @@ DEFAULTS = {
 
 
 class SmartEnv(Env):
-
     def cache_url(self, var=Env.DEFAULT_CACHE_ENV, default=Env.NOTSET, backend=None):
         v = self.str(var, default)
-        if v.startswith('redisraw://'):
-            scheme, string = v.split('redisraw://')
-            host, *options = string.split(',')
-            config = dict([v.split('=', 1) for v in options])
-            if parse_bool(config.get('ssl', 'false')):
-                scheme = 'rediss'
+        if v.startswith("redisraw://"):
+            scheme, string = v.split("redisraw://")
+            host, *options = string.split(",")
+            config = dict([v.split("=", 1) for v in options])
+            if parse_bool(config.get("ssl", "false")):
+                scheme = "rediss"
             else:
-                scheme = 'redis'
-            auth = ''
-            credentials = [config.pop('user', ''), config.pop('password', '')]
+                scheme = "redis"
+            auth = ""
+            credentials = [config.pop("user", ""), config.pop("password", "")]
             if credentials[0] or credentials[1]:
                 auth = f"{':'.join(credentials)}@"
             new_url = f"{scheme}://{auth}{host}/?{urlencode(config)}"
-            return self.cache_url_config(
-                urlparse(new_url),
-                backend=backend
-            )
+            return self.cache_url_config(urlparse(new_url), backend=backend)
         return super().cache_url(var, default, backend)
 
 

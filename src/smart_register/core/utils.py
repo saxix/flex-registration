@@ -39,8 +39,10 @@ UNDEFINED = object()
 
 
 def has_token(request, *args, **kwargs):
-    return (request.headers.get("x-session") == settings.ROOT_TOKEN
-            or request.COOKIES.get("x-session") == settings.ROOT_TOKEN)
+    return (
+        request.headers.get("x-session") == settings.ROOT_TOKEN
+        or request.COOKIES.get("x-session") == settings.ROOT_TOKEN
+    )
 
 
 def is_root(request, *args, **kwargs):
@@ -315,7 +317,7 @@ def merge_data(d1, d2):
 
 
 def total_size(o, handlers={}, verbose=False):
-    """ Returns the approximate memory footprint an object and all of its contents.
+    """Returns the approximate memory footprint an object and all of its contents.
 
     Automatically finds the contents of the following builtin containers and
     their subclasses:  tuple, list, deque, dict, set and frozenset.
@@ -326,13 +328,14 @@ def total_size(o, handlers={}, verbose=False):
 
     """
     dict_handler = lambda d: chain.from_iterable(d.items())
-    all_handlers = {tuple: iter,
-                    list: iter,
-                    deque: iter,
-                    dict: dict_handler,
-                    set: iter,
-                    frozenset: iter,
-                    }
+    all_handlers = {
+        tuple: iter,
+        list: iter,
+        deque: iter,
+        dict: dict_handler,
+        set: iter,
+        frozenset: iter,
+    }
     all_handlers.update(handlers)  # user handlers take precedence
     seen = set()  # track which object id's have already been seen
     default_size = getsizeof(0)  # estimate sizeof object without __sizeof__
@@ -364,19 +367,21 @@ def cache_aware_reverse(viewname, urlconf=None, args=None, kwargs=None, current_
 
 def get_fake_value(field):
     from smart_register.core.fields import CompilationTimeField, RemoteIpField, AjaxSelectField
+
     fake = faker.Faker()
     ret = str(field)
     if hasattr(field, "choices"):
-      ret = random.choice(field.choices)[0]
+        ret = random.choice(field.choices)[0]
     elif isinstance(field, AjaxSelectField):
         from smart_register.core.models import OptionSet
+
         obj = OptionSet.objects.get(name=field.datasource)
-        ret = random.choice(obj.get_data())['pk']
+        ret = random.choice(obj.get_data())["pk"]
 
     elif isinstance(field, (forms.GenericIPAddressField, RemoteIpField)):
         ret = fake.ipv4()
     elif isinstance(field, CompilationTimeField):
-        ret =[timezone.now().isoformat(), 1658187, 1, 1658187]
+        ret = [timezone.now().isoformat(), 1658187, 1, 1658187]
     elif isinstance(field, forms.CharField):
         ret = fake.name()
     elif isinstance(field, forms.IntegerField):
@@ -405,6 +410,4 @@ def build_form_fake_data(form_class):
 
 
 def get_system_cache_version():
-    return "/".join(map(str, [config.CACHE_VERSION,
-                              os.environ.get("VERSION", ""),
-                              os.environ.get("BUILD_DATE", "")]))
+    return "/".join(map(str, [config.CACHE_VERSION, os.environ.get("VERSION", ""), os.environ.get("BUILD_DATE", "")]))

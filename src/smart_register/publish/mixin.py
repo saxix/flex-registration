@@ -32,7 +32,9 @@ from smart_register.publish.utils import (
     set_cookie,
     sign_prod_credentials,
     unwrap,
-    wraps, production_reverse, invalidate_cache,
+    wraps,
+    production_reverse,
+    invalidate_cache,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,28 +47,27 @@ class PublishMixin(ExtraButtonsMixin):
     @view(decorators=[csrf_exempt], http_basic_auth=True, enabled=is_production)
     def check_login(self, request):
         response = JsonResponse({"user": request.user.username})
-        set_cookie(response, 'editor_logged', '1')
+        set_cookie(response, "editor_logged", "1")
         return response
 
     @view(decorators=[csrf_exempt], http_basic_auth=True, enabled=is_production)
     def production_logout(self, request):
-        response = HttpResponseRedirect('..')
-        set_cookie(response, CREDENTIALS_COOKIE, '')
+        response = HttpResponseRedirect("..")
+        set_cookie(response, CREDENTIALS_COOKIE, "")
         return response
 
     def get_common_context(self, request, pk=None, **kwargs):
-        kwargs['server'] = config.PRODUCTION_SERVER
-        kwargs['prod_logout'] = local_reverse(admin_urlname(self.model._meta, "production_logout"))
-        kwargs['prod_credentials'] = get_prod_credentials(request)
-        kwargs['prod_login'] = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
+        kwargs["server"] = config.PRODUCTION_SERVER
+        kwargs["prod_logout"] = local_reverse(admin_urlname(self.model._meta, "production_logout"))
+        kwargs["prod_credentials"] = get_prod_credentials(request)
+        kwargs["prod_login"] = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
         return super().get_common_context(request, pk, **kwargs)
 
     @view(enabled=is_editor)
     def login_to_prod(self, request):
-        context = self.get_common_context(request,
-                                          title=f"Login to production ({config.PRODUCTION_SERVER})")
+        context = self.get_common_context(request, title=f"Login to production ({config.PRODUCTION_SERVER})")
         cookies = {}
-        if request.method == 'POST':
+        if request.method == "POST":
             form = ProductionLoginForm(data=request.POST)
             if form.is_valid():
                 basic = HTTPBasicAuth(**form.cleaned_data)
@@ -76,31 +77,28 @@ class PublishMixin(ExtraButtonsMixin):
                     cookies[CREDENTIALS_COOKIE] = sign_prod_credentials(**form.cleaned_data)
                     data = ret.json()
                     self.message_user(request, f"Logged in to {config.PRODUCTION_SERVER} as {data['user']}")
-                    if 'from' in request.GET:
-                        redir_url = request.build_absolute_uri(unquote_plus(request.GET['from']))
+                    if "from" in request.GET:
+                        redir_url = request.build_absolute_uri(unquote_plus(request.GET["from"]))
                         response = HttpResponseRedirect(redir_url)
                         response.set_cookie(CREDENTIALS_COOKIE, cookies[CREDENTIALS_COOKIE])
                 else:
                     self.message_user(request, f"Login failed {ret} - {url}", messages.ERROR)
         else:
             form = ProductionLoginForm()
-        context['form'] = form
+        context["form"] = form
         return render(request, "admin/publish/login_prod.html", context, cookies=cookies)
 
     @button(enabled=is_editor, change_list=True)
     def get_data(self, request):
-        context = self.get_common_context(request,
-                                          title="Load data from PRODUCTION",
-                                          server=config.PRODUCTION_SERVER)
-        if request.method == 'POST':
+        context = self.get_common_context(request, title="Load data from PRODUCTION", server=config.PRODUCTION_SERVER)
+        if request.method == "POST":
             try:
                 if not is_logged_to_prod(request):
                     raise PermissionError
                 url = production_reverse(admin_urlname(self.model._meta, "dumpdata"))
                 basic = HTTPBasicAuth(**get_prod_credentials(request))
 
-                info = loaddata_from_url(url, basic, request.user,
-                                         f"loaddata from {config.PRODUCTION_SERVER}")
+                info = loaddata_from_url(url, basic, request.user, f"loaddata from {config.PRODUCTION_SERVER}")
 
                 context["stdout"] = {"details": info}
                 invalidate_cache()
@@ -129,9 +127,8 @@ class PublishMixin(ExtraButtonsMixin):
 
     @button(enabled=is_editor)
     def publish(self, request, pk):
-        context = self.get_common_context(request, pk, title="Publish to PRODUCTION",
-                                          server=config.PRODUCTION_SERVER)
-        if request.method == 'POST':
+        context = self.get_common_context(request, pk, title="Publish to PRODUCTION", server=config.PRODUCTION_SERVER)
+        if request.method == "POST":
             try:
                 if not is_logged_to_prod(request):
                     raise PermissionError
@@ -140,9 +137,7 @@ class PublishMixin(ExtraButtonsMixin):
                 record = self.get_object(request, pk)
                 payload = self._get_data(record)
 
-                ret = requests.post(url,
-                                    data=wraps(payload),
-                                    auth=basic)
+                ret = requests.post(url, data=wraps(payload), auth=basic)
                 result = ret.json()
                 context["stdout"] = result
                 if ret.status_code == 200:
@@ -167,8 +162,7 @@ class PublishMixin(ExtraButtonsMixin):
         try:
             data = unwrap(request.body.decode())
             workdir = Path(".").absolute()
-            kwargs = {"dir": workdir, "prefix": f"~GET-{opts.model_name}",
-                      "suffix": ".json", "delete": False}
+            kwargs = {"dir": workdir, "prefix": f"~GET-{opts.model_name}", "suffix": ".json", "delete": False}
             with tempfile.NamedTemporaryFile(**kwargs) as fdst:
                 assert isinstance(fdst.write, object)
                 fdst.write(data.encode())
@@ -179,11 +173,19 @@ class PublishMixin(ExtraButtonsMixin):
                     reversion.set_comment(f"loaddata from {remote_ip}")
                     call_command("loaddata", fixture, stdout=out, stderr=out, verbosity=3)
             invalidate_cache()
-            return JsonResponse({"message": "Done",
-                                 "details": out.getvalue(),
-                                 }, status=200)
+            return JsonResponse(
+                {
+                    "message": "Done",
+                    "details": out.getvalue(),
+                },
+                status=200,
+            )
         except Exception as e:
             logger.exception(e)
-            return JsonResponse({"error": str(e),
-                                 "details": out.getvalue(),
-                                 }, status=400)
+            return JsonResponse(
+                {
+                    "error": str(e),
+                    "details": out.getvalue(),
+                },
+                status=400,
+            )

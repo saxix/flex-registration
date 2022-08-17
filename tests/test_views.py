@@ -44,10 +44,13 @@ def unique_first_name_registration(simple_form):
     reg, __ = Registration.objects.get_or_create(
         locale="en-us",
         name="registration #3",
-        defaults={"flex_form": simple_form,
-                  "unique_field": "last_name",
-                  "unique_field_error": "last_name is not unique",
-                  "encrypt_data": False, "active": True},
+        defaults={
+            "flex_form": simple_form,
+            "unique_field": "last_name",
+            "unique_field_error": "last_name is not unique",
+            "encrypt_data": False,
+            "active": True,
+        },
     )
     return reg
 
@@ -128,8 +131,7 @@ def test_register_indexed(django_app, simple_registration):
 
 @pytest.mark.django_db
 def test_register_unique(django_app, unique_first_name_registration):
-    url = reverse("register", args=[unique_first_name_registration.slug,
-                                    unique_first_name_registration.version])
+    url = reverse("register", args=[unique_first_name_registration.slug, unique_first_name_registration.version])
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first"
@@ -142,7 +144,7 @@ def test_register_unique(django_app, unique_first_name_registration):
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
     res = res.form.submit()
-    assert res.context['errors'][0].message == unique_first_name_registration.unique_field_error
+    assert res.context["errors"][0].message == unique_first_name_registration.unique_field_error
 
 
 def add_dynamic_field(form, name, value):
@@ -244,7 +246,7 @@ def test_upload_image(django_app, complex_registration, mock_storage):
     assert obj.data["family_name"] == "HH #1"
     assert obj.data["form2s"][0]["image"] == base64.b64encode(content).decode()
     ff = json.loads(obj.files.tobytes().decode())
-    assert ff['form2s'][0]["image"] == base64.b64encode(content).decode()
+    assert ff["form2s"][0]["image"] == base64.b64encode(content).decode()
     # from smart_register.registration.models import Record
     #
     # r: Record = res.context["record"]

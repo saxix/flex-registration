@@ -48,6 +48,7 @@ def find_by_css(selenium, *args):
 @pytest.fixture
 def chrome_options(request):
     from selenium.webdriver.chrome.options import Options
+
     chrome_options = Options()
     if not request.config.getvalue("show_browser"):
         chrome_options.add_argument("--headless")

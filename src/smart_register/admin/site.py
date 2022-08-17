@@ -20,7 +20,6 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import path, reverse, reverse_lazy
 from django.utils.functional import lazy
-from django.views.decorators.cache import cache_page
 from django_redis import get_redis_connection
 from redis import ResponseError
 from smart_admin.site import SmartAdminSite
@@ -141,7 +140,7 @@ class AuroraAdminSite(SmartAdminSite):
                 try:
                     r = get_redis_connection("default")
                     stdout = r.execute_command(form.cleaned_data["command"])
-                    if hasattr(stdout, '__iter__'):
+                    if hasattr(stdout, "__iter__"):
                         context["stdout"] = map(str, stdout)
                     else:
                         context["stdout"] = [str(stdout)]

@@ -11,7 +11,7 @@ from .viewsets import (
     ValidatorViewSet,
     project_info,
     extract,
-    load
+    load,
 )
 
 app_name = "api"

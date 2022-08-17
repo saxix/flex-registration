@@ -8,12 +8,10 @@ from Crypto.PublicKey import RSA
 from django import forms
 from django.conf import settings
 from django.contrib.postgres.fields import CICharField
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.text import slugify
-from django.utils.translation import gettext as _
 from natural_keys import NaturalKeyModel
 
 from smart_register.core.crypto import Crypto, crypt, decrypt
@@ -78,12 +76,10 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True
     )
     unique_field = models.CharField(
-        max_length=255, blank=True, null=True,
-        help_text="Form field to be used as unique key"
+        max_length=255, blank=True, null=True, help_text="Form field to be used as unique key"
     )
     unique_field_path = models.CharField(
-        max_length=1000, blank=True, null=True,
-        help_text="JMESPath expression to retrieve unique field"
+        max_length=1000, blank=True, null=True, help_text="JMESPath expression to retrieve unique field"
     )
     unique_field_error = models.CharField(
         max_length=255, blank=True, null=True, help_text="Error message in case of duplicate 'unique_field'"
@@ -161,25 +157,26 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
             unique_value = fields.get(self.unique_field, None)
             if not unique_value:
                 try:
-                    result = jmespath.search(self.unique_field_path,
-                                             fields)
+                    result = jmespath.search(self.unique_field_path, fields)
                     kwargs["unique_field"] = result
                 except Exception as e:
                     logger.exception(e)
 
             if not kwargs["unique_field"]:
-                for individual in fields.get('individuals'):
-                    if individual['role_i_c'] == 'y':
-                        kwargs["unique_field"] = individual['tax_id_no_i_c']
+                for individual in fields.get("individuals"):
+                    if individual["role_i_c"] == "y":
+                        kwargs["unique_field"] = individual["tax_id_no_i_c"]
                         break
             # except Exception as e:
             #     logger.exception(e)
 
-        kwargs.update({
-            "size": total_size(fields) + total_size(files),
-            "counters": fields_data.get("counters", {}),
-            "index1": fields_data.get("index1", None),
-        })
+        kwargs.update(
+            {
+                "size": total_size(fields) + total_size(files),
+                "counters": fields_data.get("counters", {}),
+                "index1": fields_data.get("index1", None),
+            }
+        )
         return Record.objects.create(registration=self, **kwargs)
 
     @cached_property
@@ -267,7 +264,7 @@ def merge(a, b, path=None, update=True):
             elif update:
                 a[key] = b[key]
             else:
-                raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
+                raise Exception("Conflict at %s" % ".".join(path + [str(key)]))
         else:
             a[key] = b[key]
     return a

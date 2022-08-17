@@ -49,9 +49,9 @@ class PageView(TemplateView):
     def get_context_data(self, **kwargs):
         from smart_register.i18n.gettext import gettext as _
 
-        return super().get_context_data(title="Title",
-                                        registrations=get_active_registrations(),
-                                        title2=_("Title2"), **kwargs)
+        return super().get_context_data(
+            title="Title", registrations=get_active_registrations(), title2=_("Title2"), **kwargs
+        )
 
 
 @method_decorator(cache_control(public=True), name="dispatch")

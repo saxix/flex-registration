@@ -10,6 +10,7 @@ def get_cache_backend():
     Compatibilty wrapper for getting Django's cache backend instance
     """
     from django.core.cache import caches
+
     cache = caches[settings.DBTEMPLATES_CACHE_BACKEND]
     # Some caches -- python-memcached in particular -- need to do a cleanup at
     # the end of a request cycle. If not implemented in a particular backend
@@ -23,11 +24,11 @@ cache = get_cache_backend()
 
 def get_cache_key(name):
     current_site = Site.objects.get_current()
-    return 'dbtemplates::%s::%s' % (slugify(name), current_site.pk)
+    return "dbtemplates::%s::%s" % (slugify(name), current_site.pk)
 
 
 def get_cache_notfound_key(name):
-    return get_cache_key(name) + '::notfound'
+    return get_cache_key(name) + "::notfound"
 
 
 def remove_notfound_key(instance):

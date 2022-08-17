@@ -25,6 +25,7 @@ class Config(AppConfig):
 
     def ready(self):
         from dbtemplates.models import Template
+
         post_save.connect(invalidate_page_cache, Template, dispatch_uid="template_saved")
 
 

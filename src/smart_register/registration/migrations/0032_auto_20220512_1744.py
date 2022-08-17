@@ -45,48 +45,50 @@ class Migration(migrations.Migration):
         #     'UNIQUE ("registration_id", "unique_field");'
         # ),
         migrations.AddField(
-            model_name='record',
-            name='fields',
+            model_name="record",
+            name="fields",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='record',
-            name='files',
+            model_name="record",
+            name="files",
             field=models.BinaryField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='record',
-            name='unique_field',
+            model_name="record",
+            name="unique_field",
             field=models.CharField(blank=True, db_index=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='registration',
-            name='unique_field',
-            field=models.CharField(blank=True,
-            help_text='Form field to be used as unique key', max_length=255, null=True),
+            model_name="registration",
+            name="unique_field",
+            field=models.CharField(
+                blank=True, help_text="Form field to be used as unique key", max_length=255, null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='registration',
-            name='scripts',
-            field=models.ManyToManyField(blank=True,
-            limit_choices_to={'target': 'script'}, related_name='script_for', to='core.Validator'),
+            model_name="registration",
+            name="scripts",
+            field=models.ManyToManyField(
+                blank=True, limit_choices_to={"target": "script"}, related_name="script_for", to="core.Validator"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='record',
-            unique_together={('registration', 'unique_field')},
+            name="record",
+            unique_together={("registration", "unique_field")},
         ),
         migrations.AlterUniqueTogether(
-            name='registration',
+            name="registration",
             unique_together=set(),
         ),
         migrations.AlterField(
-            model_name='record',
-            name='ignored',
+            model_name="record",
+            name="ignored",
             field=models.BooleanField(blank=True, default=False, null=True),
         ),
         migrations.AlterField(
-            model_name='record',
-            name='timestamp',
+            model_name="record",
+            name="timestamp",
             field=models.DateTimeField(auto_now_add=True, db_index=True),
         ),
     ]

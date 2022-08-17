@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0046_alter_validator_target'),
+        ("core", "0046_alter_validator_target"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='validator',
-            name='count_errors',
-            field=models.BooleanField(default=False, help_text='Count failures'),
+            model_name="validator",
+            name="count_errors",
+            field=models.BooleanField(default=False, help_text="Count failures"),
         ),
     ]

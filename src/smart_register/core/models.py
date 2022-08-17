@@ -165,6 +165,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
                     raise ValidationError(_("Please insert a valid value"))
             except ValidationError as e:
                 import sentry_sdk
+
                 if self.trace:
                     with sentry_sdk.push_scope() as scope:
                         scope.set_tag("validator", self.name)
@@ -175,7 +176,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
                     with sentry_sdk.push_scope() as scope:
                         scope.set_tag("validator", self.name)
                         scope.set_extra("registration", registration)
-                        sentry_sdk.capture_message(f'{self.name}', level="info")
+                        sentry_sdk.capture_message(f"{self.name}", level="info")
                 raise
             except MiniRacerBaseException as e:
                 logger.exception(e)
@@ -270,7 +271,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
                 fields[field.name] = fld
                 if isinstance(fld, CompilationTimeField):
                     compilation_time_field = field.name
-                if index := field.advanced.get('smart', {}).get('index'):
+                if index := field.advanced.get("smart", {}).get("index"):
                     indexes[str(index)] = field.name
             except TypeError:
                 pass
