@@ -39,9 +39,12 @@ jobs:
         django-version: [ "3.2", ]
         experimental: [ false ]
         include:
-          - django-version: "4.0"
-            python-version: "3.9"
-            experimental: true
+#          - python-version: "3.9"
+#            django-version: "4.0"
+#            experimental: true
+#          - python-version: "3.9"
+#            django-version: "4.1"
+#            experimental: true
     continue-on-error: ${{ matrix.experimental }}
     env:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/smart_register
