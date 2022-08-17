@@ -175,10 +175,10 @@ class RegisterView(FormView):
                 return False
 
         try:
-            if self.registration.unique_field:
-                if unique_value := cleaned_data.get(self.registration.unique_field, None):
-                    r = Record(registration=self.registration, unique_field=unique_value)
-                    r.validate_unique()
+            if unique_value := self.registration.get_unique_value(cleaned_data):
+                r = Record(registration=self.registration, unique_field=unique_value)
+                r.validate_unique()
+                cleaned_data["unique_field"] = unique_value
         except ValidationError:
             self.errors.append(ValidationError(_(self.registration.unique_field_error)))
             return False

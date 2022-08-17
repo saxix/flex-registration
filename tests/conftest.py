@@ -102,7 +102,7 @@ def complex_form():
     # ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     ind.fields.create(label="Image", **{"field_type": SmartFileField, "required": False})
     ind.fields.create(label="File", **{"field_type": SmartFileField, "required": False})
-    hh.add_formset(ind)
+    hh.add_formset(ind, min_num=0)
     return hh
 
 

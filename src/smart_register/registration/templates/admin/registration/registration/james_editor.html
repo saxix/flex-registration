@@ -13,7 +13,6 @@
     </style>
 {% endblock %}
 {% block action-content %}
-    {#    {{ original }}#}
     {{ form.media }}
     <form method="post">
         {{ form.errors }}
@@ -49,14 +48,14 @@
                 $("#id_data").on("paste", function (e) {
                     setTimeout(function () {
                         var raw = $("#id_data").val();
-                        $("#id_data").val(JSON.stringify(JSON.parse($("#id_data").val()), null, " "));
+                        $("#id_data").val(JSON.stringify(JSON.parse(raw), null, " "));
                     }, 0.5);
                 });
                 $("#id_unique_field_path, #id_data").on("keyup", function (e) {
                     try {
                         var data = JSON.parse($("#id_data").val());
                         var result = jmespath.search(data, $(this).val());
-                        $("#id_result").val(JSON.stringify(result[0], null, " "));
+                        $("#id_result").val(JSON.stringify(result, null, " "));
                     } catch (e) {
                         $("#id_result").val(e);
                     }

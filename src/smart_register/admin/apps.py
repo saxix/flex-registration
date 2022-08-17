@@ -10,6 +10,14 @@ class AuroraAdminConfig(SmartConfig):
     def ready(self):
         super().ready()
         django.contrib.admin.autodiscover()
+        from django.contrib.admin import site
+        from .panels import loaddata, dumpdata
+        from smart_admin.console import panel_migrations, panel_sysinfo
+
+        site.register_panel(loaddata)
+        site.register_panel(dumpdata)
+        site.register_panel(panel_migrations)
+        site.register_panel(panel_sysinfo)
 
 
 class AuroraAdminUIConfig(AppConfig):

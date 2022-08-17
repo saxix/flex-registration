@@ -89,6 +89,20 @@ def complex_registration(complex_form):
     return reg
 
 
+@pytest.fixture()
+def james_registration(complex_form):
+    from smart_register.registration.models import Registration
+
+    reg, __ = Registration.objects.get_or_create(
+        locale="en-us",
+        name="registration #2",
+        unique_field_path="form2s[].[first_name][0][0]",
+        unique_field_error="xxx must be unique",
+        defaults={"flex_form": complex_form, "active": True},
+    )
+    return reg
+
+
 @pytest.mark.django_db
 def test_register_simple(django_app, simple_registration):
     url = reverse("register", args=[simple_registration.slug, simple_registration.version])
@@ -147,6 +161,41 @@ def test_register_unique(django_app, unique_first_name_registration):
     assert res.context["errors"][0].message == unique_first_name_registration.unique_field_error
 
 
+@pytest.mark.django_db
+def test_register_unique_nested(django_app, james_registration):
+    url = reverse("register", args=[james_registration.slug, james_registration.version])
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["family_name"] = "Fam #1"
+    add_extra_form_to_formset_with_data(
+        res.form,
+        "form2s",
+        {
+            "first_name": "First1",
+            "last_name": "Last",
+            "date_of_birth": "2000-12-01",
+        },
+    )
+    res = res.form.submit().follow()
+    assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
+    assert res.context["record"].unique_field == "First1"
+
+    res = django_app.get(url)
+    res = res.form.submit()
+    res.form["family_name"] = "Fam #1"
+    add_extra_form_to_formset_with_data(
+        res.form,
+        "form2s",
+        {
+            "first_name": "First1",
+            "last_name": "Last",
+            "date_of_birth": "2000-12-01",
+        },
+    )
+    res = res.form.submit()
+    assert res.context["errors"][0].message == james_registration.unique_field_error
+
+
 def add_dynamic_field(form, name, value):
     """Add an extra text field to a form. More work required to support files"""
     from webtest.forms import Text
@@ -196,6 +245,7 @@ def test_register_complex(django_app, complex_registration):
         },
     )
     res = res.form.submit()
+    assert res.status_code == 302, res.context["form"].errors
     res = res.follow()
     from smart_register.registration.models import Record
 

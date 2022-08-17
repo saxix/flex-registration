@@ -152,23 +152,9 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 "files": safe_json(files).encode(),
                 "fields": jsonfy(fields),
             }
-
-        if self.unique_field and self.unique_field in fields:
-            unique_value = fields.get(self.unique_field, None)
-            if not unique_value:
-                try:
-                    result = jmespath.search(self.unique_field_path, fields)
-                    kwargs["unique_field"] = result
-                except Exception as e:
-                    logger.exception(e)
-
-            if not kwargs["unique_field"]:
-                for individual in fields.get("individuals"):
-                    if individual["role_i_c"] == "y":
-                        kwargs["unique_field"] = individual["tax_id_no_i_c"]
-                        break
-            # except Exception as e:
-            #     logger.exception(e)
+        if self.unique_field or self.unique_field_path and not kwargs.get("unique_field", None):
+            unique_value = self.get_unique_value(fields)
+            kwargs["unique_field"] = unique_value
 
         kwargs.update(
             {
@@ -177,7 +163,19 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 "index1": fields_data.get("index1", None),
             }
         )
+
         return Record.objects.create(registration=self, **kwargs)
+
+    def get_unique_value(self, cleaned_data):
+        unique_value = None
+        if self.unique_field or self.unique_field_path:
+            unique_value = cleaned_data.get(self.unique_field, None)
+            if not unique_value and self.unique_field_path:
+                try:
+                    unique_value = jmespath.search(self.unique_field_path, cleaned_data)
+                except Exception as e:
+                    logger.exception(e)
+        return unique_value
 
     @cached_property
     def languages(self):

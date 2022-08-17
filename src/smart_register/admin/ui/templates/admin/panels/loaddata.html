@@ -1,5 +1,5 @@
-{% extends "admin/base_site.html" %}{% load static i18n %}
-{% block content %}
+{% extends "smart_admin/console.html" %}{% load static i18n %}
+{% block left %}
     {% if form %}
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -14,4 +14,4 @@
             <div>{{ line }}</div>
         {% endfor %}
     {% endif %}
-{% endblock content %}
+{% endblock  %}
