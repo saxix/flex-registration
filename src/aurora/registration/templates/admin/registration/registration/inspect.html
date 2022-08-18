@@ -44,12 +44,14 @@
                 <th>Type</th>
             </tr>
             {% for fs in original.flex_form.formsets.all %}
-                {% for c in fs.flex_form.fields.all %}
+                {% for flex_field in fs.flex_form.fields.all %}
                     <tr>
-                        <td><a href="{% url "admin:core_flexformfield_change" c.pk %}">{{ c.name }}</a></td>
-                        <td><a href="{% url "admin:core_flexform_change" c.flex_form.pk %}">{{ c.flex_form.name }}</a>
+                        <td><a href="{% url "admin:core_flexformfield_change" flex_field.pk %}">{{ flex_field.name }}</a></td>
+                        <td><a href="{% url "admin:core_flexform_change" flex_field.flex_form.pk %}">{{ flex_field.flex_form.name }}</a>
                         </td>
-                        <td>{{ c.type_name }}</td>
+                        <td>{{ flex_field.type_name }}
+                            <div><small>({{ flex_field.fqn }})</small></div>
+                        </td>
                     </tr>
                 {% endfor %}
             {% endfor %}

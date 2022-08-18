@@ -1,6 +1,8 @@
 (function ($) {
     const baseUrl = $("#counters").data("url");
     const token = $("#counters").data("token");
+    const registrationId = $("#counters").data("registration");
+
     const getLineData = (initialData, lengthOfDataChunks) => {
         const numOfChunks = Math.ceil(initialData.length / lengthOfDataChunks);
         const dataChunks = [];
@@ -76,15 +78,16 @@
     Chart.register(ChartDataLabels);
     var myChart = new Chart(ctx, config);
 
-    ctx.onclick = function (evt) {
-        var points = myChart.getElementsAtEventForMode(evt, "nearest", {intersect: true}, true);
-        if (points.length) {
-            const firstPoint = points[0];
-            const label = myChart.data.labels[firstPoint.index];
-            const slabel = myChart.data.datasets[firstPoint.datasetIndex].label;
-            const value = myChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-        }
-    };
+    // config.options.onClick = function (evt, clickedElements) {
+    //     if (clickedElements) {
+    //         const firstPoint = clickedElements[0];
+    //         const label = myChart.data.labels[firstPoint.index];
+    //         const slabel = myChart.data.datasets[firstPoint.datasetIndex].label;
+    //         const value = myChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
+    //         var m = moment(currentDay);
+    //         location.href = "../daily/" + m.year() + "/" + (m.month() + 1) + "/" + (firstPoint.index+1) + "/";
+    //     }
+    // };
 
     ajax_chart({});
 
@@ -94,11 +97,11 @@
         $.getJSON(baseUrl + "?" + qs).done(function (response) {
             var chartData = response.data.map(a => a.total);
             // reset dataset
-            myChart.data.datasets = [myChart.data.datasets[0]]
+            myChart.data.datasets = [myChart.data.datasets[0]];
             if (chartData.length > 0) {
                 const lineData = getLineData(chartData, chartData.length);
                 var average = lineData[0];
-                if (average>0){
+                if (average > 0) {
                     myChart.data.datasets[1] = Object.assign({}, averageDataset);
                     myChart.data.datasets[1].data = lineData;
                     myChart.data.datasets[1].label = "Daily Average: " + average;
@@ -128,4 +131,4 @@
         data = {m: currentDay};
         ajax_chart(data);
     });
-})(django.jQuery);
+})($);

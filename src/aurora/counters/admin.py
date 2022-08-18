@@ -1,20 +1,17 @@
 import logging
-from datetime import datetime
+from django.urls import reverse
 
-from admin_extra_buttons.decorators import button, view
+from admin_extra_buttons.decorators import button
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
 from django.db.transaction import atomic
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.utils import timezone
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.utils import is_root
-from ..registration.admin import last_day_of_month
 from .forms import ChartForm
 from .models import Counter
-from ..registration.models import Registration
 
 logger = logging.getLogger(__name__)
 
@@ -45,47 +42,52 @@ class CounterAdmin(SmartModelAdmin):
     def has_change_permission(self, request, obj=None):
         return is_root(request)
 
-    @view()
-    def data(self, request, registration_id):
-        registration = Registration.objects.get(id=registration_id)
-        qs = Counter.objects.filter(registration_id=registration_id).order_by("day")
-        param_month = request.GET.get("m", None)
-        total = 0
-        if param_month:
-            date = datetime.strptime(param_month, "%Y-%m-%d")
-        else:
-            date = timezone.now()
+    # @button()
+    # def chart(self, request, pk):
+    #     registration = self.get_object(request, pk).registration
+    #     return HttpResponseRedirect(reverse("charts:registration", args=[registration.pk]))
 
-        qs = qs.filter(day__month=date.month)
-        last_day = last_day_of_month(date)
-        days = list(range(1, 1 + last_day.day))
-        labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
-        values = {}
-        for d in range(1, last_day.day + 1):
-            dt = date.replace(day=d).date()
-            values[dt] = {"total": 0, "pk": 0}
-
-        for record in qs.all():
-            values[record.day] = {"total": record.records, "pk": record.pk}
-            total += record.records
-
-        if not labels:
-            labels = [d.strftime("%-d, %a") for d in values.keys()]
-        period = date.strftime("%B %Y")
-        data = {
-            "datapoints": qs.all().count(),
-            "label": f"{registration} {period}",
-            "day": date.strftime("%Y-%m-%d"),
-            "total": total,
-            "labels": labels,
-            "data": list(values.values()),
-        }
-
-        response = JsonResponse(data)
-        response["Cache-Control"] = "max-age=315360000"
-        response["ETag"] = get_token(request)
-        return response
-
+    # @view()
+    # def data(self, request, registration_id):
+    #     registration = Registration.objects.get(id=registration_id)
+    #     qs = Counter.objects.filter(registration_id=registration_id).order_by("day")
+    #     param_month = request.GET.get("m", None)
+    #     total = 0
+    #     if param_month:
+    #         date = datetime.strptime(param_month, "%Y-%m-%d")
+    #     else:
+    #         date = timezone.now()
+    #
+    #     qs = qs.filter(day__month=date.month)
+    #     last_day = last_day_of_month(date)
+    #     days = list(range(1, 1 + last_day.day))
+    #     labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
+    #     values = {}
+    #     for d in range(1, last_day.day + 1):
+    #         dt = date.replace(day=d).date()
+    #         values[dt] = {"total": 0, "pk": 0}
+    #
+    #     for record in qs.all():
+    #         values[record.day] = {"total": record.records, "pk": record.pk}
+    #         total += record.records
+    #
+    #     if not labels:
+    #         labels = [d.strftime("%-d, %a") for d in values.keys()]
+    #     period = date.strftime("%B %Y")
+    #     data = {
+    #         "datapoints": qs.all().count(),
+    #         "label": f"{registration} {period}",
+    #         "day": date.strftime("%Y-%m-%d"),
+    #         "total": total,
+    #         "labels": labels,
+    #         "data": list(values.values()),
+    #     }
+    #
+    #     response = JsonResponse(data)
+    #     response["Cache-Control"] = "max-age=315360000"
+    #     response["ETag"] = get_token(request)
+    #     return response
+    #
     @button()
     def chart(self, request):
         ctx = self.get_common_context(request)
@@ -93,9 +95,10 @@ class CounterAdmin(SmartModelAdmin):
             form = ChartForm(request.POST)
             if form.is_valid():
                 registration = form.cleaned_data["registration"]
-                ctx["title"] = registration.title
-                ctx["registration"] = registration
-                ctx["token"] = get_token(request)
+                return HttpResponseRedirect(reverse("charts:registration", args=[registration.pk]))
+                # ctx["title"] = registration.title
+                # ctx["registration"] = registration
+                # ctx["token"] = get_token(request)
         else:
             form = ChartForm()
         ctx["form"] = form

@@ -447,6 +447,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     def type_name(self):
         return str(self.field_type.__name__)
 
+    def fqn(self):
+        return fqn(self.field_type)
+
     def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):
             field_type = self.field_type.custom.base_type

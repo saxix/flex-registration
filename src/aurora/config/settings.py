@@ -283,7 +283,6 @@ EMAIL_USE_TLS = env("EMAIL_USE_TLS")
 # FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 LOGIN_REDIRECT_URL = "summary"
 LOGOUT_REDIRECT_URL = "index"
-# LOGIN_URL = 'index'
 LOGIN_URL = "login"
 
 LOGGING = {

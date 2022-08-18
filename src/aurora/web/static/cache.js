@@ -1,7 +1,7 @@
 (function ($) {
     $(function () {
         // we need this HACK to manage the stupid cache system in front of the app
-        $.get("api/project/?" + Math.random(), function (data) {
+        $.get("/api/project/?" + Math.random(), function (data) {
             let params = (new URL(document.location)).searchParams;
             let version = params.get("ver");
             if (version != data.cache) {

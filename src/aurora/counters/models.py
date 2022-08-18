@@ -14,7 +14,7 @@ class CounterManager(models.Manager):
         result = {"registration": 0, "records": 0, "days": 0, "details": {}}
         today = datetime.today()
         yesterday = datetime.combine(today - timedelta(days=1), datetime.max.time())
-        selection = Registration.objects.filter(active=True)
+        selection = Registration.objects.filter(archived=False)
         if registrations:
             selection = selection.filter(id__in=registrations)
         querysets = []
@@ -26,10 +26,10 @@ class CounterManager(models.Manager):
                 latest = latest.day + timedelta(days=1)
             else:
                 latest = datetime.min
-            result["details"][registration.slug]["range"] = (
-                latest.strftime("%Y-%B-%d"),
-                yesterday.strftime("%Y-%B-%d"),
-            )
+            # result["details"][registration.slug]["range"] = (
+            #     latest.strftime("%Y-%B-%d"),
+            #     yesterday.strftime("%Y-%B-%d"),
+            # )
             qs = Record.objects.filter(registration=registration, timestamp__range=(latest, yesterday))
             qs = (
                 qs.annotate(hour=ExtractHour("timestamp"), day=TruncDay("timestamp"))
@@ -59,7 +59,7 @@ class CounterManager(models.Manager):
 
 
 class Counter(models.Model):
-    registration = models.ForeignKey(Registration, on_delete=models.CASCADE)
+    registration = models.ForeignKey(Registration, on_delete=models.CASCADE, related_name="counters")
     day = models.DateField(blank=True, null=True, db_index=True)
     records = models.IntegerField(default=0, blank=True, null=True)
     details = models.JSONField(default=dict, blank=True)

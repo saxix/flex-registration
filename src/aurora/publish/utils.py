@@ -98,7 +98,7 @@ def unwrap(payload: str) -> str:
 
 
 def is_logged_to_prod(request):
-    return request.COOKIES[CREDENTIALS_COOKIE]
+    return request.COOKIES.get(CREDENTIALS_COOKIE, None)
 
 
 def get_prod_credentials(request):

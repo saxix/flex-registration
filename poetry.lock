@@ -869,6 +869,17 @@ pycodestyle = ">=2.9.0,<2.10.0"
 pyflakes = ">=2.5.0,<2.6.0"
 
 [[package]]
+name = "freezegun"
+version = "1.2.2"
+description = "Let your Python tests travel through time"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+python-dateutil = ">=2.7"
+
+[[package]]
 name = "gevent"
 version = "21.12.0"
 description = "Coroutine-based network library"
@@ -2288,7 +2299,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "b4b945fad2260ed758572b03ab3106eccf60a84d027ee5f3deddee78a2d1ea14"
+content-hash = "45b991b15a27e2a12842fbf1e46b40f510b6909526b12a09ac3e82879eed096f"
 
 [metadata.files]
 amqp = [
@@ -2551,6 +2562,7 @@ fancycompleter = [
 ]
 filelock = []
 flake8 = []
+freezegun = []
 gevent = []
 greenlet = []
 gunicorn = []

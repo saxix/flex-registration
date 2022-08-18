@@ -17,6 +17,7 @@ urlpatterns = [
     re_path(r"sax-\d*/", admin.site.urls),
     path("api/", include("aurora.api.urls", namespace="api")),
     path("", include("aurora.web.urls")),
+    path("charts/", include("aurora.counters.urls", namespace="charts")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
     path("i18n/setlang/", set_language, name="set_language"),

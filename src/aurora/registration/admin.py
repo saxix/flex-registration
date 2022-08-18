@@ -67,8 +67,8 @@ class JamesForm(forms.ModelForm):
 class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
-    list_filter = ("active",)
-    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator")
+    list_filter = ("active", "archived")
+    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator", "archived")
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True
@@ -93,7 +93,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
             },
         ),
         ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
-        ("Validity", {"classes": ("collapse",), "fields": ("start", "end")}),
+        ("Validity", {"classes": ("collapse",), "fields": (("start", "end"), ("archived", "active"))}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
         ("Advanced", {"fields": ("advanced",)}),

@@ -6,6 +6,7 @@ import random
 
 import djclick as click
 import pytz
+import sys
 from django import forms
 
 from aurora.core import fields
@@ -20,15 +21,13 @@ class NotRunningInTTYException(Exception):
 
 
 @click.command()  # noqa: C901
-def upgrade(**kwargs):
+def demo(**kwargs):
     from aurora.core.models import FlexForm, Validator
     from aurora.registration.models import Registration
 
     vf1, __ = Validator.objects.update_or_create(
         name='name must start with "S"',
-        defaults=dict(
-            message="name must start with 'S'", target=Validator.FORM, code="value.family_name.startsWith('S');"
-        ),
+        defaults=dict(target=Validator.FORM, code="value.family_name.startsWith('S');"),
     )
     v1, __ = Validator.objects.get_or_create(
         name="max_length_25",
@@ -74,16 +73,30 @@ dt > limit;""",
     today = datetime.datetime.today()
 
     last_month = datetime.datetime.combine(today - datetime.timedelta(days=31), datetime.datetime.min.time())
+    prev_month = datetime.datetime.combine(last_month.replace(day=1), datetime.time.max) - datetime.timedelta(days=1)
 
     Record.objects.all().delete()
     ranges = (
         (5, 20),
         (5, 30),
     )
-    for day in range(1, 31):
-        for _ in range(0, random.randint(*ranges[0])):
-            hour = random.randint(0, 23)
-            for _ in range(0, random.randint(*ranges[1])):
-                minute = random.randint(0, 59)
-                ts = datetime.datetime(last_month.year, last_month.month, day, hour, minute, tzinfo=pytz.utc)
-                Record.objects.create(registration=reg, timestamp=ts)
+    from freezegun import freeze_time
+    from faker import Faker
+
+    fake = Faker()
+    for month in range(prev_month.month, last_month.month):
+        sys.stdout.write(f"{month}: ")
+        for day in range(1, 31):
+            sys.stdout.write(f"{day},")
+            sys.stdout.flush()
+            for _ in range(0, random.randint(*ranges[0])):
+                hour = random.randint(0, 23)
+                for _ in range(0, random.randint(*ranges[1])):
+                    minute = random.randint(0, 59)
+                    ts = datetime.datetime(last_month.year, month, day, hour, minute, tzinfo=pytz.utc)
+                    with freeze_time(ts):
+                        Record.objects.create(registration=reg, remote_ip=fake.ipv4(), timestamp=ts)
+        sys.stdout.write("\n")
+    from aurora.counters.models import Counter
+
+    Counter.objects.collect()

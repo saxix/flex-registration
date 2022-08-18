@@ -8,14 +8,13 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     {% block meta %}{% endblock meta %}
     <title>Registration</title>
-{#    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>#}
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
     <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
     <link rel="stylesheet" href="{% static "admin/debug.css" %}">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    {% block cache %}<script src="{% static "cache.min.js" %}"></script>{% endblock %}
+    {% block cache %}{#<script src="{% static "cache.min.js" %}"></script>#}{% endblock %}
 
     {% block head %}{% endblock head %}
 </head>

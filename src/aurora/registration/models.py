@@ -12,6 +12,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.text import slugify
+from django.utils.translation import gettext as _
 from natural_keys import NaturalKeyModel
 
 from aurora.core.crypto import Crypto, crypt, decrypt
@@ -56,6 +57,9 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     start = models.DateField(default=timezone.now, editable=True)
     end = models.DateField(blank=True, null=True)
     active = models.BooleanField(default=False)
+    archived = models.BooleanField(
+        default=False, null=False, help_text=_("Archived/Terminated registration cannot be activated/reopened")
+    )
     locale = models.CharField(
         verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
     )
@@ -93,7 +97,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     class Meta:
         get_latest_by = "start"
-        permissions = (("can_manage", "Can Manage"),)
+        permissions = (("can_manage", _("Can Manage Registration")),)
 
     @property
     def media(self):
@@ -243,7 +247,7 @@ class Record(models.Model):
             files = {}
             if self.files:
                 files = json.loads(self.files.tobytes().decode())
-            return merge(files, self.fields)
+            return merge(files, self.fields or {})
 
 
 def merge(a, b, path=None, update=True):
