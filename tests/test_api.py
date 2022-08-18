@@ -5,7 +5,7 @@ import pytest
 from Crypto.PublicKey import RSA
 from django.urls import reverse
 
-from smart_register.core.crypto import decrypt
+from aurora.core.crypto import decrypt
 
 PUBLIC = b"""-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxPyACSP38j/kB9jR8QPZ
@@ -48,7 +48,7 @@ btcA1UFpS9TFL++uMmwbcMzykITUTxhHp0QWEg1cpj8HFakPBZ4=
 
 @pytest.fixture()
 def registration(simple_form):
-    from smart_register.registration.models import Registration
+    from aurora.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
         locale="en-us",
@@ -77,9 +77,9 @@ def public_pem(key) -> str:
 
 @pytest.mark.django_db
 def test_api(django_app, registration, monkeypatch):
-    import smart_register.registration.views.registration
+    import aurora.registration.views.registration
 
-    monkeypatch.setattr(smart_register.registration.views.registration, "get_etag", lambda *a: time.time())
+    monkeypatch.setattr(aurora.registration.views.registration, "get_etag", lambda *a: time.time())
 
     url = reverse("register", args=[registration.slug, registration.version])
     res = django_app.get(url)
@@ -96,7 +96,7 @@ def test_api(django_app, registration, monkeypatch):
     res = django_app.get(api_url, expect_errors=True)
 
     assert res.status_code == 401
-    monkeypatch.setattr("smart_register.registration.views.api.handle_basic_auth", lambda x: True)
+    monkeypatch.setattr("aurora.registration.views.api.handle_basic_auth", lambda x: True)
 
     res = django_app.get(api_url)
     assert res.status_code == 200

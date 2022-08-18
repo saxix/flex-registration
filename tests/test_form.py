@@ -3,7 +3,7 @@ import pytest
 
 @pytest.mark.django_db
 def test_create_form(db):
-    from smart_register.core.models import FlexForm
+    from aurora.core.models import FlexForm
 
     form = FlexForm.objects.create(name="test")
     assert form
@@ -11,7 +11,7 @@ def test_create_form(db):
 
 @pytest.mark.django_db
 def test_fixed_formset(db):
-    from smart_register.core.models import FlexForm
+    from aurora.core.models import FlexForm
 
     master = FlexForm.objects.create(name="Master")
     detail = FlexForm.objects.create(name="Detail")
@@ -21,7 +21,7 @@ def test_fixed_formset(db):
 
 @pytest.mark.django_db
 def test_add_formset(db):
-    from smart_register.core.models import FlexForm
+    from aurora.core.models import FlexForm
 
     master = FlexForm.objects.create(name="Master")
     detail = FlexForm.objects.create(name="Detail")

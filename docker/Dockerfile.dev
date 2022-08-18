@@ -1,1 +1,1 @@
-FROM ghcr.io/saxix/smart_register:latest
+FROM ghcr.io/saxix/aurora:latest

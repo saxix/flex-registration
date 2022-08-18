@@ -21,7 +21,7 @@ if [ $# -eq 0 ]; then
     nginx -c /conf/nginx.conf
     redis-server /conf/redis.conf
     exec uwsgi --ini /conf/uwsgi.ini
-#   exec gunicorn smart_register.config.wsgi -c /conf/gunicorn_config.py
+#   exec gunicorn aurora.config.wsgi -c /conf/gunicorn_config.py
 else
     case "$1" in
         "dev")
@@ -31,8 +31,6 @@ else
         django-admin migrate
         django-admin runserver 0.0.0.0:8000
         ;;
-       "dev")
-       ;;
     *)
     exec "$@"
     ;;

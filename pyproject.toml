@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "smart_register"
+name = "aurora"
 version = "0.1.0"
 description = ""
 authors = ["sax <s.apostolico@gmail.com>"]
 packages = [
-    { include = "smart_register", from = "src" },
+    { include = "aurora", from = "src" },
 ]
 
 [tool.poetry.dependencies]
@@ -18,7 +18,7 @@ django-environ = "^0.8"
 django-flags = "^5.0"
 django-import-export = "^2.7"
 django-picklefield = "^3.0"
-django-smart-admin = "^2.0"
+django-smart-admin = "^2.2.1"
 django-strategy-field = "*"
 django-sysinfo = "^2.6"
 django_regex = "*"
@@ -55,6 +55,8 @@ django-reversion = "^5.0"
 django-reversion-compare = "^0.15"
 celery = "^5.2.6"
 django-appconf = "^1.0.5"
+jmespath = "^1.0.1"
+Faker = "^14.0.0"
 
 [tool.poetry.dev-dependencies]
 coverage = "*"
@@ -77,6 +79,7 @@ pytest-coverage = "^0.0"
 black = "^22.1.0"
 watchdog = "^2.1.6"
 tox = "*"
+freezegun = "^1.2.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

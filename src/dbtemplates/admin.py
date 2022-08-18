@@ -6,13 +6,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ungettext, ugettext_lazy as _
 from django.utils.safestring import mark_safe
 from dbtemplates.conf import settings
-from dbtemplates.models import (Template, remove_cached_template,
-                                add_template_to_cache)
+from dbtemplates.models import Template, remove_cached_template, add_template_to_cache
 from dbtemplates.utils.template import check_template_syntax
 
 # Check if django-reversion is installed and use reversions' VersionAdmin
 # as the base admin class if yes
-from smart_register.publish.mixin import PublishMixin
+from aurora.publish.mixin import PublishMixin
 
 if settings.DBTEMPLATES_USE_REVERSION:
     from reversion.admin import VersionAdmin as TemplateModelAdmin
@@ -29,15 +28,14 @@ class CodeMirrorTextArea(forms.Textarea):
     """
 
     class Media:
-        css = dict(screen=[posixpath.join(
-            settings.DBTEMPLATES_MEDIA_PREFIX, 'css/editor.css')])
-        js = [posixpath.join(settings.DBTEMPLATES_MEDIA_PREFIX, 'js/codemirror.js')]
+        css = dict(screen=[posixpath.join(settings.DBTEMPLATES_MEDIA_PREFIX, "css/editor.css")])
+        js = [posixpath.join(settings.DBTEMPLATES_MEDIA_PREFIX, "js/codemirror.js")]
 
     def render(self, name, value, attrs=None, renderer=None):
         result = []
+        result.append(super(CodeMirrorTextArea, self).render(name, value, attrs))
         result.append(
-            super(CodeMirrorTextArea, self).render(name, value, attrs))
-        result.append(u"""
+            """
 <script type="text/javascript">
   var editor = CodeMirror.fromTextArea('id_%(name)s', {
     path: "%(media_prefix)sjs/",
@@ -50,8 +48,10 @@ class CodeMirrorTextArea(forms.Textarea):
     lineNumbers: true
   });
 </script>
-""" % dict(media_prefix=settings.DBTEMPLATES_MEDIA_PREFIX, name=name))
-        return mark_safe(u"".join(result))
+"""
+            % dict(media_prefix=settings.DBTEMPLATES_MEDIA_PREFIX, name=name)
+        )
+        return mark_safe("".join(result))
 
 
 if settings.DBTEMPLATES_USE_CODEMIRROR:
@@ -60,16 +60,18 @@ else:
     TemplateContentTextArea = forms.Textarea
 
 if settings.DBTEMPLATES_AUTO_POPULATE_CONTENT:
-    content_help_text = _("Leaving this empty causes Django to look for a "
-                          "template with the given name and populate this "
-                          "field with its content.")
+    content_help_text = _(
+        "Leaving this empty causes Django to look for a "
+        "template with the given name and populate this "
+        "field with its content."
+    )
 else:
     content_help_text = ""
 
 if settings.DBTEMPLATES_USE_CODEMIRROR and settings.DBTEMPLATES_USE_TINYMCE:
-    raise ImproperlyConfigured("You may use either CodeMirror or TinyMCE "
-                               "with dbtemplates, not both. Please disable "
-                               "one of them.")
+    raise ImproperlyConfigured(
+        "You may use either CodeMirror or TinyMCE " "with dbtemplates, not both. Please disable " "one of them."
+    )
 
 if settings.DBTEMPLATES_USE_TINYMCE:
     from tinymce.widgets import AdminTinyMCE
@@ -85,37 +87,47 @@ class TemplateAdminForm(forms.ModelForm):
     """
     Custom AdminForm to make the content textarea wider.
     """
+
     content = forms.CharField(
-        widget=TemplateContentTextArea(attrs={'rows': '24'}),
-        help_text=content_help_text, required=False)
+        widget=TemplateContentTextArea(attrs={"rows": "24"}), help_text=content_help_text, required=False
+    )
 
     class Meta:
         model = Template
-        fields = ('name', 'content', 'sites', 'creation_date', 'last_changed')
+        fields = ("name", "content", "sites", "creation_date", "last_changed")
         fields = "__all__"
 
 
 class TemplateAdmin(PublishMixin, TemplateModelAdmin):
     form = TemplateAdminForm
     fieldsets = (
-        (None, {
-            'fields': ('name', 'content'),
-            'classes': ('monospace',),
-        }),
-        (_('Advanced'), {
-            'fields': (('sites'),),
-        }),
-        (_('Date/time'), {
-            'fields': (('creation_date', 'last_changed'),),
-            'classes': ('collapse',),
-        }),
+        (
+            None,
+            {
+                "fields": ("name", "content"),
+                "classes": ("monospace",),
+            },
+        ),
+        (
+            _("Advanced"),
+            {
+                "fields": (("sites"),),
+            },
+        ),
+        (
+            _("Date/time"),
+            {
+                "fields": (("creation_date", "last_changed"),),
+                "classes": ("collapse",),
+            },
+        ),
     )
-    filter_horizontal = ('sites',)
-    list_display = ('name', 'creation_date', 'last_changed', 'site_list')
-    list_filter = ('sites',)
+    filter_horizontal = ("sites",)
+    list_display = ("name", "creation_date", "last_changed", "site_list")
+    list_filter = ("sites",)
     save_as = True
-    search_fields = ('name', 'content')
-    actions = ['invalidate_cache', 'repopulate_cache', 'check_syntax']
+    search_fields = ("name", "content")
+    actions = ["invalidate_cache", "repopulate_cache", "check_syntax"]
 
     def invalidate_cache(self, request, queryset):
         for template in queryset:
@@ -124,11 +136,11 @@ class TemplateAdmin(PublishMixin, TemplateModelAdmin):
         message = ungettext(
             "Cache of one template successfully invalidated.",
             "Cache of %(count)d templates successfully invalidated.",
-            count)
-        self.message_user(request, message % {'count': count})
+            count,
+        )
+        self.message_user(request, message % {"count": count})
 
-    invalidate_cache.short_description = _("Invalidate cache of "
-                                           "selected templates")
+    invalidate_cache.short_description = _("Invalidate cache of " "selected templates")
 
     def repopulate_cache(self, request, queryset):
         for template in queryset:
@@ -137,39 +149,37 @@ class TemplateAdmin(PublishMixin, TemplateModelAdmin):
         message = ungettext(
             "Cache successfully repopulated with one template.",
             "Cache successfully repopulated with %(count)d templates.",
-            count)
-        self.message_user(request, message % {'count': count})
+            count,
+        )
+        self.message_user(request, message % {"count": count})
 
-    repopulate_cache.short_description = _("Repopulate cache with "
-                                           "selected templates")
+    repopulate_cache.short_description = _("Repopulate cache with " "selected templates")
 
     def check_syntax(self, request, queryset):
         errors = []
         for template in queryset:
             valid, error = check_template_syntax(template)
             if not valid:
-                errors.append('%s: %s' % (template.name, error))
+                errors.append("%s: %s" % (template.name, error))
         if errors:
             count = len(errors)
             message = ungettext(
                 "Template syntax check FAILED for %(names)s.",
                 "Template syntax check FAILED for %(count)d templates: %(names)s.",
-                count)
-            self.message_user(request, message %
-                              {'count': count, 'names': ', '.join(errors)})
+                count,
+            )
+            self.message_user(request, message % {"count": count, "names": ", ".join(errors)})
         else:
             count = queryset.count()
-            message = ungettext(
-                "Template syntax OK.",
-                "Template syntax OK for %(count)d templates.", count)
-            self.message_user(request, message % {'count': count})
+            message = ungettext("Template syntax OK.", "Template syntax OK for %(count)d templates.", count)
+            self.message_user(request, message % {"count": count})
 
     check_syntax.short_description = _("Check template syntax")
 
     def site_list(self, template):
         return ", ".join([site.name for site in template.sites.all()])
 
-    site_list.short_description = _('sites')
+    site_list.short_description = _("sites")
 
 
 admin.site.register(Template, TemplateAdmin)

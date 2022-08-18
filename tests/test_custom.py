@@ -1,7 +1,7 @@
 import pytest
 from django import forms
 
-from smart_register.core.models import CustomFieldType
+from aurora.core.models import CustomFieldType
 
 
 @pytest.mark.django_db

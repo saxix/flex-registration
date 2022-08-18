@@ -1,6 +1,6 @@
 import pytest
 
-from smart_register.core.fields import YesNoRadio
+from aurora.core.fields import YesNoRadio
 
 
 def test_yesno():
