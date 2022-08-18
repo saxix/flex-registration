@@ -4,7 +4,11 @@ import logging
 from pathlib import Path
 
 import djclick as click
+from django.core.cache import cache
 from django.core.management import CommandError, call_command
+from redis.exceptions import LockError
+
+from aurora import VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -35,55 +39,59 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
     from aurora.config import env
 
     extra = {"no_input": prompt, "verbosity": verbosity - 1, "stdout": None}
+    click.echo("Run upgrade.. waiting for lock")
+    try:
+        with cache.lock(env("MIGRATION_LOCK_KEY"), timeout=60 * 10, blocking_timeout=2, version=VERSION):
+            if migrate:
+                if verbosity >= 1:
+                    click.echo("Run migrations")
+                call_command("migrate", **extra)
+                call_command("create_extra_permissions")
 
-    #
+            static_root = Path(env("STATIC_ROOT"))
+            if not static_root.exists():
+                static_root.mkdir(parents=True)
+            print(f"STATIC_ROOT set to '{static_root}' ('{static_root.absolute()}')")
+            if static:
+                if verbosity >= 1:
+                    click.echo("Run collectstatic")
+                call_command("collectstatic", **extra)
 
-    #
+            call_command("createinitialrevisions")
 
-    if migrate:
-        if verbosity >= 1:
-            click.echo("Run migrations")
-        call_command("migrate", **extra)
-        call_command("create_extra_permissions")
+            if admin_email:
+                from django.contrib.auth import get_user_model
 
-    static_root = Path(env("STATIC_ROOT"))
-    if not static_root.exists():
-        static_root.mkdir(parents=True)
-    print(f"STATIC_ROOT set to '{static_root}' ('{static_root.absolute()}')")
-    if static:
-        if verbosity >= 1:
-            click.echo("Run collectstatic")
-        call_command("collectstatic", **extra)
+                User = get_user_model()
+                if User.objects.filter(is_superuser=True).exists():
+                    print("Superuser already exists. Ignoring ADMIN_EMAIL")
+                else:
+                    username, __ = admin_email.split("@")
+                    if User.objects.filter(username=username).exists():
+                        print("User with this name already exists")
+                    else:
+                        try:
+                            call_command(
+                                "createsuperuser",
+                                interactive=False,
+                                username=username,
+                                email=admin_email,
+                                verbosity=verbosity,
+                            )
+                            u = User.objects.get(username=username)
+                            u.set_password(admin_password)
+                            u.save()
+                        except CommandError:
+                            raise
 
-    call_command("createinitialrevisions")
+                import django
+                from django.conf import settings
+                from django.utils import translation
 
-    if admin_email:
-        from django.contrib.auth import get_user_model
-
-        User = get_user_model()
-        if User.objects.filter(is_superuser=True).exists():
-            print("Superuser already exists. Ignoring ADMIN_EMAIL")
-        else:
-            username, __ = admin_email.split("@")
-            if User.objects.filter(username=username).exists():
-                print("User with this name already exists")
-            else:
-                try:
-                    call_command(
-                        "createsuperuser", interactive=False, username=username, email=admin_email, verbosity=verbosity
-                    )
-                    u = User.objects.get(username=username)
-                    u.set_password(admin_password)
-                    u.save()
-                except CommandError:
-                    raise
-
-        import django
-        from django.conf import settings
-        from django.utils import translation
-
-        django.setup()
-        print(f"LANGUAGE_CODE: {settings.LANGUAGE_CODE}")
-        print(f"LOCALE: {translation.to_locale(settings.LANGUAGE_CODE)}")
-        translation.activate(settings.LANGUAGE_CODE)
-        print("check_for_language", translation.check_for_language("settings.LANGUAGE_CODE"))
+                django.setup()
+                print(f"LANGUAGE_CODE: {settings.LANGUAGE_CODE}")
+                print(f"LOCALE: {translation.to_locale(settings.LANGUAGE_CODE)}")
+                translation.activate(settings.LANGUAGE_CODE)
+                print("check_for_language", translation.check_for_language("settings.LANGUAGE_CODE"))
+    except LockError as e:
+        print(f"LockError: {e}")

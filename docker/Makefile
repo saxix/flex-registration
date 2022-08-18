@@ -92,6 +92,7 @@ dev:
 			-e DEBUG="0" \
 			-e DJANGO_SETTINGS_MODULE="aurora.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
+			-e REDIS_CONNSTR="127.0.0.1" \
 			${RUN_OPTIONS} \
 			${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest \
 			${CMD}

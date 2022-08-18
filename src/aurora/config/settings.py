@@ -326,6 +326,7 @@ LOGGING = {
 
 # ------ Custom App
 
+AURORA_ROLE = env("AURORA_ROLE")
 
 DATE_INPUT_FORMATS = [
     "%Y-%m-%d",  # '2006-10-25'
@@ -390,7 +391,6 @@ CONSTANCE_CONFIG = OrderedDict(
             str,
         ),
         "PRODUCTION_SERVER": ("", "production server url", str),
-        "PRODUCTION_CREDENTIALS": ("", "production url credentials", str),
         "LOG_POST_ERRORS": (False, "", bool),
         "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
         "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
@@ -632,3 +632,6 @@ DBTEMPLATES_USE_REVERSION = True
 DBTEMPLATES_USE_CODEMIRROR = True
 
 CONCURRENCY_ENABLED = False
+
+STRATEGY_CLASSLOADER = "aurora.core.registry.classloader"
+MIGRATION_LOCK_KEY = env("MIGRATION_LOCK_KEY")

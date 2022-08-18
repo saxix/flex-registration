@@ -17,12 +17,12 @@ def parse_emails(value):
 
 
 DEFAULTS = {
-    # "CSP_INCLUDE_NONCE_IN": (, True),
+    "AURORA_ROLE": (str, "MASTER"),  # PUBLIC | EDITOR | SOLO
     "CSP_REPORT_ONLY": (bool, True),
     # "CSP_DEFAULT_SRC": (list, ),
     # "CSP_SCRIPT_SRC": (str, None),
     "DJANGO_ADMIN_URL": (str, f"{uuid.uuid4().hex}/"),
-    "DJANGO_ADMIN_TITLE": (str, "="),
+    "DJANGO_ADMIN_TITLE": (str, "Aurora"),
     "AUTHENTICATION_BACKENDS": (list, []),
     "SECRET_KEY": (str, ""),
     "ADMINS": (parse_emails, ""),
@@ -52,6 +52,7 @@ DEFAULTS = {
     "CACHE_DEFAULT": (str, "locmemcache://"),
     "CONSTANCE_DATABASE_CACHE_BACKEND": (str, ""),
     "MEDIA_ROOT": (str, "/tmp/media/"),
+    "MIGRATION_LOCK_KEY": (str, "django-migrations"),
     "ROOT_TOKEN": (str, uuid.uuid4().hex),
     "PRODUCTION_SERVER": (str, ""),
     "PRODUCTION_TOKEN": (str, ""),

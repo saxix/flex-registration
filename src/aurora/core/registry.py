@@ -1,12 +1,27 @@
+from inspect import isclass
+
 from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from simplemathcaptcha.fields import MathCaptchaField
 from strategy_field.exceptions import StrategyAttributeError
 from strategy_field.registry import Registry
-from strategy_field.utils import fqn
+from strategy_field.utils import fqn, import_by_name
 
 from . import fields
 from .forms import FlexFormBaseForm
+
+
+def classloader(value):
+    if not value:
+        return value
+    elif isinstance(value, str):
+        if value.startswith("smart_register."):
+            value = value.replace("smart_register.", "aurora.")
+        return import_by_name(value)
+    elif isclass(value):
+        return value
+    else:
+        return type(value)
 
 
 def get_custom_field(value):
