@@ -194,7 +194,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     #     response = JsonResponse(data)
     #     response["Cache-Control"] = "max-age=5"
     #     return response
-    @choice(order=900, visible=lambda c: [])
+    @choice(order=900, visible=lambda c: [], change_list=False)
     def encryption(self, button):
         original = button.context["original"]
         colors = ["#DC6C6C", "white"]
@@ -246,7 +246,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
 
         return render(request, "admin/registration/registration/keys.html", ctx)
 
-    @choice(order=900)
+    @choice(order=900, change_list=False)
     def admin(self, button):
         button.choices = [self.james_editor, self.inspect, self.clone, self.create_translation]
         return button
