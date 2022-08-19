@@ -48,6 +48,7 @@ DATA = {
 
 
 class JamesForm(forms.ModelForm):
+    unique_field = forms.CharField(widget=forms.HiddenInput)
     unique_field_path = forms.CharField(
         label="JMESPath expression", widget=forms.TextInput(attrs={"style": "width:90%"})
     )
@@ -195,12 +196,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         response = JsonResponse(data)
         response["Cache-Control"] = "max-age=5"
         return response
-
-    # @button(label="Chart")
-    # def chart(self, request, pk):
-    #     ctx = self.get_common_context(request, pk, title="chart")
-    #     ctx["today"] = datetime.now().strftime("%Y-%m-%d")
-    #     return render(request, "admin/registration/registration/chart.html", ctx)
 
     @button()
     def inspect(self, request, pk):
@@ -376,10 +371,10 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         data = cache.get(f"james_{pk}", version=get_system_cache_version())
         if not data:
             form_class = reg.flex_form.get_form_class()
-            data = build_form_fake_data(form_class)
+            data = json.dumps(build_form_fake_data(form_class))
             cache.set(f"james_{pk}", data, version=get_system_cache_version())
 
-        return JsonResponse(data, safe=False)
+        return JsonResponse(json.loads(data), safe=False)
 
     @button()
     def james_editor(self, request, pk):
@@ -387,6 +382,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         if request.method == "POST":
             form = JamesForm(request.POST, instance=ctx["original"])
             if form.is_valid():
+
                 form.save()
                 cache.set(f"james_{pk}", form.cleaned_data["data"], version=get_system_cache_version())
                 return HttpResponseRedirect(".")
