@@ -7,6 +7,7 @@ from urllib.parse import quote_plus, unquote_plus
 
 import requests
 import reversion
+
 from admin_extra_buttons.decorators import button, view
 from admin_extra_buttons.mixins import ExtraButtonsMixin
 from concurrency.api import disable_concurrency
@@ -52,8 +53,9 @@ class PublishMixin(ExtraButtonsMixin):
 
     @view(decorators=[csrf_exempt], http_basic_auth=True, enabled=is_production)
     def production_logout(self, request):
-        response = HttpResponseRedirect("..")
-        set_cookie(response, CREDENTIALS_COOKIE, "")
+        redir_url = request.build_absolute_uri(unquote_plus(request.GET.get("from", "..")))
+        response = HttpResponseRedirect(redir_url)
+        response.set_cookie(CREDENTIALS_COOKIE, "")
         return response
 
     def get_common_context(self, request, pk=None, **kwargs):
@@ -81,6 +83,7 @@ class PublishMixin(ExtraButtonsMixin):
                         redir_url = request.build_absolute_uri(unquote_plus(request.GET["from"]))
                         response = HttpResponseRedirect(redir_url)
                         response.set_cookie(CREDENTIALS_COOKIE, cookies[CREDENTIALS_COOKIE])
+                        return response
                 else:
                     self.message_user(request, f"Login failed {ret} - {url}", messages.ERROR)
         else:
@@ -88,7 +91,7 @@ class PublishMixin(ExtraButtonsMixin):
         context["form"] = form
         return render(request, "admin/publish/login_prod.html", context, cookies=cookies)
 
-    @button(enabled=is_editor, change_list=True)
+    @button(enabled=is_editor, change_list=True, order=999)
     def get_data(self, request):
         context = self.get_common_context(request, title="Load data from PRODUCTION", server=config.PRODUCTION_SERVER)
         if request.method == "POST":
@@ -111,6 +114,9 @@ class PublishMixin(ExtraButtonsMixin):
                 logger.exception(e)
                 self.message_error_to_user(request, e)
         else:
+            if not is_logged_to_prod(request):
+                url = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
+                return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
             return render(request, "admin/publish/loaddata.html", context)
 
     @view(decorators=[csrf_exempt], http_basic_auth=True, enabled=is_production)
@@ -125,7 +131,7 @@ class PublishMixin(ExtraButtonsMixin):
             self.message_error_to_user(request, e)
             return HttpResponseRedirect("..")
 
-    @button(enabled=is_editor)
+    @button(enabled=is_editor, order=999)
     def publish(self, request, pk):
         context = self.get_common_context(request, pk, title="Publish to PRODUCTION", server=config.PRODUCTION_SERVER)
         if request.method == "POST":

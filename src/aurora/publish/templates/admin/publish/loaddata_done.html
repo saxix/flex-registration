@@ -5,5 +5,5 @@
 <pre>
 {{ stdout.details }}
 </pre>
-    <a href="{{ prod_logout }}">Logout from production</a>
+    <a href="{{ prod_logout }}?from={{ request.path }}">Logout from production</a>
 {% endblock %}

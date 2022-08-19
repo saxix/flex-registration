@@ -24,6 +24,7 @@
         <form method="post">
             {% csrf_token %}
             <input type="submit" value="Generate">
+            <input type="button" value="Cancel" onclick="javascript:history.back();">
         </form>
     {% endif %}
     <script>

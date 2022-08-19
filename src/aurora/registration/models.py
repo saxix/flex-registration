@@ -79,9 +79,9 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     scripts = models.ManyToManyField(
         Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True
     )
-    unique_field = models.CharField(
-        max_length=255, blank=True, null=True, help_text="Form field to be used as unique key"
-    )
+    # unique_field = models.CharField(
+    #     max_length=255, blank=True, null=True, help_text="Form field to be used as unique key (DEPRECATED)"
+    # )
     unique_field_path = models.CharField(
         max_length=1000, blank=True, null=True, help_text="JMESPath expression to retrieve unique field"
     )
@@ -156,7 +156,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 "files": safe_json(files).encode(),
                 "fields": jsonfy(fields),
             }
-        if self.unique_field or self.unique_field_path and not kwargs.get("unique_field", None):
+        if self.unique_field_path and not kwargs.get("unique_field", None):
             unique_value = self.get_unique_value(fields)
             kwargs["unique_field"] = unique_value
 
@@ -172,13 +172,11 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     def get_unique_value(self, cleaned_data):
         unique_value = None
-        if self.unique_field or self.unique_field_path:
-            unique_value = cleaned_data.get(self.unique_field, None)
-            if not unique_value and self.unique_field_path:
-                try:
-                    unique_value = jmespath.search(self.unique_field_path, cleaned_data)
-                except Exception as e:
-                    logger.exception(e)
+        if self.unique_field_path:
+            try:
+                unique_value = jmespath.search(self.unique_field_path, cleaned_data)
+            except Exception as e:
+                logger.exception(e)
         return unique_value
 
     @cached_property

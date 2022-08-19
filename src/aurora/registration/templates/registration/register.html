@@ -20,9 +20,7 @@
 {% block header %}
     {{ block.super }}
     {% if registration.locales|length > 1 %}
-{#    <div class="float-right absolute hidden">#}
         {% include "i18n/_select_language.html" with languages=registration.languages %}
-{#    </div>#}
     {% endif %}
 {% endblock %}
 

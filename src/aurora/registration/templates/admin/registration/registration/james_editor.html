@@ -18,7 +18,6 @@
         {{ form.errors }}
         {% csrf_token %}
         <table style="width: 100%">
-            {{ form.unique_field }}
             <tr>
                 <td colspan="2" style="white-space: nowrap">
                     {{ form.unique_field_path }}
@@ -39,27 +38,32 @@
     <script>
         (function ($) {
             $(function () {
+                const sampleDataTxt = $("#id_data");
+                const resultTxt = $("#id_result");
+                const expressionTxt = $("#id_unique_field_path");
+
                 $("#get_sample").on("click", function () {
                     $.getJSON("{% url "admin:registration_registration_james_fake_data" original.pk %}",
                         function (data) {
-                            $("#id_data").val(JSON.stringify(data, null, " "));
+                            sampleDataTxt.val(JSON.stringify(data, null, " "));
                         });
                 });
-                $("#id_data").on("paste", function (e) {
+                sampleDataTxt.on("paste", function (e) {
                     setTimeout(function () {
-                        var raw = $("#id_data").val();
-                        $("#id_data").val(JSON.stringify(JSON.parse(raw), null, " "));
+                        var raw = sampleDataTxt.val();
+                        resultTxt.val(JSON.stringify(JSON.parse(raw), null, " "));
                     }, 0.5);
                 });
                 $("#id_unique_field_path, #id_data").on("keyup", function (e) {
                     try {
-                        var data = JSON.parse($("#id_data").val());
+                        var data = JSON.parse(sampleDataTxt.val());
                         var result = jmespath.search(data, $(this).val());
-                        $("#id_result").val(JSON.stringify(result, null, " "));
+                        resultTxt.val(JSON.stringify(result, null, " "));
                     } catch (e) {
-                        $("#id_result").val(e);
+                        resultTxt.val(e);
                     }
                 });
+                expressionTxt.trigger("keyup")
             });
         })(django.jQuery);
 

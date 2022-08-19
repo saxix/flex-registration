@@ -1,12 +1,10 @@
 import json
 import logging
-from collections import defaultdict
 from datetime import datetime, timedelta
 
-import pytz
 from django.core.cache import cache
 
-from admin_extra_buttons.decorators import button, link, view
+from admin_extra_buttons.decorators import button, link, view, choice
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.value import ValueFilter
 from dateutil.utils import today
@@ -20,7 +18,6 @@ from django.db.transaction import atomic
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
-from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
@@ -28,7 +25,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 from ..core.admin import ConcurrencyVersionAdmin
 
 from ..core.models import FormSet
-from ..core.utils import clone_model, is_root, last_day_of_month, namify, build_form_fake_data, get_system_cache_version
+from ..core.utils import clone_model, is_root, namify, build_form_fake_data, get_system_cache_version
 from .forms import CloneForm
 from .models import Record, Registration
 from ..publish.mixin import PublishMixin
@@ -48,6 +45,7 @@ DATA = {
 
 
 class JamesForm(forms.ModelForm):
+    # unique_field = forms.CharField(widget=forms.HiddenInput)
     unique_field_path = forms.CharField(
         label="JMESPath expression", widget=forms.TextInput(attrs={"style": "width:90%"})
     )
@@ -55,7 +53,7 @@ class JamesForm(forms.ModelForm):
 
     class Meta:
         model = Registration
-        fields = ("unique_field_path", "unique_field", "data")
+        fields = ("unique_field_path", "data")
 
     class Media:
         js = [
@@ -86,13 +84,12 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
             "Unique",
             {
                 "fields": (
-                    "unique_field",
                     "unique_field_path",
                     "unique_field_error",
                 )
             },
         ),
-        ("Config", {"fields": ("flex_form", "validator", "scripts", "encrypt_data")}),
+        ("Config", {"fields": ("flex_form", "validator", "scripts")}),
         ("Validity", {"classes": ("collapse",), "fields": (("start", "end"), ("archived", "active"))}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
@@ -100,9 +97,11 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         ("Others", {"fields": ("__others__",)}),
     ]
 
-    def reversion_register(self, model, **options):
-        options["exclude"] = ("version",)
-        super().reversion_register(model, **options)
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name in ["unique_field_path", "unique_field_error"]:
+            formfield.widget.attrs = {"style": "width:80%"}
+        return formfield
 
     def secure(self, obj):
         return bool(obj.public_key)
@@ -124,85 +123,135 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         obj = self.get_object(request, pk)
         obj.save()
 
-    @view()
-    def data(self, request, registration):
-        from aurora.counters.models import Counter
-
-        qs = Counter.objects.filter(registration_id=registration).order_by("day")
-        param_day = request.GET.get("d", None)
-        param_tz = request.GET.get("tz", None)
-        total = 0
-        if param_day or param_tz:
-            tz = pytz.timezone(param_tz or "utc")
-            if not param_day:
-                day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
-            else:
-                day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
-            start = day.astimezone(pytz.UTC)
-            end = start + timedelta(days=1)
-            record = qs.filter(day__gte=start, day__lt=end).first()
-            data = []
-            if record:
-                data = record.hourly
-            hours = [f"{x:02d}:00" for x in list(range(0, 24))]
-            data = {
-                "tz": str(tz),
-                "label": day.strftime("%A, %d %B %Y"),
-                "total": total,
-                "date": str(day),
-                "start": str(start),
-                "end": str(end),
-                "day": day.strftime("%Y-%m-%d"),
-                "labels": hours,
-                "data": data,
-            }
-        elif param_month := request.GET.get("m", None):
-            if param_month:
-                day = datetime.strptime(param_month, "%Y-%m-%d")
-            else:
-                day = timezone.now().today()
-            qs = qs.filter(day__month=day.month)
-            # qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
-            data = defaultdict(lambda: 0)
-            for record in qs.all():
-                data[record.day.day] = record.records
-                total += record.records
-
-            last_day = last_day_of_month(day)
-            days = list(range(1, 1 + last_day.day))
-            labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
-            data = {
-                "label": day.strftime("%B %Y"),
-                "total": total,
-                "day": day.strftime("%Y-%m-%d"),
-                "labels": labels,
-                "data": [data[x] for x in days],
-            }
+    # @view()
+    # def data(self, request, registration):
+    #     from aurora.counters.models import Counter
+    #
+    #     qs = Counter.objects.filter(registration_id=registration).order_by("day")
+    #     param_day = request.GET.get("d", None)
+    #     param_tz = request.GET.get("tz", None)
+    #     total = 0
+    #     if param_day or param_tz:
+    #         tz = pytz.timezone(param_tz or "utc")
+    #         if not param_day:
+    #             day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
+    #         else:
+    #             day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
+    #         start = day.astimezone(pytz.UTC)
+    #         end = start + timedelta(days=1)
+    #         record = qs.filter(day__gte=start, day__lt=end).first()
+    #         data = []
+    #         if record:
+    #             data = record.hourly
+    #         hours = [f"{x:02d}:00" for x in list(range(0, 24))]
+    #         data = {
+    #             "tz": str(tz),
+    #             "label": day.strftime("%A, %d %B %Y"),
+    #             "total": total,
+    #             "date": str(day),
+    #             "start": str(start),
+    #             "end": str(end),
+    #             "day": day.strftime("%Y-%m-%d"),
+    #             "labels": hours,
+    #             "data": data,
+    #         }
+    #     elif param_month := request.GET.get("m", None):
+    #         if param_month:
+    #             day = datetime.strptime(param_month, "%Y-%m-%d")
+    #         else:
+    #             day = timezone.now().today()
+    #         qs = qs.filter(day__month=day.month)
+    #         # qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
+    #         data = defaultdict(lambda: 0)
+    #         for record in qs.all():
+    #             data[record.day.day] = record.records
+    #             total += record.records
+    #
+    #         last_day = last_day_of_month(day)
+    #         days = list(range(1, 1 + last_day.day))
+    #         labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
+    #         data = {
+    #             "label": day.strftime("%B %Y"),
+    #             "total": total,
+    #             "day": day.strftime("%Y-%m-%d"),
+    #             "labels": labels,
+    #             "data": [data[x] for x in days],
+    #         }
+    #     else:
+    #         qs = qs.all()
+    #         data = defaultdict(lambda: 0)
+    #         for record in qs.all():
+    #             data[record.day] = record.records
+    #             total += record.records
+    #         data = {
+    #             "label": "",
+    #             "day": timezone.now().today().strftime("%Y-%m-%d"),
+    #             "total": total,
+    #             "labels": [d.strftime("%-d, %a") for d in data.keys()],
+    #             "data": list(data.values()),
+    #         }
+    #
+    #     response = JsonResponse(data)
+    #     response["Cache-Control"] = "max-age=5"
+    #     return response
+    @choice(order=900, visible=lambda c: [])
+    def encryption(self, button):
+        original = button.context["original"]
+        colors = ["#DC6C6C", "white"]
+        if original.public_key:
+            colors = ["#dfd", "black"]
+            button.choices = [self.removekey]
+        elif original.encrypt_data:
+            colors = ["#dfd", "black"]
+            self.toggle_encryption.func._handler.config["label"] = "Disable Symmetric"
+            button.choices = [self.toggle_encryption]
         else:
-            qs = qs.all()
-            data = defaultdict(lambda: 0)
-            for record in qs.all():
-                data[record.day] = record.records
-                total += record.records
-            data = {
-                "label": "",
-                "day": timezone.now().today().strftime("%Y-%m-%d"),
-                "total": total,
-                "labels": [d.strftime("%-d, %a") for d in data.keys()],
-                "data": list(data.values()),
-            }
+            self.toggle_encryption.func._handler.config["label"] = "Enable Symmetric"
+            self.generate_keys.func._handler.config["label"] = "Enable RSA"
+            button.choices = [self.generate_keys, self.toggle_encryption]
+        button.config["html_attrs"] = {"style": f"background-color:{colors[0]};color:{colors[1]}"}
+        return button
 
-        response = JsonResponse(data)
-        response["Cache-Control"] = "max-age=5"
-        return response
+    @view(label="Symmetric Encryption")
+    def toggle_encryption(self, request, pk):
+        self.object = self.get_object(request, pk)
+        self.object.encrypt_data = not self.object.encrypt_data
+        self.object.save()
 
-    # @button(label="Chart")
-    # def chart(self, request, pk):
-    #     ctx = self.get_common_context(request, pk, title="chart")
-    #     ctx["today"] = datetime.now().strftime("%Y-%m-%d")
-    #     return render(request, "admin/registration/registration/chart.html", ctx)
+    @view()
+    def removekey(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Remove Encryption Key")
+        if request.method == "POST":
+            self.object = self.get_object(request, pk)
+            self.object.public_key = ""
+            self.object.save()
+            self.message_user(request, "Encryption key removed", messages.WARNING)
+            self.log_change(request, self.object, "Encryption Key has been removed")
+            return HttpResponseRedirect("..")
+        else:
+            return render(request, "admin/registration/registration/keys_remove.html", ctx)
 
-    @button()
+    @view()
+    def generate_keys(self, request, pk):
+        ctx = self.get_common_context(
+            request, pk, media=self.media, title="Generate Private/Public Key pair to encrypt this Registration data"
+        )
+
+        if request.method == "POST":
+            ctx["title"] = "Key Pair Generated"
+            private_pem, public_pem = self.object.setup_encryption_keys()
+            ctx["private_key"] = private_pem
+            ctx["public_key"] = public_pem
+            self.log_change(request, self.object, "Encryption Keys have been generated")
+
+        return render(request, "admin/registration/registration/keys.html", ctx)
+
+    @choice(order=900)
+    def admin(self, button):
+        button.choices = [self.james_editor, self.inspect, self.clone, self.create_translation]
+        return button
+
+    @view()
     def inspect(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -212,7 +261,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         )
         return render(request, "admin/registration/registration/inspect.html", ctx)
 
-    @button()
+    @view()
     def clone(self, request, pk):
         ctx = self.get_common_context(
             request,
@@ -275,7 +324,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/clone.html", ctx)
 
-    @button()
+    @view()
     def create_translation(self, request, pk):
         from aurora.i18n.forms import TranslationForm
         from aurora.i18n.models import Message
@@ -332,35 +381,11 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
 
-    @view()
-    def removekey(self, request, pk):
-        ctx = self.get_common_context(request, pk, title="Remove Encryption Key")
-        if request.method == "POST":
-            self.object = self.get_object(request, pk)
-            self.object.public_key = ""
-            self.object.save()
-            self.message_user(request, "Encryption key removed", messages.WARNING)
-            self.log_change(request, self.object, "Encryption Key has been removed")
-            return HttpResponseRedirect("..")
-        else:
-            return render(request, "admin/registration/registration/keys_remove.html", ctx)
+    @button(change_form=True, html_attrs={"target": "_new"})
+    def charts(self, request, pk):
+        return HttpResponseRedirect(reverse("charts:registration", args=[pk]))
 
-    @view()
-    def generate_keys(self, request, pk):
-        ctx = self.get_common_context(
-            request, pk, media=self.media, title="Generate Private/Public Key pair to encrypt this Registration data"
-        )
-
-        if request.method == "POST":
-            ctx["title"] = "Key Pair Generated"
-            private_pem, public_pem = self.object.setup_encryption_keys()
-            ctx["private_key"] = private_pem
-            ctx["public_key"] = public_pem
-            self.log_change(request, self.object, "Encryption Keys have been generated")
-
-        return render(request, "admin/registration/registration/keys.html", ctx)
-
-    @link(permission=is_root, html_attrs={"class": "aeb-warn "})
+    @link(permission=is_root, html_attrs={"class": "aeb-warn"})
     def view_collected_data(self, button):
         try:
             if button.original:
@@ -376,12 +401,12 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         data = cache.get(f"james_{pk}", version=get_system_cache_version())
         if not data:
             form_class = reg.flex_form.get_form_class()
-            data = build_form_fake_data(form_class)
+            data = json.dumps(build_form_fake_data(form_class))
             cache.set(f"james_{pk}", data, version=get_system_cache_version())
 
-        return JsonResponse(data, safe=False)
+        return JsonResponse(json.loads(data), safe=False)
 
-    @button()
+    @view()
     def james_editor(self, request, pk):
         ctx = self.get_common_context(request, pk, title="JAMESPath Editor")
         if request.method == "POST":
@@ -396,7 +421,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         ctx["form"] = form
         return render(request, "admin/registration/registration/james_editor.html", ctx)
 
-    @button()
+    @button(visible=False)
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Test")
         form = self.object.flex_form.get_form_class()
