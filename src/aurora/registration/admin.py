@@ -48,7 +48,7 @@ DATA = {
 
 
 class JamesForm(forms.ModelForm):
-    unique_field = forms.CharField(widget=forms.HiddenInput)
+    # unique_field = forms.CharField(widget=forms.HiddenInput)
     unique_field_path = forms.CharField(
         label="JMESPath expression", widget=forms.TextInput(attrs={"style": "width:90%"})
     )
@@ -56,7 +56,7 @@ class JamesForm(forms.ModelForm):
 
     class Meta:
         model = Registration
-        fields = ("unique_field_path", "unique_field", "data")
+        fields = ("unique_field_path", "data")
 
     class Media:
         js = [
@@ -87,7 +87,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
             "Unique",
             {
                 "fields": (
-                    "unique_field",
                     "unique_field_path",
                     "unique_field_error",
                 )

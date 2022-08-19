@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from django.urls import reverse
 from webtest import Upload
 
 LANGUAGES = {
@@ -38,7 +37,7 @@ def simple_registration(simple_form):
 
 
 @pytest.fixture()
-def unique_first_name_registration(simple_form):
+def unique_last_name_registration(simple_form):
     from aurora.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
@@ -46,7 +45,7 @@ def unique_first_name_registration(simple_form):
         name="registration #3",
         defaults={
             "flex_form": simple_form,
-            "unique_field": "last_name",
+            "unique_field_path": "last_name",
             "unique_field_error": "last_name is not unique",
             "encrypt_data": False,
             "active": True,
@@ -105,7 +104,7 @@ def james_registration(complex_form):
 
 @pytest.mark.django_db
 def test_register_simple(django_app, simple_registration):
-    url = reverse("register", args=[simple_registration.slug, simple_registration.version])
+    url = simple_registration.get_absolute_url()
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first_name"
@@ -130,7 +129,7 @@ def test_register_simple(django_app, simple_registration):
 
 @pytest.mark.django_db
 def test_register_indexed(django_app, simple_registration):
-    url = reverse("register", args=[simple_registration.slug, simple_registration.version])
+    url = simple_registration.get_absolute_url()
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first"
@@ -144,26 +143,28 @@ def test_register_indexed(django_app, simple_registration):
 
 
 @pytest.mark.django_db
-def test_register_unique(django_app, unique_first_name_registration):
-    url = reverse("register", args=[unique_first_name_registration.slug, unique_first_name_registration.version])
+def test_register_unique(django_app, unique_last_name_registration):
+    url = unique_last_name_registration.get_absolute_url()
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
     res = res.form.submit().follow()
     assert res.context["record"].data["first_name"] == "first"
+    assert res.context["record"].data["last_name"] == "last"
+    assert res.context["record"].unique_field == "last"
 
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = "first"
     res.form["last_name"] = "last"
     res = res.form.submit()
-    assert res.context["errors"][0].message == unique_first_name_registration.unique_field_error
+    assert res.context["errors"][0].message == unique_last_name_registration.unique_field_error
 
 
 @pytest.mark.django_db
 def test_register_unique_nested(django_app, james_registration):
-    url = reverse("register", args=[james_registration.slug, james_registration.version])
+    url = james_registration.get_absolute_url()
     res = django_app.get(url)
     res = res.form.submit()
     res.form["family_name"] = "Fam #1"
@@ -222,7 +223,7 @@ def add_extra_form_to_formset_with_data(form, prefix, field_names_and_values):
 
 @pytest.mark.django_db
 def test_register_complex(django_app, complex_registration):
-    url = reverse("register", args=[complex_registration.slug, complex_registration.version])
+    url = complex_registration.get_absolute_url()
     res = django_app.get(url)
     res.form["family_name"] = "HH #1"
 
@@ -257,7 +258,7 @@ def test_register_complex(django_app, complex_registration):
 
 @pytest.mark.parametrize("first_name", LANGUAGES.values(), ids=LANGUAGES.keys())
 def test_register_encrypted(django_app, first_name, rsa_encrypted_registration):
-    url = reverse("register", args=[rsa_encrypted_registration.slug, rsa_encrypted_registration.version])
+    url = rsa_encrypted_registration.get_absolute_url()
     res = django_app.get(url)
     res = res.form.submit()
     res.form["first_name"] = first_name
@@ -273,7 +274,7 @@ def test_register_encrypted(django_app, first_name, rsa_encrypted_registration):
 
 @pytest.mark.django_db
 def test_upload_image(django_app, complex_registration, mock_storage):
-    url = reverse("register", args=[complex_registration.slug, complex_registration.version])
+    url = complex_registration.get_absolute_url()
     res = django_app.get(url)
     res.form["family_name"] = "HH #1"
     # IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
@@ -306,7 +307,7 @@ def test_upload_image(django_app, complex_registration, mock_storage):
 
 @pytest.mark.django_db
 def test_upload_image_register_rsa_encrypted(django_app, rsa_encrypted_registration, mock_storage):
-    url = reverse("register", args=[rsa_encrypted_registration.slug, rsa_encrypted_registration.version])
+    url = rsa_encrypted_registration.get_absolute_url()
     content = Path("tests/data/image.png").read_bytes()
     IMAGE = Upload("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
 
@@ -327,7 +328,7 @@ def test_upload_image_register_rsa_encrypted(django_app, rsa_encrypted_registrat
 def test_upload_image_register_fernet_encrypted(django_app, fernet_encrypted_registration, mock_storage):
     from aurora.registration.models import Record
 
-    url = reverse("register", args=[fernet_encrypted_registration.slug, fernet_encrypted_registration.version])
+    url = fernet_encrypted_registration.get_absolute_url()
     content = Path("tests/data/image.png").read_bytes()
     IMAGE = Upload("tests/data/image.jpeg", content)
 
