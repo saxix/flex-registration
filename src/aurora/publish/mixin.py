@@ -91,7 +91,7 @@ class PublishMixin(ExtraButtonsMixin):
         context["form"] = form
         return render(request, "admin/publish/login_prod.html", context, cookies=cookies)
 
-    @button(enabled=is_editor, change_list=True)
+    @button(enabled=is_editor, change_list=True, order=999)
     def get_data(self, request):
         context = self.get_common_context(request, title="Load data from PRODUCTION", server=config.PRODUCTION_SERVER)
         if request.method == "POST":
@@ -131,7 +131,7 @@ class PublishMixin(ExtraButtonsMixin):
             self.message_error_to_user(request, e)
             return HttpResponseRedirect("..")
 
-    @button(enabled=is_editor)
+    @button(enabled=is_editor, order=999)
     def publish(self, request, pk):
         context = self.get_common_context(request, pk, title="Publish to PRODUCTION", server=config.PRODUCTION_SERVER)
         if request.method == "POST":
