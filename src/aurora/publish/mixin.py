@@ -112,7 +112,7 @@ class PublishMixin(ExtraButtonsMixin):
                 context["stdout"] = {"details": info}
                 invalidate_cache()
                 self.message_user(request, "Success", messages.SUCCESS)
-                return render(request, "admin/publish/loaddata_done.html", context)
+                return render(request, "admin/publish/get_data_done.html", context)
             except PermissionError:
                 url = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
                 return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
@@ -123,7 +123,7 @@ class PublishMixin(ExtraButtonsMixin):
             if not is_logged_to_prod(request):
                 url = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
                 return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
-            return render(request, "admin/publish/loaddata.html", context)
+            return render(request, "admin/publish/get_data.html", context)
 
     @view(decorators=[csrf_exempt], http_basic_auth=True, enabled=is_production)
     def dumpdata(self, request):
@@ -156,7 +156,8 @@ class PublishMixin(ExtraButtonsMixin):
                     self.message_user(request, "Success", messages.SUCCESS)
                 else:
                     self.message_user(request, "Error", messages.ERROR)
-                return render(request, "admin/publish/publish_done.html", context)
+                return HttpResponseRedirect("../publish_done/done/")
+                # return render(request, "admin/publish/publish_done.html", context)
             except PermissionError:
                 url = local_reverse(admin_urlname(self.model._meta, "login_to_prod"))
                 return HttpResponseRedirect(f"{url}?from={quote_plus(request.path)}")
@@ -201,3 +202,8 @@ class PublishMixin(ExtraButtonsMixin):
                 },
                 status=400,
             )
+
+    @view(decorators=[csrf_exempt], http_basic_auth=True)
+    def done(self, request, pk, tpl):
+        context = self.get_common_context(request, pk)
+        return render(request, f"admin/publish/{tpl}.html", context)
