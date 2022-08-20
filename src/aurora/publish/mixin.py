@@ -10,6 +10,8 @@ import reversion
 
 from admin_extra_buttons.decorators import button, view
 from admin_extra_buttons.mixins import ExtraButtonsMixin
+from admin_extra_buttons.handlers import BaseExtraHandler
+
 from concurrency.api import disable_concurrency
 from constance import config
 from django.contrib import messages
@@ -39,6 +41,10 @@ from aurora.publish.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def check_permission(request, obj, handler: BaseExtraHandler, **kwargs):
+    return True
 
 
 class PublishMixin(ExtraButtonsMixin):
@@ -131,7 +137,7 @@ class PublishMixin(ExtraButtonsMixin):
             self.message_error_to_user(request, e)
             return HttpResponseRedirect("..")
 
-    @button(enabled=is_editor, order=999)
+    @button(enabled=is_editor, order=999, permission=check_permission)
     def publish(self, request, pk):
         context = self.get_common_context(request, pk, title="Publish to PRODUCTION", server=config.PRODUCTION_SERVER)
         if request.method == "POST":

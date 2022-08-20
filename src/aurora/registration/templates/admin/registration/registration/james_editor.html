@@ -41,28 +41,34 @@
                 const sampleDataTxt = $("#id_data");
                 const resultTxt = $("#id_result");
                 const expressionTxt = $("#id_unique_field_path");
-
-                $("#get_sample").on("click", function () {
-                    $.getJSON("{% url "admin:registration_registration_james_fake_data" original.pk %}",
-                        function (data) {
-                            sampleDataTxt.val(JSON.stringify(data, null, " "));
-                        });
-                });
-                sampleDataTxt.on("paste", function (e) {
-                    setTimeout(function () {
-                        var raw = sampleDataTxt.val();
-                        resultTxt.val(JSON.stringify(JSON.parse(raw), null, " "));
-                    }, 0.5);
-                });
-                $("#id_unique_field_path, #id_data").on("keyup", function (e) {
+                var parse = function(){
                     try {
                         var data = JSON.parse(sampleDataTxt.val());
-                        var result = jmespath.search(data, $(this).val());
+                        var result = jmespath.search(data, expressionTxt.val());
                         resultTxt.val(JSON.stringify(result, null, " "));
                     } catch (e) {
                         resultTxt.val(e);
                     }
+                };
+                var formatJson = function() {
+                    var raw = sampleDataTxt.val();
+                    resultTxt.val(JSON.stringify(JSON.parse(raw), null, " "));
+                };
+                $("#get_sample").on("click", function () {
+                    sampleDataTxt.val("Processing...");
+                    resultTxt.val("");
+                    $.get("{% url "admin:registration_registration_james_fake_data" original.pk %}",
+                        function (data) {
+                            {#var formatted = JSON.stringify(data, null, " ");#}
+                            sampleDataTxt.val(data);
+                            formatJson();
+                            parse();
+                        });
                 });
+                sampleDataTxt.on("paste", function (e) {
+                    setTimeout(formatJson, 0.5);
+                });
+                $("#id_unique_field_path, #id_data").on("keyup", parse);
                 expressionTxt.trigger("keyup")
             });
         })(django.jQuery);
