@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from natural_keys import NaturalKeyModel
+
 from dbtemplates.conf import settings
 from dbtemplates.utils.cache import add_template_to_cache, remove_cached_template
 from dbtemplates.utils.template import get_template_source
@@ -11,13 +13,15 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 
 
-class Template(models.Model):
+class Template(NaturalKeyModel, models.Model):
     """
     Defines a template model for use with the database template loader.
     The field ``name`` is the equivalent to the filename of a static template.
     """
 
-    name = models.CharField(_("name"), max_length=100, help_text=_("Example: 'flatpages/default.html'"))
+    _natural_key = ("name",)
+
+    name = models.CharField(_("name"), max_length=100, unique=True, help_text=_("Example: 'flatpages/default.html'"))
     content = models.TextField(_("content"), blank=True)
     sites = models.ManyToManyField(Site, verbose_name=_("sites"), blank=True)
     creation_date = models.DateTimeField(_("creation date"), default=now)

@@ -76,6 +76,7 @@ def loaddata_from_url(url, auth, user=None, comment=None):
     payload = unwrap(ret.content)
     workdir = Path(".").absolute()
     kwargs = {"dir": workdir, "prefix": f"~LOADDATA-{slugify(url)}", "suffix": ".json", "delete": False}
+    payload = payload.replace("smart_register", "aurora")
     with tempfile.NamedTemporaryFile(**kwargs) as fdst:
         assert isinstance(fdst.write, object)
         fdst.write(payload.encode())

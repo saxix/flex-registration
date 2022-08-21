@@ -10,7 +10,6 @@ import reversion
 
 from admin_extra_buttons.decorators import button, view
 from admin_extra_buttons.mixins import ExtraButtonsMixin
-from admin_extra_buttons.handlers import BaseExtraHandler
 
 from concurrency.api import disable_concurrency
 from constance import config
@@ -24,6 +23,7 @@ from requests.auth import HTTPBasicAuth
 from aurora.core.utils import get_client_ip, render
 from aurora.i18n.hreflang import reverse as local_reverse
 from aurora.publish.forms import ProductionLoginForm
+from aurora.publish.perms import check_publish_permission, check_load_permission
 from aurora.publish.utils import (
     CREDENTIALS_COOKIE,
     get_data_structure,
@@ -41,10 +41,6 @@ from aurora.publish.utils import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def check_permission(request, obj, handler: BaseExtraHandler, **kwargs):
-    return True
 
 
 class PublishMixin(ExtraButtonsMixin):
@@ -97,7 +93,7 @@ class PublishMixin(ExtraButtonsMixin):
         context["form"] = form
         return render(request, "admin/publish/login_prod.html", context, cookies=cookies)
 
-    @button(enabled=is_editor, change_list=True, order=999)
+    @button(enabled=is_editor, change_list=True, order=999, permission=check_load_permission)
     def get_data(self, request):
         context = self.get_common_context(request, title="Load data from PRODUCTION", server=config.PRODUCTION_SERVER)
         if request.method == "POST":
@@ -137,7 +133,7 @@ class PublishMixin(ExtraButtonsMixin):
             self.message_error_to_user(request, e)
             return HttpResponseRedirect("..")
 
-    @button(enabled=is_editor, order=999, permission=check_permission)
+    @button(enabled=is_editor, order=999, permission=check_publish_permission)
     def publish(self, request, pk):
         context = self.get_common_context(request, pk, title="Publish to PRODUCTION", server=config.PRODUCTION_SERVER)
         if request.method == "POST":
