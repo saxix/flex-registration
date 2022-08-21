@@ -15,7 +15,7 @@ from django.contrib.admin import SimpleListFilter, register
 from django.db.models import JSONField
 from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils.text import slugify
@@ -26,7 +26,7 @@ from ..core.admin import ConcurrencyVersionAdmin
 
 from ..core.models import FormSet
 from ..core.utils import clone_model, is_root, namify, build_form_fake_data, get_system_cache_version
-from .forms import CloneForm
+from .forms import CloneForm, RegistrationForm
 from .models import Record, Registration
 from ..publish.mixin import PublishMixin
 from ..publish.utils import get_registration_data
@@ -70,6 +70,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True
+    form = RegistrationForm
     readonly_fields = ("version", "last_update_date")
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
@@ -104,7 +105,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         return formfield
 
     def secure(self, obj):
-        return bool(obj.public_key)
+        return bool(obj.public_key) or obj.encrypt_data
 
     secure.boolean = True
 
@@ -194,7 +195,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
     #     response = JsonResponse(data)
     #     response["Cache-Control"] = "max-age=5"
     #     return response
-    @choice(order=900, visible=lambda c: [])
+    @choice(order=900, visible=lambda c: [], change_list=False)
     def encryption(self, button):
         original = button.context["original"]
         colors = ["#DC6C6C", "white"]
@@ -246,7 +247,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
 
         return render(request, "admin/registration/registration/keys.html", ctx)
 
-    @choice(order=900)
+    @choice(order=900, change_list=False)
     def admin(self, button):
         button.choices = [self.james_editor, self.inspect, self.clone, self.create_translation]
         return button
@@ -401,10 +402,10 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         data = cache.get(f"james_{pk}", version=get_system_cache_version())
         if not data:
             form_class = reg.flex_form.get_form_class()
-            data = json.dumps(build_form_fake_data(form_class))
+            data = json.dumps(build_form_fake_data(form_class), indent=4)
             cache.set(f"james_{pk}", data, version=get_system_cache_version())
 
-        return JsonResponse(json.loads(data), safe=False)
+        return HttpResponse(data)
 
     @view()
     def james_editor(self, request, pk):

@@ -9,7 +9,7 @@ packages = [
 
 [tool.poetry.dependencies]
 django = "^3"
-django-admin-extra-buttons = "^1.4"
+django-admin-extra-buttons = "^1.5"
 django-adminactions = "^2.0"
 django-adminfilters = "^2.0"
 django-click = "^2.3"

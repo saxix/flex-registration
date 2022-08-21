@@ -1,4 +1,4 @@
-{% extends "admin_extra_buttons/action_page.html" %}
+{% extends "admin/publish/_publish_base.html" %}
 {% block action-content %}
     <div style="margin:10px">
         Proceeding you will download production configuration from <strong>{{ server }}</strong>
@@ -13,7 +13,8 @@
     <div style="margin-top:50px">
     <form method="post">
         {% csrf_token %}
-        <input type="submit" value="Load">
+        <input type="submit" class="default" value="Load">
+        <input type="button" value="Cancel" onclick="javascript:history.back()">
     </form>
     </div>
 {% endblock %}
