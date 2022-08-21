@@ -402,7 +402,7 @@ CONSTANCE_CONFIG = OrderedDict(
 )
 
 SMART_ADMIN_SECTIONS = {
-    "Registration": ["registration"],
+    "Registration": ["registration", "dbtemplates"],
     "Form Builder": ["core"],
     "Configuration": ["constance", "flags"],
     "Security": ["auth", "social_auth"],
