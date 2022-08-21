@@ -11,12 +11,17 @@ from . import fields
 from .forms import FlexFormBaseForm
 
 
+def clean_classname(value):
+    if value.startswith("smart_register."):
+        value = value.replace("smart_register.", "aurora.")
+    return value
+
+
 def classloader(value):
     if not value:
         return value
     elif isinstance(value, str):
-        if value.startswith("smart_register."):
-            value = value.replace("smart_register.", "aurora.")
+        value = clean_classname(value)
         return import_by_name(value)
     elif isclass(value):
         return value
@@ -32,10 +37,14 @@ def get_custom_field(value):
 
 
 def import_custom_field(value, exc):
+    value = clean_classname(value)
     try:
-        return get_custom_field(value).get_class()
-    except ObjectDoesNotExist:
-        return None
+        return import_by_name(value)
+    except ImportError:
+        try:
+            return get_custom_field(value).get_class()
+        except ObjectDoesNotExist:
+            return None
 
 
 class FieldRegistry(Registry):
