@@ -7,14 +7,16 @@
     {% if prod_credentials.username %}
         <div style="margin:10px">
             You are currently logged in as <strong>{{ prod_credentials.username }}</strong>
-            (<a href="{{ prod_logout }}">Change user</a>)
+            (<a href="{{ prod_logout }}?{{ request.path }}">Change user</a>)
         </div>
+        <div style="margin-top:50px">
+            <form method="post">
+                {% csrf_token %}
+                <input class="default" type="submit" value="Publish">
+                <input type="button" value="Cancel" onclick="javascript:history.back()">
+            </form>
+        </div>
+    {% else %}
+        <a href="{{ prod_login }}?{{ request.path }}">Login</a>
     {% endif %}
-    <div style="margin-top:50px">
-    <form method="post">
-            {% csrf_token %}
-            <input class="default" type="submit" value="Publish">
-            <input type="button" value="Cancel" onclick="javascript:history.back()">
-        </form>
-    </div>
 {% endblock %}
