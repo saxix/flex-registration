@@ -95,6 +95,19 @@ $color-error: #ff9898;
     }
   }
 }
+.charting{
+  .button {
+    color: $base-color;
+    font-weight: bold;
+    border-radius: 2px;
+    border-color: #092c3a;
+    background-color: #01ADF1;
+    color: white;
+    padding: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
 
 .landing {
   input.button {

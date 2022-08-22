@@ -259,9 +259,9 @@ STATICFILES_DIRS = [
 # -------- Added Settings
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
     "aurora.security.backend.SmartBackend",
+    # "django.contrib.auth.backends.ModelBackend",
+    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -281,7 +281,7 @@ EMAIL_USE_SSL = env("EMAIL_USE_SSL")
 EMAIL_USE_TLS = env("EMAIL_USE_TLS")
 
 # FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
-LOGIN_REDIRECT_URL = "summary"
+LOGIN_REDIRECT_URL = "index"
 LOGOUT_REDIRECT_URL = "index"
 LOGIN_URL = "login"
 

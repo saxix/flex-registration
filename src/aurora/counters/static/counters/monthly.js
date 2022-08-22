@@ -94,7 +94,10 @@
     function ajax_chart(params) {
         params.rnd = token || Math.random();
         const qs = new URLSearchParams(params).toString();
-        $.getJSON(baseUrl + "?" + qs).done(function (response) {
+        $.getJSON({
+            url: baseUrl + "?" + qs,
+            ifModified: true
+        }).done(function (response) {
             var chartData = response.data.map(a => a.total);
             // reset dataset
             myChart.data.datasets = [myChart.data.datasets[0]];

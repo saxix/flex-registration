@@ -96,9 +96,6 @@ class CounterAdmin(SmartModelAdmin):
             if form.is_valid():
                 registration = form.cleaned_data["registration"]
                 return HttpResponseRedirect(reverse("charts:registration", args=[registration.pk]))
-                # ctx["title"] = registration.title
-                # ctx["registration"] = registration
-                # ctx["token"] = get_token(request)
         else:
             form = ChartForm()
         ctx["form"] = form

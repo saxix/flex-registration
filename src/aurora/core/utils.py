@@ -6,6 +6,8 @@ import json
 import os
 import random
 import re
+from hashlib import md5
+
 import sys
 import time
 import unicodedata
@@ -274,7 +276,7 @@ def get_etag(request, *args, **kwargs):
         params = [time.time()]
     else:
         params = (VERSION,) + args
-    return "/".join(map(str, params))
+    return md5("/".join(map(str, params)).encode()).hexdigest()
 
 
 def last_day_of_month(date):

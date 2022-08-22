@@ -1,26 +1,27 @@
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
 
 from aurora.core.utils import render, last_day_of_month
-from aurora.counters.admin import get_token
 from aurora.counters.models import Counter
 from aurora.registration.models import Registration
 
 
 @login_required()
 def index(request):
-    context = {"registrations": Registration.objects.all()}
+    regs = Registration.objects.filter(roles__user=request.user, roles__role__permissions__codename="view_counter")
+    context = {"registrations": regs}
     return render(request, "counters/index.html", context)
 
 
 class ChartView(UserPassesTestMixin, View):
-    # raise_exception = True
     permission_denied_message = "----"
     login_url = "/"
 
@@ -28,7 +29,10 @@ class ChartView(UserPassesTestMixin, View):
         return self.request.user.is_authenticated
 
     def get_registration(self, request, pk) -> Registration:
-        return get_object_or_404(Registration, id=pk)
+        reg = get_object_or_404(Registration, id=pk)
+        if not request.user.has_perm("view_counter", reg):
+            raise PermissionDenied("----")
+        return reg
 
     def handle_no_permission(self):
         return HttpResponseRedirect("/")
@@ -69,10 +73,10 @@ class MonthlyDataView(ChartView):
             "labels": labels,
             "data": list(values.values()),
         }
-
         response = JsonResponse(data)
-        response["Cache-Control"] = "max-age=315360000"
-        response["ETag"] = get_token(request)
+        # response["Cache-Control"] = "max-age=315360000"
+        # response["Last-Modified"] = "max-age=315360000"
+        # response["ETag"] = etag
         return response
 
 
@@ -91,6 +95,7 @@ class MonthlyChartView(ChartView):
             "registration": reg,
             "first": first,
             "latest": latest,
+            "token": request.COOKIES[settings.SESSION_COOKIE_NAME],
             # "years": range(first.day.year, latest.day.year)
         }
         return render(request, "counters/chart_month.html", context)
