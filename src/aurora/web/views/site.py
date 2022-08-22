@@ -35,6 +35,8 @@ def get_active_registrations():
         if slug.strip():
             try:
                 registrations.append(Registration.objects.get(active=True, slug=slug.strip()))
+            except Registration.DoesNotExist:
+                pass
             except Exception as e:
                 logger.exception(e)
     return registrations

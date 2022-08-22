@@ -20,7 +20,8 @@ class Config(AppConfig):
         try:
             for field in CustomFieldType.objects.all():
                 try:
-                    field_registry.register(field.get_class())
+                    cls = field.get_class()
+                    field_registry.register(cls)
                 except Exception as e:
                     logger.exception(e)
 

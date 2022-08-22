@@ -1,3 +1,4 @@
+import logging
 from inspect import isclass
 
 from django import forms
@@ -9,6 +10,8 @@ from strategy_field.utils import fqn, import_by_name
 
 from . import fields
 from .forms import FlexFormBaseForm
+
+logger = logging.getLogger(__name__)
 
 
 def clean_classname(value):
