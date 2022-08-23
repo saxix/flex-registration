@@ -58,6 +58,7 @@ DEFAULTS = {
     "PRODUCTION_TOKEN": (str, ""),
     # Sentry - see CONTRIBUTING.md
     "SENTRY_DSN": (str, ""),
+    "SENTRY_PROJECT": (str, ""),
     "SENTRY_SECURITY_TOKEN": (str, ""),
     "SENTRY_SECURITY_TOKEN_HEADER": (str, "X-Sentry-Token"),
     "SESSION_COOKIE_DOMAIN": (str, "localhost"),

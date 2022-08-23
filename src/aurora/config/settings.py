@@ -46,12 +46,12 @@ INSTALLED_APPS = [
     "reversion",  # https://github.com/etianen/django-reversion
     "reversion_compare",  # https://github.com/jedie/django-reversion-compare
     # ---
-    "aurora.admin.apps.AuroraAdminUIConfig",
+    # "aurora.admin.apps.AuroraAdminUIConfig",
     "aurora.admin.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartAuthConfig",
-    # "smart_admin.apps.SmartConfig",
+    "smart_admin.apps.SmartConfig",
     # 'smart_admin',
     "rest_framework",
     "rest_framework.authtoken",
@@ -344,6 +344,7 @@ DATE_INPUT_FORMATS = [
 
 MAX_OBSERVED = 1
 SENTRY_DSN = env("SENTRY_DSN")
+SENTRY_PROJECT = env("SENTRY_PROJECT")
 if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
