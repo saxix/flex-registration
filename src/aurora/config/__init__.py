@@ -53,6 +53,7 @@ DEFAULTS = {
     "CONSTANCE_DATABASE_CACHE_BACKEND": (str, ""),
     "MEDIA_ROOT": (str, "/tmp/media/"),
     "MIGRATION_LOCK_KEY": (str, "django-migrations"),
+    "REDIS_CONNSTR": (str, ""),
     "ROOT_TOKEN": (str, uuid.uuid4().hex),
     "PRODUCTION_SERVER": (str, ""),
     "PRODUCTION_TOKEN": (str, ""),
