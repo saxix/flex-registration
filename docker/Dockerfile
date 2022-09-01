@@ -48,13 +48,12 @@ ENV POETRY_VERSION=1.1.13 \
     VERSION=${VERSION}
 
 WORKDIR /code/
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-
 ADD . /code/
 
-RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi --no-root \
-  && pip install uwsgi
+RUN pip install poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --no-root \
+    && pip install uwsgi
 
 EXPOSE 8000
 
