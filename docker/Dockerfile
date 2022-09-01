@@ -50,7 +50,7 @@ ENV POETRY_VERSION=1.1.13 \
 WORKDIR /code/
 ADD . /code/
 
-RUN pip install poetry \
+RUN pip install "poetry>=1.1.4" \
     && poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --no-root \
     && pip install uwsgi
