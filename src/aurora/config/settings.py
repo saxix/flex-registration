@@ -70,11 +70,11 @@ INSTALLED_APPS = [
     "corsheaders",
     "simplemathcaptcha",
     "dbtemplates",
+    "admin_sync",
     # ---
     "aurora.apps.Config",
     "aurora.i18n",
     "aurora.web",
-    "aurora.publish",
     "aurora.security.apps.Config",
     "aurora.core",
     "aurora.registration",
@@ -283,7 +283,8 @@ EMAIL_USE_TLS = env("EMAIL_USE_TLS")
 # FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 LOGIN_REDIRECT_URL = "index"
 LOGOUT_REDIRECT_URL = "index"
-LOGIN_URL = "login"
+LOGIN_URL = "/login"
+USER_LOGIN_URL = "/login"
 
 LOGGING = {
     "version": 1,
@@ -324,8 +325,6 @@ LOGGING = {
 }
 
 # ------ Custom App
-
-AURORA_ROLE = env("AURORA_ROLE")
 
 DATE_INPUT_FORMATS = [
     "%Y-%m-%d",  # '2006-10-25'
@@ -390,7 +389,10 @@ CONSTANCE_CONFIG = OrderedDict(
             "",
             str,
         ),
-        "PRODUCTION_SERVER": ("", "production server url", str),
+        "ADMIN_SYNC_REMOTE_SERVER": ("", "production server url", str),
+        "ADMIN_SYNC_REMOTE_ADMIN_URL": ("/admin/", "", str),
+        "ADMIN_SYNC_LOCAL_ADMIN_URL": ("/admin/", "", str),
+        "ADMIN_SYNC_USE_REVERSION": (False, "", bool),
         "LOG_POST_ERRORS": (False, "", bool),
         "MINIFY_RESPONSE": (0, "select yes or no", "html_minify_select"),
         "MINIFY_IGNORE_PATH": (r"", "regex for ignored path", str),
@@ -623,8 +625,8 @@ ADD_REVERSION_ADMIN = True
 REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = False
 REVERSION_COMPARE_IGNORE_NOT_REGISTERED = False
 
-PRODUCTION_SERVER = env("PRODUCTION_SERVER")
-PRODUCTION_TOKEN = env("PRODUCTION_TOKEN")
+ADMIN_SYNC_CONFIG = "admin_sync.conf.DjangoConstance"
+ADMIN_SYNC_RESPONSE_HEADER = None
 
 SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W006", "urls.W005", "admin_extra_buttons.PERM"]
 

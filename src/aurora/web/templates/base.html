@@ -18,17 +18,15 @@
 
     {% block head %}{% endblock head %}
 </head>
-<body class="min-h-screen dark">
+<body class="min-h-screen">
 <script>
     const LANGUAGE_CODE = "{{ LANGUAGE_CODE }}";
 </script>
-{#{% block staff-toolbar %}{% include "_env_header.html" %}{% endblock %}#}
 {% block header %}
     <header class="text-gray-700 body-font border-b border-gray-200 header">
         <div class="container-fluid w-100 mx-auto flex flex-wrap p-5 md:flex-row items-center">
             <div class="flex-none align-middle">
                 <a class="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0" href="/">
-                    {#      <object data="{% static "logo_uk.png" %}" class="mt-2" idth="100" height="40"> </object>#}
                 </a>
             </div>
             <div class="flex-grow"></div>

@@ -19,14 +19,20 @@
 {% endblock head %}
 {% block header %}
     {{ block.super }}
-    {% if registration.locales|length > 1 %}
+    <div id="loading" class="h-screen flex justify-center bg-gray-100 pb-10">
+        Loading...
+    </div>
+{#    {% if registration.locales|length > 1 %}#}
+    <div class="flex flex-row px-5">
+    <div class="flex-grow">
         {% include "i18n/_select_language.html" with languages=registration.languages %}
-    {% endif %}
+    </div>
+    <div class="flex-shrink">
+        <a href="{% url "logout" %}">logout</a>
+    </div>
+    </div>
+{#    {% endif %}#}
 {% endblock %}
-
-{#{% block staff-toolbar %}#}
-{#    {% include "registration/_staff_toolbar.html" %}#}
-{#{% endblock staff-toolbar %}#}
 
 {% block body %}
     {% include "smart/_form.html" %}
@@ -39,6 +45,7 @@
         <script src="{% static 'i18n/i18n_edit.js' %}"></script>
         <script defer src="{% static "edit.min.js" %}"></script>
     {% endif %}
+    <script defer src="{% static "registration/auth.js" %}"></script>
     {% if registration.advanced.smart.wizard %}<script src="{% static "wizard.min.js" %}"></script>{% endif %}
     <div class="flex justify-center text-xs footer m-auto pt-1 pb-2 border-t-2 text-gray-400 border-gray-400">
         {{ project.build_date }} - {{ LANGUAGE_CODE }}

@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 
+from admin_sync.mixin import SyncMixin
 from django.core.cache import cache
 
 from admin_extra_buttons.decorators import button, link, view, choice
@@ -28,8 +29,8 @@ from ..core.models import FormSet
 from ..core.utils import clone_model, is_root, namify, build_form_fake_data, get_system_cache_version
 from .forms import CloneForm, RegistrationForm
 from .models import Record, Registration
-from ..publish.mixin import PublishMixin
-from ..publish.utils import get_registration_data
+from .paginator import LargeTablePaginator
+
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ class JamesForm(forms.ModelForm):
 
 
 @register(Registration)
-class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
+class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active", "archived")
@@ -93,6 +94,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         ("Config", {"fields": ("flex_form", "validator", "scripts")}),
         ("Validity", {"classes": ("collapse",), "fields": (("start", "end"), ("archived", "active"))}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
+        ("Security", {"classes": ("collapse",), "fields": ("protected", "restrict_to_groups")}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
         ("Advanced", {"fields": ("advanced",)}),
         ("Others", {"fields": ("__others__",)}),
@@ -124,77 +126,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
         obj = self.get_object(request, pk)
         obj.save()
 
-    # @view()
-    # def data(self, request, registration):
-    #     from aurora.counters.models import Counter
-    #
-    #     qs = Counter.objects.filter(registration_id=registration).order_by("day")
-    #     param_day = request.GET.get("d", None)
-    #     param_tz = request.GET.get("tz", None)
-    #     total = 0
-    #     if param_day or param_tz:
-    #         tz = pytz.timezone(param_tz or "utc")
-    #         if not param_day:
-    #             day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=tz)
-    #         else:
-    #             day = datetime.strptime(param_day, "%Y-%m-%d").replace(tzinfo=tz)
-    #         start = day.astimezone(pytz.UTC)
-    #         end = start + timedelta(days=1)
-    #         record = qs.filter(day__gte=start, day__lt=end).first()
-    #         data = []
-    #         if record:
-    #             data = record.hourly
-    #         hours = [f"{x:02d}:00" for x in list(range(0, 24))]
-    #         data = {
-    #             "tz": str(tz),
-    #             "label": day.strftime("%A, %d %B %Y"),
-    #             "total": total,
-    #             "date": str(day),
-    #             "start": str(start),
-    #             "end": str(end),
-    #             "day": day.strftime("%Y-%m-%d"),
-    #             "labels": hours,
-    #             "data": data,
-    #         }
-    #     elif param_month := request.GET.get("m", None):
-    #         if param_month:
-    #             day = datetime.strptime(param_month, "%Y-%m-%d")
-    #         else:
-    #             day = timezone.now().today()
-    #         qs = qs.filter(day__month=day.month)
-    #         # qs = qs.annotate(day=TruncDay("timestamp")).values("day").annotate(c=Count("id"))
-    #         data = defaultdict(lambda: 0)
-    #         for record in qs.all():
-    #             data[record.day.day] = record.records
-    #             total += record.records
-    #
-    #         last_day = last_day_of_month(day)
-    #         days = list(range(1, 1 + last_day.day))
-    #         labels = [last_day.replace(day=d).strftime("%-d, %a") for d in days]
-    #         data = {
-    #             "label": day.strftime("%B %Y"),
-    #             "total": total,
-    #             "day": day.strftime("%Y-%m-%d"),
-    #             "labels": labels,
-    #             "data": [data[x] for x in days],
-    #         }
-    #     else:
-    #         qs = qs.all()
-    #         data = defaultdict(lambda: 0)
-    #         for record in qs.all():
-    #             data[record.day] = record.records
-    #             total += record.records
-    #         data = {
-    #             "label": "",
-    #             "day": timezone.now().today().strftime("%Y-%m-%d"),
-    #             "total": total,
-    #             "labels": [d.strftime("%-d, %a") for d in data.keys()],
-    #             "data": list(data.values()),
-    #         }
-    #
-    #     response = JsonResponse(data)
-    #     response["Cache-Control"] = "max-age=5"
-    #     return response
     @choice(order=900, visible=lambda c: [], change_list=False)
     def encryption(self, button):
         original = button.context["original"]
@@ -442,9 +373,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, PublishMixin, SmartModelAdmin):
             key=lambda item: item.config.get("order", 1),
         )
 
-    def _get_data(self, record):
-        return get_registration_data(record)
-
 
 class DecryptForm(forms.Form):
     key = forms.CharField(widget=forms.Textarea)
@@ -485,6 +413,8 @@ class RecordAdmin(SmartModelAdmin):
     change_form_template = None
     change_list_template = None
     actions = ["fix_tax_id"]
+    paginator = LargeTablePaginator
+    show_full_result_count = False
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

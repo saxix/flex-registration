@@ -11,7 +11,7 @@ from dbtemplates.utils.template import check_template_syntax
 
 # Check if django-reversion is installed and use reversions' VersionAdmin
 # as the base admin class if yes
-from aurora.publish.mixin import PublishMixin
+from admin_sync.mixin import PublishMixin, SyncMixin
 
 if settings.DBTEMPLATES_USE_REVERSION:
     from reversion.admin import VersionAdmin as TemplateModelAdmin
@@ -98,7 +98,7 @@ class TemplateAdminForm(forms.ModelForm):
         fields = "__all__"
 
 
-class TemplateAdmin(PublishMixin, TemplateModelAdmin):
+class TemplateAdmin(SyncMixin, PublishMixin, TemplateModelAdmin):
     form = TemplateAdminForm
     fieldsets = (
         (
@@ -180,6 +180,12 @@ class TemplateAdmin(PublishMixin, TemplateModelAdmin):
         return ", ".join([site.name for site in template.sites.all()])
 
     site_list.short_description = _("sites")
+
+    def check_publish_permission(self, request, obj=None):
+        return True
+
+    def check_sync_permission(self, request, obj=None):
+        return True
 
 
 admin.site.register(Template, TemplateAdmin)

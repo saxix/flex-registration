@@ -41,7 +41,7 @@ from .models import (
     Validator,
 )
 from .utils import dict_setdefault, render
-from ..publish.utils import is_editor
+from admin_sync.utils import is_local
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class ConcurrencyVersionAdmin(CompareVersionAdmin):
             return super().recover_view(request, version_id, extra_context)
 
     def has_change_permission(self, request, obj=None):
-        return is_editor(request)
+        return is_local(request)
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):

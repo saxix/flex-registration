@@ -57,6 +57,7 @@ sentry-sdk = "^1.5"
 social-auth-app-django = "^5.0.0"
 sqlparse = "^0.4.2"
 whitenoise="^6.0"
+django-admin-sync = "^0.2.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"

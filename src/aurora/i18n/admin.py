@@ -3,6 +3,7 @@ from unittest.mock import Mock
 from urllib.parse import unquote
 
 from admin_extra_buttons.decorators import button, view
+from admin_sync.mixin import PublishMixin
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
 from dateutil.utils import today
@@ -19,7 +20,6 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from ..admin.mixin import LoadDumpMixin
 from ..core.models import FlexForm
-from ..publish.mixin import PublishMixin
 from ..state import state
 from .engine import translator
 from .forms import TranslationForm

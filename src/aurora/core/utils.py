@@ -6,12 +6,15 @@ import json
 import os
 import random
 import re
+from functools import wraps
 from hashlib import md5
 
 import sys
 import time
 import unicodedata
 from collections import deque
+
+from django.utils.cache import patch_cache_control
 from itertools import chain
 from pathlib import Path
 from sys import getsizeof, stderr
@@ -413,3 +416,20 @@ def build_form_fake_data(form_class):
 
 def get_system_cache_version():
     return "/".join(map(str, [config.CACHE_VERSION, os.environ.get("VERSION", ""), os.environ.get("BUILD_DATE", "")]))
+
+
+def never_ever_cache(decorated_function):
+    """Like Django @never_cache but sets more valid cache disabling headers.
+
+    @never_cache only sets Cache-Control:max-age=0 which is not
+    enough. For example, with max-axe=0 Firefox returns cached results
+    of GET calls when it is restarted.
+    """
+
+    @wraps(decorated_function)
+    def wrapper(*args, **kwargs):
+        response = decorated_function(*args, **kwargs)
+        patch_cache_control(response, no_cache=True, no_store=True, must_revalidate=True, max_age=0)
+        return response
+
+    return wrapper

@@ -1,23 +1,28 @@
 import logging
 import os
+from functools import wraps
+
 import time
 from hashlib import md5
 
 import sentry_sdk
 from constance import config
+from django.conf import settings
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.forms import forms
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.utils.cache import get_conditional_response
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.utils import translation
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-from aurora.core.utils import get_etag, get_qrcode
+from aurora.core.utils import get_etag, get_qrcode, has_token, never_ever_cache
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
@@ -89,10 +94,7 @@ class RegisterRouter(FormView):
         return HttpResponseRedirect(url)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
-class RegisterView(FormView):
-    template_name = "registration/register.html"
-
+class RegistrationMixin:
     @cached_property
     def registration(self):
         filters = {}
@@ -105,8 +107,29 @@ class RegisterView(FormView):
         except Registration.DoesNotExist:  # pragma: no coalidateer
             raise Http404
 
-    def get(self, request, *args, **kwargs):
 
+def check_access(view_func):
+    def wrapped_view(*args, **kwargs):
+        view, request = args
+        if view.registration.protected:
+            login_url = "%s?next=%s" % (settings.USER_LOGIN_URL, request.path)
+            if request.user.is_anonymous:
+                return HttpResponseRedirect(login_url)
+            if not request.user.has_perm("registration.register", view.registration):
+                messages.add_message(request, messages.ERROR, _("Sorry you do not have access to requested Form"))
+                return HttpResponseRedirect(login_url)
+        return view_func(*args, **kwargs)
+
+    wrapped_view.csrf_exempt = True
+    return wraps(view_func)(wrapped_view)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class RegisterView(RegistrationMixin, FormView):
+    template_name = "registration/register.html"
+
+    @check_access
+    def get(self, request, *args, **kwargs):
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
         else:
@@ -185,6 +208,7 @@ class RegisterView(FormView):
 
         return True
 
+    @check_access
     def post(self, request, *args, **kwargs):
         form = self.get_form()
         formsets = self.get_formsets()
@@ -239,4 +263,34 @@ class RegisterView(FormView):
 
         return self.render_to_response(
             self.get_context_data(form=form, invalid=True, errors=self.errors, formsets=formsets)
+        )
+
+
+class RegisterAuthView(RegistrationMixin, View):
+    @method_decorator(never_ever_cache)
+    def get(self, request, *args, **kwargs):
+        project = {
+            "build_date": os.environ.get("BUILD_DATE", ""),
+            "version": os.environ.get("VERSION", ""),
+            "debug": settings.DEBUG,
+            "env": settings.SMART_ADMIN_HEADER,
+            "sentry_dsn": settings.SENTRY_DSN,
+            "cache": config.CACHE_VERSION,
+            "has_token": has_token(request),
+        }
+        return JsonResponse(
+            {
+                "registration": {
+                    "name": self.registration.name,
+                    "locale": self.registration.locale,
+                    "protected": self.registration.protected,
+                },
+                "project": project,
+                "user": {
+                    "username": request.user.username,
+                    # "perms": request.user.get_all_permissions(self.registration),
+                    # "authenticated": request.user.is_authenticated,
+                    "anonymous": not request.user.is_authenticated,
+                },
+            }
         )

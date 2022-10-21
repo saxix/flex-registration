@@ -7,6 +7,7 @@ from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
 from django import forms
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.utils import timezone
@@ -81,10 +82,11 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     scripts = models.ManyToManyField(
         Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True
     )
-    # DEPRECATED
+    # DEPRECATED uses `unique_field_path`
     unique_field = models.CharField(
         max_length=255, blank=True, null=True, help_text="Form field to be used as unique key (DEPRECATED)"
     )
+
     unique_field_path = models.CharField(
         max_length=1000, blank=True, null=True, help_text="JMESPath expression to retrieve unique field"
     )
@@ -97,10 +99,18 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     )
     encrypt_data = models.BooleanField(default=False)
     advanced = models.JSONField(default=dict, blank=True)
+    protected = models.BooleanField(
+        default=False,
+        help_text="If true, only authenticated 'users' with " "'registration.register' permission can use this Module",
+    )
+    restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
 
     class Meta:
         get_latest_by = "start"
-        permissions = (("can_manage", _("Can Manage Registration")),)
+        permissions = (
+            ("manage", _("Can Manage Registration")),
+            ("register", _("Can User Registration")),
+        )
 
     @property
     def media(self):
