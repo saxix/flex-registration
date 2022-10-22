@@ -12,8 +12,8 @@ class AuroraAdminConfig(AppConfig):
             panel_email,
             panel_error_page,
             panel_migrations,
-            panel_sentry,
             panel_redis,
+            panel_sentry,
             panel_sysinfo,
         )
 

@@ -6,15 +6,12 @@ import json
 import os
 import random
 import re
-from functools import wraps
-from hashlib import md5
-
 import sys
 import time
 import unicodedata
 from collections import deque
-
-from django.utils.cache import patch_cache_control
+from functools import wraps
+from hashlib import md5
 from itertools import chain
 from pathlib import Path
 from sys import getsizeof, stderr
@@ -31,6 +28,7 @@ from django.http import HttpResponse
 from django.template import loader
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.cache import patch_cache_control
 from django.utils.functional import keep_lazy_text
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -371,7 +369,7 @@ def cache_aware_reverse(viewname, urlconf=None, args=None, kwargs=None, current_
 
 
 def get_fake_value(field):
-    from aurora.core.fields import CompilationTimeField, RemoteIpField, AjaxSelectField
+    from aurora.core.fields import AjaxSelectField, CompilationTimeField, RemoteIpField
 
     fake = faker.Faker()
     ret = str(field)

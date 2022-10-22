@@ -128,3 +128,10 @@ def mock_storage(monkeypatch):
     monkeypatch.setattr(storage_class, "_save", _mock_save)
     monkeypatch.setattr(storage_class, "delete", _mock_delete)
     monkeypatch.setattr(storage_class, "exists", _mock_exists)
+
+
+@pytest.fixture()
+def user():
+    from testutils.factories import UserFactory
+
+    return UserFactory()

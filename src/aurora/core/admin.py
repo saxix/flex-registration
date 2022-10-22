@@ -6,10 +6,9 @@ from json import JSONDecodeError
 from pathlib import Path
 
 import requests
-from reversion_compare.admin import CompareVersionAdmin
-
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
+from admin_sync.utils import is_local
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.querystring import QueryStringFilter
@@ -26,6 +25,7 @@ from django.http import JsonResponse
 from django.urls import NoReverseMatch
 from jsoneditor.forms import JSONEditor
 from requests.auth import HTTPBasicAuth
+from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..admin.mixin import LoadDumpMixin
@@ -41,7 +41,6 @@ from .models import (
     Validator,
 )
 from .utils import dict_setdefault, render
-from admin_sync.utils import is_local
 
 logger = logging.getLogger(__name__)
 

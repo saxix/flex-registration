@@ -11,13 +11,13 @@ from concurrency.api import disable_concurrency
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.core.management import call_command
-from django.db import connections, DEFAULT_DB_ALIAS
+from django.db import DEFAULT_DB_ALIAS, connections
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from .forms import ImportForm, ExportForm, SQLForm
 from .. import VERSION
 from ..core.utils import is_root
+from .forms import ExportForm, ImportForm, SQLForm
 
 logger = logging.getLogger(__name__)
 

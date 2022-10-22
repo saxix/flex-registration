@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             name="protected",
             field=models.BooleanField(
                 default=False,
-                help_text="If true, only authenticated 'users' with 'registration.register' "
+                help_text="If true, only authenticated 'users' with 'registration.can_use_registration' "
                 "permission can use this Module",
             ),
         ),

@@ -1,5 +1,4 @@
 import logging
-from django.urls import reverse
 
 from admin_extra_buttons.decorators import button
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -7,12 +6,13 @@ from django.contrib.admin import register
 from django.db.transaction import atomic
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.utils import is_root
+from ..registration.paginator import LargeTablePaginator
 from .forms import ChartForm
 from .models import Counter
-from ..registration.paginator import LargeTablePaginator
 
 logger = logging.getLogger(__name__)
 

@@ -4,12 +4,12 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
 
-from aurora.core.utils import render, last_day_of_month
+from aurora.core.utils import last_day_of_month, render
 from aurora.counters.models import Counter
 from aurora.registration.models import Registration
 

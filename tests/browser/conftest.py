@@ -3,7 +3,6 @@ from collections import namedtuple
 
 import pytest
 from selenium.webdriver.common.by import By
-
 from testutils.utils import wait_for
 
 Proxy = namedtuple("Proxy", "host,port")

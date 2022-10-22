@@ -108,8 +108,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     class Meta:
         get_latest_by = "start"
         permissions = (
-            ("manage", _("Can Manage Registration")),
-            ("register", _("Can User Registration")),
+            ("manage", _("Can manage Registration")),
+            ("register", _("Can use Registration")),
         )
 
     @property

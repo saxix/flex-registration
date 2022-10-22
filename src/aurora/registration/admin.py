@@ -2,10 +2,8 @@ import json
 import logging
 from datetime import datetime, timedelta
 
+from admin_extra_buttons.decorators import button, choice, link, view
 from admin_sync.mixin import SyncMixin
-from django.core.cache import cache
-
-from admin_extra_buttons.decorators import button, link, view, choice
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.value import ValueFilter
 from dateutil.utils import today
@@ -13,24 +11,30 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
+from django.core.cache import cache
 from django.db.models import JSONField
 from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, translate_url
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
-from ..core.admin import ConcurrencyVersionAdmin
 
+from ..core.admin import ConcurrencyVersionAdmin
 from ..core.models import FormSet
-from ..core.utils import clone_model, is_root, namify, build_form_fake_data, get_system_cache_version
+from ..core.utils import (
+    build_form_fake_data,
+    clone_model,
+    get_system_cache_version,
+    is_root,
+    namify,
+)
 from .forms import CloneForm, RegistrationForm
 from .models import Record, Registration
 from .paginator import LargeTablePaginator
-
 
 logger = logging.getLogger(__name__)
 

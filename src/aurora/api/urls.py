@@ -6,8 +6,8 @@ from .viewsets import (
     FlexFormViewSet,
     FormSetViewSet,
     RegistrationViewSet,
-    UserViewSet,
     TemplateViewSet,
+    UserViewSet,
     ValidatorViewSet,
     project_info,
 )

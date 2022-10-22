@@ -3,10 +3,10 @@
 import datetime
 import logging
 import random
+import sys
 
 import djclick as click
 import pytz
-import sys
 from django import forms
 
 from aurora.core import fields
@@ -80,8 +80,8 @@ dt > limit;""",
         (5, 20),
         (5, 30),
     )
-    from freezegun import freeze_time
     from faker import Faker
+    from freezegun import freeze_time
 
     fake = Faker()
     for month in range(prev_month.month, last_month.month):

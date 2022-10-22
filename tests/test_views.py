@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from testutils.perms import user_grant_permissions
 from webtest import Upload
 
 LANGUAGES = {
@@ -98,6 +99,25 @@ def james_registration(complex_form):
         unique_field_path="form2s[].[first_name][0][0]",
         unique_field_error="xxx must be unique",
         defaults={"flex_form": complex_form, "active": True},
+    )
+    return reg
+
+
+@pytest.fixture()
+def protected_registration(simple_form):
+    from aurora.registration.models import Registration
+
+    reg, __ = Registration.objects.get_or_create(
+        locale="en-us",
+        name="registration #3",
+        defaults={
+            "flex_form": simple_form,
+            "unique_field_path": "last_name",
+            "unique_field_error": "last_name is not unique",
+            "encrypt_data": False,
+            "active": True,
+            "protected": True,
+        },
     )
     return reg
 
@@ -346,3 +366,14 @@ def test_upload_image_register_fernet_encrypted(django_app, fernet_encrypted_reg
     assert data["first_name"] == "first"
     assert data["image"].read().decode() == base64.b64encode(content).decode()
     assert data["file"].read().decode() == base64.b64encode(content).decode()
+
+
+@pytest.mark.django_db
+def test_register_protected_registration(django_app, user, protected_registration):
+    url = protected_registration.get_absolute_url()
+    res = django_app.get(url)
+    assert res.status_code == 302
+    assert res.headers["location"].startswith("/login?next=")
+    with user_grant_permissions(user, "registration.register", protected_registration):
+        res = django_app.get(url, user=user.username)
+    assert res.status_code == 200
