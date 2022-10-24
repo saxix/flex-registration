@@ -25,8 +25,7 @@ RUN apt-get update \
     && locale-gen --no-purge uk_UA.UTF-8 \
     && apt-get clean
 
-ENV POETRY_VERSION=1.1.13 \
-    PATH="${PATH}:/root/.local/bin" \
+ENV PATH="${PATH}:/root/.local/bin" \
     ADMINS="" \
     BUILD_DATE=${BUILD_DATE} \
     CACHE_DEFAULT="redis://127.0.0.1/0" \
