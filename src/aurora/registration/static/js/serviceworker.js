@@ -25,7 +25,10 @@ self.addEventListener('install', function(event) {
 
   event.waitUntil(
     caches.open(staticCacheName).then(function(cache) {
-      let urls = ["/"];
+      let urls = [
+          "/registrations",
+          "/"
+      ];
       if (urlToCache) {
         urls.push(urlToCache);
       }
@@ -33,3 +36,24 @@ self.addEventListener('install', function(event) {
     })
   );
 });
+
+
+self.addEventListener('fetch', function(event) {
+  var requestUrl = new URL(event.request.url);
+    if (requestUrl.origin === location.origin) {
+      console.log(requestUrl.pathname);
+      if (requestUrl.pathname === '/registrations') {
+        console.log("jestem tutaj i nie działam")
+        event.respondWith(caches.match('/registrations'));
+        return;
+      } else if (requestUrl.pathname === '/') {
+        console.log("jestem tutaj i działam!!!!!")
+        event.respondWith(caches.match('/'));
+        return;
+    }
+    event.respondWith(
+      caches.match(event.request).then(function(response) {
+        return response || fetch(event.request);
+      })
+    );
+}});
