@@ -49,7 +49,7 @@ ENV PATH="${PATH}:/root/.local/bin" \
     VERSION=${VERSION} \
     POETRY_VERSION=${POETRY_VERSION}
 
-RUN pip install "poetry==${POETRY_VERSION}"
+RUN pip install "poetry==1.2.2"
 
 ADD poetry.lock pyproject.toml /code/
 
