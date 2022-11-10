@@ -107,6 +107,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         help_text="If true, limit access to users with 'registration.register' permission",
     )
     restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
+    is_pwa_enabled = models.BooleanField(default=False)
 
     class Meta:
         get_latest_by = "start"
