@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.forms import forms
 from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils import translation
 from django.utils.cache import get_conditional_response
@@ -24,6 +25,7 @@ from django.views.generic.edit import FormView
 from aurora.core.utils import get_etag, get_qrcode, has_token, never_ever_cache
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
+from aurora.registration.forms import RegistrationForm
 from aurora.state import state
 
 logger = logging.getLogger(__name__)
@@ -293,3 +295,19 @@ class RegisterAuthView(RegistrationMixin, View):
                 },
             }
         )
+
+
+def registrations(request):
+    registration_objs = Registration.objects.filter(active=True)
+
+    if request.method == "GET":
+        return render(request, "registration/registrations.html", {"registrations": registration_objs})
+    elif request.method == "POST":
+        registration_id = int(request.POST["registration_id"])
+        registration = get_object_or_404(Registration, id=registration_id)
+        registration.is_pwa_enabled = True
+        registration.save(update_fields=["is_pwa_enabled"])
+
+        Registration.objects.exclude(id=registration_id).update(is_pwa_enabled=False)  # only one can be enabled at once
+
+        return render(request, "registration/registrations.html", {"registrations": registration_objs})

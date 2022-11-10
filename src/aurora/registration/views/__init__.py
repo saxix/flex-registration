@@ -5,4 +5,5 @@ from .registration import (
     RegisterCompleteView,
     RegisterRouter,
     RegisterView,
+    registrations
 )
