@@ -10,6 +10,7 @@ PUSH_BASE?=0
 DEVELOP?=1
 BUILD_DATE:="$(shell date +"%Y-%m-%d %H:%M")"
 # below vars are used internally
+POETRY_VERSION=1.2.2
 BUILD_OPTIONS?=--squash
 CMD?=run
 WORKER?='??'
