@@ -319,3 +319,10 @@ def registrations(request):
         Registration.objects.exclude(id=registration_id).update(is_pwa_enabled=False)  # only one can be enabled at once
 
         return render(request, "registration/registrations.html", {"registrations": registration_objs})
+
+
+def get_pwa_enabled(request):
+    register_obj = Registration.objects.filter(is_pwa_enabled=True).first()
+    return JsonResponse({
+        "slug": getattr(register_obj, "slug", None)
+    })

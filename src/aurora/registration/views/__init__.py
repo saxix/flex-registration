@@ -5,5 +5,6 @@ from .registration import (
     RegisterCompleteView,
     RegisterRouter,
     RegisterView,
-    registrations
+    registrations,
+    get_pwa_enabled
 )

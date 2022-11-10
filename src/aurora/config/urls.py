@@ -22,6 +22,7 @@ urlpatterns = [
     path("captcha/", include("captcha.urls")),
     path("i18n/", include("aurora.i18n.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
+    path('', include('pwa.urls')),
 ]
 
 urlpatterns += i18n_patterns(
