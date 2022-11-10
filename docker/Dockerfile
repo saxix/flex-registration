@@ -46,9 +46,10 @@ ENV PATH="${PATH}:/root/.local/bin" \
     STATIC_ROOT="/var/static" \
     STATIC_URL="/static/" \
     UWSGI_PROCESSES=4 \
-    VERSION=${VERSION}
+    VERSION=${VERSION} \
+    POETRY_VERSION=${POETRY_VERSION}
 
-RUN curl -sSL https://install.python-poetry.org | python -
+RUN pip install "poetry==${POETRY_VERSION}"
 
 ADD poetry.lock pyproject.toml /code/
 
