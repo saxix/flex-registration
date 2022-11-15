@@ -81,7 +81,6 @@ INSTALLED_APPS = [
     "aurora.core",
     "aurora.registration",
     "aurora.counters",
-    "pwa"
 ]
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
