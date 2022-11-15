@@ -1,59 +1,56 @@
-const staticCacheName = 'aurora-pwa';
+const cacheName = "v1";
 
-let responseObj = { slug: null }
 
-function retrieveSlug() {
-  return fetch("/get_pwa_enabled/")
-    .then((response) => response.json())
-    .then(data => {
-      responseObj.slug = data.slug;
-    })
-    .catch(error => {
-        console.error(error);
+function cleanResponse(response) {
+  const clonedResponse = response.clone();
+
+  const bodyPromise = 'body' in clonedResponse ?
+    Promise.resolve(clonedResponse.body) :
+    clonedResponse.blob();
+
+  return bodyPromise.then((body) => {
+    return new Response(body, {
+      headers: clonedResponse.headers,
+      status: clonedResponse.status,
+      statusText: clonedResponse.statusText,
     });
+  });
+}
+
+
+const addResourcesToCache = async (resources) => {
+  const cache = await caches.open(cacheName);
+  await cache.addAll(resources);
 };
 
-retrieveSlug(() => console.log("Slug retrieved"));
 
-self.addEventListener('install', function(event) {
-  console.log("slug", responseObj.slug)
-
-  let urlToCache = null
-  if (responseObj.slug) {
-    urlToCache = `/register/${responseObj.slug}`;
-  }
-
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(staticCacheName).then(function(cache) {
-      let urls = [
-          "/registrations",
-          "/"
-      ];
-      if (urlToCache) {
-        urls.push(urlToCache);
-      }
-      return cache.addAll(urls);
-    })
+    addResourcesToCache([
+      "/",
+      "/registrations/",
+      "/serviceworker.js"
+    ])
   );
 });
 
 
-self.addEventListener('fetch', function(event) {
-  var requestUrl = new URL(event.request.url);
-    if (requestUrl.origin === location.origin) {
-      console.log(requestUrl.pathname);
-      if (requestUrl.pathname === '/registrations') {
-        console.log("jestem tutaj i nie działam")
-        event.respondWith(caches.match('/registrations'));
-        return;
-      } else if (requestUrl.pathname === '/') {
-        console.log("jestem tutaj i działam!!!!!")
-        event.respondWith(caches.match('/'));
-        return;
-    }
-    event.respondWith(
-      caches.match(event.request).then(function(response) {
-        return response || fetch(event.request);
-      })
-    );
-}});
+const cacheFirst = async (request) => {
+  const responseFromCache = await caches.match(request);
+  // const responseClone = responseFromCache.clone();
+
+  console.log("responseFromCache", responseFromCache);
+  if (responseFromCache) {
+    return responseFromCache;
+  }
+  return fetch(request, { mode: 'no-cors'}).then(response => {
+    caches.open(cacheName).then(cache => {
+      cache.put(request, response.clone());
+    })
+  });
+};
+
+
+self.addEventListener("fetch", (event) => {
+  return event.respondWith(cacheFirst(event.request));
+});

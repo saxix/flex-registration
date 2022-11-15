@@ -7,6 +7,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
 from django.views.generic.list import BaseListView
+from django.conf import settings
 
 from aurora.core.models import OptionSet
 from aurora.core.utils import get_etag
@@ -69,3 +70,8 @@ class OptionsListView(BaseListView):
             response["Cache-Control"] = "public, max-age=315360000"
             response["ETag"] = etag
         return response
+
+
+def service_worker(request):
+    response = HttpResponse(open(settings.PWA_SERVICE_WORKER_PATH).read(), content_type='application/javascript')
+    return response

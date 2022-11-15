@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 
 from aurora.web.views.site import error_404
+from aurora.core.views import service_worker
 
 actions.add_to_site(admin.site)
 
@@ -22,7 +23,7 @@ urlpatterns = [
     path("captcha/", include("captcha.urls")),
     path("i18n/", include("aurora.i18n.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
-    path('', include('pwa.urls')),
+    path(r'serviceworker.js', service_worker, name='serviceworker'),
 ]
 
 urlpatterns += i18n_patterns(
