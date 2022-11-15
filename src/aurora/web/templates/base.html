@@ -1,10 +1,8 @@
-{% load pwa %}
 {% load static feature_flags http2 %}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% progressive_web_app_meta %}
     <meta charset="UTF-8">
     <meta name="version" content="{{ project.version|slice:':7'|join:'' }}">
     <meta name="date" content="{{ project.build_date }}">
@@ -45,5 +43,22 @@
 {% block footer %}{% include "_footer.html" %}
 
 {% endblock %}
+
+<script type="text/javascript">
+  if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/serviceworker.js", {
+          scope: '/'
+      }).then(function (registration) {
+          console.log("Service worker registered");
+      }, function (err) {
+          console.log('django-pwa: ServiceWorker registration failed: ', err);
+      });
+       if (navigator.serviceWorker.controller) {
+          console.log("Service worker installed");
+      }
+  } else {
+      console.log("Service worker is not supported");
+  }
+</script>
 </body>
 </html>

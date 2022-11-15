@@ -7,6 +7,7 @@ from django.urls import include, path, re_path
 from django.views.i18n import set_language
 
 from aurora.web.views.site import error_404
+from aurora.core.views import service_worker
 
 actions.add_to_site(admin.site)
 
@@ -23,7 +24,7 @@ urlpatterns = [
     path("i18n/setlang/", set_language, name="set_language"),
     path("i18n/", include("aurora.i18n.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
-    path('', include('pwa.urls')),
+    path(r'serviceworker.js', service_worker, name='serviceworker'),
 ]
 
 urlpatterns += i18n_patterns(
