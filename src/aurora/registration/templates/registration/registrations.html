@@ -20,7 +20,7 @@
             <input
               type="radio"
               name="registration_id"
-              value="{{ registration.id }}"
+              value="{{ registration.slug }}"
               id="id_registration_id_0"
               {% if registration.is_pwa_enabled %} checked {% endif %}
             >
@@ -33,10 +33,18 @@
   </form>
 
 <script>
+  const cacheName = "v1";
   const button = document.querySelector("button");
+
   button.addEventListener("click", event => {
-      console.log("Clicked")
-  })
+      const slug = document.getElementById("id_registration_id_0").value
+      if (slug) {
+          caches.open(cacheName).then(cache => {
+              cache.add(`/en-us/register/${slug}/1/`);
+              console.log("Form url added to cache");
+          });
+      }
+  });
 </script>
 </body>
 </html>

@@ -8,6 +8,7 @@ from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
 from django.views.generic.list import BaseListView
 from django.conf import settings
+from django.http import HttpResponse
 
 from aurora.core.models import OptionSet
 from aurora.core.utils import get_etag
