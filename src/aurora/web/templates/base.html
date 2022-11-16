@@ -60,5 +60,56 @@
       console.log("Service worker is not supported");
   }
 </script>
+
+<script>
+
+  const isOnline = "onLine" in navigator && navigator.onLine;
+  const prepareUrl = url => `http://localhost:8000${url}`
+
+  const prepareFormData = dataObj => {
+    const dataForm = new FormData();
+    Object.keys(dataObj).map(key => {
+      dataForm.append(key, dataObj[key])
+    });
+
+    return dataForm;
+  }
+
+  const sendData = (url, dataForm) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', prepareUrl(url));
+    xhr.send(dataForm);
+
+    return xhr
+  }
+
+  if (isOnline && localStorage.length > 0) {
+    for (let i = 0; i < localStorage.length; i++) {
+
+      const key = localStorage.key(i);
+      if (key.startsWith("id")) {
+        const dataObj = JSON.parse(localStorage.getItem(key));
+        const url = dataObj.url;
+        delete dataObj.url;
+
+        const dataForm = prepareFormData(dataObj);
+
+        const xhr = sendData(url, dataForm);
+
+        xhr.addEventListener('load', () => {
+          console.log("Data sent and response loaded.");
+          localStorage.removeItem(key);
+        });
+
+        xhr.addEventListener('error', () => {
+          console.log("Oops! Something went wrong.");
+        });
+
+      }
+    }
+  }
+
+</script>
+
 </body>
 </html>
