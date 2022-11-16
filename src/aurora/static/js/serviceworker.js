@@ -12,7 +12,9 @@ self.addEventListener("install", (event) => {
     addResourcesToCache([
       "/",
       "/registrations/",
+      // "/i18n/en-us/",
       "/serviceworker.js",
+      // "/static/admin/debug.css",
       "/static/registration/auth.js",
       "/static/page.min.js",
       "/static/edit.min.js",
@@ -22,6 +24,7 @@ self.addEventListener("install", (event) => {
       "/static/admin/js/vendor/jquery/jquery.js",
       "/static/base.css",
       "/static/staff-toolbar.css",
+      // "/static/hope1.webp",
       "https://code.jquery.com/jquery-3.6.0.min.js",
       "/api/project/",
     ])
@@ -50,7 +53,7 @@ self.addEventListener("fetch", (event) => {
         console.log("Fetching from SERVER");
         return fetch(event.request);
     } else {
-        console.log("Fetching from service worker");
+        console.log(`Fetching from service worker url=${event.request.url}`);
         return event.respondWith(cacheFirst(event.request));
     }
 
