@@ -38,10 +38,6 @@
     {% include "smart/_form.html" %}
 
 <script>
-  if (isOnline === undefined || isOnline === null) {
-      const isOnline = "onLine" in navigator && navigator.onLine;
-  }
-
   const createObjectData = formElement => {
     let formData = {};
 
@@ -64,7 +60,7 @@
 
   const button = document.querySelector('input[type=submit]');
 
-  if (button && isOnline) {
+  if (button && !navigator.onLine) {
       button.addEventListener("click", event => {
           event.preventDefault();
           const formElement = document.forms.registrationForm;

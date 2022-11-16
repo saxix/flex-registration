@@ -71,7 +71,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = ("active", "archived")
-    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator", "archived")
+    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator", "archived", "is_pwa_enabled")
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True
