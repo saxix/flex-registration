@@ -45,6 +45,26 @@
       const isOnline = "onLine" in navigator && navigator.onLine;
   }
 
+  const createObjectData = formElement => {
+    let formData = {};
+
+    // Iterate over formData and create object with properties
+    for (let i = 0; i < formElement.elements.length; i++) {
+        let el = formElement.elements[i];
+        if (el.name && el.value) {
+            if (el.name === "image") {
+                const inputEl = document.getElementsByName(el.name)[0];
+                if (inputEl.type === "file") {
+                    {# TODO img serialize #}
+                    formData[el.name] = inputEl.files[0].serializeToString();
+                }
+            }
+            formData[el.name] =  el.value
+        }
+    }
+    return formData;
+  }
+
   const button = document.querySelector('input[type=submit]');
 
   if (button && isOnline) {
@@ -52,22 +72,7 @@
           event.preventDefault();
           const formElement = document.forms.registrationForm;
           if (formElement) {
-              let formData = {};
-
-              // Iterate over formData and create object with properties
-              for (let i = 0; i < formElement.elements.length; i++) {
-                  let el = formElement.elements[i];
-                  if (el.name && el.value) {
-                      if (el.name === "image") {
-                          const inputEl = document.getElementsByName(el.name)[0];
-                          if (inputEl.type === "file") {
-                              {# TODO img serialize #}
-                              formData[el.name] = inputEl.files[0].serializeToString();
-                          }
-                      }
-                      formData[el.name] =  el.value
-                  }
-              }
+              const formData = createObjectData(formElement);
 
               // load path to know on which url post data when online
               const path = window.location.pathname;
