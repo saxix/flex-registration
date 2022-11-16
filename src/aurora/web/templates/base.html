@@ -62,8 +62,6 @@
 </script>
 
 <script>
-
-  const isOnline = "onLine" in navigator && navigator.onLine;
   const prepareUrl = url => `http://localhost:8000${url}`
 
   const prepareFormData = dataObj => {
@@ -83,7 +81,7 @@
     return xhr
   }
 
-  if (isOnline && localStorage.length > 0) {
+  if (navigator.onLine && localStorage.length > 0) {
     for (let i = 0; i < localStorage.length; i++) {
 
       const key = localStorage.key(i);

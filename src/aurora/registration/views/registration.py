@@ -311,12 +311,12 @@ def registrations(request):
     if request.method == "GET":
         return render(request, "registration/registrations.html", {"registrations": registration_objs})
     elif request.method == "POST":
-        registration_id = int(request.POST["registration_id"])
-        registration = get_object_or_404(Registration, id=registration_id)
+        slug = request.POST["slug"]
+        registration = get_object_or_404(Registration, slug=slug)
         registration.is_pwa_enabled = True
         registration.save(update_fields=["is_pwa_enabled"])
 
-        Registration.objects.exclude(id=registration_id).update(is_pwa_enabled=False)  # only one can be enabled at once
+        Registration.objects.exclude(slug=slug).update(is_pwa_enabled=False)  # only one can be enabled at once
 
         return render(request, "registration/registrations.html", {"registrations": registration_objs})
 
