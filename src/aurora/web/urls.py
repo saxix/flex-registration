@@ -8,6 +8,7 @@ from .views import (
     ProbeView,
     QRCodeView,
     RegistrarLoginView,
+    offline
 )
 
 urlpatterns = [
@@ -18,4 +19,5 @@ urlpatterns = [
     path("probe/", ProbeView.as_view(), name="probe"),
     path("maintenance", MaintenanceView.as_view(), name="maintenance"),
     path("qrcode/", QRCodeView.as_view(), name="qrcode"),
+    path("offline/", offline, name="offline"),
 ]
