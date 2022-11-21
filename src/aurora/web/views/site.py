@@ -28,6 +28,10 @@ def error_404(request, exception):
     return TemplateResponse(request, "404.html", status=404, headers={"Session-Token": settings.DJANGO_ADMIN_URL})
 
 
+def offline(request):
+    return render(request, "offline.html")
+
+
 def get_active_registrations():
     registrations = Registration.objects.filter(active=True, show_in_homepage=True)
     return registrations

@@ -40,47 +40,86 @@
 {% block body %}
     {% include "smart/_form.html" %}
 
-<script>
-  const createObjectData = formElement => {
+<script type="text/javascript">
+let db;
+
+function initDB() {
+    let request = indexedDB.open('forms', 1);
+
+    request.onerror = function(e) {
+      console.error('Unable to open database.');
+    }
+
+    request.onsuccess = function(e) {
+      db = e.target.result;
+      console.log('DB opened');
+    }
+
+    request.onupgradeneeded = function(e) {
+      db = e.target.result;
+      db.createObjectStore('cachedForms', {keyPath:'id', autoIncrement: true});
+    }
+}
+
+initDB();
+
+
+const createObjectData = formElement => {
     let formData = {};
 
-    // Iterate over formData and create object with properties
     for (let i = 0; i < formElement.elements.length; i++) {
         let el = formElement.elements[i];
         if (el.name && el.value) {
-            if (el.name === "image") {
-                const inputEl = document.getElementsByName(el.name)[0];
-                if (inputEl.type === "file") {
-                    {# TODO img serialize #}
-                    formData[el.name] = inputEl.files[0].serializeToString();
+            if (el.type === "checkbox") {
+                if (el.checked) {
+                    formData[el.name] = el.value;
                 }
+            } else if (el.type === "file") {
+                formData[el.name] = el.files[0];
+            } else {
+                formData[el.name] =  el.value;
             }
-            formData[el.name] =  el.value
         }
     }
+
+    console.log("formData", formData);
     return formData;
-  }
+}
 
-  const button = document.querySelector('input[type=submit]');
 
-  if (button && !navigator.onLine) {
-      button.addEventListener("click", event => {
-          event.preventDefault();
-          const formElement = document.forms.registrationForm;
-          if (formElement) {
-              const formData = createObjectData(formElement);
+const button = document.querySelector('input[type=submit]');
 
-              // load path to know on which url post data when online
-              const path = window.location.pathname;
-              formData["url"] = path;
+if (button && !navigator.onLine) {
+  button.addEventListener("click", event => {
+      console.log("Transferring to db");
+      event.preventDefault();
 
-              const localStorageId = `id-${new Date().getTime()}`;
-              localStorage.setItem(localStorageId, JSON.stringify(formData));
-          }
+      const formElement = document.forms.registrationForm;
+      if (formElement) {
+        const dataForm = createObjectData(formElement);
 
-          alert("Form sent, we will contact you");
-      });
-  }
+        dataForm["url"] = window.location.pathname;
+
+        let transaction = db.transaction(['cachedForms'], 'readwrite');
+        let addReq = transaction.objectStore('cachedForms').add(dataForm);
+
+        addReq.onerror = event => {
+            console.log(`error storing data: ${event}`);
+        };
+
+        transaction.oncomplete = event => {
+           console.log('data stored');
+        };
+
+        setTimeout(() => {
+            alert("Form loaded");
+            window.location.href = "/index/"
+        }, 2500);
+
+      }
+  });
+}
+
 </script>
 
 {% endblock body %}
