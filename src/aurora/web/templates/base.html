@@ -132,12 +132,6 @@ const loopOverDB = () => {
 
             xhr.addEventListener('load', () => {
               console.log("Data sent successfully to sever.");
-
-              const objectStoreRequest = objectStore.clear();
-
-              objectStoreRequest.addEventListener("success", () => {
-                  console.log("Indexeddb cleared")
-              });
             });
 
             xhr.addEventListener('error', () => {
@@ -147,7 +141,15 @@ const loopOverDB = () => {
             cursor.continue();
         }
     });
+}
 
+const clearFormsDB = () => {
+    let objectStore  = db.transaction(['cachedForms'], 'readwrite').objectStore('cachedForms');
+
+    const objectStoreRequest = objectStore.clear();
+    objectStoreRequest.addEventListener("success", () => {
+        console.log("Indexeddb forms cleared")
+    });
 }
 
 window.addEventListener("online", () => {
@@ -156,7 +158,10 @@ window.addEventListener("online", () => {
     initDB();
     setTimeout(() => {
         loopOverDB();
-    }, 10000);
+    }, 2500);
+    setTimeout(() => {
+        clearFormsDB()
+    }, 5000)
 
 });
 

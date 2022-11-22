@@ -1,4 +1,4 @@
-const version = 2;
+const version = 1;
 
 let staticName = `staticCache-${version}`;
 let dynamicName = `dynamicCache`;
@@ -24,9 +24,7 @@ let assets = [
     "/api/project/",
 ];
 
-let imageAssets = [
-  "/static/images/cat.jpeg"
-];
+let imageAssets = [];
 
 
 const handleFetchResponse = (fetchResponse, request) => {
@@ -114,13 +112,9 @@ self.addEventListener("fetch", event => {
                             options.credentials = "omit";
                         }
 
-                        console.log("fetchResponse.status");
-
                         return fetch(event.request.url, options).then(
                             fetchResponse => {
                                 if (fetchResponse.ok) {
-                                    console.log(fetchResponse);
-                                    console.log("fetchResponse.status", fetchResponse.status);
                                     return handleFetchResponse(fetchResponse, event.request);
                                 }
 
