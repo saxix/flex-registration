@@ -20,9 +20,9 @@
             <label for="id_registration_id_0" data-msgid="{{ registration.name }}">
               <input
                 type="radio"
-                name="slug"
+                id="{{ registration.slug }}"
                 value="{{ registration.slug }}"
-                id="slug_id"
+                name="slug"
                 {% if registration.is_pwa_enabled %} checked {% endif %}
               >
               {{ registration.name }}
@@ -37,15 +37,16 @@
   </form>
 
 <script>
-  const cacheName = "v1";
-  const button = document.querySelector("button");
+  const version = 1;
+  let staticName = `staticCache-${version}`;
 
+  const button = document.querySelector("button");
   button.addEventListener("click", event => {
       event.preventDefault();
 
-      const slug = document.getElementById("slug_id").value
+      const slug = document.querySelector('input[name="slug"]:checked').id;
       if (slug) {
-          caches.open(cacheName).then(cache => {
+          caches.open(staticName).then(cache => {
               const url = `/en-us/register/${slug}/1/`
               cache.add(url);
 
