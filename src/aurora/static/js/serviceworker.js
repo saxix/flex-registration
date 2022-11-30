@@ -27,6 +27,30 @@ let assets = [
 let imageAssets = [];
 
 
+const synchronizeRegistrationVersion = () => {
+    const url = "http://localhost:8000/en-us/";
+
+    fetch(`${url}get_pwa_enabled/`)
+    .then(fetchResponse => fetchResponse.json())
+    .then(response => {
+        const searchedUrl = `/en-us/register/${response.slug}/${response.version}/`;
+
+        caches.open("staticCache-1").then(cache => {
+            cache.keys().then(keys => {
+                keys.forEach(key => {
+                    if (key.url.match(/\/register\//)) {
+                        cache.delete(key).then(() => `Key ${key} deleted from cache`)
+                    }
+                })
+            }).then(() => {
+                cache.add(searchedUrl)
+                .then(() => console.log("Version of pwa-enabled registration synchronized"))
+            })
+        })
+    })
+    .catch(err => console.log(`Sorry, we couldn't synchronize data because of this error: ${err}`));
+};
+
 const handleFetchResponse = (fetchResponse, request) => {
   let type = fetchResponse.headers.get('content-type');
 
@@ -72,7 +96,7 @@ self.addEventListener("install", event => {
             }
           );
        });
-    })
+    }).then(() => synchronizeRegistrationVersion())
   );
 });
 

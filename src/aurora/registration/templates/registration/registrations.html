@@ -27,6 +27,7 @@
               >
               {{ registration.name }}
             </label>
+            <input type="hidden" name="{{ registration.slug }}_version" value="{{ registration.version }}">
           </li>
         {% endfor %}
       </ul>
@@ -47,7 +48,8 @@
       const slug = document.querySelector('input[name="slug"]:checked').id;
       if (slug) {
           caches.open(staticName).then(cache => {
-              const url = `/en-us/register/${slug}/1/`
+              const version = document.querySelector("input[name=" + `${slug}_version` + "]").value;
+              const url = `/en-us/register/${slug}/${version}/`
               cache.add(url);
 
               console.log(`Form url=${url} added to cache`);
