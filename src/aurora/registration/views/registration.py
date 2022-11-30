@@ -127,6 +127,11 @@ def check_access(view_func):
 class RegisterView(RegistrationMixin, FormView):
     template_name = "registration/register.html"
 
+    def get_template_names(self):
+        slug = self.registration.slug
+        language = translation.get_language()
+        return [f'{language}/registration/{slug}.html', f'registration/{slug}.html'] + super().get_template_names()
+
     @check_access
     def get(self, request, *args, **kwargs):
         if state.collect_messages:

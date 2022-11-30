@@ -210,6 +210,9 @@ LANGUAGES = (
     ("uk-ua", "український | Ukrainian"),
     ("en-us", "English | English"),
     ("pl-pl", "Polskie | Polish"),
+    ("pl-pl", "Polskie | Polish"),
+    ("ta-ta", "தமிழ் | Tamil"),
+    ("si-si", "සිංහල | Sinhala"),
     # ("de-de", "Deutsch"),
     # ("es-es", "Español"),
     # ("fr-fr", "Français"),
@@ -217,7 +220,6 @@ LANGUAGES = (
     # ("ro-ro", "Română"),
     # ("pt-pt", "Português"),
     # ("pl-pl", "Pусский"),
-    # ('ta-ta', 'தமிழ்'),  # Tamil
     # ('hi-hi', 'हिंदी'),  # Hindi
 )
 LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
