@@ -28,7 +28,7 @@ from requests.auth import HTTPBasicAuth
 from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ..admin.mixin import LoadDumpMixin
+from ..administration.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
 from .forms import Select2Widget, ValidatorForm
 from .models import (

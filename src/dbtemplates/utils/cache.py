@@ -50,7 +50,8 @@ def add_template_to_cache(instance, **kwargs):
     """
     remove_cached_template(instance)
     remove_notfound_key(instance)
-    cache.set(get_cache_key(instance.name), instance.content)
+    if instance.active:
+        cache.set(get_cache_key(instance.name), instance.content)
 
 
 def remove_cached_template(instance, **kwargs):
