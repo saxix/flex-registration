@@ -109,12 +109,15 @@ if (button && !navigator.onLine) {
 
         transaction.oncomplete = event => {
            console.log('data stored');
+
+           setTimeout(() => {
+              alert("Form loaded");
+              location.reload();
+           }, 1000);
+
         };
 
-        setTimeout(() => {
-            alert("Form loaded");
-            window.location.href = "/"
-        }, 2500);
+
 
       }
   });
