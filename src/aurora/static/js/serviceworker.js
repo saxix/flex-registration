@@ -7,9 +7,7 @@ let imageName = `imageCache-${version}`;
 let assets = [
     "/",
     "/registrations/",
-    // "/i18n/en-us/",
     "/serviceworker.js",
-    // "/static/admin/debug.css",
     "/static/registration/auth.js",
     "/static/page.min.js",
     "/static/edit.min.js",
@@ -19,7 +17,6 @@ let assets = [
     "/static/admin/js/vendor/jquery/jquery.js",
     "/static/base.css",
     "/static/staff-toolbar.css",
-    // "/static/hope1.webp",
     "https://code.jquery.com/jquery-3.6.0.min.js",
     "/api/project/",
 ];
