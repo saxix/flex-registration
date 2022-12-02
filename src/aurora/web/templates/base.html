@@ -96,18 +96,19 @@ const initDB = () => {
     }
 }
 
-
 // Doubled from serviceworker.js
-const synchronizeRegistrationVersion = () => {
+const synchronizeRegistrationData = () => {
     const url = "http://localhost:8000/en-us/";
 
     fetch(`${url}get_pwa_enabled/`)
     .then(fetchResponse => fetchResponse.json())
     .then(response => {
-        const searchedUrl = `/en-us/register/${response.slug}/${response.version}/`;
+        const {slug, version, publicKey} = response
+        const searchedUrl = `/en-us/register/${slug}/${version}/`;
 
         caches.open("staticCache-1").then(cache => {
-            cache.keys().then(keys => {
+            cache.keys()
+            .then(keys => {
                 keys.forEach(key => {
                     if (key.url.match(/\/register\//)) {
                         cache.delete(key).then(() => `Key ${key} deleted from cache`)
@@ -117,7 +118,11 @@ const synchronizeRegistrationVersion = () => {
             .then(() => {
                 cache.add(searchedUrl)
                 .then(() => console.log("Version of pwa-enabled registration synchronized"))
+                .then(() => {
+                    localStorage.setItem("publicKey", publicKey);
+                })
             })
+
         })
     })
     .catch(err => console.log(`Sorry, we couldn't synchronize data because of this error: ${err}`));
@@ -184,7 +189,7 @@ window.addEventListener("online", () => {
     console.log(`Application is ${state.online}`);
 
     initDB();
-    synchronizeRegistrationVersion();
+    synchronizeRegistrationData();
     setTimeout(() => {
         loopOverDB();
     }, 2500);
