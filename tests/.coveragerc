@@ -1,11 +1,11 @@
 [run]
 branch = True
-source = smart_register
+source = aurora
 include =
 omit =
-    src/smart_register/core/backends.py
-    src/smart_register/management/commands/*
-    src/smart_register/core/authentication.py
+    src/aurora/core/backends.py
+    src/aurora/management/commands/*
+    src/aurora/core/authentication.py
 
 [report]
 # Regexes for lines to exclude from consideration

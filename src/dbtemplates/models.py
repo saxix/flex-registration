@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from natural_keys import NaturalKeyModel
+
 from dbtemplates.conf import settings
-from dbtemplates.utils.cache import (add_template_to_cache,
-                                     remove_cached_template)
+from dbtemplates.utils.cache import add_template_to_cache, remove_cached_template
 from dbtemplates.utils.template import get_template_source
 from django.contrib.sites.managers import CurrentSiteManager
 from django.contrib.sites.models import Site
@@ -12,29 +13,28 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 
 
-class Template(models.Model):
+class Template(NaturalKeyModel, models.Model):
     """
     Defines a template model for use with the database template loader.
     The field ``name`` is the equivalent to the filename of a static template.
     """
-    name = models.CharField(_('name'), max_length=100,
-                            help_text=_("Example: 'flatpages/default.html'"))
-    content = models.TextField(_('content'), blank=True)
-    sites = models.ManyToManyField(Site, verbose_name=_(u'sites'),
-                                   blank=True)
-    creation_date = models.DateTimeField(_('creation date'),
-                                         default=now)
-    last_changed = models.DateTimeField(_('last changed'),
-                                        default=now)
+
+    _natural_key = ("name",)
+
+    name = models.CharField(_("name"), max_length=100, unique=True, help_text=_("Example: 'flatpages/default.html'"))
+    content = models.TextField(_("content"), blank=True)
+    sites = models.ManyToManyField(Site, verbose_name=_("sites"), blank=True)
+    creation_date = models.DateTimeField(_("creation date"), default=now)
+    last_changed = models.DateTimeField(_("last changed"), default=now)
 
     objects = models.Manager()
-    on_site = CurrentSiteManager('sites')
+    on_site = CurrentSiteManager("sites")
 
     class Meta:
-        db_table = 'django_template'
-        verbose_name = _('template')
-        verbose_name_plural = _('templates')
-        ordering = ('name',)
+        db_table = "django_template"
+        verbose_name = _("template")
+        verbose_name_plural = _("templates")
+        ordering = ("name",)
 
     def __str__(self):
         return self.name

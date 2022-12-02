@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 from django.core.exceptions import ValidationError
 
-from smart_register.core.models import Validator
+from aurora.core.models import Validator
 
 HH_SIZE = """if (value.household[0].size_h_c != value.individuals.length){
     "Household size and provided members do not match"
@@ -30,7 +30,7 @@ if (value.cleaned_data.length===0){
 def mock_state():
     from django.contrib.auth.models import AnonymousUser
 
-    from smart_register.state import state
+    from aurora.state import state
 
     state.request = Mock(user=AnonymousUser())
 

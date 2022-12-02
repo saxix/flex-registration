@@ -62,14 +62,14 @@ reset-migrations: ## reset django migrations
 	find src -name '0*[1,2,3,4,5,6,7,8,9,0]*' | xargs rm -f
 	# we need to run this two times to properly handle Stripe dependency
 	./manage.py makemigrations core --empty
-	sed -i '/from /a from django.contrib.postgres.operations import CITextExtension' src/smart_register/core/migrations/0001_initial.py
-	sed -i '/operations = \[/a CITextExtension()' src/smart_register/core/migrations/0001_initial.py
+	sed -i '/from /a from django.contrib.postgres.operations import CITextExtension' src/aurora/core/migrations/0001_initial.py
+	sed -i '/operations = \[/a CITextExtension()' src/aurora/core/migrations/0001_initial.py
 	./manage.py makemigrations
 	./manage.py makemigrations --check
 	./manage.py upgrade --no-input
 
 i18n:  ## i18n support
-	cd src && django-admin makemessages --all --settings=smart_register.config.settings -d djangojs --pythonpath=. --ignore=~*
-	cd src && django-admin makemessages --all --settings=smart_register.config.settings --pythonpath=. --ignore=~*
-	cd src && django-admin compilemessages --settings=smart_register.config.settings --pythonpath=. --ignore=~*
+	cd src && django-admin makemessages --all --settings=aurora.config.settings -d djangojs --pythonpath=. --ignore=~*
+	cd src && django-admin makemessages --all --settings=aurora.config.settings --pythonpath=. --ignore=~*
+	cd src && django-admin compilemessages --settings=aurora.config.settings --pythonpath=. --ignore=~*
 	git commit -m "Update translations"

@@ -17,7 +17,7 @@ CONTAINER_NAME?=flex-form-cnt
 LAZO?=$(shell which lazo)
 
 DOCKER_REGISTRY=ghcr.io
-DOCKER_IMAGE_NAME=saxix/smart_register
+DOCKER_IMAGE_NAME=saxix/aurora
 DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:${VERSION}
 DOCKER_TARGET=${DOCKER_REGISTRY}/${DOCKER_IMAGE}
 DOCKERFILE?=Dockerfile
@@ -85,13 +85,13 @@ dev:
 			-e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
 			-e DJANGO_ADMIN_URL=admin/ \
 			-e ADMINS="" \
-			-e ADMINS="" \
 			-e LANGUAGE_CODE="uk-ua" \
 			-e ALLOWED_HOSTS="*" \
 			-e DATABASE_URL="${DATABASE_URL}" \
 			-e DEBUG="0" \
-			-e DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
+			-e DJANGO_SETTINGS_MODULE="aurora.config.settings" \
 			-e SENTRY_DSN="${SENTRY_DSN}" \
+			-e REDIS_CONNSTR="127.0.0.1" \
 			${RUN_OPTIONS} \
 			${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest \
 			${CMD}
@@ -99,7 +99,7 @@ dev:
 # 			-e STATICFILES_STORAGE="django.contrib.staticfiles.storage.ManifestStaticFilesStorage"\
 #docker push registry.gitlab.com/bitcaster/bitcaster
 
-release: .docker-login ## relase version $VERSION
+release: .docker-login ## release version $VERSION
 	docker tag ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${VERSION} ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest
 	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:latest
 	docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${VERSION}
@@ -113,44 +113,3 @@ test:  ## test docker image
 
 shell:  ## run docker and spawn a shell
 	DOCKER_IMAGE=${DOCKER_IMAGE_NAME}:latest RUN_OPTIONS=-it CMD='/bin/bash' $(MAKE) .run
-
-IMAGE=${DOCKER_REGISTRY}/bitcaster/sos/docker-builder:19.03.12
-docker-builder:
-	cd .. && docker build \
-		--squash \${BUILD_OPTIONS} \
-		-t ${IMAGE} \
-		-f docker/${DOCKERFILE}.builder .
-	@echo ${GITLAB_API_TOKEN} | docker login ${DOCKER_REGISTRY} -u ${DOCKER_USERNAME} --password-stdin
-	docker push ${IMAGE}
-
-docker-builder-test:
-	docker run \
-		-e RANCHER_AUTH=${RANCHER_AUTH} \
-		-e RANCHER_CLUSTER=${RANCHER_CLUSTER} \
-		-e RANCHER_PROJECT=${RANCHER_PROJECT} \
-		-i \
-		-t ${IMAGE} \
-		/bin/sh
-
-
-.deploy:
-	${LAZO} rancher \
-		--insecure \
-		--use-names \
-		--auth ${RANCHER_AUTH} \
-		--base-url ${RANCHER_BASE_URL} \
-		upgrade \
-		--no-check \
-		--workload ${WORKER} \
-		--username saxix \
-		--project ${RANCHER_PROJECT} \
-		--password ${GITLAB_API_TOKEN} \
-		-r http://registry.gitlab.com \
-		-i registry.gitlab.com/${DOCKER_IMAGE_NAME}:${VERSION}
-	@printf "\033[0;32mDeployed Version \033[1;37m${VERSION}\033[0;32m on ${WORKER}. Image \033[1;37m${DOCKER_IMAGE_NAME}:${VERSION}\n"
-
-deploy:  ## deploy on xavier
-	WORKER='bitcaster-ns:sos-qa' $(MAKE) .deploy
-
-deploy-prod:  ## deploy on xavier
-	WORKER='bitcaster-ns:sos' $(MAKE) .deploy

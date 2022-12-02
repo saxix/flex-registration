@@ -2,6 +2,8 @@ FROM python:3.9.2-slim-buster
 ARG BUILD_DATE
 ARG VERSION
 
+WORKDIR /code/
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
                 build-essential \
@@ -23,14 +25,13 @@ RUN apt-get update \
     && locale-gen --no-purge uk_UA.UTF-8 \
     && apt-get clean
 
-ENV POETRY_VERSION=1.1.13 \
-    PATH="${PATH}:/root/.poetry/bin" \
+ENV PATH="${PATH}:/root/.local/bin" \
     ADMINS="" \
     BUILD_DATE=${BUILD_DATE} \
     CACHE_DEFAULT="redis://127.0.0.1/0" \
     CONSTANCE_DATABASE_CACHE_BACKEND="" \
     DATABASE_URL="" \
-    DJANGO_SETTINGS_MODULE="smart_register.config.settings" \
+    DJANGO_SETTINGS_MODULE="aurora.config.settings" \
     IPSTACK_KEY="" \
     LOG_LEVEL="ERROR" \
     NGINX_CACHE_DIR="/data/nginx/cache" \
@@ -47,19 +48,18 @@ ENV POETRY_VERSION=1.1.13 \
     UWSGI_PROCESSES=4 \
     VERSION=${VERSION}
 
-WORKDIR /code/
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+RUN curl -sSL https://install.python-poetry.org | python -
 
-ADD . /code/
+ADD poetry.lock pyproject.toml /code/
 
 RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi --no-root \
-  && pip install uwsgi
+    && poetry install --no-interaction --no-ansi --no-root \
+    && pip install uwsgi
 
-EXPOSE 8000
-
+ADD . /code/
 ADD ./docker/conf/nginx/* /var/nginx/
 ADD ./docker/conf/* /conf/
 ADD ./docker/bin/* /usr/local/bin/
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+EXPOSE 8000

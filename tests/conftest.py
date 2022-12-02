@@ -4,7 +4,7 @@ import pytest
 from django import forms
 from django.core.files.storage import get_storage_class
 
-from smart_register.core.fields import CompilationTimeField, SmartFileField
+from aurora.core.fields import CompilationTimeField, SmartFileField
 
 
 def pytest_addoption(parser):
@@ -40,8 +40,8 @@ def pytest_configure(config):
 
 @pytest.fixture()
 def simple_form(db):
-    from smart_register.core.cache import cache
-    from smart_register.core.models import FlexForm, Validator
+    from aurora.core.cache import cache
+    from aurora.core.models import FlexForm, Validator
 
     cache.clear()
 
@@ -65,19 +65,23 @@ def simple_form(db):
     frm.fields.get_or_create(label="time", defaults={"field_type": CompilationTimeField})
     frm.fields.get_or_create(label="First Name", defaults={"field_type": forms.CharField, "required": True})
     frm.fields.get_or_create(
-        label="Last Name", defaults={"field_type": forms.CharField,
-                                     "required": True,
-                                     "validator": v2,
-                                     "advanced": {"smart": {"index": 1}}}
+        label="Last Name",
+        defaults={
+            "field_type": forms.CharField,
+            "required": True,
+            "validator": v2,
+            "advanced": {"smart": {"index": 1}},
+        },
     )
     frm.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     frm.fields.get_or_create(label="File", defaults={"field_type": forms.FileField, "required": False})
+    frm.fields.get_or_create(label="index_no", defaults={"field_type": forms.CharField, "required": False})
     return frm
 
 
 @pytest.fixture()
 def complex_form():
-    from smart_register.core.models import FlexForm, Validator
+    from aurora.core.models import FlexForm, Validator
 
     v1, __ = Validator.objects.get_or_create(
         name="length_2_8",
@@ -98,7 +102,7 @@ def complex_form():
     # ind.fields.get_or_create(label="Image", defaults={"field_type": forms.ImageField, "required": False})
     ind.fields.create(label="Image", **{"field_type": SmartFileField, "required": False})
     ind.fields.create(label="File", **{"field_type": SmartFileField, "required": False})
-    hh.add_formset(ind)
+    hh.add_formset(ind, min_num=0)
     return hh
 
 
@@ -124,3 +128,10 @@ def mock_storage(monkeypatch):
     monkeypatch.setattr(storage_class, "_save", _mock_save)
     monkeypatch.setattr(storage_class, "delete", _mock_delete)
     monkeypatch.setattr(storage_class, "exists", _mock_exists)
+
+
+@pytest.fixture()
+def user():
+    from testutils.factories import UserFactory
+
+    return UserFactory()

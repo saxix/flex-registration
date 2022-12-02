@@ -11,7 +11,7 @@ __pycache__
 tests
 node_modules
 src/*.egg-info
-src/smart_register/staticfiles/
+src/aurora/staticfiles/
 Makefile
 README.md
 manage.py

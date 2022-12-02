@@ -12,8 +12,7 @@ class Command(BaseCommand):
         for template in Template.objects.all():
             valid, error = check_template_syntax(template)
             if not valid:
-                errors.append('%s: %s' % (template.name, error))
+                errors.append("%s: %s" % (template.name, error))
         if errors:
-            raise CommandError(
-                'Some templates contained errors\n%s' % '\n'.join(errors))
-        self.stdout.write('OK')
+            raise CommandError("Some templates contained errors\n%s" % "\n".join(errors))
+        self.stdout.write("OK")

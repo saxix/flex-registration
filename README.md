@@ -1,12 +1,23 @@
-How to run local development with docker compose
-=
+# Aurora
 
-Local development can use docker-compose
-it will use postgress redis and celery under the hood
+Aurora is an open source project to collect and register data.
+It is focused mainly on performance and security, 
 
-Aplication will be accessible at http://localhost:8000
+
+### Run the code 
+
+- Option 1: with local machine services (redis, postgres) with `direnv`
+
+First configure your `.envrc` and run
+
+```shell
+  python manage.py runserver
+````
+
+- Option 2: using docker-composer
 
 For the first time you need to run in root project directory
+
 ```shell
 cp .env.example .env
 docker-compose build
@@ -18,6 +29,3 @@ each next time
 ```shell
 docker-compose up
 ```
-
-Other way(stefano)
-=

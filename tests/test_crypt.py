@@ -3,7 +3,7 @@ import json
 import pytest
 from Crypto.PublicKey import RSA
 
-from smart_register.core.crypto import RSACrypto, crypt, decrypt
+from aurora.core.crypto import RSACrypto, crypt, decrypt
 
 LANGUAGES = {
     "english": "first",
@@ -55,7 +55,7 @@ btcA1UFpS9TFL++uMmwbcMzykITUTxhHp0QWEg1cpj8HFakPBZ4=
 
 @pytest.fixture()
 def registration(simple_form):
-    from smart_register.registration.models import Registration
+    from aurora.registration.models import Registration
 
     reg, __ = Registration.objects.get_or_create(
         name="registration #1", defaults={"flex_form": simple_form, "active": True}
@@ -98,7 +98,7 @@ def test_crypt_complex(data, public_pem, private_pem):
 
 @pytest.mark.parametrize("data", [LANGUAGES], ids=["json"])
 def test_crypt_field(data, registration):
-    from smart_register.registration.models import Record
+    from aurora.registration.models import Record
 
     record: Record = registration.add_record(data)
     decrypted = record.decrypt(registration._private_pem)
