@@ -316,5 +316,6 @@ def registrations(request):
 def get_pwa_enabled(request):
     register_obj = Registration.objects.filter(is_pwa_enabled=True).first()
     return JsonResponse({
-        "slug": getattr(register_obj, "slug", None)
+        "slug": getattr(register_obj, "slug", None),
+        "version": getattr(register_obj, "version", None)
     })
