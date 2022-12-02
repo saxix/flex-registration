@@ -113,7 +113,8 @@ const synchronizeRegistrationVersion = () => {
                         cache.delete(key).then(() => `Key ${key} deleted from cache`)
                     }
                 })
-            }).then(() => {
+            })
+            .then(() => {
                 cache.add(searchedUrl)
                 .then(() => console.log("Version of pwa-enabled registration synchronized"))
             })

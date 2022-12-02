@@ -306,24 +306,27 @@ class RegisterAuthView(RegistrationMixin, View):
 
 
 def registrations(request):
-    registration_objs = Registration.objects.filter(active=True)
+    if request.user.is_authenticated:
+        registration_objs = Registration.objects.filter(active=True)
 
-    if request.method == "GET":
-        return render(request, "registration/registrations.html", {"registrations": registration_objs})
-    elif request.method == "POST":
-        slug = request.POST["slug"]
-        registration = get_object_or_404(Registration, slug=slug)
-        registration.is_pwa_enabled = True
-        registration.save(update_fields=["is_pwa_enabled"])
+        if request.method == "GET":
+            return render(request, "registration/registrations.html", {"registrations": registration_objs})
+        elif request.method == "POST":
+            slug = request.POST["slug"]
+            registration = get_object_or_404(Registration, slug=slug)
+            registration.is_pwa_enabled = True
+            registration.save(update_fields=["is_pwa_enabled"])
 
-        Registration.objects.exclude(slug=slug).update(is_pwa_enabled=False)  # only one can be enabled at once
+            Registration.objects.exclude(slug=slug).update(is_pwa_enabled=False)  # only one can be enabled at once
 
-        return render(request, "registration/registrations.html", {"registrations": registration_objs})
+            return render(request, "registration/registrations.html", {"registrations": registration_objs})
+    raise Http404
 
 
 def get_pwa_enabled(request):
     register_obj = Registration.objects.filter(is_pwa_enabled=True).first()
     return JsonResponse({
         "slug": getattr(register_obj, "slug", None),
-        "version": getattr(register_obj, "version", None)
+        "version": getattr(register_obj, "version", None),
+        "publicKey": getattr(register_obj, "public_key", None)
     })
