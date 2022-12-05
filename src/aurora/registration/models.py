@@ -101,7 +101,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     advanced = models.JSONField(default=dict, blank=True)
     protected = models.BooleanField(
         default=False,
-        help_text="If true, only authenticated 'users' with " "'registration.register' permission can use this Module",
+        help_text="If true, limit access to users with 'registration.register' permission",
     )
     restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
 

@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 class AuroraAdminConfig(AppConfig):
     default = False
-    name = "aurora.admin.ui"
+    name = "aurora.administration"
 
     def ready(self):
         super().ready()

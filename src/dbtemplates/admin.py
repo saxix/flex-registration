@@ -3,8 +3,12 @@ import posixpath
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.utils.translation import ungettext, ugettext_lazy as _
 from django.utils.safestring import mark_safe
+
+from admin_extra_buttons.decorators import button, view
 from dbtemplates.conf import settings
 from dbtemplates.models import Template, remove_cached_template, add_template_to_cache
 from dbtemplates.utils.template import check_template_syntax
@@ -104,7 +108,13 @@ class TemplateAdmin(SyncMixin, PublishMixin, TemplateModelAdmin):
         (
             None,
             {
-                "fields": ("name", "content"),
+                "fields": (
+                    (
+                        "name",
+                        "active",
+                    ),
+                    "content",
+                ),
                 "classes": ("monospace",),
             },
         ),
@@ -123,8 +133,8 @@ class TemplateAdmin(SyncMixin, PublishMixin, TemplateModelAdmin):
         ),
     )
     filter_horizontal = ("sites",)
-    list_display = ("name", "creation_date", "last_changed", "site_list")
-    list_filter = ("sites",)
+    list_display = ("name", "creation_date", "last_changed", "site_list", "active")
+    list_filter = ("sites", "active")
     save_as = True
     search_fields = ("name", "content")
     actions = ["invalidate_cache", "repopulate_cache", "check_syntax"]
@@ -186,6 +196,20 @@ class TemplateAdmin(SyncMixin, PublishMixin, TemplateModelAdmin):
 
     def check_sync_permission(self, request, obj=None):
         return True
+
+    @view()
+    def xrender(self, request, pk):
+        obj = self.get_object(request, pk)
+        from django.template import Template, Context
+
+        tpl = Template(obj.content)
+        content = tpl.render(Context({}))
+        return HttpResponse(content)
+
+    @button()
+    def preview(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Preview")
+        return render(request, "admin/dbtemplates/template/preview.html", ctx)
 
 
 admin.site.register(Template, TemplateAdmin)

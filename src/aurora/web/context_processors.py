@@ -14,5 +14,7 @@ def smart(request):
             "env": settings.SMART_ADMIN_HEADER,
             "sentry_dsn": settings.SENTRY_DSN,
             "has_token": has_token(request),
+            "languages": settings.LANGUAGES,
+            "settings": settings,
         }
     }
