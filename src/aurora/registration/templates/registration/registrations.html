@@ -29,6 +29,7 @@
             </label>
             <input type="hidden" name="{{ registration.slug }}_version" value="{{ registration.version }}">
             <input type="hidden" name="{{ registration.slug }}_public_key" value="{{ registration.public_key }}">
+            <input type="hidden" name="{{ registration.slug }}_ajax_urls" value="{{ registration.option_set_links }}">
           </li>
         {% endfor %}
       </ul>
@@ -68,6 +69,13 @@
                 localStorage.setItem("publicKey", publicKey);
 
                 console.log("PublicKey saved in localStorage");
+            })
+            .then(() => {
+                const ajaxLinks = document.querySelector("input[name=" + `${slug}_ajax_urls` + "]").value;
+                ajaxLinks.slice(1, -1).split(",").forEach(link => {
+                    let ajaxLink = `${window.location.origin}${link.trim().replaceAll("'", "")}`;
+                    cache.add(ajaxLink);
+                })
             })
             .catch(err => console.log(`Sorry, we couldn't update cache or localStorage of this error: ${err}`));
         })
