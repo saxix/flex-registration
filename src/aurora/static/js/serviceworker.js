@@ -8,17 +8,29 @@ let assets = [
     "/",
     "/registrations/",
     "/serviceworker.js",
-    "/static/registration/auth.js",
-    "/static/page.min.js",
-    "/static/edit.min.js",
-    "/static/i18n/i18n_edit.js",
-    "/static/smart.js",
+    "/api/project/",
+
     "/static/registration/survey.min.js",
     "/static/admin/js/vendor/jquery/jquery.js",
-    "/static/base.css",
-    "/static/staff-toolbar.css",
+
     "https://code.jquery.com/jquery-3.6.0.min.js",
-    "/api/project/",
+    "/i18n/en-us/",
+    "/static/admin/debug.css",
+    "/static/staff-toolbar.css",
+    "/static/base.css",
+    "https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css",
+    "/static/i18n/i18n.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js",
+    "/static/smart.js",
+    "/static/select2/ajax_select.js",
+    "/static/i18n/i18n_edit.js",
+    "/static/page.min.js",
+    "/static/hope1.webp",
+    "/static/edit.min.js",
+    "/static/registration/auth.js",
+    "https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
 ];
 
 let imageAssets = [];
@@ -73,7 +85,8 @@ self.addEventListener("install", event => {
   console.log(`Version ${version} installed - caching started`);
 
   event.waitUntil(
-    caches.open(staticName).then(cache => {
+    caches.open(staticName)
+    .then(cache => {
         cache.addAll(assets).then(
             () => {
               console.log(`${staticName} has been updated.`);
@@ -82,7 +95,8 @@ self.addEventListener("install", event => {
               console.warn(`Failed to update ${staticName}, ${err}`)
             }
         )
-    }).then(() => {
+    })
+    .then(() => {
        caches.open(imageName).then(cache => {
            cache.addAll(imageAssets).then(
             () => {
@@ -93,7 +107,8 @@ self.addEventListener("install", event => {
             }
           );
        });
-    }).then(() => synchronizeRegistrationVersion())
+    })
+    .then(() => synchronizeRegistrationVersion())
   );
 });
 

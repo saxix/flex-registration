@@ -3,6 +3,7 @@ import json
 import logging
 
 import jmespath
+from aurora.core.fields import AjaxSelectField
 from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
 from django import forms
@@ -203,6 +204,14 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         if self.locales:
             locales += self.locales
         return set(locales)
+
+    @property
+    def option_set_links(self):
+        links = []
+        for field in self.flex_form.fields.all():
+            if field.field_type == AjaxSelectField:
+                links.append(f"/en-us/options/{field.choices}/")  # TODO: is en-us always valid?
+        return links
 
 
 class RemoteIp(models.GenericIPAddressField):
