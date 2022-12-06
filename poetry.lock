@@ -390,7 +390,7 @@ tests = ["coverage"]
 
 [[package]]
 name = "django-admin-sync"
-version = "0.4.0"
+version = "0.5.0"
 description = ""
 category = "main"
 optional = false
@@ -2181,7 +2181,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "63daf1520e9cb25d3c59b619f6226808c313050976adc8173fa39f9fbaa25cd5"
+content-hash = "2261a7154fafac24bc9bcd097960876d1872dabc46274a55ab83c6931b8fc690"
 
 [metadata.files]
 amqp = [
@@ -2460,7 +2460,7 @@ django-admin-ordering = [
     {file = "django_admin_ordering-0.16.1.tar.gz", hash = "sha256:1ec37781e228cd43ec221d8a75972ea4e8d8b7af3f0e13a7e5950de41f70af39"},
 ]
 django-admin-sync = [
-    {file = "django-admin-sync-0.4.0.tar.gz", hash = "sha256:2fd6d0a8fbd6980faf28ef444fbd599bd497844d361aca9d021ba0ac450d51f9"},
+    {file = "django-admin-sync-0.5.0.tar.gz", hash = "sha256:98019369e9401e6823adb275f2d114a32e5b1b38b6c89a1c9110cd1dd53247a0"},
 ]
 django-adminactions = [
     {file = "django-adminactions-2.0.0.tar.gz", hash = "sha256:f5753045572a99e211455858fa1c3780ea1b3cd657fe5a43047cc3d542b10fc3"},

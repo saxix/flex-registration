@@ -25,6 +25,7 @@ from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
+from .protocol import AuroraSyncRegistrationProtocol
 from ..core.admin import ConcurrencyVersionAdmin
 from ..core.models import FormSet
 from ..core.utils import (
@@ -106,6 +107,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         ("Advanced", {"fields": ("advanced",)}),
         ("Others", {"fields": ("__others__",)}),
     ]
+    protocol_class = AuroraSyncRegistrationProtocol
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
