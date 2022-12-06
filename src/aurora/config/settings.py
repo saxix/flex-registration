@@ -300,30 +300,19 @@ LOGGING = {
             "class": "logging.NullHandler",
         },
     },
-    "": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "environ": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-        "propagate": False,
-    },
-    "flags": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "django": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "social_core": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "aurora": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
+    "loggers": {
+        "flags": {
+            "handlers": ["console"],
+            "level": "ERROR",
+        },
+        "django": {
+            "handlers": ["console"],
+            "level": "ERROR",
+        },
+        "aurora": {
+            "handlers": ["console"],
+            "level": env("LOG_LEVEL"),
+        },
     },
 }
 
