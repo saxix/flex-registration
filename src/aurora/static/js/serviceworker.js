@@ -1,28 +1,26 @@
 const version = 1;
 
+let internalName = `internalCache-${version}`;
 let staticName = `staticCache-${version}`;
-let dynamicName = `dynamicCache`;
+let externalName = `externalCache`;
 let imageName = `imageCache-${version}`;
 
-let assets = [
+
+let internalAssets = [
     "/",
     "/registrations/",
     "/serviceworker.js",
     "/api/project/",
+];
 
+let staticAssets = [
     "/static/registration/survey.min.js",
     "/static/admin/js/vendor/jquery/jquery.js",
-
-    "https://code.jquery.com/jquery-3.6.0.min.js",
     "/i18n/en-us/",
     "/static/admin/debug.css",
     "/static/staff-toolbar.css",
     "/static/base.css",
-    "https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css",
     "/static/i18n/i18n.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css",
-    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js",
     "/static/smart.js",
     "/static/select2/ajax_select.js",
     "/static/i18n/i18n_edit.js",
@@ -30,7 +28,17 @@ let assets = [
     "/static/hope1.webp",
     "/static/edit.min.js",
     "/static/registration/auth.js",
-    "https://browser.sentry-cdn.com/5.30.0/bundle.min.js"
+];
+
+let externalAssets = [
+    "https://browser.sentry-cdn.com/5.30.0/bundle.min.js",
+    "https://code.jquery.com/jquery-3.6.0.min.js",
+    "https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.min.js"
 ];
 
 let imageAssets = [];
@@ -44,7 +52,7 @@ const synchronizeRegistrationVersion = () => {
     .then(response => {
         const searchedUrl = `/en-us/register/${response.slug}/${response.version}/`;
 
-        caches.open("staticCache-1").then(cache => {
+        caches.open(internalName).then(cache => {
             cache.keys().then(keys => {
                 keys.forEach(key => {
                     if (key.url.match(/\/register\//)) {
@@ -71,9 +79,9 @@ const handleFetchResponse = (fetchResponse, request) => {
       return fetchResponse;
     });
   } else {
-    console.log(`SAVE ${request.url} in ${dynamicName}`);
+    console.log(`SAVE ${request.url} in ${externalName}`);
 
-    return caches.open(dynamicName).then((cache) => {
+    return caches.open(externalName).then((cache) => {
       cache.put(request, fetchResponse.clone());
       return fetchResponse;
     });
@@ -85,16 +93,28 @@ self.addEventListener("install", event => {
   console.log(`Version ${version} installed - caching started`);
 
   event.waitUntil(
-    caches.open(staticName)
+     caches.open(internalName)
     .then(cache => {
-        cache.addAll(assets).then(
+        cache.addAll(internalAssets).then(
             () => {
-              console.log(`${staticName} has been updated.`);
+              console.log(`${internalName} has been updated.`);
             },
             err => {
-              console.warn(`Failed to update ${staticName}, ${err}`)
+              console.warn(`Failed to update ${internalName}, ${err}`)
             }
         )
+    })
+    .then(() => {
+        caches.open(staticName).then(cache => {
+            cache.addAll(staticAssets).then(
+                () => {
+                  console.log(`${staticName} has been updated.`);
+                },
+                err => {
+                  console.warn(`Failed to update ${staticName}, ${err}`)
+                }
+            )
+        })
     })
     .then(() => {
        caches.open(imageName).then(cache => {
@@ -103,7 +123,19 @@ self.addEventListener("install", event => {
               console.log(`${imageName} has been updated.`);
             },
             err => {
-              console.warn(`failed to update ${staticName}.`);
+              console.warn(`failed to update ${imageName}, ${err}`);
+            }
+          );
+       });
+    })
+    .then(() => {
+        caches.open(externalName).then(cache => {
+           cache.addAll(externalAssets).then(
+            () => {
+              console.log(`${externalName} has been updated.`);
+            },
+            err => {
+              console.warn(`failed to update ${externalName}, ${err}`);
             }
           );
        });
@@ -119,7 +151,12 @@ self.addEventListener("activate", event => {
    event.waitUntil(
      caches.keys().then(keys => {
         return Promise.all(
-            keys.filter(key => key !== staticName && key !== imageName).map(key => caches.delete(key))
+            keys.filter(
+                key => key !== staticName &&
+                key !== imageName &&
+                key !== internalName &&
+                key !== externalName
+            ).map(key => caches.delete(key))
         );
      })
    );
