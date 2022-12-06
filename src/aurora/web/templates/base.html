@@ -106,7 +106,7 @@ const synchronizeRegistrationData = () => {
         const {slug, version, publicKey} = response
         const searchedUrl = `/en-us/register/${slug}/${version}/`;
 
-        caches.open("staticCache-1").then(cache => {
+        caches.open("internalCache-1").then(cache => {
             cache.keys()
             .then(keys => {
                 keys.forEach(key => {
