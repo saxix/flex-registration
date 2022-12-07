@@ -120,6 +120,9 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
     secure.boolean = True
 
+    def admin_sync_show_inspect(self):
+        return True
+
     @property
     def media(self):
         extra = "" if settings.DEBUG else ".min"
