@@ -102,6 +102,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     draft = models.BooleanField(
         default=False, blank=True, help_text="Testing purposes: draft validator are enabled only for staff users."
     )
+    _natural_key = ["name"]
 
     def __str__(self):
         return f"{self.label} ({self.target})"
@@ -559,6 +560,7 @@ class OptionSet(NaturalKeyModel, models.Model):
     languages = models.CharField(
         max_length=255, default="-;-;", blank=True, null=True, help_text="language code of each column."
     )
+    _natural_key = ["name"]
 
     objects = OptionSetManager()
 
