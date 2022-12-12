@@ -40,6 +40,7 @@
 {% block body %}
     {% include "smart/_form.html" %}
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js" integrity="sha512-95iy0RZIbw3H/FgfAj2wnCQJlzFQ+eaSfUeV/l8WVyGHKSRMzm3M/O+85j9ba/HFphkijrCTDjcuDX0BL2lthA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript">
 let db;
 
@@ -70,6 +71,9 @@ const createObjectData = formElement => {
     for (let i = 0; i < formElement.elements.length; i++) {
         let el = formElement.elements[i];
         if (el.name && el.value) {
+            if (el.name === "csrfmiddlewaretoken") {
+                continue;
+            }
             if (el.type === "checkbox") {
                 if (el.checked) {
                     formData[el.name] = el.value;
@@ -82,7 +86,6 @@ const createObjectData = formElement => {
         }
     }
 
-    console.log("formData", formData);
     return formData;
 }
 
@@ -96,7 +99,20 @@ if (button && !navigator.onLine) {
 
       const formElement = document.forms.registrationForm;
       if (formElement) {
-        const dataForm = createObjectData(formElement);
+        let dataForm = createObjectData(formElement);
+
+        const publicKey = localStorage.getItem("publicKey");
+
+        if (publicKey) {
+            const pubKey = forge.pki.publicKeyFromPem(publicKey);
+            const encrypted = pubKey.encrypt(JSON.stringify(dataForm), "RSA-OAEP", {
+                md: forge.md.sha256.create(),
+                mgf1: forge.mgf1.create()
+            });
+
+            const encryptedBase64 = forge.util.encode64(encrypted);
+            dataForm = {"formDict": encryptedBase64};
+        }
 
         dataForm["url"] = window.location.pathname;
 
@@ -108,7 +124,7 @@ if (button && !navigator.onLine) {
         };
 
         transaction.oncomplete = event => {
-           console.log('data stored');
+           console.log('Data stored');
 
            setTimeout(() => {
               alert("Form loaded");
@@ -116,9 +132,6 @@ if (button && !navigator.onLine) {
            }, 1000);
 
         };
-
-
-
       }
   });
 }

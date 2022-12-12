@@ -1,13 +1,18 @@
 import base64
 import io
+import json
 import logging
+from typing import Dict
 
 from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from cryptography.fernet import Fernet
 from django.conf import settings
 
 from aurora.core.utils import safe_json
+
+from aurora.core.private_key import privkey
 
 BLOCK_SIZE = 16
 CHUNK_SIZE = BLOCK_SIZE * 1024 * 1024 + BLOCK_SIZE
@@ -63,6 +68,8 @@ class RSACrypto:
         self.private_pem = private_pem.encode()
 
     def crypt(self, data):
+        print("**************")
+        print(data)
         return crypt(data, self.public_pem)
 
     def decrypt(self, data):
@@ -111,3 +118,10 @@ def decrypt(data: bytes, private_pem: bytes):
 
     file_out.seek(0)
     return file_out.read().decode()
+
+
+def decrypt_offline(encrypted_key: str) -> Dict:
+    key = RSA.importKey(privkey)
+    cipher = PKCS1_OAEP.new(key, hashAlgo=SHA256)
+    decrypted_data = cipher.decrypt(base64.b64decode(encrypted_key))
+    return json.loads(decrypted_data)
