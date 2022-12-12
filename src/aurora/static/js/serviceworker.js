@@ -37,8 +37,7 @@ let externalAssets = [
     "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js",
     "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css",
     "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/2.3.1/jsencrypt.min.js"
+    "https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"
 ];
 
 let imageAssets = [];

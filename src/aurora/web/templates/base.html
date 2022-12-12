@@ -103,7 +103,7 @@ const synchronizeRegistrationData = () => {
     fetch(`${url}get_pwa_enabled/`)
     .then(fetchResponse => fetchResponse.json())
     .then(response => {
-        const {slug, version, publicKey} = response
+        const {slug, version, publicKey, optionsSets} = response
         const searchedUrl = `/en-us/register/${slug}/${version}/`;
 
         caches.open("internalCache-1").then(cache => {
@@ -116,7 +116,7 @@ const synchronizeRegistrationData = () => {
                 })
             })
             .then(() => {
-                cache.add(searchedUrl)
+                cache.addAll([searchedUrl, ...optionsSets])
                 .then(() => console.log("Version of pwa-enabled registration synchronized"))
                 .then(() => {
                     localStorage.setItem("publicKey", publicKey);
@@ -133,7 +133,6 @@ const prepareFormData = dataObj => {
   const dataForm = new FormData();
 
   Object.keys(dataObj).map(key => {
-    console.log(key, typeof dataObj[key]);
     dataForm.append(key, dataObj[key])
   });
   return dataForm;
@@ -160,7 +159,9 @@ const loopOverDB = () => {
             delete record.id;
             delete record.url;
 
-            const dataForm = prepareFormData(record);
+            const dataForm = new FormData();
+            dataForm.append("encryptedData", record.formDict);
+
             const xhr = sendData(url, dataForm);
 
             xhr.addEventListener('load', () => {
@@ -181,7 +182,7 @@ const clearFormsDB = () => {
 
     const objectStoreRequest = objectStore.clear();
     objectStoreRequest.addEventListener("success", () => {
-        console.log("Indexeddb forms cleared")
+        console.log("Indexeddb forms cleared");
     });
 }
 

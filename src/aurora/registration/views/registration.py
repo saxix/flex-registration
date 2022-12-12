@@ -5,7 +5,6 @@ from functools import wraps
 from hashlib import md5
 
 import sentry_sdk
-from aurora.core.fields import AjaxSelectField
 from constance import config
 from django.conf import settings
 from django.contrib import messages
@@ -26,8 +25,9 @@ from django.views.generic.edit import FormView
 from aurora.core.utils import get_etag, get_qrcode, has_token, never_ever_cache
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
-from aurora.registration.forms import RegistrationForm
 from aurora.state import state
+
+from aurora.core.crypto import decrypt_offline
 
 logger = logging.getLogger(__name__)
 
@@ -207,11 +207,24 @@ class RegisterView(RegistrationMixin, FormView):
         except ValidationError:
             self.errors.append(ValidationError(_(self.registration.unique_field_error)))
             return False
-
         return True
 
     @check_access
     def post(self, request, *args, **kwargs):
+        slug = request.resolver_match.kwargs.get("slug")
+        registration = Registration.objects.filter(slug=slug).first()
+        if registration and registration.is_pwa_enabled:
+            encrypted_data = request.POST.get("encryptedData")
+            if encrypted_data:
+
+                decrypted_data = decrypt_offline(encrypted_data)
+
+                form = self.get_form()
+                form.cleaned_data = decrypted_data
+                is_valid = self.validate(form.cleaned_data)
+                if is_valid:
+                    return self.form_valid(form, {})
+
         form = self.get_form()
         formsets = self.get_formsets()
         self.errors = []
@@ -320,5 +333,6 @@ def get_pwa_enabled(request):
     return JsonResponse({
         "slug": getattr(register_obj, "slug", None),
         "version": getattr(register_obj, "version", None),
-        "publicKey": getattr(register_obj, "public_key", None)
+        "publicKey": getattr(register_obj, "public_key", None),
+        "optionsSets": register_obj.option_set_links
     })

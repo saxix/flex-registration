@@ -247,6 +247,12 @@ class Record(models.Model):
             # return json.loads(decrypt(self.storage, private_key))
             files = json.loads(decrypt(self.files, private_key))
             fields = json.loads(decrypt(base64.b64decode(self.fields), private_key))
+
+            print("*********")
+            print(files)
+            print(fields)
+            print(router.compress(fields, files))
+
             return router.compress(fields, files)
         elif secret != undefined:
             files = json.loads(Crypto(secret).decrypt(self.files))
