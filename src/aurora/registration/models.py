@@ -18,7 +18,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from natural_keys import NaturalKeyModel
 
-from aurora.core.crypto import Crypto, crypt, decrypt
+from aurora.core.crypto import Crypto, crypt, decrypt, decrypt_offline
 from aurora.core.models import FlexForm, Validator
 from aurora.core.utils import (
     cache_aware_reverse,
@@ -163,6 +163,10 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     def add_record(self, fields_data):
         fields, files = router.decompress(fields_data)
 
+        print("DATA")
+        print(fields)
+        # print(str(files)[:100])
+
         if self.public_key:
             kwargs = {
                 # "storage": self.encrypt(fields_data),
@@ -249,25 +253,24 @@ class Record(models.Model):
     index2 = models.CharField(null=True, blank=True, max_length=255)
     index3 = models.CharField(null=True, blank=True, max_length=255)
 
+    is_offline = models.BooleanField(default=False)
+
     class Meta:
         unique_together = ("registration", "unique_field")
 
     def decrypt(self, private_key=undefined, secret=undefined):
-        if private_key != undefined:
-            # return json.loads(decrypt(self.storage, private_key))
-            files = json.loads(decrypt(self.files, private_key))
-            fields = json.loads(decrypt(base64.b64decode(self.fields), private_key))
-
-            print("*********")
-            print(files)
-            print(fields)
-            print(router.compress(fields, files))
-
-            return router.compress(fields, files)
-        elif secret != undefined:
-            files = json.loads(Crypto(secret).decrypt(self.files))
-            fields = json.loads(Crypto(secret).decrypt(self.fields))
-            return router.compress(fields, files)
+        if self.is_offline:
+            fields = json.loads(decrypt_offline(self.fields, private_key))
+            return router.compress(fields, {})
+        else:
+            if private_key != undefined:
+                files = json.loads(decrypt(self.files, private_key))
+                fields = json.loads(decrypt(base64.b64decode(self.fields), private_key))
+                return router.compress(fields, files)
+            elif secret != undefined:
+                files = json.loads(Crypto(secret).decrypt(self.files))
+                fields = json.loads(Crypto(secret).decrypt(self.fields))
+                return router.compress(fields, files)
 
     @property
     def unicef_id(self):

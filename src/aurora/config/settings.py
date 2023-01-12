@@ -640,3 +640,6 @@ CONCURRENCY_ENABLED = False
 
 STRATEGY_CLASSLOADER = "aurora.core.registry.classloader"
 MIGRATION_LOCK_KEY = env("MIGRATION_LOCK_KEY")
+
+# for offline forms
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 10

@@ -41,6 +41,8 @@
     {% include "smart/_form.html" %}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js" integrity="sha512-95iy0RZIbw3H/FgfAj2wnCQJlzFQ+eaSfUeV/l8WVyGHKSRMzm3M/O+85j9ba/HFphkijrCTDjcuDX0BL2lthA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
 <script type="text/javascript">
 let db;
 
@@ -65,6 +67,30 @@ function initDB() {
 initDB();
 
 
+const generateRandomString = () => {
+    let result = '';
+    let characters = '0123456789';
+    let charactersLength = characters.length;
+
+    for (let i = 0; i < 16; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+
+function readFile(inputFile) {
+  console.log("reading file...");
+  const file = inputFile[0];
+  console.log(file);
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    console.log(reader.result);
+  }
+
+  reader.readAsDataURL(file);
+}
+
 const createObjectData = formElement => {
     let formData = {};
 
@@ -79,7 +105,7 @@ const createObjectData = formElement => {
                     formData[el.name] = el.value;
                 }
             } else if (el.type === "file") {
-                formData[el.name] = el.files[0];
+                {#formData[el.name] = readFile(el.files[0]);#}
             } else {
                 formData[el.name] =  el.value;
             }
@@ -92,6 +118,21 @@ const createObjectData = formElement => {
 
 const button = document.querySelector('input[type=submit]');
 
+let dataFiles = {};
+const fileInputs = document.querySelectorAll('input[type=file]');
+fileInputs.forEach(fileInput => {
+    fileInput.addEventListener("change", e => {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.addEventListener("load", () => {
+            dataFiles[fileInput.name] = reader.result;
+        });
+
+        reader.readAsDataURL(file);
+    });
+});
+
 if (button && !navigator.onLine) {
   button.addEventListener("click", event => {
       console.log("Transferring to db");
@@ -99,19 +140,31 @@ if (button && !navigator.onLine) {
 
       const formElement = document.forms.registrationForm;
       if (formElement) {
-        let dataForm = createObjectData(formElement);
+        let dataFields = createObjectData(formElement);
+        let dataForm = Object.assign({}, dataFields, dataFiles);
+        console.log("dataForm", dataForm);
 
         const publicKey = localStorage.getItem("publicKey");
 
         if (publicKey) {
             const pubKey = forge.pki.publicKeyFromPem(publicKey);
-            const encrypted = pubKey.encrypt(JSON.stringify(dataForm), "RSA-OAEP", {
+            const randomString = generateRandomString();
+
+            const encryptedSymmetricKey = pubKey.encrypt(JSON.stringify(randomString), "RSA-OAEP", {
                 md: forge.md.sha256.create(),
                 mgf1: forge.mgf1.create()
             });
 
-            const encryptedBase64 = forge.util.encode64(encrypted);
-            dataForm = {"formDict": encryptedBase64};
+            const encryptedBase64 = forge.util.encode64(encryptedSymmetricKey);
+
+            let derivedKey = CryptoJS.enc.Base64.parse("LefjQ2pEXmiy/nNZvEJ43i8hJuaAnzbA1Cbn1hOuAgA=")
+            let encryptedData = CryptoJS.AES.encrypt(
+                JSON.stringify(dataForm),
+                derivedKey,
+                {iv: CryptoJS.enc.Utf8.parse(randomString), mode: CryptoJS.mode.CBC}
+            ).toString();
+
+            dataForm = {"formDict": encryptedBase64 + encryptedData};
         }
 
         dataForm["url"] = window.location.pathname;

@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.forms import forms
-from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils import translation
@@ -26,8 +26,8 @@ from aurora.core.utils import get_etag, get_qrcode, has_token, never_ever_cache
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
+from aurora.core.utils import total_size
 
-from aurora.core.crypto import decrypt_offline
 
 logger = logging.getLogger(__name__)
 
@@ -224,14 +224,14 @@ class RegisterView(RegistrationMixin, FormView):
         if registration and registration.is_pwa_enabled:
             encrypted_data = request.POST.get("encryptedData")
             if encrypted_data:
+                kwargs = {
+                    "fields": encrypted_data,
+                    "size": total_size(encrypted_data),
+                    "is_offline": True
+                }
 
-                decrypted_data = decrypt_offline(encrypted_data)
-
-                form = self.get_form()
-                form.cleaned_data = decrypted_data
-                is_valid = self.validate(form.cleaned_data)
-                if is_valid:
-                    return self.form_valid(form, {})
+                Record.objects.create(registration=registration, **kwargs)
+                return HttpResponse()
 
         form = self.get_form()
         formsets = self.get_formsets()
