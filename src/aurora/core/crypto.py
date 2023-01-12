@@ -2,11 +2,12 @@ import base64
 import io
 import json
 import logging
-from typing import Dict
+from typing import Dict, Union
 
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Util.Padding import unpad
 from cryptography.fernet import Fernet
 from django.conf import settings
 
@@ -68,8 +69,6 @@ class RSACrypto:
         self.private_pem = private_pem.encode()
 
     def crypt(self, data):
-        print("**************")
-        print(data)
         return crypt(data, self.public_pem)
 
     def decrypt(self, data):
@@ -85,6 +84,9 @@ def get_public_keys(pem):
 
 
 def crypt(data: str, public_pem: bytes) -> bytes:
+    print("CRYPT")
+    print(data)
+
     data = data.encode("utf-8")
     file_out = io.BytesIO()
     file_in = io.BytesIO(data)
@@ -120,8 +122,17 @@ def decrypt(data: bytes, private_pem: bytes):
     return file_out.read().decode()
 
 
-def decrypt_offline(encrypted_key: str) -> Dict:
-    key = RSA.importKey(privkey)
+def decrypt_offline(data: str, private_pem: bytes) -> Union[str, bytes]:
+    encrypted_symmetric_key = data[:344]
+    form_fields = data[344:]
+
+    key = RSA.importKey(private_pem)
     cipher = PKCS1_OAEP.new(key, hashAlgo=SHA256)
-    decrypted_data = cipher.decrypt(base64.b64decode(encrypted_key))
-    return json.loads(decrypted_data)
+    decrypted_symmetric_key = json.loads(cipher.decrypt(base64.b64decode(encrypted_symmetric_key)))
+    enc = base64.b64decode(form_fields)
+
+    derived_key = base64.b64decode("LefjQ2pEXmiy/nNZvEJ43i8hJuaAnzbA1Cbn1hOuAgA=")
+    cipher = AES.new(derived_key, AES.MODE_CBC, decrypted_symmetric_key.encode('utf-8'))
+
+    decrypted_data = unpad(cipher.decrypt(enc), 16)
+    return decrypted_data
