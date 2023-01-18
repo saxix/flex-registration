@@ -78,19 +78,6 @@ const generateRandomString = () => {
     return result;
 }
 
-function readFile(inputFile) {
-  console.log("reading file...");
-  const file = inputFile[0];
-  console.log(file);
-  const reader = new FileReader();
-
-  reader.onload = () => {
-    console.log(reader.result);
-  }
-
-  reader.readAsDataURL(file);
-}
-
 const createObjectData = formElement => {
     let formData = {};
 
@@ -104,8 +91,6 @@ const createObjectData = formElement => {
                 if (el.checked) {
                     formData[el.name] = el.value;
                 }
-            } else if (el.type === "file") {
-                {#formData[el.name] = readFile(el.files[0]);#}
             } else {
                 formData[el.name] =  el.value;
             }
@@ -114,7 +99,6 @@ const createObjectData = formElement => {
 
     return formData;
 }
-
 
 const button = document.querySelector('input[type=submit]');
 
@@ -142,7 +126,6 @@ if (button && !navigator.onLine) {
       if (formElement) {
         let dataFields = createObjectData(formElement);
         let dataForm = Object.assign({}, dataFields, dataFiles);
-        console.log("dataForm", dataForm);
 
         const publicKey = localStorage.getItem("publicKey");
 

@@ -84,9 +84,6 @@ def get_public_keys(pem):
 
 
 def crypt(data: str, public_pem: bytes) -> bytes:
-    print("CRYPT")
-    print(data)
-
     data = data.encode("utf-8")
     file_out = io.BytesIO()
     file_in = io.BytesIO(data)
