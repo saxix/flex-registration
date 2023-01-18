@@ -158,6 +158,12 @@ WSGI_APPLICATION = "aurora.config.wsgi.application"
 
 main_conn = env.db("DATABASE_URL")
 main_conn["CONN_MAX_AGE"] = 60
+main_conn.update(
+    {
+        "OPTIONS": {"options": "-c statement_timeout=10000"}
+    }
+)
+
 ro_conn = main_conn.copy()
 ro_conn.update(
     {

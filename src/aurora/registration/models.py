@@ -153,10 +153,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     def add_record(self, fields_data):
         fields, files = router.decompress(fields_data)
 
-        print("DATA")
-        print(fields)
-        # print(str(files)[:100])
-
         if self.public_key:
             kwargs = {
                 # "storage": self.encrypt(fields_data),
@@ -244,6 +240,13 @@ class Record(models.Model):
     index3 = models.CharField(null=True, blank=True, max_length=255)
 
     is_offline = models.BooleanField(default=False)
+
+    @property
+    def fields_data(self):
+        if self.is_offline and len(self.fields) > 12_000:
+            return "String too long to display..."
+        else:
+            return self.fields
 
     class Meta:
         unique_together = ("registration", "unique_field")
