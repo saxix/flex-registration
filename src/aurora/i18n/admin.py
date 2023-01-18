@@ -18,7 +18,7 @@ from django.utils import translation
 from django.utils.translation import get_language
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ..admin.mixin import LoadDumpMixin
+from ..administration.mixin import LoadDumpMixin
 from ..core.models import FlexForm
 from ..state import state
 from .engine import translator

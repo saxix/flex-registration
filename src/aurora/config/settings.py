@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "reversion_compare",  # https://github.com/jedie/django-reversion-compare
     # ---
     # "aurora.admin.apps.AuroraAdminUIConfig",
-    "aurora.admin.apps.AuroraAdminConfig",
+    "aurora.administration.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
     "smart_admin.apps.SmartAuthConfig",
@@ -88,7 +88,6 @@ MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
     "aurora.web.middlewares.thread_local.ThreadLocalMiddleware",
     "aurora.web.middlewares.sentry.SentryMiddleware",
-    "aurora.web.middlewares.security.SecurityHeadersMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "aurora.web.middlewares.maintenance.MaintenanceMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -107,6 +106,7 @@ MIDDLEWARE = [
     # "django.middleware.cache.FetchFromCacheMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 if env("WHITENOISE"):
     MIDDLEWARE += [
@@ -214,18 +214,21 @@ else:
 
 LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
+
 LANGUAGES = (
-    ("uk-ua", "український | Ukrainian"),
     ("en-us", "English | English"),
+    ("uk-ua", "український | Ukrainian"),
     ("pl-pl", "Polskie | Polish"),
+    ("ar-ae", " | عربي" + "Arabic"),
     # ("de-de", "Deutsch"),
-    # ("es-es", "Español"),
-    # ("fr-fr", "Français"),
+    ("es-es", "Español | Spanish"),
+    ("fr-fr", "Français | French"),
     # ("it-it", "Italiano"),
     # ("ro-ro", "Română"),
-    # ("pt-pt", "Português"),
+    ("pt-pt", "Português"),
     # ("pl-pl", "Pусский"),
-    # ('ta-ta', 'தமிழ்'),  # Tamil
+    ("ta-ta", "தமிழ் | Tamil"),
+    ("si-si", "සිංහල | Sinhala"),
     # ('hi-hi', 'हिंदी'),  # Hindi
 )
 LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
@@ -305,30 +308,19 @@ LOGGING = {
             "class": "logging.NullHandler",
         },
     },
-    "": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "environ": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-        "propagate": False,
-    },
-    "flags": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "django": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "social_core": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
-    },
-    "aurora": {
-        "handlers": ["console"],
-        "level": env("LOG_LEVEL"),
+    "loggers": {
+        "flags": {
+            "handlers": ["console"],
+            "level": "ERROR",
+        },
+        "django": {
+            "handlers": ["console"],
+            "level": "ERROR",
+        },
+        "aurora": {
+            "handlers": ["console"],
+            "level": env("LOG_LEVEL"),
+        },
     },
 }
 
@@ -633,8 +625,13 @@ ADD_REVERSION_ADMIN = True
 REVERSION_COMPARE_FOREIGN_OBJECTS_AS_ID = False
 REVERSION_COMPARE_IGNORE_NOT_REGISTERED = False
 
-ADMIN_SYNC_CONFIG = "admin_sync.conf.DjangoConstance"
+ADMIN_SYNC_CONFIG = env("ADMIN_SYNC_CONFIG")
 ADMIN_SYNC_RESPONSE_HEADER = None
+# these are actually used only in local development
+ADMIN_SYNC_REMOTE_SERVER = env("ADMIN_SYNC_REMOTE_SERVER", default="")
+ADMIN_SYNC_REMOTE_ADMIN_URL = env("ADMIN_SYNC_REMOTE_ADMIN_URL", default="")
+ADMIN_SYNC_LOCAL_ADMIN_URL = env("ADMIN_SYNC_LOCAL_ADMIN_URL", default="")
+# ADMIN_SYNC_USE_REVERSION=
 
 SILENCED_SYSTEM_CHECKS = ["debug_toolbar.W006", "urls.W005", "admin_extra_buttons.PERM"]
 

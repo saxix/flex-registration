@@ -4,7 +4,6 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import include, path, re_path
-from django.views.i18n import set_language
 
 from aurora.web.views.site import error_404
 from aurora.core.views import service_worker
@@ -21,7 +20,6 @@ urlpatterns = [
     path("charts/", include("aurora.counters.urls", namespace="charts")),
     path("", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
-    path("i18n/setlang/", set_language, name="set_language"),
     path("i18n/", include("aurora.i18n.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
     path(r'serviceworker.js', service_worker, name='serviceworker'),

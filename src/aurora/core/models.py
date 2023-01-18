@@ -102,6 +102,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     draft = models.BooleanField(
         default=False, blank=True, help_text="Testing purposes: draft validator are enabled only for staff users."
     )
+    _natural_key = ["name"]
 
     def __str__(self):
         return f"{self.label} ({self.target})"
@@ -452,6 +453,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):
+            widget_kwargs = {}
             field_type = self.field_type.custom.base_type
             kwargs = self.field_type.custom.attrs.copy()
             if self.validator:
@@ -497,12 +499,12 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         return kwargs
 
     def get_instance(self):
-        if issubclass(self.field_type, CustomFieldMixin):
-            field_type = self.field_type.custom.base_type
-        else:
-            field_type = self.field_type
-        kwargs = self.get_field_kwargs()
         try:
+            if issubclass(self.field_type, CustomFieldMixin):
+                field_type = self.field_type.custom.base_type
+            else:
+                field_type = self.field_type
+            kwargs = self.get_field_kwargs()
             kwargs.setdefault("flex_field", self)
             tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
             fld = tt(**kwargs)
@@ -512,12 +514,14 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         return fld
 
     def clean(self):
-        try:
-            # dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
-            # dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
-            self.get_instance()
-        except Exception as e:
-            raise ValidationError(e)
+        if self.field_type:
+            try:
+                # dict_setdefault(self.advanced, self.FLEX_FIELD_DEFAULT_ATTRS)
+                # dict_setdefault(self.advanced, {"kwargs": FIELD_KWARGS.get(self.field_type, {})})
+                self.get_instance()
+            except Exception as e:
+                logger.exception(e)
+                raise ValidationError(e)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.name:
@@ -556,6 +560,7 @@ class OptionSet(NaturalKeyModel, models.Model):
     languages = models.CharField(
         max_length=255, default="-;-;", blank=True, null=True, help_text="language code of each column."
     )
+    _natural_key = ["name"]
 
     objects = OptionSetManager()
 

@@ -4,7 +4,7 @@ from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ..admin.mixin import LoadDumpMixin
+from ..administration.mixin import LoadDumpMixin
 from .models import RegistrationRole
 
 logger = logging.getLogger(__name__)

@@ -26,7 +26,7 @@ class Template(NaturalKeyModel, models.Model):
     sites = models.ManyToManyField(Site, verbose_name=_("sites"), blank=True)
     creation_date = models.DateTimeField(_("creation date"), default=now)
     last_changed = models.DateTimeField(_("last changed"), default=now)
-
+    active = models.BooleanField(default=True, blank=True)
     objects = models.Manager()
     on_site = CurrentSiteManager("sites")
 
