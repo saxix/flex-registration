@@ -5,6 +5,7 @@ https://support.google.com/webmasters/answer/189077?hl=en
 """
 
 from django import template
+from django.urls import NoReverseMatch
 from django.urls.base import resolve
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
@@ -23,12 +24,16 @@ def translate_url(context, lang, view_name=None, *args, **kwargs):
     @param view_name: Which view to get url from, current if not set.
     """
     assert "request" in context, "translate_url needs request context"
-    if view_name is None:
-        reverse_match = resolve(context["request"].path)
-        view_name = reverse_match.view_name
-        args = reverse_match.args
-        kwargs = reverse_match.kwargs
-    return reverse(view_name, lang=lang, *args, **kwargs)
+    try:
+        kwargs["lang"] = lang
+        if view_name is None:
+            reverse_match = resolve(context["request"].path)
+            view_name = reverse_match.view_name
+            args = reverse_match.args
+            kwargs = reverse_match.kwargs
+        return reverse(view_name, *args, **kwargs)
+    except NoReverseMatch:
+        return ""
 
 
 @register.simple_tag(takes_context=True)

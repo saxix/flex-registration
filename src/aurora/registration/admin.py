@@ -17,12 +17,15 @@ from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
+from django.template import Template
+from django.template.loader import select_template
 from django.urls import reverse, translate_url
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
+from .protocol import AuroraSyncRegistrationProtocol
 from ..core.admin import ConcurrencyVersionAdmin
 from ..core.models import FormSet
 from ..core.utils import (
@@ -32,6 +35,7 @@ from ..core.utils import (
     is_root,
     namify,
 )
+from ..i18n.forms import TemplateForm
 from .forms import CloneForm, RegistrationForm
 from .models import Record, Registration
 from .paginator import LargeTablePaginator
@@ -103,6 +107,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         ("Advanced", {"fields": ("advanced",)}),
         ("Others", {"fields": ("__others__",)}),
     ]
+    protocol_class = AuroraSyncRegistrationProtocol
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -114,6 +119,9 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         return bool(obj.public_key) or obj.encrypt_data
 
     secure.boolean = True
+
+    def admin_sync_show_inspect(self):
+        return True
 
     @property
     def media(self):
@@ -184,7 +192,13 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
     @choice(order=900, change_list=False)
     def admin(self, button):
-        button.choices = [self.james_editor, self.inspect, self.clone, self.create_translation]
+        button.choices = [
+            self.james_editor,
+            self.inspect,
+            self.clone,
+            self.create_translation,
+            self.create_custom_template,
+        ]
         return button
 
     @view()
@@ -259,6 +273,46 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             form = CloneForm()
             ctx["form"] = form
         return render(request, "admin/registration/registration/clone.html", ctx)
+
+    @view()
+    def create_custom_template(self, request, pk):
+        ctx = self.get_common_context(
+            request,
+            pk,
+            media=self.media,
+            title="Create Custom Template",
+        )
+        if request.method == "POST":
+            obj = ctx["original"]
+            form = TemplateForm(request.POST)
+            if form.is_valid():
+                from dbtemplates.models import Template as DbTemplate
+
+                lang = form.cleaned_data["locale"]
+                source: Template = select_template(
+                    [
+                        f"registration/{obj.locale}/{obj.slug}.html",
+                        f"registration/{obj.slug}.html",
+                        "registration/register.html",
+                    ]
+                )
+                if lang == "-":
+                    name = f"registration/{obj.slug}.html"
+                else:
+                    name = f"{lang}/registration/{obj.slug}.html"
+                if hasattr(source, "template"):
+                    content = source.template.source
+                    source_name = source.template.name
+                else:
+                    content = ""
+                tpl, created = DbTemplate.objects.get_or_create(name=name, defaults={"content": content})
+                ctx["custom_template"] = tpl
+                ctx["created"] = created
+                ctx["source"] = source_name
+
+        else:
+            ctx["form"] = TemplateForm()
+        return render(request, "admin/registration/registration/create_template.html", ctx)
 
     @view()
     def create_translation(self, request, pk):

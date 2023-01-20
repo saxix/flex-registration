@@ -8,6 +8,8 @@ from pathlib import Path
 import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
+
+from admin_sync.mixin import SyncMixin
 from admin_sync.utils import is_local
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.combo import ChoicesFieldComboFilter
@@ -28,7 +30,7 @@ from requests.auth import HTTPBasicAuth
 from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ..admin.mixin import LoadDumpMixin
+from ..administration.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
 from .forms import Select2Widget, ValidatorForm
 from .models import (
@@ -40,7 +42,7 @@ from .models import (
     OptionSet,
     Validator,
 )
-from .utils import dict_setdefault, render
+from .utils import dict_setdefault, render, namify
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +50,12 @@ cache = caches["default"]
 
 
 class ConcurrencyVersionAdmin(CompareVersionAdmin):
+    change_list_template = "admin_extra_buttons/change_list.html"
+
+    @button(label="Recover deleted")
+    def _recoverlist_view(self, request):
+        return super().recoverlist_view(request)
+
     def reversion_register(self, model, **options):
         options["exclude"] = ("version",)
         super().reversion_register(model, **options)
@@ -76,7 +84,7 @@ class ValidatorTestForm(forms.Form):
 
 
 @register(Validator)
-class ValidatorAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
+class ValidatorAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     form = ValidatorForm
     list_editable = ("trace", "active", "draft")
     list_display = ("label", "name", "target", "used_by", "trace", "active", "draft")
@@ -140,7 +148,7 @@ class ValidatorAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
 
 
 @register(FormSet)
-class FormSetAdmin(LoadDumpMixin, SmartModelAdmin):
+class FormSetAdmin(LoadDumpMixin, SyncMixin, SmartModelAdmin):
     list_display = (
         "name",
         "title",
@@ -185,8 +193,11 @@ class FlexFormFieldForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # if self.instance and self.instance.pk:
-        self.fields["name"].widget.attrs = {"readonly": True, "style": "background-color:#f8f8f8;border:none"}
+        self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
+
+    def clean_name(self):
+        if not self.cleaned_data.get("name") and self.cleaned_data.get("label"):
+            self.cleaned_data["name"] = namify(self.cleaned_data["label"])[:100]
 
 
 class FlexFormFieldForm2(forms.ModelForm):
@@ -202,7 +213,7 @@ class FlexFormFieldForm2(forms.ModelForm):
 
 
 @register(FlexFormField)
-class FlexFormFieldAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, OrderableAdmin, SmartModelAdmin):
+class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
     list_display = ("label", "name", "flex_form", "form_type", "required", "enabled")
     list_editable = ["required", "enabled"]
@@ -307,7 +318,7 @@ class SyncForm(SyncConfigForm):
 
 
 @register(FlexForm)
-class FlexFormAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
+class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
     inlines = [FlexFormFieldInline, FormSetInline]
     list_display = ("name", "validator", "used_by", "childs", "parents")
