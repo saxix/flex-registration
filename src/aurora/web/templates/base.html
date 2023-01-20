@@ -49,7 +49,8 @@ let db;
 
 const state = {
     online: "ONLINE",
-    offline: "OFFLINE"
+    offline: "OFFLINE",
+    isAuthorized: false
 }
 
 const registerServiceWorker = () => {
@@ -128,6 +129,29 @@ const synchronizeRegistrationData = () => {
     .catch(err => console.log(`Sorry, we couldn't synchronize data because of this error: ${err}`));
 };
 
+const getCookie = name => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+
+async function authorizeCookie(url = "") {
+    const response = await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify(getCookie("reg_id"))
+    })
+
+    return response.json();
+}
+
 
 const prepareFormData = dataObj => {
   const dataForm = new FormData();
@@ -155,6 +179,7 @@ const loopOverDB = () => {
         if (cursor) {
             let record = cursor.value;
             const url = record.url;
+            const recordId = record.id;
 
             delete record.id;
             delete record.url;
@@ -166,6 +191,7 @@ const loopOverDB = () => {
 
             xhr.addEventListener('load', () => {
               console.log("Data sent successfully to sever.");
+              removeForm(recordId);
             });
 
             xhr.addEventListener('error', () => {
@@ -175,6 +201,13 @@ const loopOverDB = () => {
             cursor.continue();
         }
     });
+}
+
+const removeForm = key => {
+    const request = db.transaction(['cachedForms'], 'readwrite').objectStore('cachedForms').delete(key);
+
+    request.onsuccess = () => console.log(`Form deleted, id: ${key}`);
+    request.onerror = err => console.error(`Error to delete form: ${err}`)
 }
 
 const clearFormsDB = () => {
@@ -189,15 +222,12 @@ const clearFormsDB = () => {
 window.addEventListener("online", () => {
     console.log(`Application is ${state.online}`);
 
+    {#authorizeCookie("http://localhost:8000/en-us/authorize_cookie/")#}
     initDB();
     synchronizeRegistrationData();
     setTimeout(() => {
         loopOverDB();
-    }, 2500);
-    setTimeout(() => {
-        {#clearFormsDB();#}
-    }, 5000)
-
+    }, 3000);
 });
 
 window.addEventListener("offline", () => {

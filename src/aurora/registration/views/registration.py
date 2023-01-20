@@ -1,9 +1,9 @@
+import json
 import logging
 import os
 import time
 from functools import wraps
 from hashlib import md5
-
 import sentry_sdk
 from constance import config
 from django.conf import settings
@@ -336,3 +336,13 @@ def get_pwa_enabled(request):
         "publicKey": getattr(register_obj, "public_key", None),
         "optionsSets": register_obj.option_set_links
     })
+
+
+def authorize_cookie(request):
+    import base64
+    key = json.loads(request.body)
+    print("*"*10)
+    print(key)
+    decoded = base64.urlsafe_b64decode(key)
+    print(decoded)
+    return JsonResponse({"authorized": True})
