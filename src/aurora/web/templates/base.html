@@ -219,20 +219,35 @@ const clearFormsDB = () => {
     });
 }
 
+const processOnline = () => {
+    authorizeCookie("http://localhost:8000/en-us/authorize_cookie/").then(response => {
+        state.isAuthorized = response.authorized;
+    }).then(() => {
+        if (state.isAuthorized === true) {
+            console.log("User authorized, starting to send forms");
+            initDB();
+            synchronizeRegistrationData();
+            setTimeout(() => {
+                loopOverDB();
+            }, 5000);
+        } else {
+            console.log("User not authorized to send forms...");
+        }
+    });
+
+
+}
+
 window.addEventListener("online", () => {
     console.log(`Application is ${state.online}`);
-
-    {#authorizeCookie("http://localhost:8000/en-us/authorize_cookie/")#}
-    initDB();
-    synchronizeRegistrationData();
-    setTimeout(() => {
-        loopOverDB();
-    }, 3000);
+    processOnline();
 });
 
 window.addEventListener("offline", () => {
     console.log(`Application is ${state.offline}`);
 });
+
+processOnline();
 
 </script>
 

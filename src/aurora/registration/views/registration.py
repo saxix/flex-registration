@@ -4,8 +4,12 @@ import os
 import time
 from functools import wraps
 from hashlib import md5
+from json import JSONDecodeError
+
 import sentry_sdk
 from constance import config
+from django.core import signing
+from django.contrib.auth.models import User
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -342,15 +346,22 @@ def get_pwa_enabled(request):
         "slug": getattr(register_obj, "slug", None),
         "version": getattr(register_obj, "version", None),
         "publicKey": getattr(register_obj, "public_key", None),
-        "optionsSets": register_obj.option_set_links
+        "optionsSets": getattr(register_obj, "option_set_links", None)
     })
 
 
+@csrf_exempt
 def authorize_cookie(request):
-    import base64
-    key = json.loads(request.body)
-    print("*"*10)
-    print(key)
-    decoded = base64.urlsafe_b64decode(key)
-    print(decoded)
-    return JsonResponse({"authorized": True})
+    try:
+        decoded_key = signing.loads(
+            json.loads(request.body),
+            max_age=settings.SESSION_COOKIE_AGE,
+            salt='django.contrib.sessions.backends.signed_cookies'
+        )
+        if User.objects.filter(id=int(decoded_key.get("_auth_user_id"))).exists():
+            return JsonResponse({"authorized": True})
+        else:
+            return JsonResponse({"authorized": False})
+    except (signing.BadSignature, JSONDecodeError):
+        logger.info("PWA Cookie was not authorized")
+        return JsonResponse({"authorized": False})
