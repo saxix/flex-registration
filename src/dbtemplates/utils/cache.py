@@ -1,5 +1,5 @@
-from django.core import signals
 from django.contrib.sites.models import Site
+from django.core import signals
 from django.template.defaultfilters import slugify
 
 from dbtemplates.conf import settings

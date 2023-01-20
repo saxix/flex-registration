@@ -1,4 +1,4 @@
-from django.core.management.base import CommandError, BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from dbtemplates.models import Template
 from dbtemplates.utils.template import check_template_syntax

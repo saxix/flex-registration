@@ -10,6 +10,7 @@ from django.urls.base import resolve
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 
+from aurora.core.utils import cache_aware_url
 from aurora.i18n.hreflang import get_hreflang_info, languages, reverse
 
 register = template.Library()
@@ -31,7 +32,7 @@ def translate_url(context, lang, view_name=None, *args, **kwargs):
             view_name = reverse_match.view_name
             args = reverse_match.args
             kwargs = reverse_match.kwargs
-        return reverse(view_name, *args, **kwargs)
+        return cache_aware_url(reverse(view_name, *args, **kwargs))
     except NoReverseMatch:
         return ""
 

@@ -24,5 +24,13 @@ class RegistrationViewSet(SmartViewSet):
 
     @action(detail=True, permission_classes=[AllowAny], authentication_classes=[])
     def version(self, request, slug=None):
-        reg = self.get_object()
-        return Response({"version": reg.version})
+        reg: Registration = self.get_object()
+        return Response(
+            {
+                "version": reg.version,
+                "url": reg.get_absolute_url(),
+                "auth": request.user.is_authenticated,
+                "active": reg.active,
+                "protected": reg.protected,
+            }
+        )

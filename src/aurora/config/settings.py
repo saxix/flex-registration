@@ -31,7 +31,7 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 DJANGO_ADMIN_URL = env("DJANGO_ADMIN_URL")
 
 # Application definition
-SITE_ID = 1
+SITE_ID = env("SITE_ID")
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -267,7 +267,7 @@ AUTHENTICATION_BACKENDS = [
     "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
-CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME")
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_COOKIE_SECURE = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -508,7 +508,6 @@ DEBUG_TOOLBAR_PANELS = [
 
 ROOT_TOKEN = env("ROOT_TOKEN")
 CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
-
 # Azure login
 
 # Social Auth settings.

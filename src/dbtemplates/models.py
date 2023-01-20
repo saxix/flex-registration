@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-from natural_keys import NaturalKeyModel
-
-from dbtemplates.conf import settings
-from dbtemplates.utils.cache import add_template_to_cache, remove_cached_template
-from dbtemplates.utils.template import get_template_source
 from django.contrib.sites.managers import CurrentSiteManager
 from django.contrib.sites.models import Site
 from django.db import models
 from django.db.models import signals
 from django.template import TemplateDoesNotExist
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
+from natural_keys import NaturalKeyModel
+
+from dbtemplates.conf import settings
+from dbtemplates.utils.cache import add_template_to_cache, remove_cached_template
+from dbtemplates.utils.template import get_template_source
 
 
 class Template(NaturalKeyModel, models.Model):

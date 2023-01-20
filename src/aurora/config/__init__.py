@@ -69,6 +69,7 @@ DEFAULTS = {
     "USE_HTTPS": (bool, False),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "WHITENOISE": (bool, False),
+    "SITE_ID": (int, 1),
     # "CSP_DEFAULT_SRC": (list, ),
     # "CSP_SCRIPT_SRC": (str, None),
     # "FERNET_KEY": (str, "Nl_puP2z0-OKVNKMtPXx4jEI-ox7sKLM7CgnGT-yAug="),

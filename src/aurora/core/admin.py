@@ -8,7 +8,6 @@ from pathlib import Path
 import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
-
 from admin_sync.mixin import SyncMixin
 from admin_sync.utils import is_local
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -42,7 +41,7 @@ from .models import (
     OptionSet,
     Validator,
 )
-from .utils import dict_setdefault, render, namify
+from .utils import dict_setdefault, namify, render
 
 logger = logging.getLogger(__name__)
 

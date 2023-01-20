@@ -1,6 +1,7 @@
 import sys
-from django.core.management.base import CommandError, BaseCommand
+
 from django.contrib.sites.models import Site
+from django.core.management.base import BaseCommand, CommandError
 
 from dbtemplates.models import Template
 
