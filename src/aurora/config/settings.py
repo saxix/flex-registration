@@ -525,13 +525,6 @@ SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
     "email",
 ]
 
-SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
-    "username",
-    "first_name",
-    "last_name",
-    "email",
-]
-# SOCIAL_AUTH_POSTGRES_JSONFIELD = True
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     "aurora.core.authentication.social_details",
@@ -546,18 +539,20 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "aurora.core.authentication.user_details",
 )
-SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_USER_FIELDS = [
+SOCIAL_AUTH_USER_FIELDS = [
     "email",
     "fullname",
 ]
 
-SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
+SOCIAL_AUTH_OAUTH2_SCOPE = [
     "openid",
     "email",
     "profile",
 ]
 
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
+SOCIAL_AUTH_JWT_LEEWAY = env.int('JWT_LEEWAY', 0)
+
 # fix admin name
 LOGIN_URL = "/login/azuread-b2c-oauth2"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
