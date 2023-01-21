@@ -5,8 +5,8 @@ from rest_framework.response import Response
 
 from aurora.registration.models import Registration
 
-from .base import SmartViewSet
 from ...core.utils import get_session_id
+from .base import SmartViewSet
 
 
 class RegistrationSerializer(serializers.ModelSerializer):

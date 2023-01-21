@@ -2,7 +2,7 @@ import os
 
 from django.conf import settings
 
-from aurora.core.utils import has_token, get_session_id
+from aurora.core.utils import get_session_id, has_token
 
 
 def smart(request):

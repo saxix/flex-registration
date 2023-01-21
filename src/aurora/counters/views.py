@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
 
-from aurora.core.utils import last_day_of_month, render, get_session_id
+from aurora.core.utils import get_session_id, last_day_of_month, render
 from aurora.counters.models import Counter
 from aurora.registration.models import Registration
 

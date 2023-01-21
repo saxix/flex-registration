@@ -10,6 +10,7 @@ import sys
 import time
 import unicodedata
 from collections import deque
+from collections.abc import Mapping
 from functools import wraps
 from hashlib import md5
 from itertools import chain
@@ -443,3 +444,18 @@ def get_session_id():
     if state.request.user.is_authenticated:
         return state.request.COOKIES.get(settings.SESSION_COOKIE_NAME)
     return ""
+
+
+def flatten_dict(d, parent_key="", sep="_"):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, Mapping):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        elif isinstance(v, (list, tuple)):
+            base_key = new_key
+            for i, r in enumerate(v):
+                items.extend(flatten_dict(r, f"{base_key}{sep}{i}", sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
