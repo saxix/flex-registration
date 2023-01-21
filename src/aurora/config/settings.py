@@ -264,7 +264,7 @@ ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "aurora.security.backend.SmartBackend",
     # "django.contrib.auth.backends.ModelBackend",
-    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "social_core.backends.azuread_b2c.AzureADB2COAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME")
@@ -511,9 +511,20 @@ CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
 # Azure login
 
 # Social Auth settings.
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = env("AZURE_CLIENT_ID")
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env("AZURE_CLIENT_SECRET")
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_KEY")
+SOCIAL_AUTH_KEY = env.str("AZURE_CLIENT_KEY")
+SOCIAL_AUTH_SECRET = env.str("AZURE_CLIENT_SECRET")
+SOCIAL_AUTH_TENANT_ID = env("AZURE_TENANT_ID")
+SOCIAL_AUTH_RESOURCE = "https://graph.microsoft.com/"
+SOCIAL_AUTH_POLICY = env("AZURE_POLICY_NAME")
+SOCIAL_AUTH_AUTHORITY_HOST = env("AZURE_AUTHORITY_HOST")
+
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+    "username",
+    "first_name",
+    "last_name",
+    "email",
+]
+
 SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
     "username",
     "first_name",

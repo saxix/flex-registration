@@ -19,7 +19,7 @@ First configure your `.envrc` and run
 For the first time you need to run in root project directory
 
 ```shell
-cp .env.example .env
+./manage env --comment --defaults > .env
 docker-compose build
 docker-compose up
 ```

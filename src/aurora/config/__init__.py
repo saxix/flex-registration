@@ -16,21 +16,27 @@ def parse_emails(value):
     return v
 
 
-DEFAULTS = {
+MANDATORY = {
+    "CACHE_DEFAULT": (str, "locmemcache://"),
+    "DATABASE_URL": (str, "psql://postgres:@postgres:5432/aurora"),
+}
+OPTIONS = {
     "ADMINS": (parse_emails, ""),
     "ADMIN_SYNC_CONFIG": (str, "admin_sync.conf.DjangoConstance"),
     "ALLOWED_HOSTS": (list, []),
     "AUTHENTICATION_BACKENDS": (list, []),
-    "AZURE_CLIENT_ID": (str, None),
-    "AZURE_CLIENT_SECRET": (str, None),
-    "AZURE_TENANT_KEY": (str, None),
-    "CACHE_DEFAULT": (str, "locmemcache://"),
-    "CAPTCHA_TEST_MODE": (bool, False),
+    "AZURE_AUTHORITY_HOST": (str, ""),
+    "AZURE_CLIENT_ID": (str, ""),
+    "AZURE_CLIENT_KEY": (str, ""),
+    "AZURE_CLIENT_SECRET": (str, ""),
+    "AZURE_POLICY_NAME": (str, ""),
+    "AZURE_TENANT_ID": (str, ""),
+    "AZURE_TENANT_KEY": (str, ""),
+    "CAPTCHA_TEST_MODE": (bool, "false"),
     "CONSTANCE_DATABASE_CACHE_BACKEND": (str, ""),
     "CORS_ALLOWED_ORIGINS": (list, []),
     "CSP_REPORT_ONLY": (bool, True),
     "CSRF_COOKIE_NAME": (str, "aurora"),
-    "DATABASE_URL": (str, "psql://postgres:@postgres:5432/aurora"),
     "DEBUG": (bool, False),
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
     "DJANGO_ADMIN_TITLE": (str, "Aurora"),
@@ -100,4 +106,4 @@ class SmartEnv(Env):
         return super().cache_url(var, default, backend)
 
 
-env = SmartEnv(**DEFAULTS)
+env = SmartEnv(**MANDATORY, **OPTIONS)
