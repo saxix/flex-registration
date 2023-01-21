@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
@@ -9,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
 
-from aurora.core.utils import last_day_of_month, render
+from aurora.core.utils import last_day_of_month, render, get_session_id
 from aurora.counters.models import Counter
 from aurora.registration.models import Registration
 
@@ -95,7 +94,7 @@ class MonthlyChartView(ChartView):
             "registration": reg,
             "first": first,
             "latest": latest,
-            "token": request.COOKIES[settings.SESSION_COOKIE_NAME],
+            "token": get_session_id(),
             # "years": range(first.day.year, latest.day.year)
         }
         return render(request, "counters/chart_month.html", context)

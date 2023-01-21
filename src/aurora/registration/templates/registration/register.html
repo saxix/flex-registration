@@ -25,12 +25,14 @@
     </div>
 {#    {% if registration.locales|length > 1 %}#}
     <div class="flex flex-row px-5">
+    {% if registration.locales %}
     <div class="flex-grow">
         {% include "i18n/_select_language.html" with languages=registration.languages %}
     </div>
-    <div class="flex-shrink">
+    {% endif %}
+    {% if user.is_authenticated and registration.protected %}<div class="flex-shrink">
         <a href="{% url "logout" %}">logout</a>
-    </div>
+    </div>{% endif %}
     </div>
 {#    {% endif %}#}
 {% endblock %}
@@ -39,7 +41,7 @@
     {% include "smart/_form.html" %}
 {% endblock body %}
 {% block footer %}
-    {% if registration.locales|length > 1 %}
+    {% if registration.locales|length >= 1 %}
         <script defer src="{% static 'i18n/i18n.min.js' %}"></script>
     {% endif %}
     {% if can_translate %}

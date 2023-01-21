@@ -1,4 +1,3 @@
-from django.conf import settings
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -7,6 +6,7 @@ from rest_framework.response import Response
 from aurora.registration.models import Registration
 
 from .base import SmartViewSet
+from ...core.utils import get_session_id
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -31,7 +31,7 @@ class RegistrationViewSet(SmartViewSet):
                 "version": reg.version,
                 "url": reg.get_absolute_url(),
                 "auth": request.user.is_authenticated,
-                "session_id": request.COOKIES[settings.SESSION_COOKIE_NAME],
+                "session_id": get_session_id(),
                 "active": reg.active,
                 "protected": reg.protected,
             }

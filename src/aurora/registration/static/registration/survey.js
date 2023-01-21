@@ -7,13 +7,16 @@
     $(function () {
         // we need this HACK to manage the stupid cache system in front of the app
         const slug = $("meta[name=\"Survey\"]").attr("content");
+        const sessionUrl = gst_session();
         $.get("/api/registration/" + slug + "/version/?" + Math.random(), function (data) {
             var parts = location.href.split("/");
             const version = parseInt(parts[parts.length - 2]);
             if (version !== data.version) {
                 location.href = data.url;
             }
-            else if (data.auth && (data.session_id !== gst_session())){
+            else if (data.auth && (data.session_id !== sessionUrl)){
+                location.href = data.url;
+            }else if (!data.auth && sessionUrl) {
                 location.href = data.url;
             }
         });

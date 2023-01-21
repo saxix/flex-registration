@@ -363,14 +363,14 @@ def total_size(o, handlers={}, verbose=False):
 
 def cache_aware_url(url):
     if state.request.user.is_authenticated:
-        url += f"?s={state.request.COOKIES[settings.SESSION_COOKIE_NAME]}"
+        url += f"?s={get_session_id()}"
     return url
 
 
 def cache_aware_reverse(viewname, urlconf=None, args=None, kwargs=None, current_app=None, **kw):
     url = reverse(viewname, urlconf, args, kwargs, current_app, **kw)
     if state.request.user.is_authenticated:
-        url += f"?s={state.request.COOKIES[settings.SESSION_COOKIE_NAME]}"
+        url += f"?s={get_session_id()}"
     return url
 
 
@@ -437,3 +437,9 @@ def never_ever_cache(decorated_function):
         return response
 
     return wrapper
+
+
+def get_session_id():
+    if state.request.user.is_authenticated:
+        return state.request.COOKIES.get(settings.SESSION_COOKIE_NAME)
+    return ""
