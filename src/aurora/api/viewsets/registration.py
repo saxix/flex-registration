@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -22,7 +23,7 @@ class RegistrationViewSet(SmartViewSet):
     def get_permissions(self):
         return [permission() for permission in self.permission_classes]
 
-    @action(detail=True, permission_classes=[AllowAny], authentication_classes=[])
+    @action(detail=True, permission_classes=[AllowAny])
     def version(self, request, slug=None):
         reg: Registration = self.get_object()
         return Response(
@@ -30,6 +31,7 @@ class RegistrationViewSet(SmartViewSet):
                 "version": reg.version,
                 "url": reg.get_absolute_url(),
                 "auth": request.user.is_authenticated,
+                "session_id": request.COOKIES[settings.SESSION_COOKIE_NAME],
                 "active": reg.active,
                 "protected": reg.protected,
             }

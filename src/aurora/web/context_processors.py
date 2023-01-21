@@ -7,6 +7,7 @@ from aurora.core.utils import has_token
 
 def smart(request):
     return {
+        "session_id": request.COOKIES[settings.SESSION_COOKIE_NAME],
         "project": {
             "build_date": os.environ.get("BUILD_DATE", ""),
             "version": os.environ.get("VERSION", ""),
@@ -16,5 +17,5 @@ def smart(request):
             "has_token": has_token(request),
             "languages": settings.LANGUAGES,
             "settings": settings,
-        }
+        },
     }

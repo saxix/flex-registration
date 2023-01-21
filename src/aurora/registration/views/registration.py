@@ -134,6 +134,9 @@ class RegisterView(RegistrationMixin, FormView):
 
     @check_access
     def get(self, request, *args, **kwargs):
+        # if request.user.is_authenticated and not request.GET.get("s"):
+        #     return HttpResponseRedirect(self.registration.get_absolute_url())
+
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
         else:

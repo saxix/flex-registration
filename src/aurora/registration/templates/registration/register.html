@@ -2,7 +2,8 @@
 {% block meta %}
     <meta name="Description" content="Module: '{{ registration.title}}' Version: {{ registration.version }} - Form version: {{ form.flex_form.version }}">
     <meta name="Survey" content="{{ registration.slug }}">
-    <meta name="Version" content="1{{ registration.version }}">
+    <meta name="Version" content="{{ registration.version }}">
+    <meta name="User" content="{% if user.is_authenticated %}{{ session_id }}{% endif %}">
 {% endblock meta %}
 {% block cache %}{% endblock %}
 {% block head %}
