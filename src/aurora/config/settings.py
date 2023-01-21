@@ -559,7 +559,7 @@ SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
 
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 # fix admin name
-LOGIN_URL = "/login/azuread-tenant-oauth2"
+LOGIN_URL = "/login/azuread-b2c-oauth2"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
 
 # allow upload big file
