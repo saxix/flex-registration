@@ -41,7 +41,7 @@ from .models import (
     OptionSet,
     Validator,
 )
-from .utils import dict_setdefault, namify, render
+from .utils import dict_setdefault, render
 
 logger = logging.getLogger(__name__)
 
@@ -192,11 +192,14 @@ class FlexFormFieldForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
+        if self.instance.pk:
+            self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
 
-    def clean_name(self):
-        if not self.cleaned_data.get("name") and self.cleaned_data.get("label"):
-            self.cleaned_data["name"] = namify(self.cleaned_data["label"])[:100]
+    #
+    # def clean_name(self):
+    #     if not self.instance.pk:
+    #         if not self.cleaned_data.get("name") and self.cleaned_data.get("label"):
+    #             self.cleaned_data["name"] = namify(self.cleaned_data["label"])[:100]
 
 
 class FlexFormFieldForm2(forms.ModelForm):

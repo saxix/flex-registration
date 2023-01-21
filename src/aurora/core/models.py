@@ -524,10 +524,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 raise ValidationError(e)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if not self.name:
+        if not self.name.strip():
             self.name = namify(self.label)[:100]
-        else:
-            self.name = namify(self.name)[:100]
 
         super().save(force_insert, force_update, using, update_fields)
 
