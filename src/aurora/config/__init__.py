@@ -29,6 +29,7 @@ DEFAULTS = {
     "CONSTANCE_DATABASE_CACHE_BACKEND": (str, ""),
     "CORS_ALLOWED_ORIGINS": (list, []),
     "CSP_REPORT_ONLY": (bool, True),
+    "CSRF_COOKIE_NAME": (str, "aurora"),
     "DATABASE_URL": (str, "psql://postgres:@postgres:5432/aurora"),
     "DEBUG": (bool, False),
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
