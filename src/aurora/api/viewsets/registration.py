@@ -31,7 +31,7 @@ class RegistrationViewSet(SmartViewSet):
                 "version": reg.version,
                 "url": reg.get_absolute_url(),
                 "auth": request.user.is_authenticated,
-                "session_id": get_session_id(),
+                "session_id": get_session_id(request),
                 "active": reg.active,
                 "protected": reg.protected,
             }

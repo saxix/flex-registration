@@ -75,7 +75,6 @@ OPTIONS = {
     "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"),
     "USE_HTTPS": (bool, False),
     "USE_X_FORWARDED_HOST": (bool, "false"),
-    "WHITENOISE": (bool, False),
     "SITE_ID": (int, 1),
     # "CSP_DEFAULT_SRC": (list, ),
     # "CSP_SCRIPT_SRC": (str, None),

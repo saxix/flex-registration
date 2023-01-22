@@ -101,7 +101,26 @@ def test_api(django_app, registration, monkeypatch):
     assert res.status_code == 200
     records = res.json["data"]
     for r in records:
-        storage = r["storage"]
+        # storage = r["storage"]
         storage = str(r["fields"]).encode()
         data = base64.urlsafe_b64decode(storage)
         decrypt(data, registration._private_pem)
+
+
+@pytest.mark.django_db
+def test_version(django_app, registration, admin_user):
+    # do not use reverse because url is hardcoded in survey.js
+    api_url = "/api/registration/%s/version/" % registration.slug
+
+    res = django_app.get(api_url)
+    data = res.json
+    assert data["version"] == registration.version
+    assert not data["auth"]
+
+    res = django_app.get(api_url, user=admin_user)
+    data = res.json
+    assert data["version"] == registration.version
+    assert data["active"] == registration.active
+    assert data["protected"] == registration.protected
+    assert data["session_id"]
+    assert data["auth"]

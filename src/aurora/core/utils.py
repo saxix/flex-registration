@@ -362,8 +362,8 @@ def total_size(o, handlers={}, verbose=False):
     return sizeof(o)
 
 
-def cache_aware_url(url):
-    if state.request.user.is_authenticated:
+def cache_aware_url(request, url):
+    if request.user.is_authenticated:
         url += f"?s={get_session_id()}"
     return url
 
@@ -440,9 +440,10 @@ def never_ever_cache(decorated_function):
     return wrapper
 
 
-def get_session_id():
-    if state.request.user.is_authenticated:
-        return state.request.COOKIES.get(settings.SESSION_COOKIE_NAME)
+def get_session_id(request=None):
+    r = request or state.request
+    if r and r.user.is_authenticated:
+        return r.session.session_key
     return ""
 
 

@@ -664,9 +664,15 @@ class CustomFieldType(NaturalKeyModel, models.Model):
             field_registry.register(cls)
 
     def clean(self):
+        if not self.base_type:
+            raise ValidationError("base_type is mandatory")
+        try:
+            class_ = self.get_class()
+        except Exception as e:
+            raise ValidationError(f"Error instantiating class: {e}")
+
         try:
             kwargs = self.attrs.copy()
-            class_ = self.get_class()
             class_(**kwargs)
         except Exception as e:
             raise ValidationError(f"Error instantiating {fqn(class_)}: {e}")

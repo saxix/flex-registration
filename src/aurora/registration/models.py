@@ -110,6 +110,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         permissions = (
             ("manage", _("Can manage Registration")),
             ("register", _("Can use Registration")),
+            ("create_translation", _("Can Create Translation")),
         )
 
     @property

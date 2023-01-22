@@ -32,7 +32,7 @@ def translate_url(context, lang, view_name=None, *args, **kwargs):
             view_name = reverse_match.view_name
             args = reverse_match.args
             kwargs = reverse_match.kwargs
-        return cache_aware_url(reverse(view_name, *args, **kwargs))
+        return cache_aware_url(context["request"], reverse(view_name, *args, **kwargs))
     except NoReverseMatch:
         return ""
 

@@ -90,7 +90,6 @@ MIDDLEWARE = [
     "aurora.web.middlewares.maintenance.MaintenanceMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "aurora.web.middlewares.i18n.I18NMiddleware",
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -106,10 +105,6 @@ MIDDLEWARE = [
 ]
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
-if env("WHITENOISE"):
-    MIDDLEWARE += [
-        "whitenoise.middleware.WhiteNoiseMiddleware",
-    ]
 ROOT_URLCONF = "aurora.config.urls"
 
 TEMPLATES = [
@@ -176,14 +171,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 try:
     if REDIS_CONNSTR := env("REDIS_CONNSTR"):
         os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR}"
-except Exception as e:
+except Exception as e:  # pragma: no cache
     logging.exception(e)
 
 CACHES = {
     "default": env.cache_url("CACHE_DEFAULT"),
 }
 
-if DEBUG:
+if DEBUG:  # pragma: no cache
     AUTH_PASSWORD_VALIDATORS = []
 else:
     AUTH_PASSWORD_VALIDATORS = [
@@ -473,7 +468,7 @@ def show_ddt(request):  # pragma: no-cover
     # key must be `X-DDT` (no HTTP_ prefix no underscore)
     from flags.state import flag_enabled
 
-    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):
+    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):  # pragma: no cache
         return False
     return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
 
@@ -517,13 +512,8 @@ SOCIAL_AUTH_TENANT_ID = env("AZURE_TENANT_ID")
 SOCIAL_AUTH_RESOURCE = "https://graph.microsoft.com/"
 SOCIAL_AUTH_POLICY = env("AZURE_POLICY_NAME")
 SOCIAL_AUTH_AUTHORITY_HOST = env("AZURE_AUTHORITY_HOST")
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_POLICY = ""
 
-SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
-    "username",
-    "first_name",
-    "last_name",
-    "email",
-]
 
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
