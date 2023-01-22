@@ -12,9 +12,9 @@ class AuroraSyncRegistrationProtocol(LoadDumpProtocol):
         from aurora.registration.models import Registration
 
         if len(data) == 0:
-            raise SyncError("Empty queryset")
+            raise SyncError("Empty queryset")  # pragma: no cover
 
-        if not isinstance(data[0], Registration):
+        if not isinstance(data[0], Registration):  # pragma: no cover
             raise ValueError("AuroraSyncRegistrationProtocol can be used only for Registration")
         return_value = []
         for reg in list(data):
