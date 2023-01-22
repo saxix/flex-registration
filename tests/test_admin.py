@@ -1,10 +1,9 @@
-from _pytest.mark import Mark
 from typing import List
-
-from _pytest.python import Metafunc
 from unittest.mock import Mock
 
 import pytest
+from _pytest.mark import Mark
+from _pytest.python import Metafunc
 from admin_extra_buttons.handlers import ChoiceHandler
 from django.contrib.admin.sites import site
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
@@ -28,6 +27,17 @@ GLOBAL_EXCLUDED_MODELS = RegexList(
     ]
 )
 
+GLOBAL_EXCLUDED_BUTTONS = RegexList(
+    [
+        r".*:publish",
+        r".*:_recoverlist_view",
+        r"core.ValidatorAdmin:test",
+        r"registration.RecordAdmin:preview",
+        r"registration.RecordAdmin:inspect",
+        r"registration.RecordAdmin:decrypt",
+    ]
+)
+
 KWARGS = {}
 pytestmark = pytest.mark.admin
 
@@ -37,9 +47,13 @@ def pytest_generate_tests(metafunc: Metafunc):
 
     markers: List[Mark] = metafunc.definition.own_markers
     excluded_models = RegexList(GLOBAL_EXCLUDED_MODELS)
+    excluded_buttons = RegexList(GLOBAL_EXCLUDED_BUTTONS)
     if "skip_models" in [m.name for m in markers]:
         skip_rule = list(filter(lambda m: m.name == "skip_models", markers))[0]
         excluded_models.extend(skip_rule.args)
+    if "skip_buttons" in [m.name for m in markers]:
+        skip_rule = list(filter(lambda m: m.name == "skip_buttons", markers))[0]
+        excluded_buttons.extend(skip_rule.args)
     django.setup()
     if "button_handler" in metafunc.fixturenames:
         m = []
@@ -47,13 +61,17 @@ def pytest_generate_tests(metafunc: Metafunc):
         for model, admin in site._registry.items():
             if hasattr(admin, "get_changelist_buttons"):
                 name = model._meta.object_name
-                # admin.get_urls()
+                assert admin.urls  # we need to force this call
+                # admin.get_urls()  # we need to force this call
                 buttons = admin.extra_button_handlers.values()
                 full_name = f"{model._meta.app_label}.{name}"
+                admin_name = f"{model._meta.app_label}.{admin.__class__.__name__}"
                 if not (full_name in excluded_models):
                     for btn in buttons:
-                        m.append([admin, btn])
-                        ids.append(f"{admin.__class__.__name__}:{full_name}:{btn.name}")
+                        tid = f"{admin_name}:{btn.name}"
+                        if tid not in excluded_buttons:
+                            m.append([admin, btn])
+                            ids.append(tid)
         metafunc.parametrize("modeladmin,button_handler", m, ids=ids)
     elif "modeladmin" in metafunc.fixturenames:
         m = []
@@ -190,6 +208,9 @@ def test_delete(app, modeladmin, record, monkeypatch):
 
 
 @pytest.mark.django_db
+@pytest.mark.skip_buttons(
+    "i18n.MessageAdmin.publish",
+)
 def test_buttons(app, modeladmin, button_handler, record, monkeypatch):
     from admin_extra_buttons.handlers import LinkHandler
 

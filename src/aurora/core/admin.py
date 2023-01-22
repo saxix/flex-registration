@@ -126,7 +126,7 @@ class ValidatorAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, SmartMod
         if stored:
             param = json.loads(stored)
         else:
-            param = self.DEFAULTS[self.object.target]
+            param = self.DEFAULTS[original.target]
 
         if request.method == "POST":
             form = ValidatorTestForm(request.POST)
@@ -464,9 +464,10 @@ class OptionSetAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     @button()
     def display_data(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Data")
+        obj: OptionSet = ctx["original"]
         data = []
-        for line in self.object.data.split("\r\n"):
-            data.append(line.split(self.object.separator))
+        for line in obj.data.split("\r\n"):
+            data.append(line.split(obj.separator))
         ctx["data"] = data
         return render(request, "admin/core/optionset/table.html", ctx)
 

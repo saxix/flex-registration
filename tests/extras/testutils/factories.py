@@ -2,14 +2,21 @@ import factory.fuzzy
 from django import forms
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Group, User
+from django.utils import timezone
 from factory.base import FactoryMetaClass
 from rest_framework.authtoken.models import TokenProxy
-from social_django.models import UserSocialAuth, Nonce, Association
+from social_django.models import Association, Nonce, UserSocialAuth
 
 import dbtemplates.models as dbtemplates
-from aurora.core.models import FlexForm, CustomFieldType, FlexFormField
+from aurora.core.models import (
+    CustomFieldType,
+    FlexForm,
+    FlexFormField,
+    OptionSet,
+    Validator,
+)
 from aurora.counters.models import Counter
-from aurora.registration.models import Registration, Record
+from aurora.registration.models import Record, Registration
 
 factories_registry = {}
 
@@ -61,6 +68,24 @@ class SuperUserFactory(UserFactory):
     is_active = True
 
 
+class ValidatorFactory(AutoRegisterModelFactory):
+    name = factory.Sequence(lambda d: "Form-%s" % d)
+
+    class Meta:
+        model = Validator
+        django_get_or_create = ("name",)
+
+
+class OptionSetFactory(AutoRegisterModelFactory):
+    name = factory.Sequence(lambda d: "Form-%s" % d)
+    separator = ";"
+    data = "aa=1;bb=2"
+
+    class Meta:
+        model = OptionSet
+        django_get_or_create = ("name",)
+
+
 class FormFactory(AutoRegisterModelFactory):
     name = factory.Sequence(lambda d: "Form-%s" % d)
 
@@ -108,6 +133,7 @@ class RecordFactory(AutoRegisterModelFactory):
 class CounterFactory(AutoRegisterModelFactory):
     registration = factory.SubFactory(RegistrationFactory)
     details = {"hours": {str(x): 10 for x in range(23)}}
+    day = timezone.now()
 
     class Meta:
         model = Counter

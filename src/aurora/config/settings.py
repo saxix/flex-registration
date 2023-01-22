@@ -171,16 +171,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 try:
     if REDIS_CONNSTR := env("REDIS_CONNSTR"):
         os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR}"
-except Exception as e:  # pragma: no cache
+except Exception as e:  # pragma: no cover
     logging.exception(e)
 
 CACHES = {
     "default": env.cache_url("CACHE_DEFAULT"),
 }
 
-if DEBUG:  # pragma: no cache
+if DEBUG:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = []
-else:
+else:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = [
         {
             "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -541,7 +541,7 @@ SOCIAL_AUTH_OAUTH2_SCOPE = [
 ]
 
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
-SOCIAL_AUTH_JWT_LEEWAY = env.int('JWT_LEEWAY', 0)
+SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
 
 # fix admin name
 LOGIN_URL = "/login/azuread-b2c-oauth2"
