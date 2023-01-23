@@ -234,8 +234,6 @@ const processOnline = () => {
             console.log("User not authorized to send forms...");
         }
     });
-
-
 }
 
 window.addEventListener("online", () => {
@@ -247,7 +245,9 @@ window.addEventListener("offline", () => {
     console.log(`Application is ${state.offline}`);
 });
 
-processOnline();
+if (navigator.onLine) {
+    processOnline();
+}
 
 </script>
 
