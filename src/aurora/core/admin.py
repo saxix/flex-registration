@@ -8,7 +8,6 @@ from pathlib import Path
 import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
-
 from admin_sync.mixin import SyncMixin
 from admin_sync.utils import is_local
 from adminfilters.autocomplete import AutoCompleteFilter
@@ -42,7 +41,7 @@ from .models import (
     OptionSet,
     Validator,
 )
-from .utils import dict_setdefault, render, namify
+from .utils import dict_setdefault, render
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +126,7 @@ class ValidatorAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, SmartMod
         if stored:
             param = json.loads(stored)
         else:
-            param = self.DEFAULTS[self.object.target]
+            param = self.DEFAULTS[original.target]
 
         if request.method == "POST":
             form = ValidatorTestForm(request.POST)
@@ -193,11 +192,14 @@ class FlexFormFieldForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
+        if self.instance.pk:
+            self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
 
-    def clean_name(self):
-        if not self.cleaned_data.get("name") and self.cleaned_data.get("label"):
-            self.cleaned_data["name"] = namify(self.cleaned_data["label"])[:100]
+    #
+    # def clean_name(self):
+    #     if not self.instance.pk:
+    #         if not self.cleaned_data.get("name") and self.cleaned_data.get("label"):
+    #             self.cleaned_data["name"] = namify(self.cleaned_data["label"])[:100]
 
 
 class FlexFormFieldForm2(forms.ModelForm):
@@ -462,9 +464,10 @@ class OptionSetAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     @button()
     def display_data(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Data")
+        obj: OptionSet = ctx["original"]
         data = []
-        for line in self.object.data.split("\r\n"):
-            data.append(line.split(self.object.separator))
+        for line in obj.data.split("\r\n"):
+            data.append(line.split(obj.separator))
         ctx["data"] = data
         return render(request, "admin/core/optionset/table.html", ctx)
 

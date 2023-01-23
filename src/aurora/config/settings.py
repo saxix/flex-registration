@@ -33,7 +33,7 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 DJANGO_ADMIN_URL = env("DJANGO_ADMIN_URL")
 
 # Application definition
-SITE_ID = 1
+SITE_ID = env("SITE_ID")
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -92,7 +92,6 @@ MIDDLEWARE = [
     "aurora.web.middlewares.maintenance.MaintenanceMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "aurora.web.middlewares.i18n.I18NMiddleware",
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -108,10 +107,6 @@ MIDDLEWARE = [
 ]
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
-if env("WHITENOISE"):
-    MIDDLEWARE += [
-        "whitenoise.middleware.WhiteNoiseMiddleware",
-    ]
 ROOT_URLCONF = "aurora.config.urls"
 
 TEMPLATES = [
@@ -184,16 +179,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 try:
     if REDIS_CONNSTR := env("REDIS_CONNSTR"):
         os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR}"
-except Exception as e:
+except Exception as e:  # pragma: no cover
     logging.exception(e)
 
 CACHES = {
     "default": env.cache_url("CACHE_DEFAULT"),
 }
 
-if DEBUG:
+if DEBUG:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = []
-else:
+else:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = [
         {
             "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -272,10 +267,10 @@ ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "aurora.security.backend.SmartBackend",
     # "django.contrib.auth.backends.ModelBackend",
-    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "social_core.backends.azuread_b2c.AzureADB2COAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
-CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME")
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_COOKIE_SECURE = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -481,7 +476,7 @@ def show_ddt(request):  # pragma: no-cover
     # key must be `X-DDT` (no HTTP_ prefix no underscore)
     from flags.state import flag_enabled
 
-    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):
+    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):  # pragma: no cache
         return False
     return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
 
@@ -516,20 +511,18 @@ DEBUG_TOOLBAR_PANELS = [
 
 ROOT_TOKEN = env("ROOT_TOKEN")
 CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
-
 # Azure login
 
 # Social Auth settings.
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = env("AZURE_CLIENT_ID")
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env("AZURE_CLIENT_SECRET")
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_KEY")
-SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
-    "username",
-    "first_name",
-    "last_name",
-    "email",
-]
-# SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+SOCIAL_AUTH_KEY = env.str("AZURE_CLIENT_KEY")
+SOCIAL_AUTH_SECRET = env.str("AZURE_CLIENT_SECRET")
+SOCIAL_AUTH_TENANT_ID = env("AZURE_TENANT_ID")
+SOCIAL_AUTH_RESOURCE = "https://graph.microsoft.com/"
+SOCIAL_AUTH_POLICY = env("AZURE_POLICY_NAME")
+SOCIAL_AUTH_AUTHORITY_HOST = env("AZURE_AUTHORITY_HOST")
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_POLICY = ""
+
+
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     "aurora.core.authentication.social_details",
@@ -544,20 +537,22 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "aurora.core.authentication.user_details",
 )
-SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_USER_FIELDS = [
+SOCIAL_AUTH_USER_FIELDS = [
     "email",
     "fullname",
 ]
 
-SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
+SOCIAL_AUTH_OAUTH2_SCOPE = [
     "openid",
     "email",
     "profile",
 ]
 
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
+SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
+
 # fix admin name
-LOGIN_URL = "/login/azuread-tenant-oauth2"
+LOGIN_URL = "/login/azuread-b2c-oauth2"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
 
 # allow upload big file

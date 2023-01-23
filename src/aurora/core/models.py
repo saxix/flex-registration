@@ -524,10 +524,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 raise ValidationError(e)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if not self.name:
+        if not self.name.strip():
             self.name = namify(self.label)[:100]
-        else:
-            self.name = namify(self.name)[:100]
 
         super().save(force_insert, force_update, using, update_fields)
 
@@ -666,9 +664,15 @@ class CustomFieldType(NaturalKeyModel, models.Model):
             field_registry.register(cls)
 
     def clean(self):
+        if not self.base_type:
+            raise ValidationError("base_type is mandatory")
+        try:
+            class_ = self.get_class()
+        except Exception as e:
+            raise ValidationError(f"Error instantiating class: {e}")
+
         try:
             kwargs = self.attrs.copy()
-            class_ = self.get_class()
             class_(**kwargs)
         except Exception as e:
             raise ValidationError(f"Error instantiating {fqn(class_)}: {e}")

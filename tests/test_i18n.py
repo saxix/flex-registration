@@ -27,3 +27,20 @@ def test_register_simple(django_app, simple_registration):
     res.form["last_name"] = "last"
     res = res.form.submit().follow()
     assert res.context["record"].data["first_name"] == "first"
+
+
+@pytest.mark.django_db
+def test_create_translation(django_app, simple_registration, admin_user):
+    url = reverse("admin:registration_registration_create_translation", args=[simple_registration.pk])
+    # assert url == f"/en-us/register/registration-1/{simple_registration.version}/"
+    res = django_app.get(url, user=admin_user)
+    # translation-form
+    res = res.form.submit()
+    # res = res.form.submit()
+    # res.form["first_name"] = "first_name"
+    # res.form["last_name"] = "f"
+    # res = res.form.submit()
+    # res.form["first_name"] = "first"
+    # res.form["last_name"] = "last"
+    # res = res.form.submit().follow()
+    # assert res.context["record"].data["first_name"] == "first"

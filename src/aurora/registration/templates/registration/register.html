@@ -2,7 +2,8 @@
 {% block meta %}
     <meta name="Description" content="Module: '{{ registration.title}}' Version: {{ registration.version }} - Form version: {{ form.flex_form.version }}">
     <meta name="Survey" content="{{ registration.slug }}">
-    <meta name="Version" content="1{{ registration.version }}">
+    <meta name="Version" content="{{ registration.version }}">
+    <meta name="User" content="{% if user.is_authenticated %}{{ session_id }}{% endif %}">
 {% endblock meta %}
 {% block cache %}{% endblock %}
 {% block head %}
@@ -24,12 +25,14 @@
     </div>
 {#    {% if registration.locales|length > 1 %}#}
     <div class="flex flex-row px-5">
+    {% if registration.locales %}
     <div class="flex-grow">
         {% include "i18n/_select_language.html" with languages=registration.languages %}
     </div>
-    <div class="flex-shrink">
+    {% endif %}
+    {% if user.is_authenticated and registration.protected %}<div class="flex-shrink">
         <a href="{% url "logout" %}">logout</a>
-    </div>
+    </div>{% endif %}
     </div>
 {#    {% endif %}#}
 {% endblock %}
@@ -173,7 +176,7 @@ if (button && !navigator.onLine) {
 
 {% endblock body %}
 {% block footer %}
-    {% if registration.locales|length > 1 %}
+    {% if registration.locales|length >= 1 %}
         <script defer src="{% static 'i18n/i18n.min.js' %}"></script>
     {% endif %}
     {% if can_translate %}
