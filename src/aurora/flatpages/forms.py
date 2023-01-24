@@ -25,28 +25,42 @@ class FlatPageForm(forms.ModelForm):
             mce_attrs={
                 "setup": "initTinyMCE",
                 "useDarkMode": False,
+                "branding": False,
                 "deprecation_warnings": True,
                 "force_p_newlines": False,
                 "force_br_newlines": True,
                 "urlconverter_callback": "tinyURLConverter",
                 "relative_urls": False,
                 "forced_root_block": "",
-                # 'content_style': '.left { text-align: left; } ',
                 "content_style": get_page_css(),
+                "plugins": [
+                    "advlist",
+                    "charmap",
+                    "code",
+                    "fullscreen",
+                    "help",
+                    "image",
+                    "insertdatetime",
+                    "link",
+                    "lists",
+                ],
                 "toolbar": [
-                    "undo redo code source | buttonPrimary | fullscreen help"
+                    "undo redo code source | fullscreen help"
                     "| bold italic underline strikethrough blockformats "
-                    "| alignleft aligncenter alignright alignjustify "
+                    "| alignleft aligncenter alignright alignjustify | bullist numlist"
                     "| forecolor backcolor "
                     "| formatselect "
-                    "| image link pageembed styles",
+                    "| image link charmap insertdatetime | buttonPrimary",
                 ],
+                "toolbar_sticky": True,
+                "toolbar_mode": "sliding",
+                # toolbar_sticky_offset: isSmallScreen ? 102: 108,
                 "block_formats": "Paragraph=p; Header 1=h1; Header 2=h2; Header 3=h3; Header 4=h4",
                 "formats": {
-                    "h1": {"block": "h1", "attributes": {"class": "text-5xl"}},
-                    "h2": {"block": "h2", "attributes": {"class": "text-4xl"}},
-                    "h3": {"block": "h3", "attributes": {"class": "text-3xl"}},
-                    "h4": {"block": "h4", "attributes": {"class": "text-2xl"}},
+                    "h1": {"block": "h1", "attributes": {"class": "text-5xl leading-1"}},
+                    "h2": {"block": "h2", "attributes": {"class": "text-4xl leading-1"}},
+                    "h3": {"block": "h3", "attributes": {"class": "text-3xl leading-1"}},
+                    "h4": {"block": "h4", "attributes": {"class": "text-2xl leading-1"}},
                 },
             },
         ),
@@ -72,8 +86,8 @@ class FlatPageForm(forms.ModelForm):
         self.fields["content"].widget.mce_attrs["content_css"] = [static("bob/mailing.css")]
         # self.fields["html"].widget.mce_attrs["document_base_url"] = get_server_url()
 
-    # class Media:
-    # js = ('flatpages/tinymce_init.js',)
+    class Media:
+        js = ("flatpages/tinymce_init.js",)
 
     class Meta:
         model = FlatPage
@@ -93,7 +107,6 @@ class FlatPageForm(forms.ModelForm):
         return value
 
     def clean(self):
-        # url = slugify(self.cleaned_data.get('title'))
         url = self.cleaned_data.get("url")
         sites = self.cleaned_data.get("sites")
 

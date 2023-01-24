@@ -25,7 +25,7 @@
     </div>
 {#    {% if registration.locales|length > 1 %}#}
     <div class="flex flex-row px-5">
-    {% if registration.locales > 1 %}
+    {% if registration.locales|length > 1 %}
     <div class="flex-grow">
         {% include "i18n/_select_language.html" with languages=registration.languages %}
     </div>

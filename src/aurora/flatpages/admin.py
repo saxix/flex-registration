@@ -6,10 +6,8 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from .forms import FlatPageForm
 
-INITIAL_CONTENT = """{% block head %}{{ block.super }}{% endblock head %}
-{% block header %}{{ block.super }}{% endblock %}
-{% block body %} <!-- add your page here -->{% endblock %}
-{% block footer %}{{ block.super }}{% endblock %}
+INITIAL_CONTENT = """
+
 """
 
 
@@ -47,11 +45,6 @@ class FlatPageAdmin(SyncMixin, SmartModelAdmin):
         from aurora.flatpages.views import render_flatpage
 
         return render_flatpage(request, obj)
-        # from django.template import Context, Template
-        #
-        # tpl = Template(obj.content)
-        # content = tpl.render(Context({}))
-        # return HttpResponse(content)
 
     @button()
     def preview(self, request, pk):

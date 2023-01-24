@@ -218,6 +218,7 @@ LANGUAGES = (
     ("pl-pl", "Polskie | Polish"),
     ("pt-pt", "Português"),
     ("ro-ro", "Română"),
+    ("ru-ru", "Русский | Russian"),
     ("si-si", "සිංහල | Sinhala"),
     ("ta-ta", "தமிழ் | Tamil"),
     ("uk-ua", "український | Ukrainian"),
