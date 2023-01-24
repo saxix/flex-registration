@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "admin_extra_buttons",
     "adminfilters",
     "adminactions",
+    "tinymce",
     "constance",
     "constance.backends.database",
     "flags",
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
     "admin_sync",
     # ---
     "aurora.apps.Config",
+    "aurora.flatpages.apps.Config",
     "aurora.i18n",
     "aurora.web",
     "aurora.security.apps.Config",
@@ -114,6 +116,7 @@ TEMPLATES = [
             PACKAGE_DIR / "admin/ui/templates",
             PACKAGE_DIR / "api/templates",
             PACKAGE_DIR / "registration/templates",
+            PACKAGE_DIR / "flatpages/templates",
             PACKAGE_DIR / "core/templates",
             PACKAGE_DIR / "web/templates",
         ],
@@ -202,21 +205,23 @@ else:  # pragma: no cover
 LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 
+# As per http://www.lingoes.net/en/translator/langcode.htm
 LANGUAGES = (
     ("en-us", "English | English"),
-    ("uk-ua", "український | Ukrainian"),
-    ("pl-pl", "Polskie | Polish"),
     ("ar-ae", " | عربي" + "Arabic"),
-    # ("de-de", "Deutsch"),
+    ("cs-cz", "čeština | Czech"),
+    ("de-de", "Deutsch"),
     ("es-es", "Español | Spanish"),
     ("fr-fr", "Français | French"),
-    # ("it-it", "Italiano"),
-    # ("ro-ro", "Română"),
+    ("hu-hu", "Magyar | Hungarian"),
+    ("it-it", "Italiano"),
+    ("pl-pl", "Polskie | Polish"),
     ("pt-pt", "Português"),
-    # ("pl-pl", "Pусский"),
-    ("ta-ta", "தமிழ் | Tamil"),
+    ("ro-ro", "Română"),
     ("si-si", "සිංහල | Sinhala"),
-    # ('hi-hi', 'हिंदी'),  # Hindi
+    ("ta-ta", "தமிழ் | Tamil"),
+    ("uk-ua", "український | Ukrainian"),
+    ("hi-hi", "हिंदी"),  # Hindi
 )
 LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
 
@@ -251,7 +256,8 @@ STATIC_ROOT = env("STATIC_ROOT") + STATIC_URL  # simplify nginx config
 STATICFILES_STORAGE = env("STATICFILES_STORAGE")
 
 STATICFILES_DIRS = [
-    # os.path.join(BASE_DIR, "web/static"),
+    os.path.join(BASE_DIR, "web/static"),
+    os.path.join(BASE_DIR, "flatpages/static"),
 ]
 
 # -------- Added Settings
@@ -504,6 +510,8 @@ DEBUG_TOOLBAR_PANELS = [
 ROOT_TOKEN = env("ROOT_TOKEN")
 CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
 # Azure login
+
+AUTH_USER_MODEL = "auth.User"
 
 # Social Auth settings.
 SOCIAL_AUTH_KEY = env.str("AZURE_CLIENT_KEY")

@@ -97,8 +97,8 @@ class RegistrationExportForm(forms.Form):
 class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
-    list_filter = ("active", "archived", "protected")
-    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator", "archived", "protected")
+    list_filter = ("active", "archived", "protected", "show_in_homepage")
+    list_display = ("name", "slug", "locale", "secure", "active", "archived", "protected", "show_in_homepage")
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True

@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     {% block meta %}{% endblock meta %}
-    <title>Registration</title>
+    <title>{% block title %}Registration{% endblock %}</title>
     <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "base.css" %}">
     <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
