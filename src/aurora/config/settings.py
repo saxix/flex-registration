@@ -12,7 +12,7 @@ from . import env
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'static/js', 'serviceworker.js')
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, "static/js", "serviceworker.js")
 
 mimetypes.add_type("image/svg+xml", ".svg", True)
 mimetypes.add_type("image/svg+xml", ".svgz", True)
@@ -156,11 +156,7 @@ WSGI_APPLICATION = "aurora.config.wsgi.application"
 
 main_conn = env.db("DATABASE_URL")
 main_conn["CONN_MAX_AGE"] = 60
-main_conn.update(
-    {
-        "OPTIONS": {"options": "-c statement_timeout=10000"}
-    }
-)
+main_conn.update({"OPTIONS": {"options": "-c statement_timeout=10000"}})
 
 ro_conn = main_conn.copy()
 ro_conn.update(

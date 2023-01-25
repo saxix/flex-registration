@@ -2,7 +2,7 @@ import base64
 import io
 import json
 import logging
-from typing import Dict, Union
+from typing import Union
 
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
@@ -13,7 +13,6 @@ from django.conf import settings
 
 from aurora.core.utils import safe_json
 
-from aurora.core.private_key import privkey
 
 BLOCK_SIZE = 16
 CHUNK_SIZE = BLOCK_SIZE * 1024 * 1024 + BLOCK_SIZE
@@ -129,7 +128,7 @@ def decrypt_offline(data: str, private_pem: bytes) -> Union[str, bytes]:
     enc = base64.b64decode(form_fields)
 
     derived_key = base64.b64decode("LefjQ2pEXmiy/nNZvEJ43i8hJuaAnzbA1Cbn1hOuAgA=")
-    cipher = AES.new(derived_key, AES.MODE_CBC, decrypted_symmetric_key.encode('utf-8'))
+    cipher = AES.new(derived_key, AES.MODE_CBC, decrypted_symmetric_key.encode("utf-8"))
 
     decrypted_data = unpad(cipher.decrypt(enc), 16)
     return decrypted_data

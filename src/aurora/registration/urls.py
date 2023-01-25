@@ -9,7 +9,7 @@ from .views import (
     RegistrationDataApi,
     registrations,
     get_pwa_enabled,
-    authorize_cookie
+    authorize_cookie,
 )
 
 urlpatterns = [

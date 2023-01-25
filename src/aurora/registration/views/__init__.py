@@ -7,5 +7,5 @@ from .registration import (
     RegisterView,
     registrations,
     get_pwa_enabled,
-    authorize_cookie
+    authorize_cookie,
 )

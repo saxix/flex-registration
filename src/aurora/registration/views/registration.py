@@ -228,11 +228,7 @@ class RegisterView(RegistrationMixin, FormView):
         if registration and registration.is_pwa_enabled:
             encrypted_data = request.POST.get("encryptedData")
             if encrypted_data:
-                kwargs = {
-                    "fields": encrypted_data,
-                    "size": total_size(encrypted_data),
-                    "is_offline": True
-                }
+                kwargs = {"fields": encrypted_data, "size": total_size(encrypted_data), "is_offline": True}
 
                 Record.objects.create(registration=registration, **kwargs)
                 return HttpResponse()
@@ -342,12 +338,14 @@ def registrations(request):
 
 def get_pwa_enabled(request):
     register_obj = Registration.objects.filter(is_pwa_enabled=True).first()
-    return JsonResponse({
-        "slug": getattr(register_obj, "slug", None),
-        "version": getattr(register_obj, "version", None),
-        "publicKey": getattr(register_obj, "public_key", None),
-        "optionsSets": getattr(register_obj, "option_set_links", None)
-    })
+    return JsonResponse(
+        {
+            "slug": getattr(register_obj, "slug", None),
+            "version": getattr(register_obj, "version", None),
+            "publicKey": getattr(register_obj, "public_key", None),
+            "optionsSets": getattr(register_obj, "option_set_links", None),
+        }
+    )
 
 
 @csrf_exempt
@@ -356,7 +354,7 @@ def authorize_cookie(request):
         decoded_key = signing.loads(
             json.loads(request.body),
             max_age=settings.SESSION_COOKIE_AGE,
-            salt='django.contrib.sessions.backends.signed_cookies'
+            salt="django.contrib.sessions.backends.signed_cookies",
         )
         if User.objects.filter(id=int(decoded_key.get("_auth_user_id"))).exists():
             return JsonResponse({"authorized": True})

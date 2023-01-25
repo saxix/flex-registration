@@ -12,7 +12,7 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
-from aurora.core.utils import get_etag, get_qrcode
+from aurora.core.utils import get_etag, get_qrcode, render
 from aurora.registration.models import Registration
 
 logger = logging.getLogger(__name__)

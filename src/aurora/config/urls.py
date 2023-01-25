@@ -23,7 +23,7 @@ urlpatterns = [
     path("captcha/", include("captcha.urls")),
     path("i18n/", include("aurora.i18n.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
-    path(r'serviceworker.js', service_worker, name='serviceworker'),
+    path(r"serviceworker.js", service_worker, name="serviceworker"),
 ]
 
 urlpatterns += i18n_patterns(

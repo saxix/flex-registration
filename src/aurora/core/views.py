@@ -74,5 +74,5 @@ class OptionsListView(BaseListView):
 
 
 def service_worker(request):
-    response = HttpResponse(open(settings.PWA_SERVICE_WORKER_PATH).read(), content_type='application/javascript')
+    response = HttpResponse(open(settings.PWA_SERVICE_WORKER_PATH).read(), content_type="application/javascript")
     return response
