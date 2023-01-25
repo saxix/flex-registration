@@ -86,10 +86,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     scripts = models.ManyToManyField(
         Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True
     )
-    # DEPRECATED uses `unique_field_path`
-    unique_field = models.CharField(
-        max_length=255, blank=True, null=True, help_text="Form field to be used as unique key (DEPRECATED)"
-    )
 
     unique_field_path = models.CharField(
         max_length=1000, blank=True, null=True, help_text="JMESPath expression to retrieve unique field"
