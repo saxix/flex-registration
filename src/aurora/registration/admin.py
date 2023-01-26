@@ -6,7 +6,6 @@ import re
 from datetime import datetime, timedelta
 
 from admin_extra_buttons.decorators import button, choice, link, view
-from admin_sync.mixin import SyncMixin
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.numbers import NumberFilter
 from adminfilters.querystring import QueryStringFilter
@@ -33,6 +32,7 @@ from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.admin import ConcurrencyVersionAdmin
+from ..core.admin_sync import SyncMixin
 from ..core.models import FormSet
 from ..core.utils import (
     build_form_fake_data,
@@ -93,11 +93,26 @@ class RegistrationExportForm(forms.Form):
             raise ValidationError(e)
 
 
+class OrganizationFilter(AutoCompleteFilter):
+    pass
+
+
+class RegistrationProjectFilter(AutoCompleteFilter):
+    fk_name = "flex_form__project__organization__exact"
+
+
 @register(Registration)
 class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
-    list_filter = ("active", "archived", "protected", "show_in_homepage")
+    list_filter = (
+        "active",
+        ("flex_form__project__organization", OrganizationFilter),
+        ("flex_form__project", RegistrationProjectFilter),
+        "archived",
+        "protected",
+        "show_in_homepage",
+    )
     list_display = ("name", "slug", "locale", "secure", "active", "archived", "protected", "show_in_homepage")
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
@@ -158,9 +173,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
     @view()
     def export_as_csv(self, request, pk):
-        from adminactions.export import export_as_xls
-
-        export_as_xls
         ctx = self.get_common_context(request, pk, title="Export")
         reg: Registration = ctx["original"]
         if request.method == "POST":
@@ -509,8 +521,9 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         return render(request, "admin/registration/registration/test.html", ctx)
 
     def get_changeform_buttons(self, context):
+        base = super().get_changeform_buttons(context)
         return sorted(
-            [h for h in self.extra_button_handlers.values() if h.change_form in [True, None]],
+            [h for h in base if h.change_form in [True, None]],
             key=lambda item: item.config.get("order", 1),
         )
 

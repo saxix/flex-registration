@@ -13,7 +13,6 @@ from django.conf import settings
 
 from aurora.core.utils import safe_json
 
-
 BLOCK_SIZE = 16
 CHUNK_SIZE = BLOCK_SIZE * 1024 * 1024 + BLOCK_SIZE
 TAG_SIZE = BLOCK_SIZE

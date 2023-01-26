@@ -13,6 +13,8 @@ from aurora.core.models import (
     FlexForm,
     FlexFormField,
     OptionSet,
+    Organization,
+    Project,
     Validator,
 )
 from aurora.counters.models import Counter
@@ -46,6 +48,23 @@ class GroupFactory(AutoRegisterModelFactory):
 
     class Meta:
         model = Group
+        django_get_or_create = ("name",)
+
+
+class OrganizationFactory(AutoRegisterModelFactory):
+    name = factory.Sequence(lambda n: "Organization%03d" % n)
+
+    class Meta:
+        model = Organization
+        django_get_or_create = ("name",)
+
+
+class ProjectFactory(AutoRegisterModelFactory):
+    organization = factory.SubFactory(OrganizationFactory)
+    name = factory.Sequence(lambda n: "Project%03d" % n)
+
+    class Meta:
+        model = Project
         django_get_or_create = ("name",)
 
 
@@ -88,6 +107,7 @@ class OptionSetFactory(AutoRegisterModelFactory):
 
 class FormFactory(AutoRegisterModelFactory):
     name = factory.Sequence(lambda d: "Form-%s" % d)
+    project = factory.SubFactory(ProjectFactory)
 
     class Meta:
         model = FlexForm

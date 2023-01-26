@@ -18,6 +18,8 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
 from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
@@ -35,6 +37,46 @@ from .utils import JSONEncoder, dict_setdefault, jsonfy, namify, underscore_to_c
 logger = logging.getLogger(__name__)
 
 cache = caches["default"]
+
+
+class Organization(NaturalKeyModel, MPTTModel):
+    name = CICharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
+    parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
+    _natural_key = ["name"]
+
+    class MPTTMeta:
+        order_insertion_by = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+class Project(NaturalKeyModel, MPTTModel):
+    name = CICharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, blank=True, null=True)
+    organization = models.ForeignKey(Organization, null=True, related_name="projects", on_delete=models.CASCADE)
+    parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
+    _natural_key = ["name", "organization.slug"]
+
+    class MPTTMeta:
+        order_insertion_by = ["name"]
+
+    class Meta:
+        unique_together = ("slug", "organization")
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 
 class Validator(NaturalKeyModel):
@@ -214,6 +256,7 @@ def get_validators(field):
 class FlexForm(I18NModel, NaturalKeyModel):
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
     validator = models.ForeignKey(

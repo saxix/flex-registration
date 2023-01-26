@@ -616,6 +616,20 @@ python-versions = "*"
 packaging = "*"
 
 [[package]]
+name = "django-mptt"
+version = "0.14.0"
+description = "Utilities for implementing Modified Preorder Tree Traversal with your Django Models and working with trees of Model instances."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+django-js-asset = "*"
+
+[package.extras]
+tests = ["coverage", "mock-django"]
+
+[[package]]
 name = "django-picklefield"
 version = "3.1"
 description = "Pickled object field for Django"
@@ -2220,7 +2234,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "85e380eff73da5e76132ac17fa90c13276a87aecd0e8886e7e65f5a92f1eff37"
+content-hash = "449e790b01918e726f5570962c543819cd9dcc015c2eb5a1719a53afdf5ad245"
 
 [metadata.files]
 amqp = [
@@ -2640,6 +2654,10 @@ django-js-asset = [
 django-jsoneditor = [
     {file = "django-jsoneditor-0.2.3.tar.gz", hash = "sha256:560435e47fc878ed6a345876cb5489d982b2cb5eec2def5f40a5aa49aaafbb1a"},
     {file = "django_jsoneditor-0.2.3-py2.py3-none-any.whl", hash = "sha256:1da2c672a65f2707ca83171c35208b0dcecf4d62af71f201225d105f8943f440"},
+]
+django-mptt = [
+    {file = "django-mptt-0.14.0.tar.gz", hash = "sha256:2c92a2b1614c53086278795ccf50580cf1f9b8564f3ff03055dd62bab5987711"},
+    {file = "django_mptt-0.14.0-py3-none-any.whl", hash = "sha256:d9a87433ab0e4f35247c6f6d5a93ace6990860a4ba8796f815d185f773b9acfc"},
 ]
 django-picklefield = [
     {file = "django-picklefield-3.1.tar.gz", hash = "sha256:c786cbeda78d6def2b43bff4840d19787809c8909f7ad683961703060398d356"},

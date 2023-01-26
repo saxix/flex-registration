@@ -78,5 +78,5 @@ class HtmlMinMiddleware:
                 response.content = s
             response.headers["Content-Length"] = str(len(response.content))
         elif settings.DEBUG:
-            logger.warn(f'Skip minification of "{request.path_info}"')
+            logger.warning(f'Skip minification of "{request.path_info}"')
         return response

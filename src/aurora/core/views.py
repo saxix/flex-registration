@@ -1,14 +1,13 @@
 import time
 
-from django.http import JsonResponse
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.cache import get_conditional_response
 from django.utils.decorators import method_decorator
 from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
 from django.views.generic.list import BaseListView
-from django.conf import settings
-from django.http import HttpResponse
 
 from aurora.core.models import OptionSet
 from aurora.core.utils import get_etag

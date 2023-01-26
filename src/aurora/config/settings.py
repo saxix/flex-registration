@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "admin_extra_buttons",
     "adminfilters",
     "adminactions",
+    "mptt",
     "tinymce",
     "constance",
     "constance.backends.database",
@@ -403,7 +404,8 @@ CONSTANCE_CONFIG = OrderedDict(
 )
 
 SMART_ADMIN_SECTIONS = {
-    "Registration": ["registration", "dbtemplates"],
+    "Organization": ["core.Organization", "core.Project"],
+    "Registration": ["registration", "dbtemplates", "flatpages"],
     "Form Builder": ["core"],
     "Configuration": ["constance", "flags"],
     "Security": ["auth", "social_auth"],

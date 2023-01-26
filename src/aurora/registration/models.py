@@ -3,7 +3,6 @@ import json
 import logging
 
 import jmespath
-from aurora.core.fields import AjaxSelectField
 from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
 from django import forms
@@ -19,7 +18,8 @@ from django.utils.translation import gettext as _
 from natural_keys import NaturalKeyModel
 
 from aurora.core.crypto import Crypto, crypt, decrypt, decrypt_offline
-from aurora.core.models import FlexForm, Validator
+from aurora.core.fields import AjaxSelectField
+from aurora.core.models import FlexForm, Organization, Project, Validator
 from aurora.core.utils import (
     cache_aware_reverse,
     dict_setdefault,
@@ -105,6 +105,9 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     )
     restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
     is_pwa_enabled = models.BooleanField(default=False)
+
+    organization = models.ForeignKey(Organization, null=True, on_delete=models.SET_NULL)
+    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         get_latest_by = "start"

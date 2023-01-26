@@ -8,14 +8,14 @@ from json import JSONDecodeError
 
 import sentry_sdk
 from constance import config
-from django.core import signing
-from django.contrib.auth.models import User
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.models import User
+from django.core import signing
 from django.core.exceptions import ValidationError
 from django.forms import forms
-from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import translation
 from django.utils.cache import get_conditional_response
@@ -26,12 +26,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-from aurora.core.utils import get_etag, get_qrcode, has_token, never_ever_cache
+from aurora.core.utils import (
+    get_etag,
+    get_qrcode,
+    has_token,
+    never_ever_cache,
+    total_size,
+)
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
-from aurora.core.utils import total_size
-
 
 logger = logging.getLogger(__name__)
 

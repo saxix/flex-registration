@@ -11,7 +11,7 @@ from admin_ordering.admin import OrderableAdmin
 from admin_sync.mixin import SyncMixin
 from admin_sync.utils import is_local
 from adminfilters.autocomplete import AutoCompleteFilter
-from adminfilters.combo import ChoicesFieldComboFilter
+from adminfilters.combo import ChoicesFieldComboFilter, RelatedFieldComboFilter
 from adminfilters.querystring import QueryStringFilter
 from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
@@ -23,8 +23,9 @@ from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
 from django.db.models import JSONField
 from django.http import JsonResponse
-from django.urls import NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 from jsoneditor.forms import JSONEditor
+from mptt.admin import MPTTModelAdmin
 from requests.auth import HTTPBasicAuth
 from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
@@ -39,6 +40,8 @@ from .models import (
     FlexFormField,
     FormSet,
     OptionSet,
+    Organization,
+    Project,
     Validator,
 )
 from .utils import dict_setdefault, is_root, render
@@ -75,11 +78,38 @@ class Select2FieldComboFilter(ChoicesFieldComboFilter):
     template = "adminfilters/select2.html"
 
 
+class Select2RelatedFieldComboFilter(RelatedFieldComboFilter):
+    template = "adminfilters/select2.html"
+
+
 class ValidatorTestForm(forms.Form):
     code = forms.CharField(
         widget=PythonEditor,
     )
     input = forms.CharField(widget=PythonEditor(toolbar=False), required=False)
+
+
+@register(Organization)
+class OrganizationAdmin(SyncMixin, MPTTModelAdmin):
+    list_display = ("name",)
+    mptt_level_indent = 20
+    mptt_indent_field = "name"
+    search_fields = ("name",)
+
+
+@register(Project)
+class ProjectAdmin(SyncMixin, MPTTModelAdmin):
+    list_display = ("name",)
+    list_filter = ("organization",)
+    mptt_level_indent = 20
+    mptt_indent_field = "name"
+    search_fields = ("name",)
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+        if "oid" in request.GET:
+            queryset = queryset.filter(organization__id=request.GET["oid"])
+        return queryset, may_have_duplicates
 
 
 @register(Validator)
@@ -171,6 +201,12 @@ class FormSetAdmin(LoadDumpMixin, SyncMixin, SmartModelAdmin):
         JSONField: {"widget": JSONEditor},
     }
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+        if "oid" in request.GET:
+            queryset = queryset.filter(flex_form__organization__id=request.GET["oid"])
+        return queryset, may_have_duplicates
+
 
 class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
@@ -194,12 +230,6 @@ class FlexFormFieldForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
             self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
-
-    #
-    # def clean_name(self):
-    #     if not self.instance.pk:
-    #         if not self.cleaned_data.get("name") and self.cleaned_data.get("label"):
-    #             self.cleaned_data["name"] = namify(self.cleaned_data["label"])[:100]
 
 
 class FlexFormFieldForm2(forms.ModelForm):
@@ -319,6 +349,24 @@ class SyncForm(SyncConfigForm):
     remember = forms.BooleanField(label="Remember me", required=False)
 
 
+class ProjectFilter(AutoCompleteFilter):
+    fk_name = "project__organization__exact"
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        self.request = request
+        super().__init__(field, request, params, model, model_admin, field_path)
+
+    def has_output(self):
+        return "project__organization__exact" in self.request.GET
+
+    def get_url(self):
+        url = reverse("%s:autocomplete" % self.admin_site.name)
+        if self.fk_name in self.request.GET:
+            oid = self.request.GET[self.fk_name]
+            return f"{url}?oid={oid}"
+        return url
+
+
 @register(FlexForm)
 class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
@@ -326,7 +374,9 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     list_display = ("name", "validator", "used_by", "childs", "parents")
     list_filter = (
         QueryStringFilter,
-        "formsets",
+        ("project__organization", AutoCompleteFilter),
+        ("project", ProjectFilter),
+        ("formsets", Select2RelatedFieldComboFilter),
     )
     search_fields = ("name",)
     readonly_fields = ("version", "last_update_date")
