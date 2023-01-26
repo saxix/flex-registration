@@ -9,6 +9,7 @@ from Crypto.PublicKey import RSA
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.contrib.flatpages.models import FlatPage
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.utils import timezone
@@ -67,6 +68,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     locale = models.CharField(
         verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
     )
+    show_in_homepage = models.BooleanField(default=False)
+    welcome_page = models.ForeignKey(FlatPage, blank=True, null=True, on_delete=models.SET_NULL)
     locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
     intro = models.TextField(blank=True, null=True, default="")
     footer = models.TextField(blank=True, null=True, default="")
@@ -124,6 +127,12 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     def get_absolute_url(self):
         return cache_aware_reverse("register", args=[self.slug, self.version])
+
+    def get_welcome_url(self):
+        if self.welcome_page:
+            return self.welcome_page.get_absolute_url()
+        else:
+            return self.get_absolute_url()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:

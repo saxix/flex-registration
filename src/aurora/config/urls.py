@@ -17,6 +17,7 @@ urlpatterns = [
     re_path(r"sax-\d*/", admin.site.urls),
     path("api/", include("aurora.api.urls", namespace="api")),
     path("", include("aurora.web.urls")),
+    path("pages/", include("aurora.flatpages.urls")),
     path("charts/", include("aurora.counters.urls", namespace="charts")),
     path("social/", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),

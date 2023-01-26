@@ -97,8 +97,8 @@ class RegistrationExportForm(forms.Form):
 class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
-    list_filter = ("active", "archived")
-    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator", "archived", "is_pwa_enabled")
+    list_filter = ("active", "archived", "protected", "show_in_homepage")
+    list_display = ("name", "slug", "locale", "secure", "active", "archived", "protected", "show_in_homepage")
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True
@@ -156,7 +156,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             ]
         )
 
-    @button()
+    @view()
     def export_as_csv(self, request, pk):
         from adminactions.export import export_as_xls
 
@@ -455,19 +455,24 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
 
-    @button(change_form=True, html_attrs={"target": "_new"})
+    @choice(order=900, change_list=False)
+    def data(self, button):
+        button.choices = [
+            self.charts,
+            self.view_collected_data,
+            self.export_as_csv,
+        ]
+        return button
+
+    @view(change_form=True, html_attrs={"target": "_new"})
     def charts(self, request, pk):
         return HttpResponseRedirect(reverse("charts:registration", args=[pk]))
 
-    @link(permission=is_root, html_attrs={"class": "aeb-warn"})
-    def view_collected_data(self, button):
-        try:
-            if button.original:
-                base = reverse("admin:registration_record_changelist")
-                button.href = f"{base}?registration__exact={button.original.pk}"
-                button.html_attrs["target"] = f"_{button.original.pk}"
-        except Exception as e:
-            logger.exception(e)
+    @view(permission=is_root, html_attrs={"class": "aeb-warn"})
+    def view_collected_data(self, button, pk):
+        base = reverse("admin:registration_record_changelist")
+        url = f"{base}?registration__exact={pk}"
+        return HttpResponseRedirect(url)
 
     @view()
     def james_fake_data(self, request, pk):

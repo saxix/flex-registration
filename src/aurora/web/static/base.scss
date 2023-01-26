@@ -4,6 +4,12 @@ $color-error: #ff9898;
 * {
 
 }
+.CodeMirror-wrapping{
+  textarea{
+    background-color: white;
+  }
+}
+
 .select2{
   &.select2-container{
     &.select2-container--default{
@@ -118,9 +124,16 @@ $color-error: #ff9898;
   }
 }
 
+.button {
+  font-weight: bold;
+  background-color: #01ADF1;
+  color: white;
+  display: inline-block;
+  margin: 2px;
+}
+
 .landing {
-  input.button {
-    color: $base-color;
+  .button {
     font-weight: bold;
     background-color: #01ADF1;
     color: white;

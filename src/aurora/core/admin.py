@@ -41,7 +41,7 @@ from .models import (
     OptionSet,
     Validator,
 )
-from .utils import dict_setdefault, render
+from .utils import dict_setdefault, is_root, render
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class ConcurrencyVersionAdmin(CompareVersionAdmin):
             return super().recover_view(request, version_id, extra_context)
 
     def has_change_permission(self, request, obj=None):
-        return is_local(request)
+        return is_local(request) or settings.DEBUG or is_root(request)
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):

@@ -46,9 +46,11 @@
                     {% endif %}
                     {% formset_config formset as config %}
                     <div class="formset-config">{{ config|json_script:name }}</div>
-                    <script> function onAdd_{{ config.prefix }}(fs, row){
+                    {% if config.onAdd %}
+                    <script> function onAdd_{{ config.namespace }}(fs, row){
                         {{ config.onAdd }};
                     }</script>
+                    {% endif %}
                     <div class="shadow-md rounded bg-gray-100 mb-10 p-2 sm:p-4" data-page="{{ forloop.counter }}">
                         <div class="w-full formset formset-{{ name }} {{ formset.fs.advanced.smart.container.class }}"
                                 {% include "django/forms/widgets/attrs.html" with widget=formset.fs.advanced.smart.container.html_attrs %}>

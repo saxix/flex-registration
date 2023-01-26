@@ -2,7 +2,7 @@ import base64
 import io
 import json
 import logging
-from typing import Dict, Union
+from typing import Union
 
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
@@ -12,8 +12,6 @@ from cryptography.fernet import Fernet
 from django.conf import settings
 
 from aurora.core.utils import safe_json
-
-from aurora.core.private_key import privkey
 
 BLOCK_SIZE = 16
 CHUNK_SIZE = BLOCK_SIZE * 1024 * 1024 + BLOCK_SIZE
