@@ -169,7 +169,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 "files": self.encrypt(files),
                 "fields": base64.b64encode(self.encrypt(fields)).decode(),
             }
-        elif self.encrypt_data:
+        elif self.encrypt_data and not self.is_pwa_enabled:
             kwargs = {
                 # "storage": Crypto().encrypt(fields_data).encode(),
                 "files": Crypto().encrypt(files).encode(),
