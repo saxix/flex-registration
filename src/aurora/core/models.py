@@ -24,6 +24,7 @@ from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
+from .cache import cache_form
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
@@ -270,6 +271,10 @@ class FlexForm(I18NModel, NaturalKeyModel):
     def __str__(self):
         return self.name
 
+    def __init__(self, *args, **kwargs):
+        self._initial = {}
+        super().__init__(*args, **kwargs)
+
     def add_field(
         self,
         label,
@@ -297,12 +302,15 @@ class FlexForm(I18NModel, NaturalKeyModel):
             },
         )[0]
 
+    def get_initial(self):
+        return self._initial
+
     def add_formset(self, form, **extra):
         defaults = {"extra": 0, "name": form.name.lower() + pluralize(0)}
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    # @cache_form
+    @cache_form
     def get_form_class(self):
         from aurora.core.fields import CompilationTimeField
 
@@ -317,6 +325,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
                     compilation_time_field = field.name
                 if index := field.advanced.get("smart", {}).get("index"):
                     indexes[str(index)] = field.name
+                self._initial[field.name] = field.get_default_value()
             except TypeError:
                 pass
         form_class_attrs = {
@@ -493,6 +502,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     def fqn(self):
         return fqn(self.field_type)
+
+    def get_default_value(self):
+        return self.advanced.get("default", None)
 
     def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):

@@ -408,12 +408,12 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
         ctx = self.get_common_context(request, pk)
         form_class = self.object.get_form_class()
         if request.method == "POST":
-            form = form_class(request.POST)
+            form = form_class(request.POST, initial=self.object.get_initial())
             if form.is_valid():
                 ctx["cleaned_data"] = form.cleaned_data
                 self.message_user(request, "Form is valid")
         else:
-            form = form_class()
+            form = form_class(initial=self.object.get_initial())
         ctx["form"] = form
         return render(request, "admin/core/flexform/test.html", ctx)
 
