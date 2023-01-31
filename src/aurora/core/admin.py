@@ -290,12 +290,11 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
             fld = ctx["original"]
             instance = fld.get_instance()
             ctx["debug_info"] = {
-                "instance": instance,
-                "kwargs": fld.get_field_kwargs(),
-                "options": getattr(instance, "options", None),
-                "choices": getattr(instance, "choices", None),
-                "widget": getattr(instance, "widget", None),
-                "widget_attrs": instance.widget_attrs(instance.widget),
+                # "widget": getattr(instance, "widget", None),
+                "field_kwargs": fld.get_field_kwargs(),
+                # "options": getattr(instance, "options", None),
+                # "choices": getattr(instance, "choices", None),
+                # "widget_attrs": instance.widget_attrs(instance.widget),
             }
             form_class_attrs = {
                 "sample": instance,
@@ -313,6 +312,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
             else:
                 form = form_class()
             ctx["form"] = form
+            ctx["instance"] = instance
         except Exception as e:
             logger.exception(e)
             ctx["error"] = e

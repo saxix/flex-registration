@@ -1,3 +1,5 @@
+from typing import Dict, Type
+
 import json
 import logging
 import os
@@ -36,6 +38,7 @@ from aurora.core.utils import (
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
+from aurora.stubs import FormSet
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +178,7 @@ class RegisterView(RegistrationMixin, FormView):
         return self.registration.flex_form.get_form_class()
 
     # @cache_formset
-    def get_formsets_classes(self):
+    def get_formsets_classes(self) -> Dict[str, Type[FormSet]]:
         #     return self.registration.flex_form.get_formsets_classes()
         formsets = {}
         # attrs = self.get_form_kwargs().copy()
@@ -190,9 +193,10 @@ class RegisterView(RegistrationMixin, FormView):
     def get_formsets(self):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
+        attrs["initial"] = []
         attrs.pop("prefix")
         for name, fs in self.get_formsets_classes().items():
-            attrs["initial"] = fs.form.get_initial()
+            attrs["initial"] = [fs.form.flex_form.get_initial()]
             formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets
 

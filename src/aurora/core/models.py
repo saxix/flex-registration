@@ -420,7 +420,7 @@ class FormSet(NaturalKeyModel, OrderableModel):
         dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
         return self.advanced["smart"]["widget"]
 
-    def get_formset(self):
+    def get_formset(self) -> SmartBaseFormSet:
         formSet = formset_factory(
             self.get_form(),
             formset=SmartBaseFormSet,
@@ -453,11 +453,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     ]
     I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
-        "widget_kwargs": {
-            "pattern": None,
-            "title": None,
-            "placeholder": None,
-        },
+        "default": None,
+        "widget_kwargs": {"pattern": None, "title": None, "placeholder": None, "class": "", "classes": ""},
         "kwargs": {},
         "smart": {
             "hint": "",
@@ -525,6 +522,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             advanced = self.advanced.copy()
             kwargs = self.advanced.get("kwargs", {}).copy()
             widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
+            # widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             regex = self.regex
 
             smart_attrs = advanced.pop("smart", {}).copy()
