@@ -49,12 +49,13 @@ INSTALLED_APPS = [
     "reversion_compare",  # https://github.com/jedie/django-reversion-compare
     # ---
     # "aurora.admin.apps.AuroraAdminUIConfig",
-    "aurora.administration.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
-    "smart_admin.apps.SmartAuthConfig",
+    # "smart_admin.apps.SmartAuthConfig",
     "smart_admin.apps.SmartConfig",
-    # 'smart_admin',
+    "aurora.administration.apps.AuroraAdminConfig",
+    "aurora.administration.apps.AuroraAuthConfig",
+    "hijack",
     "rest_framework",
     "rest_framework.authtoken",
     "aurora.api",
@@ -107,6 +108,7 @@ MIDDLEWARE = [
     "django.middleware.gzip.GZipMiddleware",
     # "django.middleware.cache.FetchFromCacheMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "hijack.middleware.HijackUserMiddleware",
 ]
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
@@ -269,7 +271,8 @@ STATICFILES_DIRS = [
 # -------- Added Settings
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
-    "aurora.security.backend.SmartBackend",
+    # "aurora.security.backend.SmartBackend",
+    "aurora.security.backend.OrganizationBackend",
     # "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_b2c.AzureADB2COAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
@@ -408,7 +411,7 @@ SMART_ADMIN_SECTIONS = {
     "Registration": ["registration", "dbtemplates", "flatpages"],
     "Form Builder": ["core"],
     "Configuration": ["constance", "flags"],
-    "Security": ["auth", "social_auth"],
+    "Security": ["auth", "social_auth", "security"],
     "Other": [],
     "_hidden_": [],
 }
@@ -648,3 +651,5 @@ MIGRATION_LOCK_KEY = env("MIGRATION_LOCK_KEY")
 # for offline forms
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 10
 SESSION_COOKIE_HTTPONLY = False
+
+HIJACK_PERMISSION_CHECK = "aurora.administration.hijack.can_impersonate"

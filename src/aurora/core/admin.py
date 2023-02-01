@@ -71,7 +71,8 @@ class ConcurrencyVersionAdmin(CompareVersionAdmin):
             return super().recover_view(request, version_id, extra_context)
 
     def has_change_permission(self, request, obj=None):
-        return is_local(request) or settings.DEBUG or is_root(request)
+        orig = super().has_change_permission(request, obj)
+        return orig and (is_local(request) or settings.DEBUG or is_root(request))
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):

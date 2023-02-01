@@ -1,5 +1,3 @@
-from typing import Dict, Type
-
 import json
 import logging
 import os
@@ -7,6 +5,7 @@ import time
 from functools import wraps
 from hashlib import md5
 from json import JSONDecodeError
+from typing import Dict, Type
 
 import sentry_sdk
 from constance import config

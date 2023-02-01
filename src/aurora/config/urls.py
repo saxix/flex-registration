@@ -21,6 +21,7 @@ urlpatterns = [
     path("charts/", include("aurora.counters.urls", namespace="charts")),
     path("social/", include("social_django.urls", namespace="social")),
     path("captcha/", include("captcha.urls")),
+    path("hijack/", include("hijack.urls")),
     path("i18n/", include("aurora.i18n.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
     path(r"serviceworker.js", service_worker, name="serviceworker"),

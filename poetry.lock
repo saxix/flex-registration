@@ -578,6 +578,20 @@ docs = ["mkdocs (>=0.17)", "mkdocs-rtd-dropdown (>=0.0.11)", "pymdown-extensions
 testing = ["coverage (>=3.7.0)", "django-debug-toolbar (>=3.2,<4)", "jinja2"]
 
 [[package]]
+name = "django-hijack"
+version = "3.2.6"
+description = "django-hijack allows superusers to hijack (=login as) and work on behalf of another user."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+django = ">=2.2"
+
+[package.extras]
+test = ["pytest", "pytest-cov", "pytest-django"]
+
+[[package]]
 name = "django-import-export"
 version = "3.0.2"
 description = "Django application and library for importing and exporting data with included admin integration."
@@ -2234,7 +2248,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "449e790b01918e726f5570962c543819cd9dcc015c2eb5a1719a53afdf5ad245"
+content-hash = "ab8d023c662ac6d281d9f9c09f9c70f860a4b77025580e693915dd658a4af69c"
 
 [metadata.files]
 amqp = [
@@ -2642,6 +2656,10 @@ django-environ = [
 django-flags = [
     {file = "django-flags-5.0.12.tar.gz", hash = "sha256:07f28e334da1c2fe54262160172610cdb8f13e2be6ec18964c23c375091442ca"},
     {file = "django_flags-5.0.12-py2.py3-none-any.whl", hash = "sha256:b186651de361926c917f9d7c9ecc84fac47c39f4ad6066c25bf6cd3cf28da50a"},
+]
+django-hijack = [
+    {file = "django-hijack-3.2.6.tar.gz", hash = "sha256:a6df02875c6a653eeb2c0768391587c3ffe711613b8f6cd9e56b9ba62f0b44d9"},
+    {file = "django_hijack-3.2.6-py3-none-any.whl", hash = "sha256:c453d9d37208d7cd78f9b679831ec60ff03160c88bb87e9ac1f49e5c4ada3874"},
 ]
 django-import-export = [
     {file = "django-import-export-3.0.2.tar.gz", hash = "sha256:ae77a44c08d94b98e50dec11ea53fd5f65702b7d8c3c929c88c310a4e4444507"},

@@ -24,11 +24,11 @@ from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
 
-from .cache import cache_form
 from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
 from . import fields
+from .cache import cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
