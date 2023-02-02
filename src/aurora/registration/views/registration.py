@@ -331,7 +331,6 @@ class RegisterAuthView(RegistrationMixin, View):
 
 
 def registrations(request):
-    # if request.user.is_authenticated:
     registration_objs = Registration.objects.filter(active=True)
 
     if request.method == "GET":

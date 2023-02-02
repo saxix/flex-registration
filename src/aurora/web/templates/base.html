@@ -50,7 +50,9 @@ let db;
 const state = {
     online: "ONLINE",
     offline: "OFFLINE",
-    isAuthorized: false
+    isAuthorized: false,
+    authCookieName: "aurora_id",
+    baseUrl: document.URL.slice(0, -1)
 }
 
 const registerServiceWorker = () => {
@@ -99,9 +101,7 @@ const initDB = () => {
 
 // Doubled from serviceworker.js
 const synchronizeRegistrationData = () => {
-    const url = "http://localhost:8000/en-us/";
-
-    fetch(`${url}get_pwa_enabled/`)
+    fetch(`${state.baseUrl}/get_pwa_enabled/`)
     .then(fetchResponse => fetchResponse.json())
     .then(response => {
         const {slug, version, publicKey, optionsSets} = response
@@ -146,7 +146,7 @@ async function authorizeCookie(url = "") {
             "Content-Type": "application/json",
             "X-CSRFToken": getCookie("csrftoken")
         },
-        body: JSON.stringify(getCookie("reg_id"))
+        body: JSON.stringify(getCookie(state.authCookieName))
     })
 
     return response.json();
@@ -164,7 +164,7 @@ const prepareFormData = dataObj => {
 
 const sendData = (url, dataForm) => {
   const xhr = new XMLHttpRequest();
-  xhr.open('POST', `http://localhost:8000${url}`);
+  xhr.open('POST', `${state.baseUrl}${url}`);
   xhr.send(dataForm);
 
   return xhr
@@ -220,7 +220,7 @@ const clearFormsDB = () => {
 }
 
 const processOnline = () => {
-    authorizeCookie("http://localhost:8000/en-us/authorize_cookie/").then(response => {
+    authorizeCookie(`${state.baseUrl}/en-us/authorize_cookie/`).then(response => {
         state.isAuthorized = response.authorized;
     }).then(() => {
         if (state.isAuthorized === true) {
