@@ -6,9 +6,6 @@ dateutil = {
 
 };
 smart = {
-    makeMandatoryOnselect: function (sender, target) {
-
-    },
     sameAs: function (sender, target) {
         var $sender = $(sender);
         var $form = $sender.parents(".form-container");
@@ -46,6 +43,30 @@ smart = {
             } else {
                 $target.hide();
             }
+        } catch (error) {
+            console.error(error);
+        }
+    },
+    setRequiredOnValue: function (sender, targets, value) {
+        try {
+            console.log(11111, targets)
+            var cmp = value.toLowerCase();
+            var $form = $(sender).parents(".form-container");
+            $form.find(targets).each(function(i, e){
+                $c = $(e).parents(".field-container");
+                if ($(sender).val() == cmp){
+                    $(e).attr("required", true);
+                    $c.find('.required-label').show();
+                }else{
+                    $(e).attr("required", false);
+                    $c.find('.required-label').hide();
+                }
+            })
+            // if ($(sender).val() == cmp) {
+            //     $targets.attr("required", true);
+            // } else {
+            //     $targets.attr("required", false);
+            // }
         } catch (error) {
             console.error(error);
         }
@@ -92,6 +113,9 @@ smart = {
 
 (function ($) {
     $(function () {
+        $(".field-container.required span.required").each(function(i, e){
+            $(e).removeClass("hidden");
+        })
         $(".required_by_question").each(function(i, e){
             var $question = $(e).parents('fieldset').find('.question-visibility');
             var $container = $(e).parents("fieldset").find(".field-container");

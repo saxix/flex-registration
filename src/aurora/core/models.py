@@ -537,9 +537,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 else:
                     field_kwargs["required"] = True
             else:
-                smart_attrs["required_by_question"] = "false"
+                smart_attrs["required_by_question"] = ""
                 field_kwargs["required"] = False
-                # smart_attrs["required"] = False
 
             if not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
