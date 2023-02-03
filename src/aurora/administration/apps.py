@@ -10,10 +10,7 @@ class AuroraAuthConfig(SmartAuthConfig):
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
         from smart_admin.decorators import smart_register
-        from smart_admin.smart_auth.admin import (
-            ContentTypeAdmin,
-            PermissionAdmin,
-        )
+        from smart_admin.smart_auth.admin import ContentTypeAdmin, PermissionAdmin
 
         from aurora.administration.admin import AuroraGroupAdmin, AuroraUserAdmin
 

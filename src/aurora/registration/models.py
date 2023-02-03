@@ -116,7 +116,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
             ("register", _("Can use Registration")),
             ("create_translation", _("Can Create Translation")),
         )
-        ordering = ('name', 'title')
+        ordering = ("name", "title")
 
     @property
     def media(self):

@@ -14,31 +14,31 @@ let internalAssets = [
 ];
 
 let staticAssets = [
-    "/static/registration/survey.min.js",
-    "/static/admin/js/vendor/jquery/jquery.js",
-    "/i18n/en-us/",
-    "/static/admin/debug.css",
-    "/static/staff-toolbar.css",
-    "/static/base.css",
-    "/static/i18n/i18n.min.js",
-    "/static/smart.js",
-    "/static/select2/ajax_select.js",
-    "/static/i18n/i18n_edit.js",
-    "/static/page.min.js",
-    "/static/hope1.webp",
-    "/static/edit.min.js",
-    "/static/registration/auth.js",
+    // "/static/registration/survey.min.js",
+    // "/static/admin/js/vendor/jquery/jquery.js",
+    // "/i18n/en-us/",
+    // "/static/admin/debug.css",
+    // "/static/staff-toolbar.css",
+    // "/static/base.css",
+    // "/static/i18n/i18n.min.js",
+    // "/static/smart.js",
+    // "/static/select2/ajax_select.js",
+    // "/static/i18n/i18n_edit.js",
+    // "/static/page.min.js",
+    // "/static/hope1.webp",
+    // "/static/edit.min.js",
+    // "/static/registration/auth.js",
 ];
 
 let externalAssets = [
-    "https://browser.sentry-cdn.com/5.30.0/bundle.min.js",
-    "https://code.jquery.com/jquery-3.6.0.min.js",
-    "https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css",
-    "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css",
-    "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js "
+    // "https://browser.sentry-cdn.com/5.30.0/bundle.min.js",
+    // "https://code.jquery.com/jquery-3.6.0.min.js",
+    // "https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css",
+    // "https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js",
+    // "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css",
+    // "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js",
+    // "https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js",
+    // "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js "
 ];
 
 let imageAssets = [];
@@ -164,7 +164,7 @@ self.addEventListener("activate", event => {
 
 
 self.addEventListener("fetch", event => {
-    console.log(`Fetching request for: ${event.request.url}`);
+    // console.log(`Fetching request for: ${event.request.url}`);
 
     if (!event.request.url.endsWith("/")) {
         event.request.url = event.request.url + "/";

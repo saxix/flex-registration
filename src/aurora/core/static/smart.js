@@ -89,6 +89,15 @@ smart = {
 
 (function ($) {
     $(function () {
+        $(".required_by_question").each(function(i, e){
+            var $question = $(e).parents('fieldset').find('.question-visibility');
+            var $container = $(e).parents("fieldset").find(".field-container");
+            var $input = $container.find("input,select");
+            $question.on("change", function(e){
+                $input.attr("required", $(this).is(":checked"));
+            });
+        });
+
         $("#registrationForm").on("submit", function (e) {
             $(this).find("input[type=submit]").prop("disabled", "disabled").val(gettext("Please wait..."));
         });

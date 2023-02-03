@@ -23,7 +23,7 @@
                 class="itrans block uppercase tracking-wide text-gray-700 font-bold mb-2" for="{{ field.auto_id }}">
 {#            {% if can_translate %}{% include "i18n/_staff_edit_i18n.html" with original=field.label %}{% endif %}#}
             {% trans field.label|md %}
-            {% if field.field.required %}
+            {% if field.field.required field.field.flex_field.advanced.smart.question %}
                 <span data-msgid="required" class="itrans lowercase font-thin required text-xs">({% trans "required" %})</span>{% endif %}
         </label>
         {% if field.field.flex_field.advanced.description %}
