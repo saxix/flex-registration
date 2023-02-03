@@ -5,7 +5,6 @@ from aurora.state import state
 
 class TailWindMixin:
     def __init__(self, attrs=None, **kwargs):
-        print("src/aurora/core/fields/widgets/mixins.py: 8", 33333, attrs, kwargs)
         attrs = {
             "class": "shadow appearance-none border rounded w-full py-2 px-3 my-1 cursor-pointer"
             "text-gray-700 leading-tight focus:outline-none focus:shadow-outline ",

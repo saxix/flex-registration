@@ -28,7 +28,6 @@ from ..i18n.gettext import gettext as _
 from ..i18n.models import I18NModel
 from ..state import state
 from . import fields
-from .cache import cache_form
 from .compat import RegexField, StrategyClassField
 from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
@@ -310,7 +309,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
         defaults.update(extra)
         return FormSet.objects.update_or_create(parent=self, flex_form=form, defaults=defaults)[0]
 
-    @cache_form
+    # @cache_form
     def get_form_class(self):
         from aurora.core.fields import CompilationTimeField
 
@@ -538,7 +537,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                     field_kwargs["required"] = True
             else:
                 smart_attrs["required_by_question"] = ""
-                field_kwargs["required"] = False
+            # field_kwargs["required"] = False
 
             if not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
@@ -580,7 +579,6 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             kwargs = self.get_field_kwargs()
             kwargs.setdefault("flex_field", self)
             tt = type(field_type.__name__, (SmartFieldMixin, field_type), dict())
-            print("src/aurora/core/models.py: 574", 232222, kwargs)
             fld = tt(**kwargs)
         except Exception as e:
             logger.exception(e)

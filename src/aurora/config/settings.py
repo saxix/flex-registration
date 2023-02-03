@@ -271,7 +271,7 @@ STATICFILES_DIRS = [
 # -------- Added Settings
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
-    # "aurora.security.backend.SmartBackend",
+    "aurora.security.backend.SmartBackend",
     "aurora.security.backend.OrganizationBackend",
     # "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_b2c.AzureADB2COAuth2",
