@@ -6,6 +6,9 @@ dateutil = {
 
 };
 smart = {
+    makeMandatoryOnselect: function (sender, target) {
+
+    },
     sameAs: function (sender, target) {
         var $sender = $(sender);
         var $form = $sender.parents(".form-container");

@@ -531,13 +531,13 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
             if self.required:
-                smart_attrs["data-required"] = "required"
+                smart_attrs["required_by_question"] = "required"
                 if smart_attrs.get("question"):
                     field_kwargs["required"] = False
                 else:
                     field_kwargs["required"] = True
             else:
-                smart_attrs["data-required"] = "false"
+                smart_attrs["required_by_question"] = "false"
                 field_kwargs["required"] = False
                 # smart_attrs["required"] = False
 

@@ -17,7 +17,7 @@ class TailWindMixin:
         """Build an attribute dictionary."""
         if extra_classes := base_attrs.pop("extra_classes", None):
             base_attrs["class"] += f" {extra_classes}"
-        required = self.smart_attrs.get("data-required", "")
+        required = self.smart_attrs.get("required_by_question", "")
         if required == "required":
             if self.smart_attrs.get("question", None):
                 base_attrs.pop("required", None)
