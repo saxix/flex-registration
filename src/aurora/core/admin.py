@@ -291,6 +291,11 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
         return initial
 
     @button()
+    def attributes(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        return render(request, "admin/core/flexformfield/attributes.html", ctx)
+
+    @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk)
         try:

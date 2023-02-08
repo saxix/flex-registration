@@ -92,3 +92,7 @@ class SmartBaseFormSet(BaseFormSet):
                 static("smart.formset%s.js" % extra),
             ]
         )
+
+
+class FieldAttributesForm(forms.Form):
+    pass

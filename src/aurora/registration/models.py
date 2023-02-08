@@ -105,7 +105,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     )
     restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
     is_pwa_enabled = models.BooleanField(default=False)
-
+    export_allowed = models.BooleanField(default=False)
     project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
 
     class Meta:
@@ -114,6 +114,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
             ("manage", _("Can manage Registration")),
             ("register", _("Can use Registration")),
             ("create_translation", _("Can Create Translation")),
+            ("export_data", _("Can Export Data")),
         )
         ordering = ("name", "title")
 
