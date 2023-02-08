@@ -397,14 +397,11 @@ class UsedInRFormset(BaseAutoCompleteFilter):
 @register(FlexForm)
 class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
-    inlines = [FlexFormFieldInline, FormSetInline]
+    # inlines = [FlexFormFieldInline, FormSetInline]
     list_display = (
         "name",
         "validator",
-        # "used_by",
         "is_main",
-        # "childs",
-        # "parents",
     )
     list_filter = (
         QueryStringFilter,
@@ -416,6 +413,7 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     )
     search_fields = ("name",)
     readonly_fields = ("version", "last_update_date")
+    autocomplete_fields = ("validator", "project")
     ordering = ("name",)
     save_as = True
 

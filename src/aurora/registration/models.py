@@ -19,7 +19,7 @@ from natural_keys import NaturalKeyModel
 
 from aurora.core.crypto import Crypto, crypt, decrypt, decrypt_offline
 from aurora.core.fields import AjaxSelectField
-from aurora.core.models import FlexForm, Organization, Project, Validator
+from aurora.core.models import FlexForm, Project, Validator
 from aurora.core.utils import (
     cache_aware_reverse,
     dict_setdefault,
@@ -106,7 +106,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
     is_pwa_enabled = models.BooleanField(default=False)
 
-    organization = models.ForeignKey(Organization, null=True, on_delete=models.SET_NULL)
     project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
 
     class Meta:
