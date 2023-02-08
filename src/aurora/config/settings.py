@@ -480,8 +480,6 @@ CAPTCHA_GET_FROM_POOL = True
 
 # DEBUG TOOLBAR
 def show_ddt(request):  # pragma: no-cover
-    # use https://bewisse.com/modheader/ to set custom header
-    # key must be `X-DDT` (no HTTP_ prefix no underscore)
     from flags.state import flag_enabled
 
     if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):  # pragma: no cache

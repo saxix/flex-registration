@@ -18,10 +18,12 @@ from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
+from django.contrib.admin.options import IncorrectLookupParameters
 from django.core.cache import caches
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
-from django.db.models import JSONField
+from django.db.models import JSONField, Q
 from django.http import JsonResponse
 from django.urls import NoReverseMatch, reverse
 from jsoneditor.forms import JSONEditor
@@ -30,6 +32,7 @@ from requests.auth import HTTPBasicAuth
 from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
+from ..administration.filters import BaseAutoCompleteFilter
 from ..administration.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
 from .forms import Select2Widget, ValidatorForm
@@ -72,7 +75,7 @@ class ConcurrencyVersionAdmin(CompareVersionAdmin):
 
     def has_change_permission(self, request, obj=None):
         orig = super().has_change_permission(request, obj)
-        return orig and (is_local(request) or settings.DEBUG or is_root(request))
+        return orig and (settings.DEBUG or is_root(request) or is_local(request))
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):
@@ -265,6 +268,9 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     ordering_field = "ordering"
     order = "ordering"
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related()
+
     # change_list_template = "reversion/change_list.html"
 
     def form_type(self, obj):
@@ -368,21 +374,65 @@ class ProjectFilter(AutoCompleteFilter):
         return url
 
 
+class UsedByRegistration(BaseAutoCompleteFilter):
+    def has_output(self):
+        return "project__exact" in self.request.GET
+
+    def queryset(self, request, queryset):
+        # {'registration__exact': '30'}
+        try:
+            value = self.used_parameters["registration__exact"]
+            return queryset.filter(Q(registration__exact=value) | Q(formset__parent__registration=value))
+        except (ValueError, ValidationError) as e:
+            # Fields may raise a ValueError or ValidationError when converting
+            # the parameters to the correct type.
+            raise IncorrectLookupParameters(e)
+
+
+class UsedInRFormset(BaseAutoCompleteFilter):
+    def has_output(self):
+        return "project__exact" in self.request.GET
+
+
 @register(FlexForm)
 class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
     inlines = [FlexFormFieldInline, FormSetInline]
-    list_display = ("name", "validator", "used_by", "childs", "parents")
+    list_display = (
+        "name",
+        "validator",
+        # "used_by",
+        "is_main",
+        # "childs",
+        # "parents",
+    )
     list_filter = (
         QueryStringFilter,
         ("project__organization", AutoCompleteFilter),
         ("project", ProjectFilter),
-        ("formsets", Select2RelatedFieldComboFilter),
+        ("registration", UsedByRegistration),
+        ("formset", UsedInRFormset),
+        ("formset__parent", UsedInRFormset),
     )
     search_fields = ("name",)
     readonly_fields = ("version", "last_update_date")
     ordering = ("name",)
     save_as = True
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("registration_set")
+            .select_related(
+                "project",
+            )
+        )
+
+    def is_main(self, obj):
+        return obj.registration_set.exists()
+
+    is_main.boolean = True
 
     def used_by(self, obj):
         return ", ".join(obj.registration_set.values_list("name", flat=True))
@@ -400,7 +450,7 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
         cache.clear()
 
     @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
-    def _invalidate_cache(self, request, pk):
+    def invalidate_cache_single(self, request, pk):
         obj = self.get_object(request, pk)
         obj.save()
 
