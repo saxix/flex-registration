@@ -35,7 +35,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 from ..administration.filters import BaseAutoCompleteFilter
 from ..administration.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
-from .forms import Select2Widget, ValidatorForm
+from .forms import Select2Widget, ValidatorForm, FieldAttributesForm, WidgetAttributesForm, SmartAttributesForm
 from .models import (
     FIELD_KWARGS,
     CustomFieldType,
@@ -290,10 +290,48 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
         initial.setdefault("advanced", FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
         return initial
 
+    def _attributes(self, request):
+        formAttrs = FieldAttributesForm(request.GET)
+        formWidget = WidgetAttributesForm(request.GET)
+        formSmart = SmartAttributesForm(request.GET)
+        formAttrs.is_valid()
+        formWidget.is_valid()
+        formSmart.is_valid()
+
+        data = {**formAttrs.cleaned_data, **formWidget.cleaned_data, **formSmart.cleaned_data}
+        return JsonResponse(data)
+
     @button()
     def attributes(self, request, pk):
         ctx = self.get_common_context(request, pk)
+        if request.method == "POST":
+            return self._attributes(request)
+        else:
+            formAttrs = FieldAttributesForm()
+            formWidget = WidgetAttributesForm()
+            formSmart = SmartAttributesForm()
+        ctx["form_attrs"] = formAttrs
+        ctx["form_widget"] = formWidget
+        ctx["form_smart"] = formSmart
+
         return render(request, "admin/core/flexformfield/attributes.html", ctx)
+
+    @view()
+    def widget(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        if request.POST:
+            pass
+        else:
+            fld: FlexFormField = ctx["original"]
+            instance = fld.get_instance()
+            form_class_attrs = {
+                "sample": instance,
+            }
+            form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+            ctx["form"] = form_class()
+            ctx["instance"] = instance
+
+        return render(request, "admin/core/flexformfield/widget.html", ctx)
 
     @button()
     def test(self, request, pk):
@@ -436,15 +474,6 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
         return obj.registration_set.exists()
 
     is_main.boolean = True
-
-    def used_by(self, obj):
-        return ", ".join(obj.registration_set.values_list("name", flat=True))
-
-    def childs(self, obj):
-        return ", ".join(obj.formsets.values_list("name", flat=True))
-
-    def parents(self, obj):
-        return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
 
     @button(html_attrs={"class": "aeb-danger"})
     def invalidate_cache(self, request):

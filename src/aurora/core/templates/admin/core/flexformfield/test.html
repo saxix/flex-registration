@@ -9,10 +9,6 @@
     {{ error }}
     {{ form.media }}
     <table>
-{#        <tr>#}
-{#            <th>Label</th>#}
-{#            <td>{{ original.label }}</td>#}
-{#        </tr>#}
         <tr>
             <th>FlexField</th>
             <td>{{ original }}</td>
@@ -40,13 +36,13 @@
 
     </table>
 
-    <form method="post" id="registrationForm">
-        {% csrf_token %}
-        {% for field in form %}
-            {% include "registration/_fieldset.html" %}
-        {% endfor %}
-    <div lass="submit-row">
-        <input style="background-color: cornflowerblue" type="submit" value="Submit">
-    </div>
-    </form>
+        <form method="post" id="registrationForm">
+            {% csrf_token %}
+            {% for field in form %}
+                {% include "smart/_fieldset.html" %}
+            {% endfor %}
+        <div lass="submit-row">
+            <input style="background-color: cornflowerblue" type="submit" value="Submit">
+        </div>
+        </form>
 {% endblock action-content %}

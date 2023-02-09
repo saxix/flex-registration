@@ -54,7 +54,4 @@ class SmartFieldMixin:
             attrs.pop("required", "")
         widget.smart_attrs = self.smart_attrs
         widget.flex_field = self.flex_field
-        if "extra_classes" in attrs:
-            print("src/aurora/core/fields/mixins.py: 57", 1111, attrs)
-        # # attrs["smart_attrs"] = self.smart_attrs
         return attrs

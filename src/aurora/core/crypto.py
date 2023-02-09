@@ -39,7 +39,7 @@ class Crypto:
             return encrypted_text
         except Exception as e:
             logger.exception(e)
-        return v
+        return value
 
     def decrypt(self, value):
         try:

@@ -162,7 +162,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     def add_record(self, fields_data):
         fields, files = router.decompress(fields_data)
-
+        crypter = Crypto()
         if self.public_key:
             kwargs = {
                 # "storage": self.encrypt(fields_data),
@@ -172,8 +172,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         elif self.encrypt_data:
             kwargs = {
                 # "storage": Crypto().encrypt(fields_data).encode(),
-                "files": Crypto().encrypt(files).encode(),
-                "fields": Crypto().encrypt(fields),
+                "files": crypter.encrypt(files).encode(),
+                "fields": crypter.encrypt(fields),
             }
         else:
             kwargs = {

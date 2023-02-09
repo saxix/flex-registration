@@ -44,13 +44,13 @@ UNDEFINED = object()
 
 def has_token(request, *args, **kwargs):
     return (
-        request.headers.get("x-session") == settings.ROOT_TOKEN
-        or request.COOKIES.get("x-session") == settings.ROOT_TOKEN
+        request.headers.get("x-aurora-token") == settings.ROOT_TOKEN
+        or request.COOKIES.get("x-aurora-token") == settings.ROOT_TOKEN
     )
 
 
 def is_root(request, *args, **kwargs):
-    return settings.DEBUG or (request.user.is_superuser and has_token(request))
+    return request.user.is_superuser and has_token(request)
 
 
 @keep_lazy_text

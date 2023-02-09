@@ -171,7 +171,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             ]
         )
 
-    @view(permission=lambda req, obj, **kw: is_root(req))
+    @view(permission=is_root)
     def export_as_csv(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Export")
         reg: Registration = ctx["original"]
@@ -469,7 +469,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj.pk and not is_root(request):
+        if obj and not is_root(request):
             readonly_fields.append("export_allowed")
         return readonly_fields
 
@@ -479,7 +479,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             self.charts,
             self.view_collected_data,
         ]
-        if button.original.export_allowed:
+        if button.original.export_allowed and is_root(button.context["request"]):
             button.choices.append(self.export_as_csv)
         return button
 
