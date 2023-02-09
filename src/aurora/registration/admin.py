@@ -497,7 +497,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             self.charts,
             self.view_collected_data,
         ]
-        if can_export_data(button.context["request"], button.original.export_allowed):
+        if can_export_data(button.context["request"], button.original):
             button.choices.append(self.export_as_csv)
         return button
 
