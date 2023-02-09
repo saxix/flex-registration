@@ -505,7 +505,10 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):
-            widget_kwargs = {}
+            advanced = self.advanced.copy()
+            smart_attrs = advanced.pop("smart", {}).copy()
+            widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
+
             field_type = self.field_type.custom.base_type
             field_kwargs = self.field_type.custom.attrs.copy()
             if self.validator:

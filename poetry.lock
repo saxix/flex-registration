@@ -362,6 +362,26 @@ files = [
 ]
 
 [[package]]
+name = "channels"
+version = "4.0.0"
+description = "Brings async, event-driven capabilities to Django 3.2 and up."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "channels-4.0.0-py3-none-any.whl", hash = "sha256:2253334ac76f67cba68c2072273f7e0e67dbdac77eeb7e318f511d2f9a53c5e4"},
+    {file = "channels-4.0.0.tar.gz", hash = "sha256:0ce53507a7da7b148eaa454526e0e05f7da5e5d1c23440e4886cf146981d8420"},
+]
+
+[package.dependencies]
+asgiref = ">=3.5.0,<4"
+Django = ">=3.2"
+
+[package.extras]
+daphne = ["daphne (>=4.0.0)"]
+tests = ["async-timeout", "coverage (>=4.5,<5.0)", "pytest", "pytest-asyncio", "pytest-django"]
+
+[[package]]
 name = "chardet"
 version = "5.1.0"
 description = "Universal encoding detector for Python 3"
@@ -851,28 +871,6 @@ six = "*"
 
 [package.extras]
 tests = ["flake8", "mysqlclient", "psycopg2 (>=2.3)", "pytest-django"]
-
-[[package]]
-name = "django-channels"
-version = "0.7.0"
-description = "A Django library for sending notifications"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "django-channels-0.7.0.tar.gz", hash = "sha256:c8bc623df4a7828c2e5ea453d0d0f066ff9b71b8c7c1a58b2f7fa86bc0bd619e"},
-    {file = "django_channels-0.7.0-py2-none-any.whl", hash = "sha256:06812bda257e7b5e9786b1c205bede9ab7bd2864689ed5dc64b549086b3d3a33"},
-    {file = "django_channels-0.7.0-py3-none-any.whl", hash = "sha256:ceb5675ed0133bd54cc0529eb76157cc3b9ab67aceba7293ee5ac2fe4126987b"},
-]
-
-[package.dependencies]
-requests = ">=2.7.0"
-requests-oauthlib = ">=0.5.0"
-six = ">=1.9.0"
-
-[package.extras]
-docs = ["Sphinx (>=1.4,<1.5)", "sphinx-rtd-theme (>=0.1.9,<0.2)"]
-test = ["mock (>=2.0.0,<3.0.0)"]
 
 [[package]]
 name = "django-click"
@@ -3452,4 +3450,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "db45c0af1183fc1db0744a6af6192fd9b7922e3b12d85c00c12ba79f3b0d7173"
+content-hash = "6dc1f84f779c364b158d8ab8cbd85ed3235b323fa9506f102fd4e7fda70d13ea"

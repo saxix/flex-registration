@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.forms",
+    "daphne",
     # -- dev --
     "debug_toolbar",
     # ---
@@ -87,7 +88,6 @@ INSTALLED_APPS = [
     "aurora.counters",
 ]
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
-
 MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
     "aurora.web.middlewares.thread_local.ThreadLocalMiddleware",
@@ -153,6 +153,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "aurora.config.wsgi.application"
+ASGI_APPLICATION = "aurora.config.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases

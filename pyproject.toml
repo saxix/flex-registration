@@ -60,7 +60,7 @@ django-tinymce = "^3.5.0"
 django-pwa = "^1.0.10"
 django-mptt = "^0.14.0"
 django-hijack = "^3.2.6"
-django-channels = "^0.7.0"
+channels = "^4.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
