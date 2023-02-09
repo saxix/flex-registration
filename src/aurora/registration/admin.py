@@ -117,7 +117,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         "protected",
         "show_in_homepage",
     )
-    list_display = ("name", "slug", "locale", "secure", "active", "archived", "protected", "show_in_homepage")
+    list_display = ("name", "slug", "project", "secure", "active", "archived", "protected", "show_in_homepage")
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True
@@ -150,6 +150,9 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         ("Others", {"fields": ("__others__",)}),
     ]
     protocol_class = AuroraSyncRegistrationProtocol
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("project")
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)

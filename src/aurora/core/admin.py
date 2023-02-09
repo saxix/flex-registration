@@ -453,6 +453,7 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     list_display = (
         "name",
         "validator",
+        "project",
         "is_main",
     )
     list_filter = (
