@@ -1,8 +1,5 @@
 from adminfilters.autocomplete import get_real_field
-from adminfilters.mixin import (
-    MediaDefinitionFilter,
-    SmartFieldListFilter,
-)
+from adminfilters.mixin import MediaDefinitionFilter, SmartFieldListFilter
 from django.conf import settings
 from django.contrib.admin.widgets import SELECT2_TRANSLATIONS
 from django.forms import forms

@@ -19,6 +19,7 @@ from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from mptt.fields import TreeForeignKey
+from mptt.managers import TreeManager
 from mptt.models import MPTTModel
 from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
@@ -39,11 +40,18 @@ logger = logging.getLogger(__name__)
 cache = caches["default"]
 
 
-class Organization(NaturalKeyModel, MPTTModel):
+class OrganizationManager(TreeManager):
+    def get_by_natural_key(self, slug):
+        return self.get(slug=slug)
+
+
+class Organization(MPTTModel):
     name = CICharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
     parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
-    _natural_key = ["name"]
+    _natural_key = ("slug",)
+
+    objects = OrganizationManager()
 
     class MPTTMeta:
         order_insertion_by = ["name"]
@@ -51,18 +59,27 @@ class Organization(NaturalKeyModel, MPTTModel):
     def __str__(self):
         return self.name
 
+    def natural_key(self):
+        return (self.slug,)
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
 
-class Project(NaturalKeyModel, MPTTModel):
+class ProjectManager(TreeManager):
+    def get_by_natural_key(self, slug, org_slug):
+        return self.get(slug=slug, organization__slug=org_slug)
+
+
+class Project(MPTTModel):
     name = CICharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, blank=True, null=True)
     organization = models.ForeignKey(Organization, null=True, related_name="projects", on_delete=models.CASCADE)
     parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
-    _natural_key = ["name", "organization.slug"]
+
+    objects = ProjectManager()
 
     class MPTTMeta:
         order_insertion_by = ["name"]
@@ -72,6 +89,9 @@ class Project(NaturalKeyModel, MPTTModel):
 
     def __str__(self):
         return self.name
+
+    def natural_key(self):
+        return self.slug, self.organization.slug
 
     def save(self, *args, **kwargs):
         if not self.slug:
