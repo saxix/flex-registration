@@ -101,6 +101,10 @@ class RegistrationProjectFilter(AutoCompleteFilter):
     fk_name = "flex_form__project__organization__exact"
 
 
+def can_export_data(request, obj, handler=None):
+    return is_root(request) and obj.export_allowed
+
+
 @register(Registration)
 class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
@@ -171,7 +175,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             ]
         )
 
-    @view(permission=is_root)
+    @view(permission=can_export_data)
     def export_as_csv(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Export")
         reg: Registration = ctx["original"]
@@ -479,7 +483,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             self.charts,
             self.view_collected_data,
         ]
-        if button.original.export_allowed and is_root(button.context["request"]):
+        if can_export_data(button.context["request"], button.original.export_allowed):
             button.choices.append(self.export_as_csv)
         return button
 
