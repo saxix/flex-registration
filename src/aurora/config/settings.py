@@ -35,6 +35,7 @@ DJANGO_ADMIN_URL = env("DJANGO_ADMIN_URL")
 # Application definition
 SITE_ID = env("SITE_ID")
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -42,7 +43,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.forms",
-    "daphne",
     # -- dev --
     "debug_toolbar",
     # ---
