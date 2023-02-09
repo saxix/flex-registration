@@ -31,6 +31,7 @@ from django_regex.utils import RegexList
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
+from ..administration.filters import BaseAutoCompleteFilter
 from ..core.admin import ConcurrencyVersionAdmin
 from ..core.admin_sync import SyncMixin
 from ..core.models import FormSet
@@ -93,12 +94,22 @@ class RegistrationExportForm(forms.Form):
             raise ValidationError(e)
 
 
-class OrganizationFilter(AutoCompleteFilter):
+class OrganizationFilter(BaseAutoCompleteFilter):
     pass
 
 
-class RegistrationProjectFilter(AutoCompleteFilter):
+class RegistrationProjectFilter(BaseAutoCompleteFilter):
     fk_name = "flex_form__project__organization__exact"
+
+    def has_output(self):
+        return "flex_form__project__organization__exact" in self.request.GET
+
+    def get_url(self):
+        url = reverse("%s:autocomplete" % self.admin_site.name)
+        if self.fk_name in self.request.GET:
+            oid = self.request.GET[self.fk_name]
+            return f"{url}?oid={oid}"
+        return url
 
 
 def can_export_data(request, obj, handler=None):

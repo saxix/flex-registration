@@ -454,7 +454,7 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     # inlines = [FlexFormFieldInline, FormSetInline]
     list_display = (
         "name",
-        "validator",
+        # "validator",
         "project",
         "is_main",
     )
