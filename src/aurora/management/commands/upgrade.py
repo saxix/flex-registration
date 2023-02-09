@@ -9,6 +9,7 @@ from django.core.management import CommandError, call_command
 from redis.exceptions import LockError
 
 from aurora import VERSION
+from aurora.core.models import FlexForm
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,8 @@ class NotRunningInTTYException(Exception):
 )
 @click.option("--migrate/--no-migrate", default=True, is_flag=True, help="Run database migrations")
 @click.option("--static/--no-static", default=True, is_flag=True, help="Collect static assets")
-def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **kwargs):
+@click.option("--organization", default=None, envvar="DEFAULT_ORGANIZATION", help="Main Organization name")
+def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, organization, **kwargs):
     from aurora.config import env
 
     extra = {"no_input": prompt, "verbosity": verbosity - 1, "stdout": None}
@@ -58,6 +60,14 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, **k
                 call_command("collectstatic", **extra)
 
             call_command("createinitialrevisions")
+
+            if organization:
+                from aurora.core.models import Organization
+
+                org, __ = Organization.objects.get_or_create(name=organization)
+                if FlexForm.objects.filter(project__isnull=True).exists():
+                    prj, __ = org.projects.get_or_create(name="Default Project")
+                    FlexForm.objects.filter(project__isnull=True).update(project=prj)
 
             if admin_email:
                 from django.contrib.auth import get_user_model

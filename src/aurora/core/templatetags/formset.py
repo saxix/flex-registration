@@ -18,6 +18,7 @@ def formset_config(formset):
         "formCssClass": f"form-container-{formset.prefix}",
         "counterPrefix": "",
         "prefix": formset.prefix,
+        "namespace": formset.prefix.replace("-", "_").lower(),
         "deleteContainerClass": f"{formset.fs.name}-delete",
         "addContainerClass": f"{formset.fs.name}-add",
         "addText": "Add Another",

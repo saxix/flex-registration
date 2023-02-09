@@ -1,9 +1,10 @@
 import io
 import os
+
 from django.contrib.sites.models import Site
-from django.core.management.base import CommandError, BaseCommand
-from django.template.utils import get_app_template_dirs
+from django.core.management.base import BaseCommand, CommandError
 from django.template.loader import _engine_list
+from django.template.utils import get_app_template_dirs
 
 try:
     from django.utils.six import input as raw_input

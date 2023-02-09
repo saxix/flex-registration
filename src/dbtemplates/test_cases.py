@@ -4,18 +4,20 @@ import shutil
 import tempfile
 
 from django.conf import settings as django_settings
+from django.contrib.sites.models import Site
 from django.core.cache.backends.base import BaseCache
 from django.core.management import call_command
-from django.template import loader, TemplateDoesNotExist
+from django.template import TemplateDoesNotExist, loader
 from django.test import TestCase
 
-from django.contrib.sites.models import Site
-
 from dbtemplates.conf import settings
+from dbtemplates.management.commands.sync_templates import (
+    DATABASE_TO_FILES,
+    FILES_TO_DATABASE,
+)
 from dbtemplates.models import Template
 from dbtemplates.utils.cache import get_cache_backend, get_cache_key
-from dbtemplates.utils.template import get_template_source, check_template_syntax
-from dbtemplates.management.commands.sync_templates import FILES_TO_DATABASE, DATABASE_TO_FILES
+from dbtemplates.utils.template import check_template_syntax, get_template_source
 
 
 class DbTemplatesTestCase(TestCase):

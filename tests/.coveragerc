@@ -3,9 +3,10 @@ branch = True
 source = aurora
 include =
 omit =
-    src/aurora/core/backends.py
+     **/migrations/*.py
+#    src/aurora/core/backends.py
     src/aurora/management/commands/*
-    src/aurora/core/authentication.py
+#    src/aurora/core/authentication.py
 
 [report]
 # Regexes for lines to exclude from consideration

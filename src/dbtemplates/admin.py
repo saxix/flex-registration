@@ -1,21 +1,23 @@
 import logging
 import posixpath
+
+from admin_extra_buttons.decorators import button, view
+
+# Check if django-reversion is installed and use reversions' VersionAdmin
+# as the base admin class if yes
+from admin_sync.mixin import PublishMixin, SyncMixin
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.utils.translation import ungettext, ugettext_lazy as _
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ungettext
 
-from admin_extra_buttons.decorators import button, view
 from dbtemplates.conf import settings
-from dbtemplates.models import Template, remove_cached_template, add_template_to_cache
+from dbtemplates.models import Template, add_template_to_cache, remove_cached_template
 from dbtemplates.utils.template import check_template_syntax
-
-# Check if django-reversion is installed and use reversions' VersionAdmin
-# as the base admin class if yes
-from admin_sync.mixin import PublishMixin, SyncMixin
 
 if settings.DBTEMPLATES_USE_REVERSION:
     from reversion.admin import VersionAdmin as TemplateModelAdmin
@@ -200,7 +202,7 @@ class TemplateAdmin(SyncMixin, PublishMixin, TemplateModelAdmin):
     @view()
     def xrender(self, request, pk):
         obj = self.get_object(request, pk)
-        from django.template import Template, Context
+        from django.template import Context, Template
 
         tpl = Template(obj.content)
         content = tpl.render(Context({}))

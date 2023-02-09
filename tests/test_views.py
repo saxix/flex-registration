@@ -188,31 +188,40 @@ def test_register_unique_nested(django_app, james_registration):
     res = django_app.get(url)
     res = res.form.submit()
     res.form["family_name"] = "Fam #1"
+    res.form["form2s-0-first_name"] = "First0"
+    res.form["form2s-0-last_name"] = "Last0"
+    res.form["form2s-0-date_of_birth"] = "2000-12-01"
     add_extra_form_to_formset_with_data(
         res.form,
         "form2s",
         {
             "first_name": "First1",
-            "last_name": "Last",
+            "last_name": "Last1",
             "date_of_birth": "2000-12-01",
         },
     )
-    res = res.form.submit().follow()
-    assert res.context["record"].data["form2s"][0]["first_name"] == "First1"
-    assert res.context["record"].unique_field == "First1"
+    res = res.form.submit()
+    assert res.status_code == 302, res.context["form"].errors
+    res = res.follow()
+    assert res.context["record"].data["form2s"][0]["first_name"] == "First0"
+    assert res.context["record"].unique_field == "First0"
 
     res = django_app.get(url)
     res = res.form.submit()
     res.form["family_name"] = "Fam #1"
-    add_extra_form_to_formset_with_data(
-        res.form,
-        "form2s",
-        {
-            "first_name": "First1",
-            "last_name": "Last",
-            "date_of_birth": "2000-12-01",
-        },
-    )
+    res.form["form2s-0-first_name"] = "First0"
+    res.form["form2s-0-last_name"] = "Last0"
+    res.form["form2s-0-date_of_birth"] = "2000-12-01"
+
+    # add_extra_form_to_formset_with_data(
+    #     res.form,
+    #     "form2s",
+    #     {
+    #         "first_name": "First1",
+    #         "last_name": "Last",
+    #         "date_of_birth": "2000-12-01",
+    #     },
+    # )
     res = res.form.submit()
     assert res.context["errors"][0].message == james_registration.unique_field_error
 
@@ -246,13 +255,16 @@ def test_register_complex(django_app, complex_registration):
     url = complex_registration.get_absolute_url()
     res = django_app.get(url)
     res.form["family_name"] = "HH #1"
+    res.form["form2s-0-first_name"] = "First0"
+    res.form["form2s-0-last_name"] = "Last0"
+    res.form["form2s-0-date_of_birth"] = "2000-12-01"
 
     add_extra_form_to_formset_with_data(
         res.form,
         "form2s",
         {
             "first_name": "First1",
-            "last_name": "Last",
+            "last_name": "Last1",
             "date_of_birth": "2000-12-01",
         },
     )
@@ -271,9 +283,9 @@ def test_register_complex(django_app, complex_registration):
     from aurora.registration.models import Record
 
     r: Record = res.context["record"]
-    assert r.data["form2s"][0]["first_name"] == "First1"
-    assert r.data["form2s"][0]["last_name"] == "Last"
-    assert r.data["form2s"][1]["first_name"] == "First2"
+    assert r.data["form2s"][0]["first_name"] == "First0"
+    assert r.data["form2s"][0]["last_name"] == "Last0"
+    assert r.data["form2s"][1]["first_name"] == "First1"
 
 
 @pytest.mark.parametrize("first_name", LANGUAGES.values(), ids=LANGUAGES.keys())
@@ -301,6 +313,9 @@ def test_upload_image(django_app, complex_registration, mock_storage):
     # IMAGE = SimpleUploadedFile("tests/data/image.jpeg", Path("tests/data/image.png").read_bytes())
     content = Path("tests/data/image.png").read_bytes()
     IMAGE = Upload("tests/data/image.jpeg", content)
+    res.form["form2s-0-first_name"] = "First0"
+    res.form["form2s-0-last_name"] = "Last0"
+    res.form["form2s-0-date_of_birth"] = "2000-12-01"
 
     add_extra_form_to_formset_with_data(
         res.form,
@@ -312,12 +327,14 @@ def test_upload_image(django_app, complex_registration, mock_storage):
             "image": IMAGE,
         },
     )
-    res = res.form.submit().follow()
+    res = res.form.submit()
+    assert res.status_code == 302, res.context["form"].errors
+    res = res.follow()
     obj = res.context["record"]
     assert obj.data["family_name"] == "HH #1"
-    assert obj.data["form2s"][0]["image"] == base64.b64encode(content).decode()
+    assert obj.data["form2s"][1]["image"] == base64.b64encode(content).decode()
     ff = json.loads(obj.files.tobytes().decode())
-    assert ff["form2s"][0]["image"] == base64.b64encode(content).decode()
+    assert ff["form2s"][1]["image"] == base64.b64encode(content).decode()
     # from aurora.registration.models import Record
     #
     # r: Record = res.context["record"]

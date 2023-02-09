@@ -1,6 +1,7 @@
 import time
 
-from django.http import JsonResponse
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.cache import get_conditional_response
 from django.utils.decorators import method_decorator
@@ -69,3 +70,8 @@ class OptionsListView(BaseListView):
             response["Cache-Control"] = "public, max-age=315360000"
             response["ETag"] = etag
         return response
+
+
+def service_worker(request):
+    response = HttpResponse(open(settings.PWA_SERVICE_WORKER_PATH).read(), content_type="application/javascript")
+    return response

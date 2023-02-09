@@ -47,6 +47,30 @@ smart = {
             console.error(error);
         }
     },
+    setRequiredOnValue: function (sender, targets, value) {
+        try {
+            console.log(11111, targets)
+            var cmp = value.toLowerCase();
+            var $form = $(sender).parents(".form-container");
+            $form.find(targets).each(function(i, e){
+                $c = $(e).parents(".field-container");
+                if ($(sender).val() == cmp){
+                    $(e).attr("required", true);
+                    $c.find('.required-label').show();
+                }else{
+                    $(e).attr("required", false);
+                    $c.find('.required-label').hide();
+                }
+            })
+            // if ($(sender).val() == cmp) {
+            //     $targets.attr("required", true);
+            // } else {
+            //     $targets.attr("required", false);
+            // }
+        } catch (error) {
+            console.error(error);
+        }
+    },
     showHideDependant: function (sender, target, value) {
         try {
             var cmp = value.toLowerCase();
@@ -89,6 +113,18 @@ smart = {
 
 (function ($) {
     $(function () {
+        $(".field-container.required span.required").each(function(i, e){
+            $(e).removeClass("hidden");
+        })
+        $(".required_by_question").each(function(i, e){
+            var $question = $(e).parents('fieldset').find('.question-visibility');
+            var $container = $(e).parents("fieldset").find(".field-container");
+            var $input = $container.find("input,select");
+            $question.on("change", function(e){
+                $input.attr("required", $(this).is(":checked"));
+            });
+        });
+
         $("#registrationForm").on("submit", function (e) {
             $(this).find("input[type=submit]").prop("disabled", "disabled").val(gettext("Please wait..."));
         });

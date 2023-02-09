@@ -1,3 +1,4 @@
+from .counter import CounterViewSet
 from .field import FlexFormFieldViewSet
 from .form import FlexFormViewSet
 from .formset import FormSetViewSet

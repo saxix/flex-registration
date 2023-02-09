@@ -1,9 +1,13 @@
 import base64
 import io
+import json
 import logging
+from typing import Union
 
 from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Util.Padding import unpad
 from cryptography.fernet import Fernet
 from django.conf import settings
 
@@ -35,7 +39,7 @@ class Crypto:
             return encrypted_text
         except Exception as e:
             logger.exception(e)
-        return v
+        return value
 
     def decrypt(self, value):
         try:
@@ -111,3 +115,19 @@ def decrypt(data: bytes, private_pem: bytes):
 
     file_out.seek(0)
     return file_out.read().decode()
+
+
+def decrypt_offline(data: str, private_pem: bytes) -> Union[str, bytes]:
+    encrypted_symmetric_key = data[:344]
+    form_fields = data[344:]
+
+    key = RSA.importKey(private_pem)
+    cipher = PKCS1_OAEP.new(key, hashAlgo=SHA256)
+    decrypted_symmetric_key = json.loads(cipher.decrypt(base64.b64decode(encrypted_symmetric_key)))
+    enc = base64.b64decode(form_fields)
+
+    derived_key = base64.b64decode("LefjQ2pEXmiy/nNZvEJ43i8hJuaAnzbA1Cbn1hOuAgA=")
+    cipher = AES.new(derived_key, AES.MODE_CBC, decrypted_symmetric_key.encode("utf-8"))
+
+    decrypted_data = unpad(cipher.decrypt(enc), 16)
+    return decrypted_data

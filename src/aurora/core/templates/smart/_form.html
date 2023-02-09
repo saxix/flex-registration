@@ -34,7 +34,7 @@
             <form data-smart-validator="{{ form.flexform.validator.name }}" class="w-full" method="post" enctype="multipart/form-data" id="registrationForm">
                 {% csrf_token %}
                 <div class="form-container" data-page="0">
-                    {% for field in form %}{% include "registration/_fieldset.html" %}{% endfor %}
+                    {% for field in form %}{% include "smart/_fieldset.html" %}{% endfor %}
                 </div>
                 {% for name, formset in formsets.items %}
                     {% if formset.non_form_errors %}
@@ -46,9 +46,11 @@
                     {% endif %}
                     {% formset_config formset as config %}
                     <div class="formset-config">{{ config|json_script:name }}</div>
-                    <script> function onAdd_{{ config.prefix }}(fs, row){
+                    {% if config.onAdd %}
+                    <script> function onAdd_{{ config.namespace }}(fs, row){
                         {{ config.onAdd }};
                     }</script>
+                    {% endif %}
                     <div class="shadow-md rounded bg-gray-100 mb-10 p-2 sm:p-4" data-page="{{ forloop.counter }}">
                         <div class="w-full formset formset-{{ name }} {{ formset.fs.advanced.smart.container.class }}"
                                 {% include "django/forms/widgets/attrs.html" with widget=formset.fs.advanced.smart.container.html_attrs %}>
@@ -85,7 +87,7 @@
 {#                                                {% include "registration/_staff_edit_form.html" %}#}
 {#                                            {% endif %}#}
                                             {% for field in form %}
-                                                {% include "registration/_fieldset.html" with counter=forloop.counter %}
+                                                {% include "smart/_fieldset.html" with counter=forloop.counter %}
                                             {% endfor %}
                                             <div class="flex">
                                                 <div class="flex-auto "></div>
@@ -107,6 +109,7 @@
                 </div>
             </form>
         </div>
+        {% if registration.footer %}
         <div class="bg-white shadow-md rounded p-6">
         <div class="bg-gray-100 py-6 px-6 shadow-md rounded " data-msgid="{{ registration.footer }}" >
 {#            {% if can_translate %}{% include "i18n/_staff_edit_i18n.html" with original=registration.footer %}{% endif %}#}
@@ -114,5 +117,6 @@
             {{ footer|md }}
         </div>
         </div>
+        {% endif %}
     </div>
 </div>

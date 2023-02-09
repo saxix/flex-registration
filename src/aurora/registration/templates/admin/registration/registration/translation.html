@@ -1,7 +1,7 @@
 {% extends "admin_extra_buttons/action_page.html" %}
 {% block action-content %}
     {% if form %}
-        <form method="post">
+        <form method="post" id="translation-form">
             {% csrf_token %}
             {{ form.errors }}
             <table>

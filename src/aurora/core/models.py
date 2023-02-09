@@ -18,6 +18,8 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
 from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
 from strategy_field.utils import fqn
@@ -35,6 +37,46 @@ from .utils import JSONEncoder, dict_setdefault, jsonfy, namify, underscore_to_c
 logger = logging.getLogger(__name__)
 
 cache = caches["default"]
+
+
+class Organization(NaturalKeyModel, MPTTModel):
+    name = CICharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
+    parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
+    _natural_key = ["name"]
+
+    class MPTTMeta:
+        order_insertion_by = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+class Project(NaturalKeyModel, MPTTModel):
+    name = CICharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, blank=True, null=True)
+    organization = models.ForeignKey(Organization, null=True, related_name="projects", on_delete=models.CASCADE)
+    parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
+    _natural_key = ["name", "organization.slug"]
+
+    class MPTTMeta:
+        order_insertion_by = ["name"]
+
+    class Meta:
+        unique_together = ("slug", "organization")
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 
 class Validator(NaturalKeyModel):
@@ -214,6 +256,7 @@ def get_validators(field):
 class FlexForm(I18NModel, NaturalKeyModel):
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
     validator = models.ForeignKey(
@@ -227,32 +270,39 @@ class FlexForm(I18NModel, NaturalKeyModel):
     def __str__(self):
         return self.name
 
-    def add_field(
-        self,
-        label,
-        field_type=forms.CharField,
-        required=False,
-        choices=None,
-        regex=None,
-        validator=None,
-        name=None,
-        **kwargs,
-    ):
-        if isinstance(choices, (list, tuple)):
-            kwargs["choices"] = choices
-            choices = None
-        return self.fields.update_or_create(
-            label=label,
-            defaults={
-                "name": name,
-                "field_type": field_type,
-                "choices": choices,
-                "regex": regex,
-                "validator": validator,
-                "advanced": kwargs,
-                "required": required,
-            },
-        )[0]
+    def __init__(self, *args, **kwargs):
+        self._initial = {}
+        super().__init__(*args, **kwargs)
+
+    # def add_field(
+    #     self,
+    #     label,
+    #     field_type=forms.CharField,
+    #     required=False,
+    #     choices=None,
+    #     regex=None,
+    #     validator=None,
+    #     name=None,
+    #     **kwargs,
+    # ):
+    #     if isinstance(choices, (list, tuple)):
+    #         kwargs["choices"] = choices
+    #         choices = None
+    #     return self.fields.update_or_create(
+    #         label=label,
+    #         defaults={
+    #             "name": name,
+    #             "field_type": field_type,
+    #             "choices": choices,
+    #             "regex": regex,
+    #             "validator": validator,
+    #             "advanced": kwargs,
+    #             "required": required,
+    #         },
+    #     )[0]
+
+    def get_initial(self):
+        return self._initial
 
     def add_formset(self, form, **extra):
         defaults = {"extra": 0, "name": form.name.lower() + pluralize(0)}
@@ -274,6 +324,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
                     compilation_time_field = field.name
                 if index := field.advanced.get("smart", {}).get("index"):
                     indexes[str(index)] = field.name
+                self._initial[field.name] = field.get_default_value()
             except TypeError:
                 pass
         form_class_attrs = {
@@ -368,7 +419,7 @@ class FormSet(NaturalKeyModel, OrderableModel):
         dict_setdefault(self.advanced, self.FORMSET_DEFAULT_ATTRS)
         return self.advanced["smart"]["widget"]
 
-    def get_formset(self):
+    def get_formset(self) -> SmartBaseFormSet:
         formSet = formset_factory(
             self.get_form(),
             formset=SmartBaseFormSet,
@@ -401,14 +452,12 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     ]
     I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
-        "widget_kwargs": {
-            "pattern": None,
-            "title": None,
-            "placeholder": None,
-        },
+        "default": None,
+        "widget_kwargs": {"pattern": None, "title": None, "placeholder": None, "class": ""},
         "kwargs": {},
         "smart": {
             "hint": "",
+            "extra_classes": "",
             "visible": True,
             "onchange": "",
             "question": "",
@@ -451,52 +500,78 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     def fqn(self):
         return fqn(self.field_type)
 
+    def get_default_value(self):
+        return self.advanced.get("default", None)
+
     def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):
-            widget_kwargs = {}
+            advanced = self.advanced.copy()
+            smart_attrs = advanced.pop("smart", {}).copy()
+            widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
+
             field_type = self.field_type.custom.base_type
-            kwargs = self.field_type.custom.attrs.copy()
+            field_kwargs = self.field_type.custom.attrs.copy()
             if self.validator:
-                kwargs.setdefault("validators", get_validators(self))
+                field_kwargs.setdefault("validators", get_validators(self))
             elif self.field_type.custom.validator:
-                kwargs["validators"] = get_validators(self.field_type.custom)
+                field_kwargs["validators"] = get_validators(self.field_type.custom)
             else:
-                kwargs["validators"] = []
-            kwargs.setdefault("label", self.label)
-            kwargs.setdefault("required", self.required)
+                field_kwargs["validators"] = []
+            field_kwargs.setdefault("label", self.label)
+            field_kwargs.setdefault("required", self.required)
             regex = self.regex or self.field_type.custom.regex
         else:
             field_type = self.field_type
             advanced = self.advanced.copy()
-            kwargs = self.advanced.get("kwargs", {}).copy()
+            field_kwargs = self.advanced.get("kwargs", {}).copy()
+            field_kwargs["required"] = False
             widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
+            # widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             regex = self.regex
 
             smart_attrs = advanced.pop("smart", {}).copy()
             # data = kwargs.pop("data", {}).copy()
             smart_attrs["data-flex"] = self.name
+            if self.required:
+                smart_attrs["required_by_question"] = "required"
+                if smart_attrs.get("question"):
+                    field_kwargs["required"] = False
+                else:
+                    field_kwargs["required"] = True
+            else:
+                smart_attrs["required_by_question"] = ""
+            # field_kwargs["required"] = False
+
             if not smart_attrs.get("visible", True):
                 smart_attrs["data-visibility"] = "hidden"
             elif smart_attrs.get("question", ""):
                 smart_attrs["data-visibility"] = "hidden"
 
-            kwargs.setdefault("smart_attrs", smart_attrs.copy())
-            kwargs.setdefault("label", self.label)
-            kwargs.setdefault("required", self.required)
-            kwargs.setdefault("validators", get_validators(self))
+            field_kwargs.setdefault("smart_attrs", smart_attrs.copy())
+            field_kwargs.setdefault("label", self.label)
+            #
+            # if not smart_attrs.get("question"):
+            #     kwargs.setdefault("required", self.required)
+
+            field_kwargs.setdefault("validators", get_validators(self))
+
         if field_type in WIDGET_FOR_FORMFIELD_DEFAULTS:
-            kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **kwargs}
+            field_kwargs = {**WIDGET_FOR_FORMFIELD_DEFAULTS[field_type], **field_kwargs}
         if "datasource" in self.advanced:
-            kwargs["datasource"] = self.advanced["datasource"]
+            field_kwargs["datasource"] = self.advanced["datasource"]
         if hasattr(field_type, "choices"):
             if "choices" in self.advanced:
-                kwargs["choices"] = self.advanced["choices"]
+                field_kwargs["choices"] = self.advanced["choices"]
             elif self.choices:
-                kwargs["choices"] = clean_choices(self.choices.split(","))
+                field_kwargs["choices"] = clean_choices(self.choices.split(","))
         if regex:
-            kwargs["validators"].append(RegexValidator(regex))
-        kwargs["widget_kwargs"] = widget_kwargs
-        return kwargs
+            field_kwargs["validators"].append(RegexValidator(regex))
+        if not widget_kwargs.pop("class", ""):
+            widget_kwargs.pop("class", "")
+        if smart_attrs.get("extra_classes"):
+            widget_kwargs["extra_classes"] = smart_attrs.pop("extra_classes")
+        field_kwargs["widget_kwargs"] = widget_kwargs
+        return field_kwargs
 
     def get_instance(self):
         try:
@@ -524,10 +599,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
                 raise ValidationError(e)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if not self.name:
+        if not self.name.strip():
             self.name = namify(self.label)[:100]
-        else:
-            self.name = namify(self.name)[:100]
 
         super().save(force_insert, force_update, using, update_fields)
 
@@ -666,9 +739,15 @@ class CustomFieldType(NaturalKeyModel, models.Model):
             field_registry.register(cls)
 
     def clean(self):
+        if not self.base_type:
+            raise ValidationError("base_type is mandatory")
+        try:
+            class_ = self.get_class()
+        except Exception as e:
+            raise ValidationError(f"Error instantiating class: {e}")
+
         try:
             kwargs = self.attrs.copy()
-            class_ = self.get_class()
             class_(**kwargs)
         except Exception as e:
             raise ValidationError(f"Error instantiating {fqn(class_)}: {e}")

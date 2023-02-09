@@ -6,7 +6,6 @@ import re
 
 import markdown as md
 from django.template import Library, Node
-from django.urls import reverse
 from django.utils.safestring import mark_safe
 from PIL import Image, UnidentifiedImageError
 
@@ -122,10 +121,9 @@ def link(registration):
     attrs = dict_get_nested(widget, "attrs")
 
     if "class" not in attrs:
-        widget["attrs"]["class"] = "button text-white border-0 py-4 px-8 " " rounded " " text-center text-2xl"
-    url = reverse("register", args=[registration.slug])
-    # url = translate_url(url, registration.locale)
-    widget["attrs"]["href"] = url
+        widget["attrs"]["class"] = "button bg-blue border-0 py-4 px-8 rounded text-center text-2xl"
+
+    widget["attrs"]["href"] = registration.get_welcome_url() + f"?reg={registration.slug}"
     return {
         "reg": registration,
         "widget": widget,

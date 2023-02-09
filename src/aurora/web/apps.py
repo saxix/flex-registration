@@ -32,5 +32,5 @@ class Config(AppConfig):
 def invalidate_page_cache(sender, instance, **kwargs):
     try:
         incr_key_version(instance.name)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.exception(e)

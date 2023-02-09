@@ -8,31 +8,34 @@ from pathlib import Path
 import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
-
 from admin_sync.mixin import SyncMixin
 from admin_sync.utils import is_local
 from adminfilters.autocomplete import AutoCompleteFilter
-from adminfilters.combo import ChoicesFieldComboFilter
+from adminfilters.combo import ChoicesFieldComboFilter, RelatedFieldComboFilter
 from adminfilters.querystring import QueryStringFilter
 from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
 from django.contrib.admin import TabularInline, register
+from django.contrib.admin.options import IncorrectLookupParameters
 from django.core.cache import caches
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.signing import BadSignature, Signer
-from django.db.models import JSONField
+from django.db.models import JSONField, Q
 from django.http import JsonResponse
-from django.urls import NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 from jsoneditor.forms import JSONEditor
+from mptt.admin import MPTTModelAdmin
 from requests.auth import HTTPBasicAuth
 from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
+from ..administration.filters import BaseAutoCompleteFilter
 from ..administration.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
-from .forms import Select2Widget, ValidatorForm
+from .forms import Select2Widget, ValidatorForm, FieldAttributesForm, WidgetAttributesForm, SmartAttributesForm
 from .models import (
     FIELD_KWARGS,
     CustomFieldType,
@@ -40,9 +43,11 @@ from .models import (
     FlexFormField,
     FormSet,
     OptionSet,
+    Organization,
+    Project,
     Validator,
 )
-from .utils import dict_setdefault, render, namify
+from .utils import dict_setdefault, is_root, render
 
 logger = logging.getLogger(__name__)
 
@@ -69,10 +74,15 @@ class ConcurrencyVersionAdmin(CompareVersionAdmin):
             return super().recover_view(request, version_id, extra_context)
 
     def has_change_permission(self, request, obj=None):
-        return is_local(request)
+        orig = super().has_change_permission(request, obj)
+        return orig and (settings.DEBUG or is_root(request) or is_local(request))
 
 
 class Select2FieldComboFilter(ChoicesFieldComboFilter):
+    template = "adminfilters/select2.html"
+
+
+class Select2RelatedFieldComboFilter(RelatedFieldComboFilter):
     template = "adminfilters/select2.html"
 
 
@@ -81,6 +91,29 @@ class ValidatorTestForm(forms.Form):
         widget=PythonEditor,
     )
     input = forms.CharField(widget=PythonEditor(toolbar=False), required=False)
+
+
+@register(Organization)
+class OrganizationAdmin(SyncMixin, MPTTModelAdmin):
+    list_display = ("name",)
+    mptt_level_indent = 20
+    mptt_indent_field = "name"
+    search_fields = ("name",)
+
+
+@register(Project)
+class ProjectAdmin(SyncMixin, MPTTModelAdmin):
+    list_display = ("name",)
+    list_filter = ("organization",)
+    mptt_level_indent = 20
+    mptt_indent_field = "name"
+    search_fields = ("name",)
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+        if "oid" in request.GET:
+            queryset = queryset.filter(organization__id=request.GET["oid"])
+        return queryset, may_have_duplicates
 
 
 @register(Validator)
@@ -127,7 +160,7 @@ class ValidatorAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, SmartMod
         if stored:
             param = json.loads(stored)
         else:
-            param = self.DEFAULTS[self.object.target]
+            param = self.DEFAULTS[original.target]
 
         if request.method == "POST":
             form = ValidatorTestForm(request.POST)
@@ -172,6 +205,12 @@ class FormSetAdmin(LoadDumpMixin, SyncMixin, SmartModelAdmin):
         JSONField: {"widget": JSONEditor},
     }
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+        if "oid" in request.GET:
+            queryset = queryset.filter(flex_form__organization__id=request.GET["oid"])
+        return queryset, may_have_duplicates
+
 
 class FormSetInline(OrderableAdmin, TabularInline):
     model = FormSet
@@ -193,11 +232,8 @@ class FlexFormFieldForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
-
-    def clean_name(self):
-        if not self.cleaned_data.get("name") and self.cleaned_data.get("label"):
-            self.cleaned_data["name"] = namify(self.cleaned_data["label"])[:100]
+        if self.instance.pk:
+            self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
 
 
 class FlexFormFieldForm2(forms.ModelForm):
@@ -232,6 +268,9 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     ordering_field = "ordering"
     order = "ordering"
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related()
+
     # change_list_template = "reversion/change_list.html"
 
     def form_type(self, obj):
@@ -251,6 +290,49 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
         initial.setdefault("advanced", FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
         return initial
 
+    def _attributes(self, request):
+        formAttrs = FieldAttributesForm(request.GET)
+        formWidget = WidgetAttributesForm(request.GET)
+        formSmart = SmartAttributesForm(request.GET)
+        formAttrs.is_valid()
+        formWidget.is_valid()
+        formSmart.is_valid()
+
+        data = {**formAttrs.cleaned_data, **formWidget.cleaned_data, **formSmart.cleaned_data}
+        return JsonResponse(data)
+
+    @button()
+    def attributes(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        if request.method == "POST":
+            return self._attributes(request)
+        else:
+            formAttrs = FieldAttributesForm()
+            formWidget = WidgetAttributesForm()
+            formSmart = SmartAttributesForm()
+        ctx["form_attrs"] = formAttrs
+        ctx["form_widget"] = formWidget
+        ctx["form_smart"] = formSmart
+
+        return render(request, "admin/core/flexformfield/attributes.html", ctx)
+
+    @view()
+    def widget(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        if request.POST:
+            pass
+        else:
+            fld: FlexFormField = ctx["original"]
+            instance = fld.get_instance()
+            form_class_attrs = {
+                "sample": instance,
+            }
+            form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+            ctx["form"] = form_class()
+            ctx["instance"] = instance
+
+        return render(request, "admin/core/flexformfield/widget.html", ctx)
+
     @button()
     def test(self, request, pk):
         ctx = self.get_common_context(request, pk)
@@ -258,12 +340,11 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
             fld = ctx["original"]
             instance = fld.get_instance()
             ctx["debug_info"] = {
-                "instance": instance,
-                "kwargs": fld.get_field_kwargs(),
-                "options": getattr(instance, "options", None),
-                "choices": getattr(instance, "choices", None),
-                "widget": getattr(instance, "widget", None),
-                "widget_attrs": instance.widget_attrs(instance.widget),
+                # "widget": getattr(instance, "widget", None),
+                "field_kwargs": fld.get_field_kwargs(),
+                # "options": getattr(instance, "options", None),
+                # "choices": getattr(instance, "choices", None),
+                # "widget_attrs": instance.widget_attrs(instance.widget),
             }
             form_class_attrs = {
                 "sample": instance,
@@ -281,6 +362,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
             else:
                 form = form_class()
             ctx["form"] = form
+            ctx["instance"] = instance
         except Exception as e:
             logger.exception(e)
             ctx["error"] = e
@@ -317,28 +399,81 @@ class SyncForm(SyncConfigForm):
     remember = forms.BooleanField(label="Remember me", required=False)
 
 
+class ProjectFilter(AutoCompleteFilter):
+    fk_name = "project__organization__exact"
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        self.request = request
+        super().__init__(field, request, params, model, model_admin, field_path)
+
+    def has_output(self):
+        return "project__organization__exact" in self.request.GET
+
+    def get_url(self):
+        url = reverse("%s:autocomplete" % self.admin_site.name)
+        if self.fk_name in self.request.GET:
+            oid = self.request.GET[self.fk_name]
+            return f"{url}?oid={oid}"
+        return url
+
+
+class UsedByRegistration(BaseAutoCompleteFilter):
+    def has_output(self):
+        return "project__exact" in self.request.GET
+
+    def queryset(self, request, queryset):
+        # {'registration__exact': '30'}
+        try:
+            value = self.used_parameters["registration__exact"]
+            return queryset.filter(Q(registration__exact=value) | Q(formset__parent__registration=value))
+        except (ValueError, ValidationError) as e:
+            # Fields may raise a ValueError or ValidationError when converting
+            # the parameters to the correct type.
+            raise IncorrectLookupParameters(e)
+
+
+class UsedInRFormset(BaseAutoCompleteFilter):
+    def has_output(self):
+        return "project__exact" in self.request.GET
+
+
 @register(FlexForm)
 class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
-    inlines = [FlexFormFieldInline, FormSetInline]
-    list_display = ("name", "validator", "used_by", "childs", "parents")
+    # inlines = [FlexFormFieldInline, FormSetInline]
+    list_display = (
+        "name",
+        "validator",
+        "is_main",
+    )
     list_filter = (
         QueryStringFilter,
-        "formsets",
+        ("project__organization", AutoCompleteFilter),
+        ("project", ProjectFilter),
+        ("registration", UsedByRegistration),
+        ("formset", UsedInRFormset),
+        ("formset__parent", UsedInRFormset),
     )
     search_fields = ("name",)
     readonly_fields = ("version", "last_update_date")
+    autocomplete_fields = ("validator", "project")
     ordering = ("name",)
     save_as = True
 
-    def used_by(self, obj):
-        return ", ".join(obj.registration_set.values_list("name", flat=True))
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("registration_set")
+            .select_related(
+                "project",
+            )
+        )
 
-    def childs(self, obj):
-        return ", ".join(obj.formsets.values_list("name", flat=True))
+    def is_main(self, obj):
+        return obj.registration_set.exists()
 
-    def parents(self, obj):
-        return ", ".join(obj.formset_set.values_list("parent__name", flat=True))
+    is_main.boolean = True
 
     @button(html_attrs={"class": "aeb-danger"})
     def invalidate_cache(self, request):
@@ -347,7 +482,7 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
         cache.clear()
 
     @button(label="invalidate cache", html_attrs={"class": "aeb-warn"})
-    def _invalidate_cache(self, request, pk):
+    def invalidate_cache_single(self, request, pk):
         obj = self.get_object(request, pk)
         obj.save()
 
@@ -356,12 +491,12 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
         ctx = self.get_common_context(request, pk)
         form_class = self.object.get_form_class()
         if request.method == "POST":
-            form = form_class(request.POST)
+            form = form_class(request.POST, initial=self.object.get_initial())
             if form.is_valid():
                 ctx["cleaned_data"] = form.cleaned_data
                 self.message_user(request, "Form is valid")
         else:
-            form = form_class()
+            form = form_class(initial=self.object.get_initial())
         ctx["form"] = form
         return render(request, "admin/core/flexform/test.html", ctx)
 
@@ -462,9 +597,10 @@ class OptionSetAdmin(LoadDumpMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     @button()
     def display_data(self, request, pk):
         ctx = self.get_common_context(request, pk, title="Data")
+        obj: OptionSet = ctx["original"]
         data = []
-        for line in self.object.data.split("\r\n"):
-            data.append(line.split(self.object.separator))
+        for line in obj.data.split("\r\n"):
+            data.append(line.split(obj.separator))
         ctx["data"] = data
         return render(request, "admin/core/optionset/table.html", ctx)
 

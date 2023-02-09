@@ -10,6 +10,7 @@ import sys
 import time
 import unicodedata
 from collections import deque
+from collections.abc import Mapping
 from functools import wraps
 from hashlib import md5
 from itertools import chain
@@ -43,13 +44,13 @@ UNDEFINED = object()
 
 def has_token(request, *args, **kwargs):
     return (
-        request.headers.get("x-session") == settings.ROOT_TOKEN
-        or request.COOKIES.get("x-session") == settings.ROOT_TOKEN
+        request.headers.get("x-aurora-token") == settings.ROOT_TOKEN
+        or request.COOKIES.get("x-aurora-token") == settings.ROOT_TOKEN
     )
 
 
 def is_root(request, *args, **kwargs):
-    return settings.DEBUG or (request.user.is_superuser and has_token(request))
+    return request.user.is_superuser and has_token(request)
 
 
 @keep_lazy_text
@@ -361,10 +362,16 @@ def total_size(o, handlers={}, verbose=False):
     return sizeof(o)
 
 
-def cache_aware_reverse(viewname, urlconf=None, args=None, kwargs=None, current_app=None):
-    url = reverse(viewname, urlconf, args, kwargs, current_app)
+def cache_aware_url(request, url):
+    if request.user.is_authenticated:
+        url += f"?s={get_session_id()}"
+    return url
+
+
+def cache_aware_reverse(viewname, urlconf=None, args=None, kwargs=None, current_app=None, **kw):
+    url = reverse(viewname, urlconf, args, kwargs, current_app, **kw)
     if state.request.user.is_authenticated:
-        url += f"?{state.request.COOKIES[settings.SESSION_COOKIE_NAME]}"
+        url += f"?s={get_session_id()}"
     return url
 
 
@@ -431,3 +438,25 @@ def never_ever_cache(decorated_function):
         return response
 
     return wrapper
+
+
+def get_session_id(request=None):
+    r = request or state.request
+    if r and r.user.is_authenticated:
+        return r.session.session_key
+    return ""
+
+
+def flatten_dict(d, parent_key="", sep="_"):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, Mapping):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        elif isinstance(v, (list, tuple)):
+            base_key = new_key
+            for i, r in enumerate(v):
+                items.extend(flatten_dict(r, f"{base_key}{sep}{i}", sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)

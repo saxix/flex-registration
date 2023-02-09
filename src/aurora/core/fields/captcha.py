@@ -10,6 +10,7 @@ from aurora.core.fields.widgets import SmartTextWidget
 
 class CaptchaAnswerInput(SmartTextWidget):
     def __init__(self, attrs=None):
+        self.smart_attrs = {}
         super().__init__(attrs=attrs)
 
     """Text input for captcha answer."""

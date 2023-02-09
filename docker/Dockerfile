@@ -31,6 +31,7 @@ ENV PATH="${PATH}:/root/.local/bin" \
     CACHE_DEFAULT="redis://127.0.0.1/0" \
     CONSTANCE_DATABASE_CACHE_BACKEND="" \
     DATABASE_URL="" \
+    DEFAULT_ORGANIZATION="UNICEF"\
     DJANGO_SETTINGS_MODULE="aurora.config.settings" \
     IPSTACK_KEY="" \
     LOG_LEVEL="ERROR" \
@@ -46,9 +47,10 @@ ENV PATH="${PATH}:/root/.local/bin" \
     STATIC_ROOT="/var/static" \
     STATIC_URL="/static/" \
     UWSGI_PROCESSES=4 \
-    VERSION=${VERSION}
+    VERSION=${VERSION} \
+    POETRY_VERSION=${POETRY_VERSION}
 
-RUN curl -sSL https://install.python-poetry.org | python -
+RUN pip install "poetry==1.2.2"
 
 ADD poetry.lock pyproject.toml /code/
 

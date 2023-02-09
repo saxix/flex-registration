@@ -7,6 +7,9 @@ from .views import (
     RegisterRouter,
     RegisterView,
     RegistrationDataApi,
+    authorize_cookie,
+    get_pwa_enabled,
+    registrations,
 )
 
 urlpatterns = [
@@ -17,4 +20,7 @@ urlpatterns = [
     path("register/<slug:slug>/auth/", RegisterAuthView.as_view(), name="register-auth"),
     path("register/<slug:slug>/<int:version>/", RegisterView.as_view(), name="register"),
     path("api/data/<int:pk>/<int:start>/<int:end>/", RegistrationDataApi.as_view(), name="api"),
+    path("registrations/", registrations, name="registrations"),
+    path("get_pwa_enabled/", get_pwa_enabled, name="get_pwa_enabled"),
+    path("authorize_cookie/", authorize_cookie, name="authorize_cookie"),
 ]

@@ -1,16 +1,22 @@
+import json
 import logging
 import os
 import time
 from functools import wraps
 from hashlib import md5
+from json import JSONDecodeError
+from typing import Dict, Type
 
 import sentry_sdk
 from constance import config
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.models import User
+from django.core import signing
 from django.core.exceptions import ValidationError
 from django.forms import forms
-from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import translation
 from django.utils.cache import get_conditional_response
@@ -21,10 +27,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-from aurora.core.utils import get_etag, get_qrcode, has_token, never_ever_cache
+from aurora.core.utils import (
+    get_etag,
+    get_qrcode,
+    has_token,
+    never_ever_cache,
+    total_size,
+)
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
+from aurora.stubs import FormSet
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +147,9 @@ class RegisterView(RegistrationMixin, FormView):
 
     @check_access
     def get(self, request, *args, **kwargs):
+        # if request.user.is_authenticated and not request.GET.get("s"):
+        #     return HttpResponseRedirect(self.registration.get_absolute_url())
+
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
         else:
@@ -161,7 +177,7 @@ class RegisterView(RegistrationMixin, FormView):
         return self.registration.flex_form.get_form_class()
 
     # @cache_formset
-    def get_formsets_classes(self):
+    def get_formsets_classes(self) -> Dict[str, Type[FormSet]]:
         #     return self.registration.flex_form.get_formsets_classes()
         formsets = {}
         # attrs = self.get_form_kwargs().copy()
@@ -170,11 +186,16 @@ class RegisterView(RegistrationMixin, FormView):
             formsets[fs.name] = fs.get_formset()
         return formsets
 
+    def get_initial(self):
+        return self.registration.flex_form.get_initial()
+
     def get_formsets(self):
         formsets = {}
         attrs = self.get_form_kwargs().copy()
+        attrs["initial"] = []
         attrs.pop("prefix")
         for name, fs in self.get_formsets_classes().items():
+            attrs["initial"] = [fs.form.flex_form.get_initial()]
             formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets
 
@@ -209,11 +230,20 @@ class RegisterView(RegistrationMixin, FormView):
         except ValidationError:
             self.errors.append(ValidationError(_(self.registration.unique_field_error)))
             return False
-
         return True
 
     @check_access
     def post(self, request, *args, **kwargs):
+        slug = request.resolver_match.kwargs.get("slug")
+        registration = Registration.objects.filter(slug=slug).first()
+        if registration and registration.is_pwa_enabled:
+            encrypted_data = request.POST.get("encryptedData")
+            if encrypted_data:
+                kwargs = {"fields": encrypted_data, "size": total_size(encrypted_data), "is_offline": True}
+
+                Record.objects.create(registration=registration, **kwargs)
+                return HttpResponse()
+
         form = self.get_form()
         formsets = self.get_formsets()
         self.errors = []
@@ -298,3 +328,49 @@ class RegisterAuthView(RegistrationMixin, View):
                 },
             }
         )
+
+
+def registrations(request):
+    # if request.user.is_authenticated:
+    registration_objs = Registration.objects.filter(active=True)
+
+    if request.method == "GET":
+        return render(request, "registration/registrations.html", {"registrations": registration_objs})
+    elif request.method == "POST":
+        slug = request.POST["slug"]
+        registration = get_object_or_404(Registration, slug=slug)
+        registration.is_pwa_enabled = True
+        registration.save(update_fields=["is_pwa_enabled"])
+
+        Registration.objects.exclude(slug=slug).update(is_pwa_enabled=False)  # only one can be enabled at once
+
+        return render(request, "registration/registrations.html", {"registrations": registration_objs})
+
+
+def get_pwa_enabled(request):
+    register_obj = Registration.objects.filter(is_pwa_enabled=True).first()
+    return JsonResponse(
+        {
+            "slug": getattr(register_obj, "slug", None),
+            "version": getattr(register_obj, "version", None),
+            "publicKey": getattr(register_obj, "public_key", None),
+            "optionsSets": getattr(register_obj, "option_set_links", None),
+        }
+    )
+
+
+@csrf_exempt
+def authorize_cookie(request):
+    try:
+        decoded_key = signing.loads(
+            json.loads(request.body),
+            max_age=settings.SESSION_COOKIE_AGE,
+            salt="django.contrib.sessions.backends.signed_cookies",
+        )
+        if User.objects.filter(id=int(decoded_key.get("_auth_user_id"))).exists():
+            return JsonResponse({"authorized": True})
+        else:
+            return JsonResponse({"authorized": False})
+    except (signing.BadSignature, JSONDecodeError):
+        logger.info("PWA Cookie was not authorized")
+        return JsonResponse({"authorized": False})

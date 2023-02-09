@@ -1,13 +1,15 @@
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import Permission
 from django.db.models import Q
 from django.utils import timezone
 
-from aurora.registration.models import Registration
-from aurora.security.models import RegistrationRole
+from .models import RegistrationRole
 
 
 class SmartBackend(ModelBackend):
     def has_perm(self, user_obj, perm, obj=None):
+        from aurora.registration.models import Registration
+
         if obj and isinstance(obj, Registration):
             app_label, perm_name = perm.split(".")
             return (
@@ -22,3 +24,15 @@ class SmartBackend(ModelBackend):
             )
 
         return user_obj.is_active and super().has_perm(user_obj, perm, obj=obj)
+
+
+class OrganizationBackend(ModelBackend):
+    def _get_group_permissions(self, user_obj):
+        # user_groups_field = get_user_model()._meta.get_field('organizationrole_set')
+        # user_groups_query = 'group__%s' % user_groups_field.related_query_name()
+        perms = Permission.objects.filter(group__organizationrole__user=user_obj)
+        print("src/aurora/security/backend.py: 34", perms)
+        return perms
+
+    def has_perm(self, user_obj, perm, obj=None):
+        return super().has_perm(user_obj, perm, obj=obj)

@@ -1,10 +1,14 @@
+import csv
+import io
 import json
 import logging
+import re
 from datetime import datetime, timedelta
 
 from admin_extra_buttons.decorators import button, choice, link, view
-from admin_sync.mixin import SyncMixin
 from adminfilters.autocomplete import AutoCompleteFilter
+from adminfilters.numbers import NumberFilter
+from adminfilters.querystring import QueryStringFilter
 from adminfilters.value import ValueFilter
 from dateutil.utils import today
 from django import forms
@@ -12,25 +16,28 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import SimpleListFilter, register
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db.models import JSONField
 from django.db.models.signals import post_delete, post_save
 from django.db.transaction import atomic
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.template import Template
 from django.template.loader import select_template
 from django.urls import reverse, translate_url
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
+from django_regex.utils import RegexList
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
-from .protocol import AuroraSyncRegistrationProtocol
 from ..core.admin import ConcurrencyVersionAdmin
+from ..core.admin_sync import SyncMixin
 from ..core.models import FormSet
 from ..core.utils import (
     build_form_fake_data,
     clone_model,
+    flatten_dict,
     get_system_cache_version,
     is_root,
     namify,
@@ -39,6 +46,7 @@ from ..i18n.forms import TemplateForm
 from .forms import CloneForm, RegistrationForm
 from .models import Record, Registration
 from .paginator import LargeTablePaginator
+from .protocol import AuroraSyncRegistrationProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +78,42 @@ class JamesForm(forms.ModelForm):
         ]
 
 
+class RegistrationExportForm(forms.Form):
+    filters = forms.CharField(widget=forms.Textarea, required=False)
+    ignored = forms.CharField(widget=forms.Textarea, required=False)
+
+    def clean_filters(self):
+        filter = QueryStringFilter(None, {}, Record, None)
+        return filter.get_filters(self.cleaned_data["filters"])
+
+    def clean_ignored(self):
+        try:
+            return RegexList([re.compile(rule) for rule in self.cleaned_data["ignored"].split("\n")])
+        except Exception as e:
+            raise ValidationError(e)
+
+
+class OrganizationFilter(AutoCompleteFilter):
+    pass
+
+
+class RegistrationProjectFilter(AutoCompleteFilter):
+    fk_name = "flex_form__project__organization__exact"
+
+
 @register(Registration)
 class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
-    list_filter = ("active", "archived", "protected")
-    list_display = ("name", "title", "slug", "locale", "secure", "active", "validator", "archived", "protected")
+    list_filter = (
+        "active",
+        ("flex_form__project__organization", OrganizationFilter),
+        ("flex_form__project", RegistrationProjectFilter),
+        "archived",
+        "protected",
+        "show_in_homepage",
+    )
+    list_display = ("name", "slug", "locale", "secure", "active", "archived", "protected", "show_in_homepage")
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True
@@ -132,6 +170,64 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                 "/static/clipboard%s.js" % extra,
             ]
         )
+
+    @view(permission=is_root)
+    def export_as_csv(self, request, pk):
+        ctx = self.get_common_context(request, pk, title="Export")
+        reg: Registration = ctx["original"]
+        if request.method == "POST":
+            form = RegistrationExportForm(request.POST)
+            if form.is_valid():
+                filters, exclude = form.cleaned_data["filters"]
+                ignore_rules = form.cleaned_data["ignored"]
+                ctx["filters"] = filters
+                ctx["exclude"] = exclude
+                qs = Record.objects.filter(registration__id=pk).filter(**filters).exclude(**exclude).values()
+                records = [flatten_dict(r["fields"]) for r in qs]
+                skipped = []
+                all_fields = []
+                for r in records:
+                    for field_name in r.keys():
+                        if field_name in ignore_rules and field_name not in skipped:
+                            skipped.append(field_name)
+                        elif field_name not in all_fields:
+                            all_fields.append(field_name)
+                if "export" in request.POST:
+                    csv_options_default = {
+                        "quotechar": '"',
+                        "quoting": csv.QUOTE_ALL,
+                        "delimiter": ";",
+                        "escapechar": "\\",
+                    }
+                    out = io.StringIO()
+                    writer = csv.DictWriter(
+                        out,
+                        dialect="excel",
+                        fieldnames=all_fields,
+                        restval="-",
+                        extrasaction="ignore",
+                        **csv_options_default,
+                    )
+                    writer.writeheader()
+                    writer.writerows(records)
+                    out.seek(0)
+                    filename = f"Registration_{reg.slug}.csv"
+                    response = HttpResponse(
+                        out.read(),
+                        headers={"Content-Disposition": 'attachment;filename="%s"' % filename},
+                        content_type="text/csv",
+                    )
+                    return response
+                else:
+                    ctx["all_fields"] = sorted(set(all_fields))
+                    ctx["skipped"] = skipped
+                    ctx["qs"] = records[:10]
+
+        else:
+            form = RegistrationExportForm()
+
+        ctx["form"] = form
+        return render(request, "admin/registration/registration/export.html", ctx)
 
     @view(label="invalidate cache", html_attrs={"class": "aeb-warn"})
     def invalidate_cache(self, request, pk):
@@ -371,19 +467,31 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
 
-    @button(change_form=True, html_attrs={"target": "_new"})
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if obj and not is_root(request):
+            readonly_fields.append("export_allowed")
+        return readonly_fields
+
+    @choice(order=900, change_list=False)
+    def data(self, button):
+        button.choices = [
+            self.charts,
+            self.view_collected_data,
+        ]
+        if button.original.export_allowed and is_root(button.context["request"]):
+            button.choices.append(self.export_as_csv)
+        return button
+
+    @view(change_form=True, html_attrs={"target": "_new"})
     def charts(self, request, pk):
         return HttpResponseRedirect(reverse("charts:registration", args=[pk]))
 
-    @link(permission=is_root, html_attrs={"class": "aeb-warn"})
-    def view_collected_data(self, button):
-        try:
-            if button.original:
-                base = reverse("admin:registration_record_changelist")
-                button.href = f"{base}?registration__exact={button.original.pk}"
-                button.html_attrs["target"] = f"_{button.original.pk}"
-        except Exception as e:
-            logger.exception(e)
+    @view(permission=is_root, html_attrs={"class": "aeb-warn"})
+    def view_collected_data(self, button, pk):
+        base = reverse("admin:registration_record_changelist")
+        url = f"{base}?registration__exact={pk}"
+        return HttpResponseRedirect(url)
 
     @view()
     def james_fake_data(self, request, pk):
@@ -420,8 +528,9 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         return render(request, "admin/registration/registration/test.html", ctx)
 
     def get_changeform_buttons(self, context):
+        base = super().get_changeform_buttons(context)
         return sorted(
-            [h for h in self.extra_button_handlers.values() if h.change_form in [True, None]],
+            [h for h in base if h.change_form in [True, None]],
             key=lambda item: item.config.get("order", 1),
         )
 
@@ -467,12 +576,25 @@ class RecordAdmin(SmartModelAdmin):
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored", "unique_field")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id", "fields", "counters")
     autocomplete_fields = ("registration",)
-    list_filter = (("registration", AutoCompleteFilter), HourFilter, ("unique_field", ValueFilter), "ignored")
+    list_filter = (
+        ("registration", AutoCompleteFilter),
+        ("id", NumberFilter),
+        HourFilter,
+        ("unique_field", ValueFilter),
+        "ignored",
+    )
     change_form_template = None
     change_list_template = None
-    actions = ["fix_tax_id"]
     paginator = LargeTablePaginator
     show_full_result_count = False
+
+    def get_actions(self, request):
+        return {}
+        # {name: (func, name, desc) for func, name, desc in actions}
+        # actions = super().get_actions(request)
+        # for name, __ in actions.items():
+        #     print("src/aurora/registration/admin.py: 485", name)
+        # return {"export_as_csv": self.get_action(self.export_as_csv)}
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -485,27 +607,6 @@ class RecordAdmin(SmartModelAdmin):
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = {"is_root": is_root(request)}
         return super().changeform_view(request, object_id, form_url, extra_context)
-
-    def fix_tax_id(self, request, queryset):
-        results = {"updated": [], "processed": []}
-        for record in queryset:
-            try:
-                for individual in record.fields["individuals"]:
-                    if individual["role_i_c"] == "y":
-                        record.unique_field = individual["tax_id_no_i_c"]
-                        record.save()
-                        results["updated"].append(record.pk)
-                        break
-                results["processed"].append(record.pk)
-
-            except Exception as e:
-                results[record.pk] = f"{e.__class__.__name__}: {str(e)}"
-        return JsonResponse(results)
-
-    @button(label="Fix TaxID")
-    def _fix_tax_id(self, request):
-        queryset = Record.objects.filter(unique_field__isnull=True, timestamp__gt="2022-06-15")
-        return self.fix_tax_id(request, queryset)
 
     @link(html_attrs={"class": "aeb-warn "}, change_form=True)
     def receipt(self, button):

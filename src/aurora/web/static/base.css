@@ -1,1 +1,212 @@
-.select2.select2-container.select2-container--default{width:100% !important}.fs-counter-container{display:flex;width:100%}.fs-counter-container .fs-counter{display:flex;width:100%}.fs-counter-container .fs-counter .pages{flex-grow:3}.fs-counter-container .fs-counter .nav{flex-shrink:1}.fs-counter-container .fs-counter .nav *{height:32px;width:32px;display:inline-block;background-repeat:no-repeat;background-size:cover}.fs-counter-container .fs-counter .nav *.remove{background-image:url("delete-25.png");height:25px;width:25px;margin-top:2px}.fs-counter-container .fs-counter .nav *.next{background-image:url("next.webp")}.fs-counter-container .fs-counter .nav *.prev{background-image:url("previous.webp")}.fs-counter-container .fs-counter .nav *.disabled{filter:opacity(30%)}.aname::before{content:"";display:block;height:15px;margin-top:-15px;visibility:hidden}.formset .formset-add-row .formset-add-button{padding-left:1rem;padding-right:1rem;padding-top:.5rem;padding-bottom:.5rem;border-width:1px;border-radius:.25rem;--border-opacity: 1;font-weight:600;box-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px 0 rgba(0,0,0,.06);color:rgba(45, 55, 72, var(--text-opacity));border-color:rgba(203, 213, 224, var(--border-opacity))}.formset .formset-delete-row .formset-delete-button{padding-left:1rem;padding-right:1rem;padding-top:.5rem;padding-bottom:.5rem;border-width:1px;border-radius:.25rem;--border-opacity: 1;font-weight:600;box-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px 0 rgba(0,0,0,.06);--text-opacity: 1;color:rgba(252, 129, 129, var(--text-opacity));border-color:rgba(252, 129, 129, var(--border-opacity));background-color:rgba(255, 255, 255, var(--bg-opacity))}.charting .button{color:#0da7e6;font-weight:bold;border-radius:2px;border-color:#092c3a;background-color:#01adf1;color:#fff;padding:2px;padding-left:10px;padding-right:10px}.landing input.button{color:#0da7e6;font-weight:bold;background-color:#01adf1;color:#fff}.intro h1{font-size:larger;font-weight:bold;margin-bottom:2px}.intro p{margin:10px 0 10px 0}.intro ul li{list-style-type:disc;list-style-position:inside}.intro ul li li{list-style-type:circle;list-style-position:inside}body{font-family:"Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;font-size:10pt}body header.header{background-color:#fff;width:100%;z-index:900}.bg-red{background-color:#ff9898}.alert-message{background-color:#ff9898}span.required{color:#c90a0a}ul.errorlist li{background-color:#ff9898;color:#000 !important;padding:2px !important}fieldset label{cursor:pointer}ul.errorlist{list-style-type:none;padding:0;margin:0}ul.errorlist li{color:#c90a0a}input[type=submit],input[type=button]{color:rgba(255, 255, 255, var(--text-opacity));padding-left:1rem;padding-right:1rem;padding-top:.5rem;padding-bottom:.5rem;margin-top:1rem;font-weight:700;border-radius:.25rem;background-color:rgba(66, 153, 225, var(--bg-opacity));cursor:pointer}input[type=submit]:hover,input[type=submit]:active,input[type=button]:hover,input[type=button]:active{box-shadow:0 0 0 3px rgba(66,153,225,.5);outline:2px solid transparent;outline-offset:2px}input[type=submit]:disabled,input[type=button]:disabled{cursor:not-allowed;background-color:rgba(124,124,124,.67)}#registrationForm input[type=submit]{color:rgba(255, 255, 255, var(--text-opacity));padding-left:1rem;padding-right:1rem;padding-top:.5rem;padding-bottom:.5rem;margin-top:1rem;font-weight:700;border-radius:.25rem;background-color:rgba(66, 153, 225, var(--bg-opacity));color:#fff;cursor:pointer}#registrationForm input[type=submit]:hover,#registrationForm input[type=submit]:active{box-shadow:0 0 0 3px rgba(66,153,225,.5);outline:2px solid transparent;outline-offset:2px}#registrationForm input[type=submit]:disabled{background-color:rgba(124,124,124,.67);cursor:not-allowed;color:#000}/*# sourceMappingURL=base.css.map */
+.CodeMirror-wrapping textarea {
+  background-color: white;
+}
+
+.select2.select2-container.select2-container--default {
+  width: 100% !important;
+}
+
+.fs-counter-container {
+  display: flex;
+  width: 100%;
+}
+.fs-counter-container .fs-counter {
+  display: flex;
+  width: 100%;
+}
+.fs-counter-container .fs-counter .pages {
+  flex-grow: 3;
+}
+.fs-counter-container .fs-counter .nav {
+  flex-shrink: 1;
+}
+.fs-counter-container .fs-counter .nav * {
+  height: 32px;
+  width: 32px;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.fs-counter-container .fs-counter .nav *.remove {
+  background-image: url("delete-25.png");
+  height: 25px;
+  width: 25px;
+  margin-top: 2px;
+}
+.fs-counter-container .fs-counter .nav *.next {
+  background-image: url("next.webp");
+}
+.fs-counter-container .fs-counter .nav *.prev {
+  background-image: url("previous.webp");
+}
+.fs-counter-container .fs-counter .nav *.disabled {
+  filter: opacity(30%);
+}
+
+.aname::before {
+  content: "";
+  display: block;
+  height: 15px;
+  margin-top: -15px;
+  visibility: hidden;
+}
+
+.formset .formset-add-row .formset-add-button {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-width: 1px;
+  border-radius: 0.25rem;
+  --border-opacity: 1;
+  font-weight: 600;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  color: rgba(45, 55, 72, var(--text-opacity));
+  border-color: rgba(203, 213, 224, var(--border-opacity));
+}
+.formset .formset-delete-row .formset-delete-button {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-width: 1px;
+  border-radius: 0.25rem;
+  --border-opacity: 1;
+  font-weight: 600;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --text-opacity: 1;
+  color: rgba(252, 129, 129, var(--text-opacity));
+  border-color: rgba(252, 129, 129, var(--border-opacity));
+  background-color: rgba(255, 255, 255, var(--bg-opacity));
+}
+
+.charting .button {
+  color: #0da7e6;
+  font-weight: bold;
+  border-radius: 2px;
+  border-color: #092c3a;
+  background-color: #01ADF1;
+  color: white;
+  padding: 2px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.button {
+  font-weight: bold;
+  background-color: #01ADF1;
+  color: white;
+  display: inline-block;
+  margin: 2px;
+}
+
+.landing .button {
+  font-weight: bold;
+  background-color: #01ADF1;
+  color: white;
+}
+.intro h1 {
+  font-size: larger;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.intro p {
+  margin: 10px 0 10px 0;
+}
+.intro ul li {
+  list-style-type: disc;
+  list-style-position: inside;
+}
+.intro ul li li {
+  list-style-type: circle;
+  list-style-position: inside;
+}
+
+body {
+  font-family: "Roboto", "Lucida Grande", "DejaVu Sans", "Bitstream Vera Sans", Verdana, Arial, sans-serif;
+  font-size: 10pt;
+}
+body header.header {
+  background-color: white;
+  width: 100%;
+  z-index: 900;
+}
+
+.bg-red {
+  background-color: #ff9898;
+}
+
+.alert-message {
+  background-color: #ff9898;
+}
+
+span.required {
+  color: #c90a0a;
+}
+
+ul.errorlist li {
+  background-color: #ff9898;
+  color: black !important;
+  padding: 2px !important;
+}
+
+fieldset label {
+  cursor: pointer;
+}
+
+ul.errorlist {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+ul.errorlist li {
+  color: #c90a0a;
+}
+
+input[type=submit], input[type=button] {
+  color: rgba(255, 255, 255, var(--text-opacity));
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-top: 1rem;
+  font-weight: 700;
+  border-radius: 0.25rem;
+  background-color: rgba(66, 153, 225, var(--bg-opacity));
+  cursor: pointer;
+}
+input[type=submit]:hover, input[type=submit]:active, input[type=button]:hover, input[type=button]:active {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+input[type=submit]:disabled, input[type=button]:disabled {
+  cursor: not-allowed;
+  background-color: rgba(124, 124, 124, 0.67);
+}
+
+#registrationForm input[type=submit] {
+  color: rgba(255, 255, 255, var(--text-opacity));
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-top: 1rem;
+  font-weight: 700;
+  border-radius: 0.25rem;
+  background-color: rgba(66, 153, 225, var(--bg-opacity));
+  color: white;
+  cursor: pointer;
+}
+#registrationForm input[type=submit]:hover, #registrationForm input[type=submit]:active {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+#registrationForm input[type=submit]:disabled {
+  background-color: rgba(124, 124, 124, 0.67);
+  cursor: not-allowed;
+  color: black;
+}
+
+/*# sourceMappingURL=base.css.map */

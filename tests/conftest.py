@@ -22,6 +22,15 @@ def pytest_addoption(parser):
     )
 
 
+@pytest.fixture(autouse=True)
+def configure_settings(settings):
+    from cryptography.fernet import Fernet
+
+    settings.FERNET_KEY = Fernet.generate_key()
+    settings.ADMINS = ["admin@demo.org"]
+    settings.CAPTCHA_TEST_MODE = True
+
+
 def pytest_configure(config):
     os.environ["DEBUG"] = "0"
     os.environ["ADMINS"] = "admin@demo.org"

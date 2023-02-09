@@ -50,10 +50,8 @@ class SmartFieldMixin:
         if self.flex_field.validator:
             attrs["data-smart-validator"] = self.flex_field.validator.name
 
-        if self.flex_field.required:
-            attrs["required"] = "required"
-
+        if not self.flex_field.required:
+            attrs.pop("required", "")
         widget.smart_attrs = self.smart_attrs
         widget.flex_field = self.flex_field
-        # # attrs["smart_attrs"] = self.smart_attrs
         return attrs

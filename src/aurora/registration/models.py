@@ -8,6 +8,7 @@ from Crypto.PublicKey import RSA
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.contrib.flatpages.models import FlatPage
 from django.contrib.postgres.fields import CICharField
 from django.db import models
 from django.utils import timezone
@@ -16,8 +17,9 @@ from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from natural_keys import NaturalKeyModel
 
-from aurora.core.crypto import Crypto, crypt, decrypt
-from aurora.core.models import FlexForm, Validator
+from aurora.core.crypto import Crypto, crypt, decrypt, decrypt_offline
+from aurora.core.fields import AjaxSelectField
+from aurora.core.models import FlexForm, Project, Validator
 from aurora.core.utils import (
     cache_aware_reverse,
     dict_setdefault,
@@ -66,6 +68,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     locale = models.CharField(
         verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
     )
+    show_in_homepage = models.BooleanField(default=False)
+    welcome_page = models.ForeignKey(FlatPage, blank=True, null=True, on_delete=models.SET_NULL)
     locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
     intro = models.TextField(blank=True, null=True, default="")
     footer = models.TextField(blank=True, null=True, default="")
@@ -81,10 +85,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     scripts = models.ManyToManyField(
         Validator, related_name="script_for", limit_choices_to={"target": Validator.SCRIPT}, blank=True
-    )
-    # DEPRECATED uses `unique_field_path`
-    unique_field = models.CharField(
-        max_length=255, blank=True, null=True, help_text="Form field to be used as unique key (DEPRECATED)"
     )
 
     unique_field_path = models.CharField(
@@ -104,13 +104,19 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         help_text="If true, limit access to users with 'registration.register' permission",
     )
     restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
+    is_pwa_enabled = models.BooleanField(default=False)
+    export_allowed = models.BooleanField(default=False)
+    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         get_latest_by = "start"
         permissions = (
             ("manage", _("Can manage Registration")),
             ("register", _("Can use Registration")),
+            ("create_translation", _("Can Create Translation")),
+            ("export_data", _("Can Export Data")),
         )
+        ordering = ("name", "title")
 
     @property
     def media(self):
@@ -121,6 +127,12 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     def get_absolute_url(self):
         return cache_aware_reverse("register", args=[self.slug, self.version])
+
+    def get_welcome_url(self):
+        if self.welcome_page:
+            return self.welcome_page.get_absolute_url()
+        else:
+            return self.get_absolute_url()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.slug:
@@ -150,7 +162,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     def add_record(self, fields_data):
         fields, files = router.decompress(fields_data)
-
+        crypter = Crypto()
         if self.public_key:
             kwargs = {
                 # "storage": self.encrypt(fields_data),
@@ -160,8 +172,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         elif self.encrypt_data:
             kwargs = {
                 # "storage": Crypto().encrypt(fields_data).encode(),
-                "files": Crypto().encrypt(files).encode(),
-                "fields": Crypto().encrypt(fields),
+                "files": crypter.encrypt(files).encode(),
+                "fields": crypter.encrypt(fields),
             }
         else:
             kwargs = {
@@ -203,6 +215,14 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
             locales += self.locales
         return set(locales)
 
+    @property
+    def option_set_links(self):
+        links = []
+        for field in self.flex_form.fields.all():
+            if field.field_type == AjaxSelectField:
+                links.append(f"/en-us/options/{field.choices}/")  # TODO: is en-us always valid?
+        return links
+
 
 class RemoteIp(models.GenericIPAddressField):
     def pre_save(self, model_instance, add):
@@ -229,19 +249,31 @@ class Record(models.Model):
     index2 = models.CharField(null=True, blank=True, max_length=255)
     index3 = models.CharField(null=True, blank=True, max_length=255)
 
+    is_offline = models.BooleanField(default=False)
+
+    @property
+    def fields_data(self):
+        if self.is_offline and len(self.fields) > 12_000:
+            return "String too long to display..."
+        else:
+            return self.fields
+
     class Meta:
         unique_together = ("registration", "unique_field")
 
     def decrypt(self, private_key=undefined, secret=undefined):
-        if private_key != undefined:
-            # return json.loads(decrypt(self.storage, private_key))
-            files = json.loads(decrypt(self.files, private_key))
-            fields = json.loads(decrypt(base64.b64decode(self.fields), private_key))
-            return router.compress(fields, files)
-        elif secret != undefined:
-            files = json.loads(Crypto(secret).decrypt(self.files))
-            fields = json.loads(Crypto(secret).decrypt(self.fields))
-            return router.compress(fields, files)
+        if self.is_offline:
+            fields = json.loads(decrypt_offline(self.fields, private_key))
+            return router.compress(fields, {})
+        else:
+            if private_key != undefined:
+                files = json.loads(decrypt(self.files, private_key))
+                fields = json.loads(decrypt(base64.b64decode(self.fields), private_key))
+                return router.compress(fields, files)
+            elif secret != undefined:
+                files = json.loads(Crypto(secret).decrypt(self.files))
+                fields = json.loads(Crypto(secret).decrypt(self.fields))
+                return router.compress(fields, files)
 
     @property
     def unicef_id(self):

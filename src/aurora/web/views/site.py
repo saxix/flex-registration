@@ -12,7 +12,7 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 
-from aurora.core.utils import get_etag, get_qrcode
+from aurora.core.utils import get_etag, get_qrcode, render
 from aurora.registration.models import Registration
 
 logger = logging.getLogger(__name__)
@@ -28,17 +28,12 @@ def error_404(request, exception):
     return TemplateResponse(request, "404.html", status=404, headers={"Session-Token": settings.DJANGO_ADMIN_URL})
 
 
+def offline(request):
+    return render(request, "offline.html")
+
+
 def get_active_registrations():
-    selection = config.HOME_PAGE_REGISTRATIONS.split(";")
-    registrations = []
-    for slug in selection:
-        if slug.strip():
-            try:
-                registrations.append(Registration.objects.get(active=True, slug=slug.strip()))
-            except Registration.DoesNotExist:
-                pass
-            except Exception as e:
-                logger.exception(e)
+    registrations = Registration.objects.filter(active=True, show_in_homepage=True)
     return registrations
 
 
@@ -58,7 +53,7 @@ class PageView(TemplateView):
 
 @method_decorator(cache_control(public=True), name="dispatch")
 class HomeView(TemplateView):
-    template_name = "ua.html"
+    template_name = "home.html"
 
     def get_template_names(self):
         return [config.HOME_TEMPLATE, self.template_name]

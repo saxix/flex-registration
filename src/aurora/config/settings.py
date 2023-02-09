@@ -12,6 +12,8 @@ from . import env
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, "static/js", "serviceworker.js")
+
 mimetypes.add_type("image/svg+xml", ".svg", True)
 mimetypes.add_type("image/svg+xml", ".svgz", True)
 
@@ -31,8 +33,9 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 DJANGO_ADMIN_URL = env("DJANGO_ADMIN_URL")
 
 # Application definition
-SITE_ID = 1
+SITE_ID = env("SITE_ID")
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -47,12 +50,13 @@ INSTALLED_APPS = [
     "reversion_compare",  # https://github.com/jedie/django-reversion-compare
     # ---
     # "aurora.admin.apps.AuroraAdminUIConfig",
-    "aurora.administration.apps.AuroraAdminConfig",
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
-    "smart_admin.apps.SmartAuthConfig",
+    # "smart_admin.apps.SmartAuthConfig",
     "smart_admin.apps.SmartConfig",
-    # 'smart_admin',
+    "aurora.administration.apps.AuroraAdminConfig",
+    "aurora.administration.apps.AuroraAuthConfig",
+    "hijack",
     "rest_framework",
     "rest_framework.authtoken",
     "aurora.api",
@@ -61,6 +65,8 @@ INSTALLED_APPS = [
     "admin_extra_buttons",
     "adminfilters",
     "adminactions",
+    "mptt",
+    "tinymce",
     "constance",
     "constance.backends.database",
     "flags",
@@ -73,6 +79,7 @@ INSTALLED_APPS = [
     "admin_sync",
     # ---
     "aurora.apps.Config",
+    "aurora.flatpages.apps.Config",
     "aurora.i18n",
     "aurora.web",
     "aurora.security.apps.Config",
@@ -81,7 +88,6 @@ INSTALLED_APPS = [
     "aurora.counters",
 ]
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
-
 MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
     "aurora.web.middlewares.thread_local.ThreadLocalMiddleware",
@@ -90,7 +96,6 @@ MIDDLEWARE = [
     "aurora.web.middlewares.maintenance.MaintenanceMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "aurora.web.middlewares.i18n.I18NMiddleware",
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -103,13 +108,10 @@ MIDDLEWARE = [
     "django.middleware.gzip.GZipMiddleware",
     # "django.middleware.cache.FetchFromCacheMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "hijack.middleware.HijackUserMiddleware",
 ]
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
-if env("WHITENOISE"):
-    MIDDLEWARE += [
-        "whitenoise.middleware.WhiteNoiseMiddleware",
-    ]
 ROOT_URLCONF = "aurora.config.urls"
 
 TEMPLATES = [
@@ -119,6 +121,7 @@ TEMPLATES = [
             PACKAGE_DIR / "admin/ui/templates",
             PACKAGE_DIR / "api/templates",
             PACKAGE_DIR / "registration/templates",
+            PACKAGE_DIR / "flatpages/templates",
             PACKAGE_DIR / "core/templates",
             PACKAGE_DIR / "web/templates",
         ],
@@ -150,12 +153,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "aurora.config.wsgi.application"
+ASGI_APPLICATION = "aurora.config.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 main_conn = env.db("DATABASE_URL")
 main_conn["CONN_MAX_AGE"] = 60
+main_conn.update({"OPTIONS": {"options": "-c statement_timeout=10000"}})
+
 ro_conn = main_conn.copy()
 ro_conn.update(
     {
@@ -176,16 +182,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 try:
     if REDIS_CONNSTR := env("REDIS_CONNSTR"):
         os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR}"
-except Exception as e:
+except Exception as e:  # pragma: no cover
     logging.exception(e)
 
 CACHES = {
     "default": env.cache_url("CACHE_DEFAULT"),
 }
 
-if DEBUG:
+if DEBUG:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = []
-else:
+else:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = [
         {
             "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -207,21 +213,24 @@ else:
 LANGUAGE_CODE = env("LANGUAGE_CODE")
 LANGUAGE_COOKIE_NAME = "smart-register-language"
 
+# As per http://www.lingoes.net/en/translator/langcode.htm
 LANGUAGES = (
     ("en-us", "English | English"),
-    ("uk-ua", "український | Ukrainian"),
-    ("pl-pl", "Polskie | Polish"),
     ("ar-ae", " | عربي" + "Arabic"),
-    # ("de-de", "Deutsch"),
+    ("cs-cz", "čeština | Czech"),
+    ("de-de", "Deutsch"),
     ("es-es", "Español | Spanish"),
     ("fr-fr", "Français | French"),
-    # ("it-it", "Italiano"),
-    # ("ro-ro", "Română"),
+    ("hu-hu", "Magyar | Hungarian"),
+    ("it-it", "Italiano"),
+    ("pl-pl", "Polskie | Polish"),
     ("pt-pt", "Português"),
-    # ("pl-pl", "Pусский"),
-    ("ta-ta", "தமிழ் | Tamil"),
+    ("ro-ro", "Română"),
+    ("ru-ru", "Русский | Russian"),
     ("si-si", "සිංහල | Sinhala"),
-    # ('hi-hi', 'हिंदी'),  # Hindi
+    ("ta-ta", "தமிழ் | Tamil"),
+    ("uk-ua", "український | Ukrainian"),
+    ("hi-hi", "हिंदी"),  # Hindi
 )
 LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
 
@@ -256,18 +265,20 @@ STATIC_ROOT = env("STATIC_ROOT") + STATIC_URL  # simplify nginx config
 STATICFILES_STORAGE = env("STATICFILES_STORAGE")
 
 STATICFILES_DIRS = [
-    # os.path.join(BASE_DIR, "web/static"),
+    os.path.join(BASE_DIR, "web/static"),
+    os.path.join(BASE_DIR, "flatpages/static"),
 ]
 
 # -------- Added Settings
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
     "aurora.security.backend.SmartBackend",
+    "aurora.security.backend.OrganizationBackend",
     # "django.contrib.auth.backends.ModelBackend",
-    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
+    "social_core.backends.azuread_b2c.AzureADB2COAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
-CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME")
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
 CSRF_COOKIE_SECURE = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -397,10 +408,11 @@ CONSTANCE_CONFIG = OrderedDict(
 )
 
 SMART_ADMIN_SECTIONS = {
-    "Registration": ["registration", "dbtemplates"],
+    "Organization": ["core.Organization", "core.Project"],
+    "Registration": ["registration", "dbtemplates", "flatpages"],
     "Form Builder": ["core"],
     "Configuration": ["constance", "flags"],
-    "Security": ["auth", "social_auth"],
+    "Security": ["auth", "social_auth", "security"],
     "Other": [],
     "_hidden_": [],
 }
@@ -469,11 +481,9 @@ CAPTCHA_GET_FROM_POOL = True
 
 # DEBUG TOOLBAR
 def show_ddt(request):  # pragma: no-cover
-    # use https://bewisse.com/modheader/ to set custom header
-    # key must be `X-DDT` (no HTTP_ prefix no underscore)
     from flags.state import flag_enabled
 
-    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):
+    if request.path in RegexList(("/tpl/.*", "/api/.*", "/dal/.*")):  # pragma: no cache
         return False
     return flag_enabled("DEVELOP_DEBUG_TOOLBAR", request=request)
 
@@ -508,20 +518,20 @@ DEBUG_TOOLBAR_PANELS = [
 
 ROOT_TOKEN = env("ROOT_TOKEN")
 CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
-
 # Azure login
 
+AUTH_USER_MODEL = "auth.User"
+
 # Social Auth settings.
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = env("AZURE_CLIENT_ID")
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env("AZURE_CLIENT_SECRET")
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_KEY")
-SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
-    "username",
-    "first_name",
-    "last_name",
-    "email",
-]
-# SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+SOCIAL_AUTH_KEY = env.str("AZURE_CLIENT_KEY")
+SOCIAL_AUTH_SECRET = env.str("AZURE_CLIENT_SECRET")
+SOCIAL_AUTH_TENANT_ID = env("AZURE_TENANT_ID")
+SOCIAL_AUTH_RESOURCE = "https://graph.microsoft.com/"
+SOCIAL_AUTH_POLICY = env("AZURE_POLICY_NAME")
+SOCIAL_AUTH_AUTHORITY_HOST = env("AZURE_AUTHORITY_HOST")
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_POLICY = ""
+
+
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     "aurora.core.authentication.social_details",
@@ -536,20 +546,22 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "aurora.core.authentication.user_details",
 )
-SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_USER_FIELDS = [
+SOCIAL_AUTH_USER_FIELDS = [
     "email",
     "fullname",
 ]
 
-SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
+SOCIAL_AUTH_OAUTH2_SCOPE = [
     "openid",
     "email",
     "profile",
 ]
 
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
+SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
+
 # fix admin name
-LOGIN_URL = "/login/azuread-tenant-oauth2"
+LOGIN_URL = "/login/azuread-b2c-oauth2"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
 
 # allow upload big file
@@ -634,3 +646,9 @@ CONCURRENCY_ENABLED = False
 
 STRATEGY_CLASSLOADER = "aurora.core.registry.classloader"
 MIGRATION_LOCK_KEY = env("MIGRATION_LOCK_KEY")
+
+# for offline forms
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 10
+SESSION_COOKIE_HTTPONLY = False
+
+HIJACK_PERMISSION_CHECK = "aurora.administration.hijack.can_impersonate"
