@@ -107,6 +107,7 @@ class OrganizationAdmin(SyncMixin, MPTTModelAdmin):
     mptt_indent_field = "name"
     search_fields = ("name",)
     protocol_class = AuroraSyncOrganizationProtocol
+    change_list_template = "admin/core/organization/change_list.html"
 
 
 @register(Project)
