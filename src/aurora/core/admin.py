@@ -35,7 +35,13 @@ from smart_admin.modeladmin import SmartModelAdmin
 from ..administration.filters import BaseAutoCompleteFilter
 from ..administration.mixin import LoadDumpMixin
 from .fields.widgets import PythonEditor
-from .forms import Select2Widget, ValidatorForm, FieldAttributesForm, WidgetAttributesForm, SmartAttributesForm
+from .forms import (
+    FieldAttributesForm,
+    Select2Widget,
+    SmartAttributesForm,
+    ValidatorForm,
+    WidgetAttributesForm,
+)
 from .models import (
     FIELD_KWARGS,
     CustomFieldType,
@@ -47,6 +53,7 @@ from .models import (
     Project,
     Validator,
 )
+from .protocols import AuroraSyncOrganizationProtocol, AuroraSyncProjectProtocol
 from .utils import dict_setdefault, is_root, render
 
 logger = logging.getLogger(__name__)
@@ -99,6 +106,7 @@ class OrganizationAdmin(SyncMixin, MPTTModelAdmin):
     mptt_level_indent = 20
     mptt_indent_field = "name"
     search_fields = ("name",)
+    protocol_class = AuroraSyncOrganizationProtocol
 
 
 @register(Project)
@@ -108,6 +116,7 @@ class ProjectAdmin(SyncMixin, MPTTModelAdmin):
     mptt_level_indent = 20
     mptt_indent_field = "name"
     search_fields = ("name",)
+    protocol_class = AuroraSyncProjectProtocol
 
     def get_search_results(self, request, queryset, search_term):
         queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)

@@ -30,10 +30,57 @@ def test_sync(db):
     call_command("loaddata", (workdir / fdst.name).absolute())
 
 
-def test_protocol(db, registration):
+def test_protocol_registration(db, registration):
     from aurora.registration.protocol import AuroraSyncRegistrationProtocol
 
     c = AuroraSyncRegistrationProtocol()
     data = c.collect([registration])
     assert registration in data
     assert registration.flex_form in data
+
+
+def test_protocol_registration_marhalling(db, registration):
+    from aurora.registration.protocol import AuroraSyncRegistrationProtocol
+
+    c = AuroraSyncRegistrationProtocol()
+    assert c.deserialize(c.serialize([registration]))
+
+
+def test_protocol_organization(db):
+    from aurora.core.protocols import AuroraSyncOrganizationProtocol
+    from testutils.factories import OrganizationFactory
+
+    organization = OrganizationFactory()
+
+    c = AuroraSyncOrganizationProtocol()
+    data = c.collect([organization])
+    assert organization in data
+
+
+def test_protocol_organization_marhalling(db):
+    from aurora.core.protocols import AuroraSyncOrganizationProtocol
+    from testutils.factories import OrganizationFactory
+
+    organization = OrganizationFactory()
+    c = AuroraSyncOrganizationProtocol()
+    assert c.deserialize(c.serialize([organization]))
+
+
+def test_protocol_project(db):
+    from aurora.core.protocols import AuroraSyncProjectProtocol
+    from testutils.factories import ProjectFactory
+
+    organization = ProjectFactory()
+
+    c = AuroraSyncProjectProtocol()
+    data = c.collect([organization])
+    assert organization in data
+
+
+def test_protocol_project_marhalling(db):
+    from aurora.core.protocols import AuroraSyncProjectProtocol
+    from testutils.factories import ProjectFactory
+
+    organization = ProjectFactory()
+    c = AuroraSyncProjectProtocol()
+    assert c.deserialize(c.serialize([organization]))
