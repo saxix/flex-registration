@@ -432,6 +432,8 @@ class UsedByRegistration(BaseAutoCompleteFilter):
 
     def queryset(self, request, queryset):
         # {'registration__exact': '30'}
+        if not self.used_parameters:
+            return queryset
         try:
             value = self.used_parameters["registration__exact"]
             return queryset.filter(Q(registration__exact=value) | Q(formset__parent__registration=value))
