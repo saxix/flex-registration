@@ -1,8 +1,21 @@
+from admin_extra_buttons.decorators import button
 from admin_sync.mixin import SyncMixin as SyncMixin_
+from django.shortcuts import render
 
 
 class SyncMixin(SyncMixin_):
-    pass
+    @button(
+        visible=lambda b: b.model_admin.admin_sync_show_inspect(),
+        html_attrs={"style": "background-color:red"},
+    )
+    def admin_sync_inspect_multi(self, request):
+        context = self.get_common_context(request, title="Sync Inspect")
+        collector = self.protocol_class(request)
+        data = collector.collect(self.get_queryset(request))
+        context["data"] = data
+        return render(request, "admin/admin_sync/inspect.html", context)
+        # return JsonResponse(c.models, safe=False)
+
     # @choice(order=900, change_list=False)
     # def admin_sync(self, button):
     #     button.choices = [

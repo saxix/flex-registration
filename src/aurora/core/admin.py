@@ -8,7 +8,6 @@ from pathlib import Path
 import requests
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
-from admin_sync.mixin import SyncMixin
 from admin_sync.utils import is_local
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.combo import ChoicesFieldComboFilter, RelatedFieldComboFilter
@@ -34,6 +33,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from ..administration.filters import BaseAutoCompleteFilter
 from ..administration.mixin import LoadDumpMixin
+from .admin_sync import SyncMixin
 from .fields.widgets import PythonEditor
 from .forms import (
     FieldAttributesForm,
@@ -108,6 +108,9 @@ class OrganizationAdmin(SyncMixin, MPTTModelAdmin):
     search_fields = ("name",)
     protocol_class = AuroraSyncOrganizationProtocol
     change_list_template = "admin/core/organization/change_list.html"
+
+    def admin_sync_show_inspect(self):
+        return True
 
 
 @register(Project)
