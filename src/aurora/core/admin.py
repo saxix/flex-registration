@@ -264,7 +264,7 @@ class FlexFormFieldForm2(forms.ModelForm):
 @register(FlexFormField)
 class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, OrderableAdmin, SmartModelAdmin):
     search_fields = ("name", "label")
-    list_display = ("label", "name", "flex_form", "form_type", "required", "enabled")
+    list_display = ("label", "name", "flex_form", "field_type", "required", "enabled")
     list_editable = ["required", "enabled"]
     list_filter = (
         ("flex_form", AutoCompleteFilter),
@@ -282,11 +282,11 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     order = "ordering"
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related()
+        return super().get_queryset(request).select_related("flex_form")
 
     # change_list_template = "reversion/change_list.html"
 
-    def form_type(self, obj):
+    def field_type(self, obj):
         if obj.field_type:
             return obj.field_type.__name__
         else:

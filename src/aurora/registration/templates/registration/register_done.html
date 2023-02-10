@@ -15,7 +15,7 @@
             {% endwith %}
             <pre class="text-2xl p-5 registration-id">{{ record.unicef_id }}</pre>
         </div>
-        {% if config.QRCODE %}
+        {% if record.registration.advanced.qrcode %}
             <div class="flex flex-row justify-center items-center">
                 <img width="300" height="300" src="data:image/png;base64,{{ qrcode }}" alt="Red dot"/>
             </div>

@@ -19,16 +19,20 @@
         <input style="background-color: cornflowerblue" type="submit" value="Submit">
 </form>
 <script>
-    const roomName = JSON.parse(document.getElementById('room-name').textContent);
-    const chatSocket = new WebSocket(
+        const chatSocket = new WebSocket(
             'ws://'
             + window.location.host
-            + '/ws/chat/'
-            + roomName
+            + '/editor/field/'
+            + {{ original.pk }}
             + '/'
         );
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            console.log(111111, data);
+        console.log(999999999, chatSocket)
+        chatSocket.onmessage = function (e) {
+            console.log(111111, e);
+            {#const data = JSON.parse(e.data);#}
+            {#console.log(111111, data);#}
+        };
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
         };
 </script>

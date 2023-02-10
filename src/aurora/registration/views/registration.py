@@ -26,6 +26,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
+from sentry_sdk import set_tag
 
 from aurora.core.utils import (
     get_etag,
@@ -53,6 +54,11 @@ class QRVerify(TemplateView):
 
 class RegisterCompleteView(TemplateView):
     template_name = "registration/register_done.html"
+
+    def get_template_names(self):
+        slug = self.registration.slug
+        language = translation.get_language()
+        return [f"registration/{language}/{slug}_done.html", f"registration/{slug}_done.html", self.template_name]
 
     @cached_property
     def registration(self):
@@ -113,9 +119,13 @@ class RegistrationMixin:
         if not self.request.user.is_staff and not state.collect_messages:
             filters["active"] = True
 
-        base = Registration.objects.select_related("flex_form", "validator")
+        base = Registration.objects.select_related("flex_form", "validator", "project", "project__organization")
         try:
-            return base.get(slug=self.kwargs["slug"], **filters)
+            reg = base.get(slug=self.kwargs["slug"], **filters)
+            set_tag("registration.organization", reg.project.organization.name)
+            set_tag("registration.project", reg.project.name)
+            set_tag("registration.slug", reg.name)
+            return reg
         except Registration.DoesNotExist:  # pragma: no coalidateer
             raise Http404
 

@@ -207,8 +207,11 @@ _.is_adult = function(d) { return !_.is_child(d)};
             ctx = MiniRacer()
             try:
                 pickled = self.jspickle(value or "")
-                ctx.eval(f"{self.CONSOLE};{self.LIB}; var value = {pickled};")
+                base = f"{self.CONSOLE};{self.LIB}; var value = {pickled};"
+
+                ctx.eval(base)
                 result = ctx.eval(self.code)
+
                 if result is None:
                     ret = False
                 else:

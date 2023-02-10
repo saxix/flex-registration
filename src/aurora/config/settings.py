@@ -311,6 +311,10 @@ LOGGING = {
             "class": "logging.NullHandler",
         },
     },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",
+    },
     "loggers": {
         "flags": {
             "handlers": ["console"],

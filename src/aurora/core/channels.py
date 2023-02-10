@@ -1,7 +1,7 @@
 import json
 
 from channels.generic.websocket import WebsocketConsumer
-from django.urls import re_path
+from django.urls import path
 
 
 class FieldEditorConsumer(WebsocketConsumer):
@@ -11,13 +11,14 @@ class FieldEditorConsumer(WebsocketConsumer):
     def disconnect(self, close_code):
         pass
 
-    def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
-
+    def receive(self, text_data=None, bytes_data=None):
+        print("src/aurora/core/channels.py: 15", 8888888, text_data, bytes_data)
+        # text_data_json = json.loads(text_data)
+        # message = text_data_json["message"]
+        message = "aaaaaa"
         self.send(text_data=json.dumps({"message": message}))
 
 
 websocket_urlpatterns = [
-    re_path(r"editor/field/(?P<channel>\w+)/$", FieldEditorConsumer.as_asgi()),
+    path("editor/field/<int:field>/", FieldEditorConsumer.as_asgi()),
 ]
