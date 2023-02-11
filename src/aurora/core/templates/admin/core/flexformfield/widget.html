@@ -26,9 +26,9 @@
             + {{ original.pk }}
             + '/'
         );
-        console.log(999999999, chatSocket)
+        console.log(333, "widget", chatSocket)
         chatSocket.onmessage = function (e) {
-            console.log(111111, e);
+            console.log(333.1, "widget/onmessage", chatSocket)
             {#const data = JSON.parse(e.data);#}
             {#console.log(111111, data);#}
         };

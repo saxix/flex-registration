@@ -53,7 +53,7 @@
             + '/'
         );
         chatSocket.onmessage = function (e) {
-            console.log(111.2, e);
+            console.log(111.2, "onmessage", e);
             {#const data = JSON.parse(e.data);#}
             {#console.log(111111, data);#}
         };
@@ -63,7 +63,7 @@
             {# $.post(".", formData, function (data) { #}
             {#    console.log(11111111, data) #}
             {# }); #}
-            console.log(11111111, formData);
+            console.log(111.1, "update/send", formData);
              chatSocket.send(JSON.stringify({
                 'message': formData
             }));
