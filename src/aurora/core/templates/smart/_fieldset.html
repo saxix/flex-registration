@@ -3,9 +3,9 @@
     {% if can_edit_inpage %}
         {% include "registration/_staff_edit_field.html" %}
     {% endif %}
-{#    {% if field.field.flex_field.validator %}#}
-{#        <script src="/api/validator/{{ field.field.flex_field.validator.pk }}/script/"></script>#}
-{#    {% endif %}#}
+    {% if field.field.flex_field.validator %}
+        <script src="/api/validator/{{ field.field.flex_field.validator.pk }}/script/"></script>
+    {% endif %}
     {% if field.field.flex_field.advanced.smart.question %}
             <label for="question_{{ field.auto_id }}" class="cursor-pointer">
                 <input id="question_{{ field.auto_id }}"
