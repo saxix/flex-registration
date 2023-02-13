@@ -18,6 +18,7 @@ def parse_emails(value):
 
 MANDATORY = {
     "CACHE_DEFAULT": (str, "locmemcache://"),
+    "CHANNEL_LAYER": (str, "locmemcache://"),
     "DATABASE_URL": (str, "psql://postgres:@postgres:5432/aurora"),
     "DJANGO_ADMIN_URL": (str, f"{uuid.uuid4().hex}/"),
     "EMAIL_FROM_EMAIL": (str, ""),

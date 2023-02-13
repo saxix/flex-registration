@@ -64,9 +64,7 @@
             {#    console.log(11111111, data) #}
             {# }); #}
             console.log(111.1, "update/send", formData);
-             chatSocket.send(JSON.stringify({
-                'message': formData
-            }));
+            chatSocket.send(formData);
         }
 
         $('input,textarea').on('keyup', function () {
@@ -74,5 +72,24 @@
             var wait = setTimeout(update, 500);
             $(this).data('timer', wait);
         });
+
+
+
+        const chatSocket2 = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/widget/field/'
+            + {{ original.pk }}
+            + '/'
+        );
+        chatSocket2.onmessage = function (e) {
+            console.log(333.1, "widget/onmessage", chatSocket2)
+            {#const data = JSON.parse(e.data);#}
+            {#console.log(111111, data);#}
+        };
+        chatSocket2.onclose = function(e) {
+            console.error('/widget/field/ - Chat socket closed unexpectedly');
+        };
+
     </script>
 {% endblock action-content %}

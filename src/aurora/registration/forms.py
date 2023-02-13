@@ -2,6 +2,7 @@ import jmespath
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
+from mdeditor.fields import MDTextFormField
 
 from aurora.registration.models import Registration
 
@@ -29,6 +30,8 @@ class RegistrationForm(forms.ModelForm):
     unique_field_path = JMESPathFormField(
         required=False, help_text=mark_safe("JAMESPath expression. " f"Read more at {as_link('https://jmespath.org/')}")
     )
+    intro = MDTextFormField()
+    footer = MDTextFormField()
 
     class Meta:
         model = Registration

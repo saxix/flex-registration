@@ -22,7 +22,7 @@
         const chatSocket = new WebSocket(
             'ws://'
             + window.location.host
-            + '/editor/field/'
+            + '/widget/field/'
             + {{ original.pk }}
             + '/'
         );
@@ -33,6 +33,6 @@
             {#console.log(111111, data);#}
         };
         chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
+            console.error('/widget/field/ - Chat socket closed unexpectedly');
         };
 </script>
