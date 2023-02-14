@@ -30,8 +30,8 @@ class RegistrationForm(forms.ModelForm):
     unique_field_path = JMESPathFormField(
         required=False, help_text=mark_safe("JAMESPath expression. " f"Read more at {as_link('https://jmespath.org/')}")
     )
-    intro = MDTextFormField()
-    footer = MDTextFormField()
+    intro = MDTextFormField(required=False)
+    footer = MDTextFormField(required=False)
 
     class Meta:
         model = Registration
