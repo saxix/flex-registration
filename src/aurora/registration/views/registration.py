@@ -86,7 +86,10 @@ class RegisterCompleteView(TemplateView):
             qrcode, url = self.get_qrcode(self.record)
         else:
             qrcode, url = None, None
-        return super().get_context_data(qrcode=qrcode, url=url, record=self.record, **kwargs)
+        registration_url = self.registration.get_absolute_url()
+        return super().get_context_data(
+            qrcode=qrcode, url=url, registration_url=registration_url, record=self.record, **kwargs
+        )
 
 
 class BinaryFile:

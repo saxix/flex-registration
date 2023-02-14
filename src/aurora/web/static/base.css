@@ -105,19 +105,42 @@
   background-color: #01ADF1;
   color: white;
 }
-.intro h1 {
+.intro h1, .editormd-preview-container h1, .editormd-html-preview h1 {
+  font-size: 18pt;
+  font-weight: bold;
+  margin-bottom: 2px;
+  text-align: center;
+}
+.intro h2, .editormd-preview-container h2, .editormd-html-preview h2 {
+  font-size: 16pt;
+  font-weight: bold;
+  margin-bottom: 2px;
+  text-align: center;
+}
+.intro h3, .editormd-preview-container h3, .editormd-html-preview h3 {
+  font-size: 13pt;
+  font-weight: bold;
+  margin-bottom: 2px;
+  text-align: center;
+}
+.intro h4, .editormd-preview-container h4, .editormd-html-preview h4 {
   font-size: larger;
   font-weight: bold;
   margin-bottom: 2px;
 }
-.intro p {
+.intro h5, .editormd-preview-container h5, .editormd-html-preview h5 {
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+.intro p, .editormd-preview-container p, .editormd-html-preview p {
   margin: 10px 0 10px 0;
 }
-.intro ul li {
+.intro ul li, .editormd-preview-container ul li, .editormd-html-preview ul li {
   list-style-type: disc;
   list-style-position: inside;
 }
-.intro ul li li {
+.intro ul li li, .editormd-preview-container ul li li, .editormd-html-preview ul li li {
   list-style-type: circle;
   list-style-position: inside;
 }

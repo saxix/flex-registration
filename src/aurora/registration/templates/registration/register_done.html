@@ -32,7 +32,7 @@
         {% endwith %}
         {% if config.SHOW_REGISTER_ANOTHER %}
             <div class="text-center mt-10 pt-10">
-                <a href="{% url "index" %}" data-msgid="register another household"
+                <a href="{{ registration_url }}" data-msgid="register another household"
                    class="itrans w-full text-white capitalize bg-indigo-500 border-0 py-4 px-8 focus:outline-none hover:bg-indigo-600 rounded text-center text-xl">
                     {% trans "register another household" %}
                 </a>

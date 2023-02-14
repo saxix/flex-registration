@@ -155,7 +155,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         ("Config", {"fields": ("flex_form", "validator", "scripts")}),
         ("Validity", {"classes": ("collapse",), "fields": (("start", "end"), ("archived", "active"))}),
         ("Languages", {"classes": ("collapse",), "fields": ("locale", "locales")}),
-        ("Security", {"classes": ("collapse",), "fields": ("protected", "restrict_to_groups")}),
+        ("Security", {"classes": ("collapse",), "fields": ("protected",)}),
         ("Text", {"classes": ("collapse",), "fields": ("intro", "footer")}),
         ("Advanced", {"fields": ("advanced",)}),
         ("Others", {"fields": ("__others__",)}),
@@ -413,7 +413,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                 if lang == "-":
                     name = f"registration/{obj.slug}.html"
                 else:
-                    name = f"{lang}/registration/{obj.slug}.html"
+                    name = f"registration/{lang}/{obj.slug}.html"
                 if hasattr(source, "template"):
                     content = source.template.source
                     source_name = source.template.name

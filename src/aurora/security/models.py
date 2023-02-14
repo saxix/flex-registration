@@ -13,7 +13,7 @@ class RegistrationRole(NaturalKeyModel, models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.ForeignKey(Group, on_delete=models.CASCADE)
     valid_from = models.DateField(default=timezone.now)
-    valid_until = models.DateField(default=None, null=True)
+    valid_until = models.DateField(default=None, null=True, blank=True)
 
     class Meta:
         unique_together = (("registration", "user", "role"),)
