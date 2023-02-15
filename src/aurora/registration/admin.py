@@ -202,7 +202,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                 ctx["exclude"] = exclude
                 qs = (
                     Record.objects.filter(registration__id=pk)
-                    .defer("files", "storage")
+                    .only("fields", "id", "timestamp", "ignored")
                     .filter(**filters)
                     .exclude(**exclude)
                     .values()
