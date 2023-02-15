@@ -36,12 +36,12 @@ from ..core.admin import ConcurrencyVersionAdmin
 from ..core.admin_sync import SyncMixin
 from ..core.models import FormSet
 from ..core.utils import (
+    build_dict,
     build_form_fake_data,
     clone_model,
     get_system_cache_version,
     is_root,
     namify,
-    build_dict,
 )
 from ..i18n.forms import TemplateForm
 from .forms import CloneForm, RegistrationForm
