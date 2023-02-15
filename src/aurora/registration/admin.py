@@ -200,7 +200,13 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                 ignore_rules = form.cleaned_data["ignored"]
                 ctx["filters"] = filters
                 ctx["exclude"] = exclude
-                qs = Record.objects.filter(registration__id=pk).filter(**filters).exclude(**exclude).values()
+                qs = (
+                    Record.objects.filter(registration__id=pk)
+                    .defer("files", "storage")
+                    .filter(**filters)
+                    .exclude(**exclude)
+                    .values()
+                )
                 records = [flatten_dict(r["fields"]) for r in qs]
                 skipped = []
                 all_fields = []
