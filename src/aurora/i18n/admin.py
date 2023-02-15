@@ -3,7 +3,6 @@ from unittest.mock import Mock
 from urllib.parse import unquote
 
 from admin_extra_buttons.decorators import button, view
-from admin_sync.mixin import PublishMixin
 from adminfilters.combo import ChoicesFieldComboFilter
 from adminfilters.value import ValueFilter
 from dateutil.utils import today
@@ -18,7 +17,7 @@ from django.utils import translation
 from django.utils.translation import get_language
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ..administration.mixin import LoadDumpMixin
+from ..core.admin_sync import SyncMixin
 from ..core.models import FlexForm
 from ..state import state
 from .engine import translator
@@ -29,9 +28,9 @@ logger = logging.getLogger(__name__)
 
 
 @register(Message)
-class MessageAdmin(PublishMixin, LoadDumpMixin, SmartModelAdmin):
+class MessageAdmin(SyncMixin, SmartModelAdmin):
     search_fields = ("msgid__icontains",)
-    list_display = ("id", "msgid", "locale", "msgstr", "draft", "used")
+    list_display = ("id", "__str__", "locale", "msgstr", "draft", "used")
     list_editable = ("draft",)
     readonly_fields = ("md5", "msgcode")
     list_filter = (

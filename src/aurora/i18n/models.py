@@ -36,7 +36,6 @@ class Message(NaturalKeyModel):
         return hashlib.md5((msgid + "|" + locale).encode()).hexdigest()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        # self.md5 = hashlib.md5((self.locale + "__" + self.msgid).encode()).hexdigest()
         self.md5 = self.get_md5(self.msgid, self.locale)
         self.msgcode = self.get_md5(self.msgid)
         obj: Message = super().save()
