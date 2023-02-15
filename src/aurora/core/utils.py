@@ -1,3 +1,5 @@
+from typing import Dict
+
 import base64
 import datetime
 import decimal
@@ -447,7 +449,7 @@ def get_session_id(request=None):
     return ""
 
 
-def flatten_dict(d, parent_key="", sep="_"):
+def flatten_dict(d, parent_key="", sep="_") -> Dict:
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
@@ -460,3 +462,14 @@ def flatten_dict(d, parent_key="", sep="_"):
         else:
             items.append((new_key, v))
     return dict(items)
+
+
+def build_dict(r):
+    d = flatten_dict(r["fields"])
+    d["timestamp"] = str(r.timestamp)
+    d["id"] = r.pk
+    d["ignored"] = r.ignored
+    from aurora.registration.models import Record
+
+    d["code"] = Record.unicef_id(r)
+    return d

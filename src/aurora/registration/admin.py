@@ -38,10 +38,10 @@ from ..core.models import FormSet
 from ..core.utils import (
     build_form_fake_data,
     clone_model,
-    flatten_dict,
     get_system_cache_version,
     is_root,
     namify,
+    build_dict,
 )
 from ..i18n.forms import TemplateForm
 from .forms import CloneForm, RegistrationForm
@@ -80,8 +80,16 @@ class JamesForm(forms.ModelForm):
 
 
 class RegistrationExportForm(forms.Form):
-    filters = forms.CharField(widget=forms.Textarea, required=False)
-    ignored = forms.CharField(widget=forms.Textarea, required=False)
+    filters = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        help_text="filters to use to select the records (Uses Django filtering syntax)",
+    )
+    ignored = forms.CharField(
+        widget=forms.Textarea,
+        required=False,
+        help_text="list the form fields should be ignored. Regex can be used in each line.",
+    )
 
     def clean_filters(self):
         filter = QueryStringFilter(None, {}, Record, None)
@@ -202,12 +210,16 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                 ctx["exclude"] = exclude
                 qs = (
                     Record.objects.filter(registration__id=pk)
-                    .only("fields", "id", "timestamp", "ignored")
+                    .defer(
+                        "storage",
+                        "counters",
+                        "files",
+                    )
                     .filter(**filters)
                     .exclude(**exclude)
-                    .values()
+                    .values("fields", "id", "ignored", "timestamp")
                 )
-                records = [flatten_dict(r["fields"]) for r in qs]
+                records = [build_dict(r) for r in qs]
                 skipped = []
                 all_fields = []
                 for r in records:
