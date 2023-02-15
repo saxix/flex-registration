@@ -65,7 +65,7 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
             {"fields": (("md5", "msgcode"),)},
         ),
     )
-    actions = ["approve", "rehash"]
+    actions = ["approve", "rehash", "publish_action"]
 
     def approve(self, request, queryset):
         queryset.update(draft=False)
@@ -146,7 +146,7 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
     def siblings(self, request, pk):
         obj = self.get_object(request, pk)
         cl = reverse("admin:i18n_message_changelist")
-        return HttpResponseRedirect(f"{cl}?msgid__exact={obj.msgid}")
+        return HttpResponseRedirect(f"{cl}?msgcode__exact={obj.msgcode}")
 
     @button(label="Create Translation")
     def create_translation_single(self, request, pk):
