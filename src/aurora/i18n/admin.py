@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 @register(Message)
 class MessageAdmin(SyncMixin, SmartModelAdmin):
-    search_fields = ("msgid__icontains",)
-    list_display = ("id", "__str__", "locale", "msgstr", "draft", "used")
+    search_fields = ("msgid__icontains", "md5")
+    list_display = ("md5", "__str__", "locale", "draft", "used")
     list_editable = ("draft",)
     readonly_fields = ("md5", "msgcode")
     list_filter = (
