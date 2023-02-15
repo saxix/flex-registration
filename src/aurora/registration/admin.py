@@ -217,7 +217,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                     )
                     .filter(**filters)
                     .exclude(**exclude)
-                    .values("fields", "id", "ignored", "timestamp")
+                    .values("fields", "id", "ignored", "timestamp", "registration_id")
                 )
                 records = [build_dict(r) for r in qs]
                 skipped = []

@@ -1,5 +1,3 @@
-from typing import Dict
-
 import base64
 import datetime
 import decimal
@@ -18,6 +16,7 @@ from hashlib import md5
 from itertools import chain
 from pathlib import Path
 from sys import getsizeof, stderr
+from typing import Dict
 
 import faker
 import qrcode
@@ -466,10 +465,15 @@ def flatten_dict(d, parent_key="", sep="_") -> Dict:
 
 def build_dict(r):
     d = flatten_dict(r["fields"])
-    d["timestamp"] = str(r.timestamp)
-    d["id"] = r.pk
-    d["ignored"] = r.ignored
+    d["timestamp"] = str(r["timestamp"])
+    d["id"] = r["id"]
+    d["ignored"] = r["ignored"]
     from aurora.registration.models import Record
 
-    d["code"] = Record.unicef_id(r)
+    d["code"] = get_registration_id(Record(**r))
     return d
+
+
+def get_registration_id(record):
+    ts = record.timestamp.strftime("%Y%m%d")
+    return f"HOPE-{ts}-{record.registration_id}/{record.id}"

@@ -1,10 +1,8 @@
-from django.contrib.admin import action
-
 from admin_extra_buttons.decorators import button
 from admin_sync.mixin import SyncMixin as SyncMixin_
-from django.shortcuts import render
-
 from admin_sync.utils import wraps
+from django.contrib.admin import action
+from django.shortcuts import render
 
 
 class SyncMixin(SyncMixin_):

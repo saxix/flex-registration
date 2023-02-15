@@ -7,7 +7,6 @@ from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
 from django import forms
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.postgres.fields import CICharField
 from django.db import models
@@ -24,6 +23,7 @@ from aurora.core.utils import (
     cache_aware_reverse,
     dict_setdefault,
     get_client_ip,
+    get_registration_id,
     jsonfy,
     safe_json,
     total_size,
@@ -103,7 +103,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         default=False,
         help_text="If true, limit access to users with 'registration.register' permission",
     )
-    restrict_to_groups = models.ManyToManyField(Group, blank=True, help_text="Restrict access to the following groups")
     is_pwa_enabled = models.BooleanField(default=False)
     export_allowed = models.BooleanField(default=False)
     project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
@@ -277,8 +276,7 @@ class Record(models.Model):
 
     @property
     def unicef_id(self):
-        ts = self.timestamp.strftime("%Y%m%d")
-        return f"HOPE-{ts}-{self.registration.id}/{self.id}"
+        return get_registration_id(self)
 
     @property
     def data(self):
