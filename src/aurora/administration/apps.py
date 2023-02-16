@@ -36,10 +36,10 @@ class AuroraAdminConfig(AppConfig):
             panel_sysinfo,
         )
 
-        from .panels import dumpdata, loaddata
+        from .panels import panel_dumpdata, panel_loaddata
 
-        site.register_panel(loaddata)
-        site.register_panel(dumpdata)
+        site.register_panel(panel_loaddata)
+        site.register_panel(panel_dumpdata)
         site.register_panel(panel_migrations)
         site.register_panel(panel_sysinfo)
         site.register_panel(panel_email)

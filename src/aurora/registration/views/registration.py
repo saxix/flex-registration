@@ -11,7 +11,7 @@ import sentry_sdk
 from constance import config
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core import signing
 from django.core.exceptions import ValidationError
 from django.forms import forms
@@ -41,6 +41,8 @@ from aurora.state import state
 from aurora.stubs import FormSet
 
 logger = logging.getLogger(__name__)
+
+User = get_user_model()
 
 
 class QRVerify(TemplateView):

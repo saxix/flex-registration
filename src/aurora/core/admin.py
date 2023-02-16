@@ -112,6 +112,12 @@ class OrganizationAdmin(SyncMixin, MPTTModelAdmin):
     def admin_sync_show_inspect(self):
         return True
 
+    def get_readonly_fields(self, request, obj=None):
+        ro = super().get_readonly_fields(request, obj)
+        if obj and obj.pk:
+            ro = list(ro) + ["slug"]
+        return ro
+
 
 @register(Project)
 class ProjectAdmin(SyncMixin, MPTTModelAdmin):
@@ -127,6 +133,12 @@ class ProjectAdmin(SyncMixin, MPTTModelAdmin):
         if "oid" in request.GET:
             queryset = queryset.filter(organization__id=request.GET["oid"])
         return queryset, may_have_duplicates
+
+    def get_readonly_fields(self, request, obj=None):
+        ro = super().get_readonly_fields(request, obj)
+        if obj and obj.pk:
+            ro = list(ro) + ["slug"]
+        return ro
 
 
 @register(Validator)

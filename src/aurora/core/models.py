@@ -49,7 +49,6 @@ class Organization(MPTTModel):
     name = CICharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
     parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
-    _natural_key = ("slug",)
 
     objects = OrganizationManager()
 

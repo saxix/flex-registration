@@ -219,19 +219,19 @@ LANGUAGES = (
     ("en-us", "English | English"),
     ("ar-ae", " | عربي" + "Arabic"),
     ("cs-cz", "čeština | Czech"),
-    ("de-de", "Deutsch"),
+    ("de-de", "Deutsch | German"),
     ("es-es", "Español | Spanish"),
     ("fr-fr", "Français | French"),
     ("hu-hu", "Magyar | Hungarian"),
-    ("it-it", "Italiano"),
+    ("it-it", "Italiano | Italian"),
     ("pl-pl", "Polskie | Polish"),
-    ("pt-pt", "Português"),
-    ("ro-ro", "Română"),
+    ("pt-pt", "Português | Portuguese"),
+    ("ro-ro", "Română | Romanian"),
     ("ru-ru", "Русский | Russian"),
     ("si-si", "සිංහල | Sinhala"),
     ("ta-ta", "தமிழ் | Tamil"),
     ("uk-ua", "український | Ukrainian"),
-    ("hi-hi", "हिंदी"),  # Hindi
+    ("hi-hi", "हिंदी | Hindi"),  # Hindi
 )
 LOCALE_PATHS = (str(PACKAGE_DIR / "LOCALE"),)
 
@@ -273,8 +273,8 @@ STATICFILES_DIRS = [
 # -------- Added Settings
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
-    "aurora.security.backend.SmartBackend",
-    "aurora.security.backend.OrganizationBackend",
+    "aurora.security.backend.RegistrationAuthBackend",
+    "aurora.security.backend.OrganizationAuthBackend",
     # "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_b2c.AzureADB2COAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
@@ -314,9 +314,13 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": "ERROR",
     },
     "loggers": {
+        "selector_events": {
+            "handlers": ["console"],
+            "level": "ERROR",
+        },
         "flags": {
             "handlers": ["console"],
             "level": "ERROR",

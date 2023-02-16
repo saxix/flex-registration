@@ -179,6 +179,12 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             formfield.widget.attrs = {"style": "width:80%"}
         return formfield
 
+    def get_readonly_fields(self, request, obj=None):
+        ro = super().get_readonly_fields(request, obj)
+        if obj and obj.pk:
+            ro = list(ro) + ["slug", "export_allowed"]
+        return ro
+
     def secure(self, obj):
         return bool(obj.public_key) or obj.encrypt_data
 
@@ -502,12 +508,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             form = TranslationForm()
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj and not is_root(request):
-            readonly_fields.append("export_allowed")
-        return readonly_fields
 
     @choice(order=900, change_list=False)
     def data(self, button):
