@@ -141,9 +141,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         dict_setdefault(self.advanced, self.ADVANCED_DEFAULT_ATTRS)
         super().save(force_insert, force_update, using, update_fields)
 
-    def translations(self):
-        return Registration.objects.filter(slug=self.slug, active=True)
-
     def setup_encryption_keys(self):
         key = RSA.generate(2048)
         private_pem = key.export_key()

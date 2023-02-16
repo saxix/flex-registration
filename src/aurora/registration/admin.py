@@ -149,7 +149,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     change_list_template = None
     filter_horizontal = ("scripts",)
     fieldsets = [
-        (None, {"fields": (("version", "last_update_date", "active"),)}),
+        (None, {"fields": (("version", "last_update_date"),)}),
         (None, {"fields": ("name", "title", "slug")}),
         (
             "Unique",
