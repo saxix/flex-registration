@@ -1,5 +1,6 @@
 from admin_extra_buttons.decorators import button
 from adminactions.helpers import AdminActionPermMixin
+from django.utils.translation import gettext_lazy as _
 from hijack.templatetags.hijack import can_hijack
 from smart_admin.smart_auth.admin import GroupAdmin, UserAdmin
 
@@ -9,6 +10,23 @@ from aurora.core.utils import is_root
 
 
 class AuroraUserAdmin(AdminActionPermMixin, UserAdmin):
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),
+        (
+            _("Permissions"),
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                ),
+            },
+        ),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    )
+
     @button(permission=lambda req, obj, **kw: is_root(req) and can_hijack(req.user, obj))
     def hijack(self, request, pk):
         hijacked = self.get_object(request, pk)
