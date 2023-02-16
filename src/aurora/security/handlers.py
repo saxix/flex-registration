@@ -9,8 +9,9 @@ User = get_user_model()
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
-    AuroraUser.objects.get_or_create(id=instance.pk, user=instance)
-    instance.profile.save()
+    if not isinstance(instance, AuroraUser):  # be safe
+        AuroraUser.objects.get_or_create(id=instance.pk, user=instance)
+        instance.profile.save()
 
 
 # @receiver(post_save, sender=User)

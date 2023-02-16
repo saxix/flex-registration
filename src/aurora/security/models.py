@@ -31,18 +31,19 @@ class AuroraUser(AbstractUser):
     )
 
     def save(self, *args, **kwargs):
-        for attr in [
-            "id",
-            "username",
-            "email",
-            "password",
-            "first_name",
-            "last_name",
-            "is_staff",
-            "is_active",
-            "is_superuser",
-        ]:
-            setattr(self, attr, getattr(self.user, attr))
+        if settings.AUTH_USER_MODEL != "security.AuroraUser":
+            for attr in [
+                "id",
+                "username",
+                "email",
+                "password",
+                "first_name",
+                "last_name",
+                "is_staff",
+                "is_active",
+                "is_superuser",
+            ]:
+                setattr(self, attr, getattr(self.user, attr))
         super().save(*args, **kwargs)
 
 
