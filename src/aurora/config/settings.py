@@ -551,6 +551,7 @@ CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
 # Azure login
 
 AUTH_USER_MODEL = "auth.User"
+# AUTH_USER_MODEL = "security.AuroraUser"
 
 # Social Auth settings.
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env.str("AZURE_CLIENT_SECRET")

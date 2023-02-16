@@ -2,13 +2,19 @@ import logging
 
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.contrib.admin import register
+from django.contrib.auth.admin import UserAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
 from aurora.core.admin_sync import SyncMixin
 
-from .models import OrganizationRole, RegistrationRole
+from .models import AuroraUser, OrganizationRole, RegistrationRole
 
 logger = logging.getLogger(__name__)
+
+
+@register(AuroraUser)
+class AuroraUserAdmin(SyncMixin, UserAdmin):
+    pass
 
 
 @register(RegistrationRole)
