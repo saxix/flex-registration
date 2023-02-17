@@ -91,7 +91,6 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
-    "aurora.web.middlewares.admin.AdminSiteMiddleware",
     "aurora.web.middlewares.thread_local.ThreadLocalMiddleware",
     "aurora.web.middlewares.sentry.SentryMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -105,6 +104,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "aurora.web.middlewares.admin.AdminSiteMiddleware",
     # "aurora.web.middlewares.http2.HTTP2Middleware",
     "aurora.web.middlewares.minify.HtmlMinMiddleware",
     "django.middleware.gzip.GZipMiddleware",
