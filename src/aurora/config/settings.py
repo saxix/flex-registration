@@ -120,6 +120,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
+            PACKAGE_DIR / "administration/templates",
             PACKAGE_DIR / "admin/ui/templates",
             PACKAGE_DIR / "api/templates",
             PACKAGE_DIR / "registration/templates",
