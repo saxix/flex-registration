@@ -383,6 +383,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "https://browser.sentry-cdn.com",
     "https://cdnjs.cloudflare.com",
+    "https://login.microsoftonline.com/",
 ] + env("CORS_ALLOWED_ORIGINS")
 
 CONSTANCE_ADDITIONAL_FIELDS = {
