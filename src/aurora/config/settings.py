@@ -278,7 +278,7 @@ AUTHENTICATION_BACKENDS = [
     "aurora.security.backend.RegistrationAuthBackend",
     "aurora.security.backend.OrganizationAuthBackend",
     # "django.contrib.auth.backends.ModelBackend",
-    "social_core.backends.azuread_b2c.AzureADB2COAuth2",
+    "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
 
 CSRF_COOKIE_NAME = env("CSRF_COOKIE_NAME")
@@ -536,13 +536,18 @@ CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
 AUTH_USER_MODEL = "auth.User"
 
 # Social Auth settings.
-SOCIAL_AUTH_KEY = env.str("AZURE_CLIENT_KEY")
-SOCIAL_AUTH_SECRET = env.str("AZURE_CLIENT_SECRET")
-SOCIAL_AUTH_TENANT_ID = env("AZURE_TENANT_ID")
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env.str("AZURE_CLIENT_SECRET")
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_ID")
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = env.str("AZURE_CLIENT_KEY")
 SOCIAL_AUTH_RESOURCE = "https://graph.microsoft.com/"
-SOCIAL_AUTH_POLICY = env("AZURE_POLICY_NAME")
-SOCIAL_AUTH_AUTHORITY_HOST = env("AZURE_AUTHORITY_HOST")
-
+# SOCIAL_AUTH_POLICY = env("AZURE_POLICY_NAME")
+# SOCIAL_AUTH_AUTHORITY_HOST = env("AZURE_AUTHORITY_HOST")
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = [
+    "username",
+    "first_name",
+    "last_name",
+    "email",
+]
 
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
@@ -558,22 +563,23 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "aurora.core.authentication.user_details",
 )
-SOCIAL_AUTH_USER_FIELDS = [
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_USER_FIELDS = [
     "email",
     "fullname",
 ]
 
-SOCIAL_AUTH_OAUTH2_SCOPE = [
+SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
     "openid",
     "email",
     "profile",
 ]
 
+
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
 
 # fix admin name
-LOGIN_URL = "/login/azuread-b2c-oauth2"
+LOGIN_URL = "/login/login/azuread-tenant-oauth2"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
 
 # allow upload big file
