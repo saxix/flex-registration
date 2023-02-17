@@ -51,7 +51,7 @@ def has_token(request, *args, **kwargs):
 
 
 def is_root(request, *args, **kwargs):
-    return (request.user.is_superuser and has_token(request)) or settings.DEBUG
+    return request.user.is_superuser and has_token(request)
 
 
 @keep_lazy_text

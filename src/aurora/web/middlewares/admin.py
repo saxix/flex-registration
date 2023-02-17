@@ -16,16 +16,20 @@ class AdminSiteMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        parts = urlparse(request.get_raw_uri())
-        if not is_root(request):
+        if is_root(request):
+            return self.get_response(request)
+        else:
+            parts = urlparse(request.get_raw_uri())
             try:
-                public_regex = re.compile(config.WAF_REGISTRATION_ALLOWED_HOSTNAMES)
-                if not (public_regex.match(parts.netloc) or parts.path.startswith(f"/{settings.DJANGO_ADMIN_URL}")):
-                    return HttpResponse("Not Allowed")
-                admin_regex = re.compile(config.WAF_REGISTRATION_ALLOWED_HOSTNAMES)
-                if parts.path.startswith(f"/{settings.DJANGO_ADMIN_URL}") and not admin_regex.match(parts.netloc):
-                    return HttpResponse("Not Allowed")
-            except Exception:
-                pass
-        ret = self.get_response(request)
-        return ret
+                if parts.path.startswith(f"/{settings.DJANGO_ADMIN_URL}"):
+                    admin_regex = re.compile(config.WAF_ADMIN_ALLOWED_HOSTNAMES)
+                    if not admin_regex.match(parts.netloc):
+                        return HttpResponse("Not Allowed")
+                else:
+                    public_regex = re.compile(config.WAF_REGISTRATION_ALLOWED_HOSTNAMES)
+                    if not public_regex.match(parts.netloc):
+                        return HttpResponse("Not Allowed")
+            except Exception as e:
+                logging.exception(e)
+            ret = self.get_response(request)
+            return ret
