@@ -91,6 +91,7 @@ INSTALLED_APPS = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
+    "aurora.web.middlewares.admin.AdminSiteMiddleware",
     "aurora.web.middlewares.thread_local.ThreadLocalMiddleware",
     "aurora.web.middlewares.sentry.SentryMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -413,6 +414,8 @@ CONSTANCE_CONFIG = OrderedDict(
         "QRCODE": (True, "Enable QRCode generation", bool),
         "SHOW_REGISTER_ANOTHER": (True, "Enable QRCode generation", bool),
         "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
+        "WAF_REGISTRATION_ALLOWED_HOSTNAMES": (".*", "allowed hostname for admin (regex)", str),
+        # "WAF_PUBLIC_ALLOWED_HOSTNAMES": ("", "set maintenance mode On/Off", str),
     }
 )
 

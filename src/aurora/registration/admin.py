@@ -121,7 +121,7 @@ class RegistrationProjectFilter(BaseAutoCompleteFilter):
 
 
 def can_export_data(request, obj, handler=None):
-    return is_root(request) and obj.export_allowed
+    return (is_root(request) and obj.export_allowed) or settings.DEBUG
 
 
 @register(Registration)
