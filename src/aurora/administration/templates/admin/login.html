@@ -43,7 +43,7 @@
                 {% endblocktranslate %}
             </p>
         {% endif %}
-        {% if user_has_token %}
+        {% if user_has_token or config.ENABLE_LOCAL_LOGIN %}
             <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
                 <div class="form-row">
                     {{ form.username.errors }}
