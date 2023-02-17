@@ -414,8 +414,8 @@ CONSTANCE_CONFIG = OrderedDict(
         "QRCODE": (True, "Enable QRCode generation", bool),
         "SHOW_REGISTER_ANOTHER": (True, "Enable QRCode generation", bool),
         "MAINTENANCE_MODE": (False, "set maintenance mode On/Off", bool),
-        "WAF_REGISTRATION_ALLOWED_HOSTNAMES": (".*", "allowed hostname for admin (regex)", str),
-        # "WAF_PUBLIC_ALLOWED_HOSTNAMES": ("", "set maintenance mode On/Off", str),
+        "WAF_REGISTRATION_ALLOWED_HOSTNAMES": (".*", "public website hostname (regex)", str),
+        "WAF_ADMIN_ALLOWED_HOSTNAMES": ("", "admin website hostname (regex)", str),
     }
 )
 
