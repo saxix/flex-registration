@@ -68,8 +68,8 @@
         <div class="module">
             <hr>
             <div class="container">
-                <div class="submit-row">
-                    <a href="{% url 'social:begin' 'azuread-tenant-oauth2' %}" class="button">
+                <div class="submit-row" style="margin-top: 10px">
+                    <a href="{% url 'social:begin' 'azuread-tenant-oauth2' %}" style="padding: 10px" class="button">
                         Sign In With Azure
                     </a>
                 </div>
@@ -78,5 +78,7 @@
     </div>
 {% endblock %}
 {% block footer %}
-
+<div style="text-align: center;border-top: 1px solid grey;margin: 10px 10px 20px; padding-top: 10px">
+{{ project.build_date }} - {{ project.version }}
+</div>
 {% endblock %}
