@@ -454,11 +454,24 @@ RATELIMIT = {
 
 AA_PERMISSION_HANDLER = 3  # AA_PERMISSION_CREATE_USE_APPCONFIG
 
+
+def masker(key, value, config, request):
+    from django_sysinfo.utils import cleanse_setting
+
+    from aurora.core.utils import is_root
+
+    if is_root(request):
+        return value
+    return cleanse_setting(key, value, config, request)
+
+
 SYSINFO = {
     "host": True,
     "os": True,
     "python": True,
     "modules": True,
+    "masker": "aurora.config.settings.masker",
+    "masked_environment": "API|TOKEN|KEY|SECRET|PASS|SIGNATURE|AUTH|_ID|SID|DATABASE_URL",
     # "project": {
     #     "mail": False,
     #     "installed_apps": False,
@@ -745,4 +758,18 @@ MDEDITOR_CONFIGS = {
         "lineNumbers": True,  # lineNumbers
         "language": "en",  # zh / en / es
     }
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    # "PAGE_SIZE": 2,
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
+    "DEFAULT_RENDERER_CLASSES": (
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+        "rest_framework_datatables.renderers.DatatablesRenderer",
+    ),
+    # "DEFAULT_FILTER_BACKENDS": ("rest_framework_datatables.filters.DatatablesFilterBackend",),
+    # "DEFAULT_PAGINATION_CLASS": "rest_framework_datatables.pagination.DatatablesPageNumberPagination",
+    "PAGE_SIZE": 2,
 }

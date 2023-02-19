@@ -1,18 +1,12 @@
 from django.http import HttpResponse
-from rest_framework import serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 
 from aurora.core.models import Validator
 
+from ..serializers.validator import ValidatorSerializer
 from .base import SmartViewSet
-
-
-class ValidatorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Validator
-        exclude = ()
 
 
 class ValidatorViewSet(SmartViewSet):

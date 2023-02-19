@@ -513,11 +513,16 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     def data(self, button):
         button.choices = [
             self.charts,
+            self.inspect_data,
             self.view_collected_data,
         ]
         if can_export_data(button.context["request"], button.original):
             button.choices.append(self.export_as_csv)
         return button
+
+    @view()
+    def inspect_data(self, request, pk):
+        return HttpResponseRedirect(reverse("register-data", args=[pk]))
 
     @view(change_form=True, html_attrs={"target": "_new"})
     def charts(self, request, pk):

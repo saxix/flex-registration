@@ -45,3 +45,8 @@ class CloneForm(forms.Form):
         help_text="Clone all forms and fields too. "
         "This will create a fully independent registration, form and components",
     )
+
+
+class RegistrationOptionForm(forms.ModelForm):
+    datatable = forms.BooleanField(required=False, help_text="enable datatable inspection for this data")
+    export = forms.BooleanField(required=False, help_text="allows data to be exported in CSV")

@@ -1090,6 +1090,21 @@ docs = ["furo (>=2021.8.17b43,<2021.9.0)", "sphinx (>=3.5.0)", "sphinx-notfound-
 testing = ["coverage[toml] (>=5.0a4)", "pytest (>=4.6.11)"]
 
 [[package]]
+name = "django-filter"
+version = "22.1"
+description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "django-filter-22.1.tar.gz", hash = "sha256:ed473b76e84f7e83b2511bb2050c3efb36d135207d0128dfe3ae4b36e3594ba5"},
+    {file = "django_filter-22.1-py3-none-any.whl", hash = "sha256:ed429e34760127e3520a67f415bec4c905d4649fbe45d0d6da37e6ff5e0287eb"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "django-flags"
 version = "5.0.12"
 description = "Feature flags for Django projects"
@@ -1447,6 +1462,22 @@ files = [
 
 [package.dependencies]
 django = ">=3.0"
+pytz = "*"
+
+[[package]]
+name = "djangorestframework-datatables"
+version = "0.7.0"
+description = "Seamless integration between Django REST framework and Datatables (https://datatables.net)"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "djangorestframework-datatables-0.7.0.tar.gz", hash = "sha256:64ccae255cbe03ae14793c55b900ce58894eb856816d6f9e16acea4a2197a6d9"},
+    {file = "djangorestframework_datatables-0.7.0-py2.py3-none-any.whl", hash = "sha256:1be615b811a5625546e93f4c331b868743925776b6c7ad6c77d22e1af6f49819"},
+]
+
+[package.dependencies]
+djangorestframework = ">=3.7.0"
 pytz = "*"
 
 [[package]]
@@ -3863,4 +3894,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "fafa14d9856e993f06b9bb0b2f7e210a72477103a47bd1651961a178718b6f60"
+content-hash = "92e709d962b0ae7d3787340162bf986f3e3ff07e783989e5fda9df200717a126"
