@@ -1,5 +1,7 @@
+import os
 from collections import OrderedDict
 
+from django.utils.cache import get_conditional_response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -7,7 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from ...core.utils import get_session_id
+from ...core.utils import get_session_id, get_etag
 from ...registration.models import Record, Registration
 from ..serializers import (
     RegistrationDetailSerializer,
@@ -76,19 +78,35 @@ class RegistrationViewSet(SmartViewSet):
         obj: Registration = self.get_object()
         if not request.user.has_perm("registration.view_data", obj):
             raise PermissionDenied()
-        queryset = (
-            Record.objects.defer(
-                "files",
-                "storage",
-            )
-            .filter(registration__id=pk)
-            .values()
+        self.res_etag = get_etag(
+            request,
+            str(obj.active),
+            str(obj.version),
+            os.environ.get("BUILD_DATE", ""),
         )
-        page = self.paginate_queryset(queryset)
+        response = get_conditional_response(request, str(self.res_etag))
+        if response is None:
 
-        if page is not None:
-            serializer = DataTableRecordSerializer(page, many=True, context={"request": request}, metadata=obj.metadata)
-            return self.get_paginated_response(serializer.data)
+            queryset = (
+                Record.objects.defer(
+                    "files",
+                    "storage",
+                )
+                .filter(registration__id=pk)
+                .values()
+            )
+            page = self.paginate_queryset(queryset)
 
-        serializer = DataTableRecordSerializer(queryset, many=True, context={"request": request}, metadata=obj.metadata)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            if page is None:
+                serializer = DataTableRecordSerializer(
+                    queryset, many=True, context={"request": request}, metadata=obj.metadata
+                )
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                serializer = DataTableRecordSerializer(
+                    page, many=True, context={"request": request}, metadata=obj.metadata
+                )
+                response = self.get_paginated_response(serializer.data)
+        response.headers.setdefault("ETag", self.res_etag)
+        response.headers.setdefault("Cache-Control", "max-age=0")
+        return response

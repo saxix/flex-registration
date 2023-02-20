@@ -111,11 +111,11 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     class Meta:
         get_latest_by = "start"
         permissions = (
-            ("manage", _("Can manage Registration")),
+            ("can_manage_registration", _("Can manage Registration")),
             ("register", _("Can use Registration")),
             ("create_translation", _("Can Create Translation")),
             ("export_data", _("Can Export Data")),
-            ("view_data", _("Can View Collected data")),
+            ("can_view_data", _("Can View Collected data")),
         )
         ordering = ("name", "title")
 

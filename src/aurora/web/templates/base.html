@@ -34,7 +34,7 @@
                     </a>
                 {% endblock %}
             </div>
-            <div class="flex-grow"></div>
+            <div class="flex-grow">{% block header-title %}{% endblock %}</div>
             {% block hope-logo %}
                 <div>
                     <img alt="hope logo" src="{% static "hope1.webp" %}" height="40">

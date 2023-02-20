@@ -1,116 +1,19 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load static %}
+    {% block header-title %}
+        <div class="text-center text-xl">{{ registration }}</div>
+    {% endblock %}
 {% block body %}
-    {#    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/themes/redmond/jquery-ui.min.css">#}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css"
           integrity="sha512-ELV+xyi8IhEApPS/pSj66+Jiw+sOT1Mqkzlh8ExXihe4zfqbWkxPRi8wptXIO9g73FSlhmquFlUOuMSoXz5IRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    {#    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.14.0/css/ui.jqgrid.min.css">#}
-    {#    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>#}
-    {#    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.14.0/jquery.jqgrid.min.js"></script>#}
-    {#	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">#}
-    {#    <link rel="stylesheet" crossorigin="anonymous"#}
-    {#          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"#}
-    {#          integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=">#}
-
-    {#    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqgrid/5.8.2/js/i18n/grid.locale-en.min.js"#}
-    {#            integrity="sha512-Oc3yFMZtHlWgPAVqS+azgzK1R519KJEYiBhi9yr+wdm5PfAJWz960R/EkSXTe352aEZyqVK88u/+qqHaqxaWbQ=="#}
-    {#            crossorigin="anonymous" referrerpolicy="no-referrer"></script>#}
-
-    {#    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqgrid/5.8.2/css/ui.jqgrid.min.css">#}
-    {#    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jqgrid/5.8.2/js/jquery.jqGrid.min.js"></script>#}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
-
-    <script>
-        var baseUrl = '/api/registration/{{ registration.id }}';
-        $(function () {
-            "use strict";
-            var $table = $("#records");
-            var $details = $("#details");
-            var buildGrid = function (columns) {
-                $table.jqGrid({
-                    url: `${baseUrl}/records/`,
-                    altRows: true,
-                    rowid: "id",
-                    {#caption: "Multiselect Example",#}
-                    colModel: columns,
-                    datatype: 'json',
-                    footerrow: true,
-
-                    gridview: true,
-                    {#guiStyle: "bootstrap",#}
-                    height: 300,
-                    iconSet: "fontAwesome",
-                    {#multikey: "altKey",#}
-                    {#multiselect: true,#}
-                    pager: '#dataTablePager',
-                    pgbuttons: true,
-                    pgtext: null,
-                    rowNum: 50,
-                    rownumbers: true,
-                    rownumWidth: 20,
-                    viewrecords: false,
-                    width: 900,
-                    jsonReader: {
-                        id: 'id',
-                        repeatitems: true,
-                        root: 'results',
-                        page: 'page',
-                        total: 'count',
-                        records: 'count',
-                        userdata: function (obj) {
-                            {#return obj.results;#}
-                            var ret = {};
-                            for (var i in obj.results) {
-                                ret[obj.results[i].id] = obj.results[i].flatten;
-                            }
-                            return ret
-                        }
-                    },
-                    gridComplete: function () {
-                        $(".ui-jqgrid-sortable").css('white-space', 'normal');
-                    },
-                    onSelectRow: function (rowid) {
-                        var userdata = $table.getGridParam('userData');
-                        $details.html("");
-                        var details = userdata[rowid];
-                        for (const key in details) {
-                            console.log(`${key}: ${details[key]}`);
-                            $details.append(`<div class="font-bold capitalize">${key}</div>`)
-                            $details.append(`<div class="mb-3">${details[key]}</div>`)
-                        }
-                    },
-                });
-            }// buildGrid
-
-            $.ajax({
-                url: `${baseUrl}/metadata/`,
-                success: function (data) {
-                    var columns = [{name: "id", label: "#", width: "40", align: "right"},
-                        {name: "timestamp", label: "Timestamp", formatter: 'date', width: "70"},
-                        {name: "remote_ip", label: "Remote IP", width: "70"},
-                        {name: "flatten", label: "Flatten", hidden: true}
-                    ];
-                    for (var f in data.base.fields) {
-                        columns.push({
-                            name: data.base.fields[f].name,
-                            label: data.base.fields[f].label,
-                        })
-                    }
-                    buildGrid(columns);
-                } // success
-            });
-        });
-
-    </script>
-    <h1>{{ registration }}</h1>
     <div class="flex inline-flex" style="width:100%;padding: 10px;">
         <div>
-            <table id="records" style="width:100%"></table>
+            <table id="records" style="width:100%" data-reg="{{ registration.id }}"></table>
             <div id="dataTablePager"></div>
         </div>
-        <div class="px-3" id="details">
-
-        </div>
+        <div class="px-3" id="details"></div>
     </div>
+    <script src="{% static "js/datatable.min.js" %}"></script>
 {% endblock %}
