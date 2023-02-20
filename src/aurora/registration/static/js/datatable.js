@@ -4,7 +4,22 @@ var $table = $("#records");
 var $details = $("#details");
 var registrationId = $table.data("reg");
 var baseUrl = `/api/registration/${registrationId}`
+var rowPerPage = 30;
+var requestVersion = 1;
 
+var showDetails = function (rowid) {
+    $details.html("");
+    if (rowid !== this.lastSel) {
+        var userdata = $table.getGridParam('userData');
+        var details = userdata[rowid];
+        $details.append(`<div class="text-center">${details["code"]}</div>`)
+        for (const key in details) {
+            $details.append(`<div class="font-bold">${key}</div>`)
+            $details.append(`<div class="mb-3">${details[key]}</div>`)
+        }
+    }
+    this.lastSel = rowid;
+}
 var buildGrid = function (columns) {
     $table.jqGrid({
         url: `${baseUrl}/records/`,
@@ -23,15 +38,16 @@ var buildGrid = function (columns) {
         loadonce: false,
         // iconSet: "fontAwesome",
         // multikey: "altKey",
-        multiselect: false,
+        multiselect: true,
+        multiboxonly: true,
         pager: '#dataTablePager',
         pgbuttons: true,
         // pgtext: null,
         prmNames: {nd: null},
         recordpos: 'left',
-        rowNum: 30,
+        rowNum: rowPerPage,
         rownumbers: true,
-        rownumWidth: 20,
+        rownumWidth: 40,
         viewrecords: true,
         width: 900,
         jsonReader: {
@@ -42,7 +58,7 @@ var buildGrid = function (columns) {
             page: 'page',
             records: 'count',
             total: function (obj) {
-                return Math.floor(obj.count / 30);
+                return Math.ceil(obj.count / rowPerPage);
             },
             userdata: function (obj) {
                 var ret = {};
@@ -52,21 +68,49 @@ var buildGrid = function (columns) {
                 return ret
             }
         },
+        serializeGridData: function (postData) {
+            var myPostData = $.extend({}, postData); // make a copy of the input parameter
+            myPostData._ver = requestVersion;
+            return myPostData;
+        },
+        beforeSelectRow: function (rowid, e) {
+            $details.html("");
+            if ($(e.target).is('input[type=checkbox]')) {
+                return true;
+            } else {
+                $('#'+this.lastSel).removeClass("details");
+                if (rowid !== this.lastSel) {
+                    $('#'+rowid).addClass("details");
+                    var userdata = $table.getGridParam('userData');
+                    var details = userdata[rowid];
+                    $details.append(`<div class="text-center">${details["code"]}</div>`)
+                    for (const key in details) {
+                        $details.append(`<div class="font-bold">${key}</div>`)
+                        $details.append(`<div class="mb-3">${details[key]}</div>`)
+                    }
+                    this.lastSel = rowid;
+                }else{
+                    this.lastSel = null;
+                }
+                return false;
+            }
+            // return $(e.target).is('input[type=checkbox]');
+        },
         gridComplete: function () {
             $(".ui-jqgrid-sortable").css('white-space', 'normal');
         },
         onSelectRow: function (rowid) {
-            $details.html("");
-            if (rowid !== this.lastSel) {
-                var userdata = $table.getGridParam('userData');
-                var details = userdata[rowid];
-                $details.append(`<div class="text-center">${details["code"]}</div>`)
-                for (const key in details) {
-                    $details.append(`<div class="font-bold">${key}</div>`)
-                    $details.append(`<div class="mb-3">${details[key]}</div>`)
-                }
-            }
-            this.lastSel = rowid;
+            // $details.html("");
+            // if (rowid !== this.lastSel) {
+            //     var userdata = $table.getGridParam('userData');
+            //     var details = userdata[rowid];
+            //     $details.append(`<div class="text-center">${details["code"]}</div>`)
+            //     for (const key in details) {
+            //         $details.append(`<div class="font-bold">${key}</div>`)
+            //         $details.append(`<div class="mb-3">${details[key]}</div>`)
+            //     }
+            // }
+            // this.lastSel = rowid;
         },
     });
 }// buildGrid
@@ -74,9 +118,11 @@ var buildGrid = function (columns) {
 $.ajax({
     url: `${baseUrl}/metadata/`,
     success: function (data) {
-        var columns = [{name: "id", label: "#", width: "40", align: "right"},
+        var columns = [
+            {name: "id", label: "#", width: "40", align: "right"},
+            {name: "cmd", label: ""},
             {name: "timestamp", label: "Timestamp", formatter: 'date', width: "70"},
-            {name: "remote_ip", label: "Remote IP", width: "70"},
+            {name: "remote_ip", label: "Remote IP", width: "100"},
         ];
         for (var f in data.base.fields) {
             columns.push({
@@ -85,5 +131,8 @@ $.ajax({
             })
         }
         buildGrid(columns);
+        $(".info-button").on("click", function () {
+            console.log(11111, $(this).data("idx"))
+        })
     } // success
 });

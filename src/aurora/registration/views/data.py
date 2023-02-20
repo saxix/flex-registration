@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import Http404
 from django.utils.functional import cached_property
@@ -14,6 +15,7 @@ class RegistrationDataView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         kwargs["registration"] = self.registration
+        kwargs["drf_page_size"] = settings.REST_FRAMEWORK["PAGE_SIZE"]
         return super().get_context_data(**kwargs)
 
     @cached_property
