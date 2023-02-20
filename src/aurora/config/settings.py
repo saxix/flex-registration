@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     # ---
     "reversion",  # https://github.com/etianen/django-reversion
     "reversion_compare",  # https://github.com/jedie/django-reversion-compare
+    "django_filters",
     # ---
     # "aurora.admin.apps.AuroraAdminUIConfig",
     "smart_admin.apps.SmartLogsConfig",
@@ -763,6 +764,7 @@ MDEDITOR_CONFIGS = {
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",

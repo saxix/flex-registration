@@ -2,6 +2,8 @@ import os
 from collections import OrderedDict
 
 from django.utils.cache import get_conditional_response
+from django_filters import rest_framework as filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -9,12 +11,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from ...core.utils import get_session_id, get_etag
+
+from ...core.utils import get_etag, get_session_id
 from ...registration.models import Record, Registration
-from ..serializers import (
-    RegistrationDetailSerializer,
-    RegistrationListSerializer,
-)
+from ..serializers import RegistrationDetailSerializer, RegistrationListSerializer
 from ..serializers.record import DataTableRecordSerializer
 from .base import SmartViewSet
 
@@ -32,6 +32,10 @@ class RecordPageNumberPagination(PageNumberPagination):
                 ]
             )
         )
+
+
+class RecordFilter(filters.FilterSet):
+    start_date = filters.DateFilter(field_name="timestamp", lookup_expr="gte")
 
 
 class RegistrationViewSet(SmartViewSet):
@@ -69,7 +73,7 @@ class RegistrationViewSet(SmartViewSet):
         methods=["GET"],
         renderer_classes=[JSONRenderer],
         pagination_class=RecordPageNumberPagination,
-        # filter_backends=[DatatablesFilterBackend],
+        filter_backends=[DjangoFilterBackend],
     )
     def records(self, request, pk=None):
         obj: Registration = self.get_object()
@@ -83,7 +87,6 @@ class RegistrationViewSet(SmartViewSet):
         )
         response = get_conditional_response(request, str(self.res_etag))
         if response is None:
-
             queryset = (
                 Record.objects.defer(
                     "files",
@@ -92,6 +95,9 @@ class RegistrationViewSet(SmartViewSet):
                 .filter(registration__id=pk)
                 .values()
             )
+            flt = RecordFilter(request.GET, queryset=queryset)
+            if flt.form.is_valid():
+                queryset = flt.filter_queryset(queryset)
             page = self.paginate_queryset(queryset)
 
             if page is None:

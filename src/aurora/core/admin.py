@@ -1,5 +1,6 @@
 import json
 import logging
+
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
 from admin_sync.utils import is_local
