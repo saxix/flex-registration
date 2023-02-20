@@ -105,5 +105,5 @@ class RegistrationViewSet(SmartViewSet):
                 )
                 response = self.get_paginated_response(serializer.data)
         response.headers.setdefault("ETag", self.res_etag)
-        response.headers.setdefault("Cache-Control", "max-age=0")
+        response.headers.setdefault("Cache-Control", "private, max-age=120")
         return response
