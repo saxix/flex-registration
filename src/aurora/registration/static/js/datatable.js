@@ -36,11 +36,13 @@ var buildGrid = function (columns) {
         width: 900,
         jsonReader: {
             id: 'id',
-            repeatitems: false,
+            repeatitems: true,
+            cell: "cell",
             root: 'results',
             page: 'page',
+            records: 'count',
             total: function (obj) {
-                Math.floor(obj.count)
+                return Math.floor(obj.count / 30);
             },
             userdata: function (obj) {
                 var ret = {};
@@ -54,13 +56,17 @@ var buildGrid = function (columns) {
             $(".ui-jqgrid-sortable").css('white-space', 'normal');
         },
         onSelectRow: function (rowid) {
-            var userdata = $table.getGridParam('userData');
             $details.html("");
-            var details = userdata[rowid];
-            for (const key in details) {
-                $details.append(`<div class="font-bold capitalize">${key}</div>`)
-                $details.append(`<div class="mb-3">${details[key]}</div>`)
+            if (rowid !== this.lastSel) {
+                var userdata = $table.getGridParam('userData');
+                var details = userdata[rowid];
+                $details.append(`<div class="text-center">${details["code"]}</div>`)
+                for (const key in details) {
+                    $details.append(`<div class="font-bold">${key}</div>`)
+                    $details.append(`<div class="mb-3">${details[key]}</div>`)
+                }
             }
+            this.lastSel = rowid;
         },
     });
 }// buildGrid

@@ -72,9 +72,6 @@ class RegistrationViewSet(SmartViewSet):
         # filter_backends=[DatatablesFilterBackend],
     )
     def records(self, request, pk=None):
-        # HACK
-        # self.get_queryset=Record.objects.filter(registration__id=pk).all
-
         obj: Registration = self.get_object()
         if not request.user.has_perm("registration.view_data", obj):
             raise PermissionDenied()

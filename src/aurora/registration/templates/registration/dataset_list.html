@@ -1,19 +1,21 @@
 {% extends "base.html" %}{% load static %}
-    {% block header-title %}
-        <div class="text-center text-xl">{{ registration }}</div>
-    {% endblock %}
+{% block header-title %}
+    <div class="text-center text-xl">{{ registration }}</div>
+{% endblock %}
 {% block body %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css"
           integrity="sha512-ELV+xyi8IhEApPS/pSj66+Jiw+sOT1Mqkzlh8ExXihe4zfqbWkxPRi8wptXIO9g73FSlhmquFlUOuMSoXz5IRw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
-    <div class="flex inline-flex" style="width:100%;padding: 10px;">
-        <div>
+    <div class="flex inline-flex w-100">
+        <div class="flex-grow">
             <table id="records" style="width:100%" data-reg="{{ registration.id }}"></table>
             <div id="dataTablePager"></div>
         </div>
-        <div class="px-3" id="details"></div>
+        <div class="px-3 mx-2 bg-gray-200 h-100 overflow-y-scroll overflow-x-hidden" id="details">
+
+        </div>
     </div>
     <script src="{% static "js/datatable.min.js" %}"></script>
 {% endblock %}
