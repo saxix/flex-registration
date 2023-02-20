@@ -300,8 +300,8 @@ EMAIL_USE_TLS = env("EMAIL_USE_TLS")
 # FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 LOGIN_REDIRECT_URL = "index"
 LOGOUT_REDIRECT_URL = "index"
-LOGIN_URL = "/login"
-USER_LOGIN_URL = "/login"
+# LOGIN_URL = "/login"
+# USER_LOGIN_URL = "/login"
 
 LOGGING = {
     "version": 1,
@@ -594,7 +594,7 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
 
 # fix admin name
-LOGIN_URL = "/login/login/azuread-tenant-oauth2"
+LOGIN_URL = "/login"
 LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
 
 # allow upload big file

@@ -522,7 +522,8 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
     @view()
     def inspect_data(self, request, pk):
-        return HttpResponseRedirect(reverse("register-data", args=[pk]))
+        obj = self.get_object(request, pk)
+        return HttpResponseRedirect(reverse("register-data", args=[obj.slug]))
 
     @view(change_form=True, html_attrs={"target": "_new"})
     def charts(self, request, pk):
