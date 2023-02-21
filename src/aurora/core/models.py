@@ -62,7 +62,7 @@ class Organization(MPTTModel):
         return (self.slug,)
 
     def save(self, *args, **kwargs):
-        if not self.slug:
+        if self._state.adding and not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 

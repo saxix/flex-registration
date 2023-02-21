@@ -6,15 +6,11 @@ from ...core.models import Organization
 
 class OrganizationSerializer(serializers.HyperlinkedModelSerializer):
     projects = serializers.SerializerMethodField()
+    parent = serializers.CharField(source="parent.slug", read_only=True, default=None)
 
     class Meta:
         model = Organization
         exclude = ("lft", "rght", "tree_id", "level")
-        # fields = ("url", "name", "slug", "parent", "registrations")
-        # lookup_field = "slug"
-        # extra_kwargs = {
-        #     'url': {'lookup_field': 'slug'}
-        # }
 
     def get_projects(self, obj):
         req = self.context["request"]
