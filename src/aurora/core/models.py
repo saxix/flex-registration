@@ -50,6 +50,7 @@ class Organization(MPTTModel):
     name = CICharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
     parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
+    last_update_date = models.DateTimeField(auto_now=True)
 
     objects = OrganizationManager()
 
@@ -78,6 +79,7 @@ class Project(MPTTModel):
     slug = models.SlugField(max_length=100, blank=True, null=True)
     organization = models.ForeignKey(Organization, null=True, related_name="projects", on_delete=models.CASCADE)
     parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
+    last_update_date = models.DateTimeField(auto_now=True)
 
     objects = ProjectManager()
 
@@ -737,6 +739,9 @@ def clean_choices(value):
 
 
 class CustomFieldType(NaturalKeyModel, models.Model):
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
+
     name = CICharField(max_length=100, unique=True, validators=[RegexValidator("[A-Z][a-zA-Z0-9_]*")])
     base_type = StrategyClassField(registry=field_registry, default=forms.CharField)
     attrs = models.JSONField(default=dict)

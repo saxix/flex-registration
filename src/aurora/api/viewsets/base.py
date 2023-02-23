@@ -1,3 +1,4 @@
+from django_filters import rest_framework as filters
 from rest_framework import viewsets
 from rest_framework.authentication import (
     BasicAuthentication,
@@ -5,6 +6,10 @@ from rest_framework.authentication import (
     TokenAuthentication,
 )
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+
+
+class LastModifiedFilter(filters.FilterSet):
+    modified_after = filters.DateFilter(field_name="last_update_date", lookup_expr="gte")
 
 
 class SmartViewSet(viewsets.ReadOnlyModelViewSet):

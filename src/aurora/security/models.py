@@ -1,3 +1,4 @@
+from concurrency.fields import AutoIncVersionField
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
@@ -10,6 +11,8 @@ from aurora.registration.models import Registration
 
 
 class AuroraUser(AbstractUser):
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     groups = models.ManyToManyField(
         Group,
@@ -53,6 +56,8 @@ class RegistrationRoleManager(models.Manager):
 
 
 class RegistrationRole(NaturalKeyModel, models.Model):
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
     registration = models.ForeignKey(Registration, related_name="roles", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.ForeignKey(Group, on_delete=models.CASCADE)
@@ -74,6 +79,8 @@ class OrganizationRoleManager(models.Manager):
 
 
 class OrganizationRole(NaturalKeyModel, models.Model):
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
     organization = models.ForeignKey(Organization, related_name="users", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.ForeignKey(Group, on_delete=models.CASCADE)
