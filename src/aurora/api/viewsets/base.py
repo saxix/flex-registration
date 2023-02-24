@@ -5,7 +5,7 @@ from rest_framework.authentication import (
     SessionAuthentication,
     TokenAuthentication,
 )
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, DjangoModelPermissions
 
 
 class LastModifiedFilter(filters.FilterSet):
@@ -14,7 +14,4 @@ class LastModifiedFilter(filters.FilterSet):
 
 class SmartViewSet(viewsets.ReadOnlyModelViewSet):
     authentication_classes = (SessionAuthentication, TokenAuthentication, BasicAuthentication)
-    permission_classes = (
-        IsAuthenticated,
-        IsAdminUser,
-    )
+    permission_classes = (IsAdminUser | DjangoModelPermissions,)

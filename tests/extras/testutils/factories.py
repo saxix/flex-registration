@@ -19,6 +19,7 @@ from aurora.core.models import (
 )
 from aurora.counters.models import Counter
 from aurora.registration.models import Record, Registration
+from aurora.security.models import AuroraUser
 
 factories_registry = {}
 
@@ -77,6 +78,14 @@ class UserFactory(AutoRegisterModelFactory):
 
     class Meta:
         model = User
+        django_get_or_create = ("username",)
+
+
+class AuroraUserFactory(AutoRegisterModelFactory):
+    user = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = AuroraUser
         django_get_or_create = ("username",)
 
 

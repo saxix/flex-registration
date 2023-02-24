@@ -1,0 +1,65 @@
+body {
+  background-color: #2C2C2C;
+
+  a {
+    color: black;
+
+    &:hover {
+      color: black;
+    }
+  }
+
+}
+
+.wrapper {
+  background-color: #2C2C2C;
+
+  .navbar {
+    border-top: none;
+  }
+
+  .container {
+    ul.breadcrumb {
+      li {
+        &.active {
+
+        }
+      }
+    }
+
+    #content {
+      .content-main {
+        .page-header {
+          color: #9d9d9d;
+
+          h1 {
+          }
+        }
+
+        .request-info {
+
+        }
+
+        .response-info {
+          .prettyprint {
+            background-color: #f7f7f9;
+            border: 1px solid #e1e1e8;
+
+            a {
+              color: black;
+            }
+
+            .str {
+              color: black;
+
+              &:hover {
+                text-transform: none;
+              }
+            }
+          }
+        }
+      }
+    }
+
+  }
+}
