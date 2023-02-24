@@ -16,6 +16,7 @@ from aurora.core.models import (
     Organization,
     Project,
     Validator,
+    FormSet,
 )
 from aurora.counters.models import Counter
 from aurora.registration.models import Record, Registration
@@ -124,9 +125,29 @@ class FormFactory(AutoRegisterModelFactory):
         django_get_or_create = ("name",)
 
 
+class FlexFormFactory(AutoRegisterModelFactory):
+    name = factory.Sequence(lambda d: "Form-%s" % d)
+    project = factory.SubFactory(ProjectFactory)
+
+    class Meta:
+        model = FlexForm
+        django_get_or_create = ("name",)
+
+
+class FormSetFactory(AutoRegisterModelFactory):
+    name = factory.Sequence(lambda d: "Form-%s" % d)
+    flex_form = factory.SubFactory(FlexFormFactory)
+    parent = factory.SubFactory(FlexFormFactory)
+
+    class Meta:
+        model = FormSet
+        django_get_or_create = ("name",)
+
+
 class FlexFormFieldFactory(AutoRegisterModelFactory):
     name = factory.Sequence(lambda d: "FormField-%s" % d)
-    field_type = "forms.CharField"
+    field_type = "django.forms.CharField"
+    flex_form = factory.SubFactory(FlexFormFactory)
 
     class Meta:
         model = FlexFormField

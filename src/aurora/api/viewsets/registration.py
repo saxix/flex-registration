@@ -88,7 +88,7 @@ class RegistrationViewSet(SmartViewSet):
         pagination_class=RecordPageNumberPagination,
         filter_backends=[DjangoFilterBackend],
     )
-    def records(self, request, slug=None):
+    def records(self, request, pk=None):
         obj: Registration = self.get_object()
         if not request.user.has_perm("registration.view_data", obj):
             raise PermissionDenied()

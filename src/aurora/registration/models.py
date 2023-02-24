@@ -229,9 +229,9 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 "type": fqn(flex_field.field_type),
                 "label": flex_field.label,
                 "name": flex_field.name,
-                "smart_attrs": kwargs["smart_attrs"],
-                "widget_kwargs": kwargs["widget_kwargs"],
-                "choices": kwargs.get("choices"),
+                "smart_attrs": kwargs.get("smart_attrs", {}),
+                "widget_kwargs": kwargs.get("widget_kwargs", {}),
+                "choices": kwargs.get("choices", []),
             }
 
         def _process_form(frm):
