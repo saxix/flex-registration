@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import date, datetime, time
 from json import JSONDecodeError
+from pathlib import Path
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
@@ -118,7 +119,9 @@ class Validator(NaturalKeyModel):
     console = {log: function(d) {}};
     """
     )
-    LIB = mark_safe(
+    LIB = (Path(__file__).parent / "static" / "smart_validation.min.js").read_text()
+    # LIB += (Path(__file__).parent / 'static' / 'validate_utils.min.js').read_text()
+    LIB3 = mark_safe(
         """
 TODAY = new Date();
 dateutil = {today: TODAY};
@@ -262,7 +265,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
         super().save(force_insert, force_update, using, update_fields)
 
     def get_script_url(self):
-        return reverse("api:validator-script", args=[self.name])
+        return reverse("api:validator-script", args=[self.pk])
 
 
 def get_validators(field):

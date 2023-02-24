@@ -55,7 +55,7 @@ class RegistrationViewSet(SmartViewSet):
         return Response(reg.metadata)
 
     @action(detail=True, permission_classes=[AllowAny])
-    def version(self, request, slug=None):
+    def version(self, request, pk=None):
         reg: Registration = self.get_object()
         return Response(
             {

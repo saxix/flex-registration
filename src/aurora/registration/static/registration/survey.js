@@ -11,9 +11,9 @@
     }
     $(function () {
         // we need this HACK to manage the stupid cache system in front of the app
-        const slug = $("meta[name=\"Survey\"]").attr("content");
+        const pk = $("meta[name=\"RegId\"]").attr("content");
         const sessionUrl = gst_session();
-        $.get("/api/registration/" + slug + "/version/?" + Math.random(), function (data) {
+        $.get("/api/registration/" + pk + "/version/?" + Math.random(), function (data) {
             var parts = location.href.split("/");
             const version = parseInt(parts[parts.length - 2]);
             if (version !== data.version) {

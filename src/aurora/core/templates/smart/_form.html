@@ -54,9 +54,9 @@
                     <div class="shadow-md rounded bg-gray-100 mb-10 p-2 sm:p-4" data-page="{{ forloop.counter }}">
                         <div class="w-full formset formset-{{ name }} {{ formset.fs.advanced.smart.container.class }}"
                                 {% include "django/forms/widgets/attrs.html" with widget=formset.fs.advanced.smart.container.html_attrs %}>
-{#                            {% if can_edit_inpage %}#}
-{#                                {% include "registration/_staff_edit_formset.html" %}#}
-{#                            {% endif %}#}
+                            {% if can_edit_inpage %}
+                                {% include "registration/_staff_edit_formset.html" %}
+                            {% endif %}
                             {% if formset.fs.title %}
                                 {% trans formset.fs.title as fstitle %}
                                 <div data-msgid="{{ formset.fs.title }}" class="itrans w-full mt-4 text-sm leading-7 text-gray-500 font-regular i18n uppercase text-center title">

@@ -38,6 +38,7 @@ class FlexFormBaseForm(forms.Form):
         base = super().media
         return base + forms.Media(
             js=[
+                static("smart_validation%s.js" % extra),
                 static("smart%s.js" % extra),
             ]
         )

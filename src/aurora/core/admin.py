@@ -150,6 +150,8 @@ class ValidatorAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, SmartMod
     }
     # change_list_template = "reversion/change_list.html"
     object_history_template = "reversion-compare/object_history.html"
+    change_form_template = None
+    inlines = []
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
