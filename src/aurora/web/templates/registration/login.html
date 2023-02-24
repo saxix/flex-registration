@@ -13,7 +13,7 @@
     <section class="text-gray-700 body-font min-h-screen ">
         <div class="flex justify-center bg-gray-100">
             <div class="mx-10">
-                {% if user_has_token or config.ENABLE_LOCAL_LOGIN %}
+                {% if user_has_token or config.LOGIN_LOCAL %}
                     <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
                         <div class="form-row">
                             {{ form.username.errors }}
@@ -24,24 +24,19 @@
                             {{ form.password.label_tag }} {{ form.password }}
                             <input type="hidden" name="next" value="{{ next }}">
                         </div>
-{#                        {% url 'admin_password_reset' as password_reset_url %}#}
-{#                        {% if password_reset_url %}#}
-{#                            <div class="password-reset-link">#}
-{#                                <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>#}
-{#                            </div>#}
-{#                        {% endif %}#}
                         <div class="text-center my-10">
                             <input type="submit" class="px-10 py-2 button btn-large" value="Login">
                         </div>
                     </form>
                 {% endif %}
                 <hr>
-                {#            <div class="container">#}
-                <div class="submit-row text-center mt-10">
-                    <a href="{% url 'social:begin' 'azuread-tenant-oauth2' %}" style="padding: 10px" class="button">
-                        Sign In With Azure
-                    </a>
-                </div>
+                {% if user_has_token or config.LOGIN_SSO %}
+                    <div class="submit-row text-center mt-10">
+                        <a href="{% url 'social:begin' 'azuread-tenant-oauth2' %}" style="padding: 10px" class="button">
+                            Sign In With Azure
+                        </a>
+                    </div>
+                {% endif %}
                 {#            </div>#}
             </div>
         </div>

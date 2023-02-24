@@ -83,9 +83,9 @@
                                             <div class="mb-3">
                                                 {{ form.non_field_errors }}
                                             </div>
-{#                                            {% if can_edit_inpage %}#}
-{#                                                {% include "registration/_staff_edit_form.html" %}#}
-{#                                            {% endif %}#}
+                                            {% if can_edit_inpage %}
+                                                {% include "registration/_staff_edit_form.html" %}
+                                            {% endif %}
                                             {% for field in form %}
                                                 {% include "smart/_fieldset.html" with counter=forloop.counter %}
                                             {% endfor %}
