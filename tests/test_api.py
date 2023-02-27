@@ -106,7 +106,7 @@ def test_api(django_app, registration, monkeypatch):
 @pytest.mark.django_db
 def test_version(django_app, registration, admin_user):
     # do not use reverse because url is hardcoded in survey.js
-    api_url = "/api/registration/%s/version/" % registration.slug
+    api_url = "/api/registration/%s/version/" % registration.pk
 
     res = django_app.get(api_url)
     data = res.json

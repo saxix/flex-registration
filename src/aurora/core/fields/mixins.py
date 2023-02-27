@@ -52,6 +52,7 @@ class SmartFieldMixin:
 
         if not self.flex_field.required:
             attrs.pop("required", "")
+        attrs["flex_field"] = self.flex_field
         widget.smart_attrs = self.smart_attrs
         widget.flex_field = self.flex_field
         return attrs

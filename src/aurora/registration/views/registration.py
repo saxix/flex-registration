@@ -139,7 +139,7 @@ def check_access(view_func):
     def wrapped_view(*args, **kwargs):
         view, request = args
         if view.registration.protected:
-            login_url = "%s?next=%s" % (settings.USER_LOGIN_URL, request.path)
+            login_url = "%s?next=%s" % (settings.LOGIN_URL, request.path)
             if request.user.is_anonymous:
                 return HttpResponseRedirect(login_url)
             if not request.user.has_perm("registration.register", view.registration):
