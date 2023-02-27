@@ -43,6 +43,8 @@ def import_custom_field(value, exc):
     value = clean_classname(value)
     try:
         return import_by_name(value)
+    except ModuleNotFoundError:
+        return None
     except StrategyAttributeError:
         try:
             return get_custom_field(value).get_class()
