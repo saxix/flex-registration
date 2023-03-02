@@ -1,3 +1,7 @@
+if ($ === undefined){
+    $ = django.jQuery;
+}
+
 (function ($) {
     $(function () {
         $(".field-container.required span.required").each(function (i, e) {

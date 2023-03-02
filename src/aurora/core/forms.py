@@ -99,13 +99,15 @@ class FieldAttributesForm(forms.Form):
     default_value = forms.CharField(required=False, help_text="default value for the field")
     choices = forms.JSONField(required=False)
     visible = forms.BooleanField(required=False)
+    required = forms.BooleanField(required=False)
 
 
 class WidgetAttributesForm(forms.Form):
     placeholder = forms.CharField(required=False, help_text="placeholder for the input")
-    class_ = forms.CharField(label="class", required=False, help_text="Input CSS class to apply (will")
+    class_ = forms.CharField(label="Field class", required=False, help_text="Input CSS class to apply (will")
     extra_classes = forms.CharField(required=False, help_text="Input CSS classes to add input")
-    fieldset = forms.CharField(label="class", required=False, help_text="Fieldset CSS class to apply")
+    fieldset = forms.CharField(label="Fieldset class", required=False, help_text="Fieldset CSS class to apply")
+    onchange = forms.CharField(required=False, help_text="Javascfipt onchange event")
 
 
 class SmartAttributesForm(forms.Form):
@@ -113,4 +115,3 @@ class SmartAttributesForm(forms.Form):
     hint = forms.CharField(required=False, help_text="Text to display above the input")
     description = forms.CharField(required=False, help_text="Text to display below the input")
     datasource = forms.CharField(required=False, help_text="Datasource name for ajax field")
-    index = forms.BooleanField(required=False)

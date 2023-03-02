@@ -1,4 +1,4 @@
-{% load itrans aurora %}<fieldset data-fid="{{ field.field.flex_field.pk }}" class="{{ field.name }} {{ field|smart:"fieldset" }}">
+{% load itrans aurora %}<fieldset data-fid="{{ field.field.flex_field.pk }}" class="{{ field.name }} {{ field.field.flex_field.advanced.widget_kwargs.fieldset }}">
 
     {% if can_edit_inpage %}
         {% include "registration/_staff_edit_field.html" %}
@@ -28,10 +28,10 @@
                       class="required-label hidden itrans lowercase font-thin required text-xs">({% trans "required" %})</span>
 {#            {% endif %}#}
         </label>
-        {% if field.field.flex_field.advanced.description %}
+        {% if field.field.flex_field.advanced.smart.description %}
         <div class="itrans text-sm" data-msgid="{{ field.field.flex_field.advanced.description }}">
 {#            {% if can_translate %}{% include "i18n/_staff_edit_i18n.html" with original=field|smart:"description,0" %}{% endif %}#}
-            {% trans field.field.flex_field.advanced.description %}
+            {% trans field.field.flex_field.advanced.smart.description %}
         </div>
         {% endif %}
         <span class="errors">{{ field.errors }}</span>

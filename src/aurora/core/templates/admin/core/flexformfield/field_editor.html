@@ -1,0 +1,106 @@
+{% extends "admin_extra_buttons/action_page.html" %}{% load static itrans aurora %}
+{% block action-content %}
+    {#    <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">#}
+    <link rel="stylesheet" href="{% static "field_atttributes.css" %}">
+    {#    <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">#}
+    {#    <link rel="stylesheet" href="{% static "admin/debug.css" %}">#}
+    {#    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>#}
+    <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+    <script src="/static/admin/js/jquery.init.js"></script>
+{#    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>#}
+{#    <script src="{% static "admin/js/vendor/jquery/jquery.init.js" %}"></script>#}
+{#    <script src="{% static "smart.js" %}"></script>#}
+    <style>
+        #iframe-container{
+            display: block;
+              overflow: auto;
+            resize: vertical;
+        }
+        #iframe-container iframe{
+            height: 100%;
+        }
+
+    </style>
+    <div>
+    <label for="radio_display">Render: <input type="radio" id="radio_display" checked name="output"></label>
+    <label for="radio_code">Code: <input type="radio" id="radio_code" name="output"></label>
+    <label for="radio_attrs">Advanced: <input type="radio" id="radio_attrs" name="output"></label>
+    </div>
+    <div id="iframe-container">
+    <iframe id="widget_display" style="width: 100%" src="{% url "admin:core_flexformfield_widget_display" original.pk %}"></iframe>
+    <iframe id="widget_code" style="display: none; width: 100%" src="{% url "admin:core_flexformfield_widget_code" original.pk %}"></iframe>
+    <iframe id="widget_attrs" style="display: none; width: 100%" src="{% url "admin:core_flexformfield_widget_attrs" original.pk %}"></iframe>
+    </div>
+    <table>
+        <tr>
+            <td>
+                <form method="post" id="fieldAttrForm">
+                    {% csrf_token %}
+                    <fieldset>
+                        <h2>Field attributes</h2>
+                        <table>
+                            {{ form_attrs }}
+                        </table>
+                    </fieldset>
+                    <fieldset>
+                        <h2>Widget attributes</h2>
+                        <table>
+                            {{ form_widget }}
+                        </table>
+                    </fieldset>
+                    <fieldset>
+                        <h2>Smart attributes</h2>
+                        <table>
+                            {{ form_smart }}
+                        </table>
+                    </fieldset>
+                    <div>
+                        <input style="background-color: cornflowerblue" type="submit" value="Submit">
+                    </div>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <script>
+        (function ($) {
+            const socket = new WebSocket(
+                'ws://'
+                + window.location.host
+                + '/editor/field/'
+                + {{ user.pk }}
+                +'/'
+                + {{ original.pk }}
+                +'/'
+            );
+
+            socket.onmessage = function (e) {
+                document.getElementById('widget_display').contentWindow.location.reload();
+                document.getElementById('widget_code').contentWindow.location.reload();
+                document.getElementById('widget_attrs').contentWindow.location.reload();
+            };
+
+            function update() {
+                var formData = $("form").serialize();
+                socket.send(formData);
+            }
+
+            $('input[type=checkbox]').on('click', function () {
+                update();
+            });
+            $('input,textarea').on('keyup', function () {
+                clearTimeout($.data(this, 'timer'));
+                var wait = setTimeout(update, 500);
+                $(this).data('timer', wait);
+            });
+
+            $("#radio_display, #radio_code, #radio_attrs").on("click", function (){
+                $("#radio_display").is(":checked") ? $("#widget_display").show(): $("#widget_display").hide();
+                $("#radio_code").is(":checked") ? $("#widget_code").show(): $("#widget_code").hide();
+                $("#radio_attrs").is(":checked") ? $("#widget_attrs").show(): $("#widget_attrs").hide();
+            })
+
+
+        })(django.jQuery);
+
+    </script>
+{% endblock action-content %}

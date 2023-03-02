@@ -478,13 +478,18 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     I18N_ADVANCED = ["smart.hint", "smart.question", "smart.description"]
     FLEX_FIELD_DEFAULT_ATTRS = {
         "default": None,
-        "widget_kwargs": {"pattern": None, "title": None, "placeholder": None, "class": ""},
+        "widget_kwargs": {
+            "pattern": None,
+            "onchange": "",
+            "title": None,
+            "placeholder": None,
+            "extra_classes": "",
+            "class": "",
+        },
         "kwargs": {},
         "smart": {
             "hint": "",
-            "extra_classes": "",
             "visible": True,
-            "onchange": "",
             "choices": [],
             "question": "",
             "description": "",
@@ -527,7 +532,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         return fqn(self.field_type)
 
     def get_default_value(self):
-        return self.advanced.get("default", None)
+        return self.advanced.get("default_value", None)
 
     def get_field_kwargs(self):
         if issubclass(self.field_type, CustomFieldMixin):
@@ -603,6 +608,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         if smart_attrs.get("extra_classes"):
             widget_kwargs["extra_classes"] = smart_attrs.pop("extra_classes")
         field_kwargs["widget_kwargs"] = widget_kwargs
+        field_kwargs.pop("default_value", "")
         return field_kwargs
 
     def get_instance(self):
