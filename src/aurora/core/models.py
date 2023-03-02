@@ -485,6 +485,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             "extra_classes": "",
             "visible": True,
             "onchange": "",
+            "choices": [],
             "question": "",
             "description": "",
             "index": None,
@@ -546,12 +547,16 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             field_kwargs.setdefault("required", self.required)
             regex = self.regex or self.field_type.custom.regex
         else:
+            # field_kwargs
+            # widget_kwargs
+            # widget_attrs
+            # smart_attrs
+            # data_attrs
             field_type = self.field_type
             advanced = self.advanced.copy()
             field_kwargs = self.advanced.get("kwargs", {}).copy()
             field_kwargs["required"] = False
             widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
-            # widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             regex = self.regex
 
             smart_attrs = advanced.pop("smart", {}).copy()
@@ -585,7 +590,9 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         if "datasource" in self.advanced:
             field_kwargs["datasource"] = self.advanced["datasource"]
         if hasattr(field_type, "choices"):
-            if "choices" in self.advanced:
+            if "choices" in smart_attrs:
+                field_kwargs["choices"] = smart_attrs["choices"]
+            elif "choices" in self.advanced:  # old deprecated
                 field_kwargs["choices"] = self.advanced["choices"]
             elif self.choices:
                 field_kwargs["choices"] = clean_choices(self.choices.split(","))

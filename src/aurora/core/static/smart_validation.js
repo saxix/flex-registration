@@ -76,12 +76,10 @@ smart = {
     },
     setRequiredOnValue: function (sender, targets, value) {
         try {
-            console.log(11111, targets)
             var cmp = value.toLowerCase();
             var $form = $(sender).parents(".form-container");
             $form.find(targets).each(function (i, e) {
                 $c = $(e).parents(".field-container");
-                console.log(11111, $c, $(sender).val(), cmp);
                 if ($(sender).val() == cmp) {
                     $(e).attr("required", true);
                     $c.find('.required-label').show();
@@ -90,26 +88,39 @@ smart = {
                     $c.find('.required-label').hide();
                 }
             })
-            // if ($(sender).val() == cmp) {
-            //     $targets.attr("required", true);
-            // } else {
-            //     $targets.attr("required", false);
-            // }
         } catch (error) {
             console.error(error);
         }
     },
+    getSiblingField: function (sender, target) {
+        var $sender = $(sender);
+        var $form = $sender.parents(".form-container");
+        return $form.find("[data-flex='" + target + "']");
+    },
+    getSibling: function (sender, target) {
+        var $form = $(sender).parents(".form-container");
+        return $form.find(target).parents(".field-container");
+    },
     showHideDependant: function (sender, target, value) {
         try {
-            var cmp = value.toLowerCase();
+            var cmp = null;
+            if (Array.isArray(value)) {
+                cmp = function (a, b) {
+                    b.includes(a);
+                }
+            } else {
+                cmp = function (a, b) {
+                    return a == b
+                };
+            }
+            var cleared = value.toLowerCase();
             var $form = $(sender).parents(".form-container");
             var $target = $form.find(target).parents(".field-container");
-            if ($(sender).val() == cmp) {
+            if (cmp($(sender).val(), cleared)) {
                 $target.show();
             } else {
                 $target.hide();
             }
-            ;
         } catch (error) {
             console.error(error);
         }

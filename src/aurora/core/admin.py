@@ -244,7 +244,7 @@ class FormSetInline(OrderableAdmin, TabularInline):
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
 
-class FlexFormFieldForm(forms.ModelForm):
+class FlexFormFieldFormInline(forms.ModelForm):
     class Meta:
         model = FlexFormField
         exclude = ()
@@ -255,7 +255,7 @@ class FlexFormFieldForm(forms.ModelForm):
             self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
 
 
-class FlexFormFieldForm2(forms.ModelForm):
+class FlexFormFieldForm(forms.ModelForm):
     class Meta:
         model = FlexFormField
         exclude = ()
@@ -283,7 +283,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
-    form = FlexFormFieldForm2
+    form = FlexFormFieldForm
     ordering_field = "ordering"
     order = "ordering"
 
@@ -297,6 +297,11 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
             return obj.field_type.__name__
         else:
             return "[[ removed ]]"
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "advanced":
+            kwargs["widget"] = JSONEditor()
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         if db_field.name == "field_type":
@@ -392,7 +397,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
 
 class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
     model = FlexFormField
-    form = FlexFormFieldForm
+    form = FlexFormFieldFormInline
     fields = ("ordering", "label", "name", "required", "enabled", "field_type")
     show_change_link = True
     extra = 0
