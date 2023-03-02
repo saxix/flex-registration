@@ -63,8 +63,9 @@
     </table>
     <script>
         (function ($) {
+            var ws_scheme = window.location.protocol === "https:" ? "wss://" : "ws://";
             const socket = new WebSocket(
-                'ws://'
+                ws_scheme
                 + window.location.host
                 + '/editor/field/'
                 + {{ user.pk }}
