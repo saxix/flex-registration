@@ -16,7 +16,7 @@ from django.contrib.admin.options import IncorrectLookupParameters
 from django.core.cache import caches
 from django.core.exceptions import ValidationError
 from django.db.models import JSONField, Q
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import HttpResponseRedirect
 from django.urls import NoReverseMatch, reverse
 from jsoneditor.forms import JSONEditor
 from mptt.admin import MPTTModelAdmin
@@ -26,14 +26,9 @@ from smart_admin.modeladmin import SmartModelAdmin
 from ..administration.filters import BaseAutoCompleteFilter
 from ..administration.mixin import LoadDumpMixin
 from .admin_sync import SyncMixin
+from .field_editor import FieldEditor
 from .fields.widgets import PythonEditor
-from .forms import (
-    FieldAttributesForm,
-    Select2Widget,
-    SmartAttributesForm,
-    ValidatorForm,
-    WidgetAttributesForm,
-)
+from .forms import Select2Widget, ValidatorForm
 from .models import (
     FIELD_KWARGS,
     CustomFieldType,
@@ -46,7 +41,7 @@ from .models import (
     Validator,
 )
 from .protocols import AuroraSyncOrganizationProtocol, AuroraSyncProjectProtocol
-from .utils import dict_setdefault, is_root, render, merge_data
+from .utils import dict_setdefault, is_root, render
 
 logger = logging.getLogger(__name__)
 
@@ -316,79 +311,120 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
 
     @button(label="editor")
     def field_editor(self, request, pk):
-        ctx = self.get_common_context(request, pk)
-        obj = self.get_object(request, pk)
+        self.editor = FieldEditor(self, request, pk)
         if request.method == "POST":
-            formAttrs = FieldAttributesForm(request.POST, prefix="kwargs")
-            formWidget = WidgetAttributesForm(request.POST, prefix="widget_kwargs")
-            formSmart = SmartAttributesForm(request.POST, prefix="smart")
-            if formSmart.is_valid() and formWidget.is_valid() and formAttrs.is_valid():
-                data = {
-                    formSmart.prefix: formSmart.cleaned_data,
-                    formWidget.prefix: formWidget.cleaned_data,
-                    formAttrs.prefix: formAttrs.cleaned_data,
-                }
-                return JsonResponse(data)
+            pass
         else:
-            formAttrs = FieldAttributesForm(prefix="kwargs", initial=obj.advanced.get("--", {}))
-            formWidget = WidgetAttributesForm(prefix="widget_kwargs", initial=obj.advanced.get("widget_kwargs", {}))
-            formSmart = SmartAttributesForm(prefix="smart", initial=obj.advanced.get("smart", {}))
-        ctx["form_attrs"] = formAttrs
-        ctx["form_widget"] = formWidget
-        ctx["form_smart"] = formSmart
+            return self.editor.get(request, pk)
+        # FORMS = {"field": FlexFieldAttributesForm,
+        #          "kwargs": FormFieldAttributesForm,
+        #          "widget_kwargs": WidgetAttributesForm,
+        #          "smart": SmartAttributesForm,
+        #          }
+        # ctx = self.get_common_context(request, pk)
+        # obj = self.get_object(request, pk)
+        # if request.method == "POST":
+        #     formField = FlexFieldAttributesForm(request.POST, prefix="field")
+        #     formAttrs = FormFieldAttributesForm(request.POST, prefix="kwargs")
+        #     formWidget = WidgetAttributesForm(request.POST, prefix="widget_kwargs")
+        #     formSmart = SmartAttributesForm(request.POST, prefix="smart")
+        #     # if formSmart.is_valid() and formWidget.is_valid() and formAttrs.is_valid() and formField.is_valid():
+        #     if all(map(lambda x: x.is_valid(), [formSmart, formWidget, formAttrs, formField])):
+        #         data = {
+        #             formField.prefix: formField.cleaned_data,
+        #             formSmart.prefix: formSmart.cleaned_data,
+        #             formWidget.prefix: formWidget.cleaned_data,
+        #             formAttrs.prefix: formAttrs.cleaned_data,
+        #         }
+        #         return JsonResponse(data)
+        # else:
+        #     # i = {"field_type": fqn(obj.field_type)}
+        #     # i.update(**obj.advanced.get("kwargs", {}))
+        #     formField = FlexFieldAttributesForm(prefix="field", instance=obj)
+        #     formAttrs = FormFieldAttributesForm(prefix="kwargs", initial=obj.advanced.get("kwargs", {}))
+        #     formWidget = WidgetAttributesForm(prefix="widget_kwargs", initial=obj.advanced.get("widget_kwargs", {}))
+        #     formSmart = SmartAttributesForm(prefix="smart", initial=obj.advanced.get("smart", {}))
+        # ctx["form_field"] = formField
+        # ctx["form_attrs"] = formAttrs
+        # ctx["form_widget"] = formWidget
+        # ctx["form_smart"] = formSmart
+        # return render(request, "admin/core/flexformfield/field_editor.html", ctx)
 
-        return render(request, "admin/core/flexformfield/field_editor.html", ctx)
-
-    def _editor_get_instance(self, base, config):
-        config = merge_data(base.advanced, config)
-        base.advanced = config
-        instance = base.get_instance()
-        return instance
+    # def _editor_get_instance(self, base, config):
+    #     formField = FlexFieldAttributesForm(config, prefix="field")
+    #     formAttrs = FormFieldAttributesForm(config, prefix="kwargs")
+    #     formWidget = WidgetAttributesForm(config, prefix="widget_kwargs")
+    #     formSmart = SmartAttributesForm(config, prefix="smart")
+    #     if all(map(lambda x: x.is_valid(), [formSmart, formWidget, formAttrs, formField])):
+    #         base.required = parse_bool(config.get("field", {}).pop("required", False))
+    #         for k, v in config.get("field", {}).items():
+    #             setattr(base, k, v)
+    #         if field_type := config.get("field", {}).pop("field_type", None):
+    #             base.field_type = field_type
+    #         #     base.field_type = field_type
+    #         config = merge_data(base.advanced, {**formWidget.cleaned_data})
+    #         base.advanced = config
+    #     else:
+    #         raise ValidationError(formField.errors)
+    #     instance = base.get_instance()
+    #     return instance
 
     @view()
     def widget_attrs(self, request, pk):
-        config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
-        base = self.get_object(request, pk)
-        base.required = config["kwargs"].get("required") == "on"
-        self._editor_get_instance(base, config)
-        rendered = json.dumps(base.advanced, indent=4)
-        return HttpResponse(rendered, content_type="text/plain")
+        editor = FieldEditor(self, request, pk)
+        return editor.render()
+        # config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
+        # base = self.get_object(request, pk)
+        # base.required = config.get("kwargs", {}).get("required") == "on"
+        # self._editor_get_instance(base, config)
+        # rendered = json.dumps(base.advanced, indent=4)
+        # return HttpResponse(rendered, content_type="text/plain")
+
+    @view()
+    def widget_refresh(self, request, pk):
+        editor = FieldEditor(self, request, pk)
+        return editor.refresh()
 
     @view()
     def widget_code(self, request, pk):
-        ctx = self.get_common_context(request, pk)
-        config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
-        instance = self._editor_get_instance(ctx["original"], config)
-        form_class_attrs = {
-            "sample": instance,
-        }
-        form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
-        ctx["form"] = form_class()
-        ctx["instance"] = instance
-        return render(request, "admin/core/flexformfield/widget_code.html", ctx, content_type="text/plain")
+        editor = FieldEditor(self, request, pk)
+        return editor.get_code()
+
+        # ctx = self.get_common_context(request, pk)
+        # config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
+        # instance = self._editor_get_instance(ctx["original"], config)
+        # form_class_attrs = {
+        #     "sample": instance,
+        # }
+        # form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+        # ctx["form"] = form_class()
+        # ctx["instance"] = instance
+        # return render(request, "admin/core/flexformfield/widget_code.html", ctx, content_type="text/plain")
 
     @view()
     def widget_display(self, request, pk):
-        ctx = self.get_common_context(request, pk)
-        if request.POST:
-            pass
-        else:
-            # fld: FlexFormField = ctx["original"]
-            # config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
-            # config = merge_data(fld.advanced, config)
-            # print("src/aurora/core/admin.py: 362", dict(config))
-            # fld.advanced = config
-            # instance = fld.get_instance()
-            config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
-            instance = self._editor_get_instance(ctx["original"], config)
-            form_class_attrs = {
-                "sample": instance,
-            }
-            form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
-            ctx["form"] = form_class()
-            ctx["instance"] = instance
-
-        return render(request, "admin/core/flexformfield/widget_display.html", ctx)
+        editor = FieldEditor(self, request, pk)
+        return editor.render()
+        # ctx = self.get_common_context(request, pk)
+        # if request.POST:
+        #     pass
+        # else:
+        #     # fld: FlexFormField = ctx["original"]
+        #     # config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
+        #     # config = merge_data(fld.advanced, config)
+        #     # print("src/aurora/core/admin.py: 362", dict(config))
+        #     # fld.advanced = config
+        #     # instance = fld.get_instance()
+        #     config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
+        #     instance = self._editor_get_instance(ctx["original"], config)
+        #     form_class_attrs = {
+        #         "sample": instance,
+        #     }
+        #     form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+        #     ctx["form"] = form_class()
+        #     ctx["instance"] = instance
+        #
+        # return render(request, "admin/core/flexformfield/widget_display.html", ctx)
 
     @button()
     def test(self, request, pk):
@@ -429,6 +465,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
 
 
 class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
+    template = "admin/core/flexformfield/tabular.html"
     model = FlexFormField
     form = FlexFormFieldFormInline
     fields = ("ordering", "label", "name", "required", "enabled", "field_type")
@@ -501,6 +538,7 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
     SYNC_COOKIE = "sync"
     inlines = [
         FlexFormFieldInline,
+        FormSetInline,
     ]
     list_display = (
         "name",

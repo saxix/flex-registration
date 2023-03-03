@@ -1,35 +1,20 @@
 {% extends "admin_extra_buttons/action_page.html" %}{% load static itrans aurora %}
 {% block action-content %}
-    {#    <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">#}
-    <link rel="stylesheet" href="{% static "field_atttributes.css" %}">
-    {#    <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">#}
-    {#    <link rel="stylesheet" href="{% static "admin/debug.css" %}">#}
-    {#    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>#}
+    <link rel="stylesheet" href="{% static "admin/field_editor/field_editor.css" %}">
     <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
     <script src="/static/admin/js/jquery.init.js"></script>
-{#    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>#}
-{#    <script src="{% static "admin/js/vendor/jquery/jquery.init.js" %}"></script>#}
-{#    <script src="{% static "smart.js" %}"></script>#}
-    <style>
-        #iframe-container{
-            display: block;
-              overflow: auto;
-            resize: vertical;
-        }
-        #iframe-container iframe{
-            height: 100%;
-        }
-
-    </style>
     <div>
-    <label for="radio_display">Render: <input type="radio" id="radio_display" checked name="output"></label>
-    <label for="radio_code">Code: <input type="radio" id="radio_code" name="output"></label>
-    <label for="radio_attrs">Advanced: <input type="radio" id="radio_attrs" name="output"></label>
+        <label for="radio_display">Render: <input type="radio" id="radio_display" checked name="output"></label>
+        <label for="radio_code">Code: <input type="radio" id="radio_code" name="output"></label>
+        <label for="radio_attrs">Advanced: <input type="radio" id="radio_attrs" name="output"></label>
     </div>
     <div id="iframe-container">
-    <iframe id="widget_display" style="width: 100%" src="{% url "admin:core_flexformfield_widget_display" original.pk %}"></iframe>
-    <iframe id="widget_code" style="display: none; width: 100%" src="{% url "admin:core_flexformfield_widget_code" original.pk %}"></iframe>
-    <iframe id="widget_attrs" style="display: none; width: 100%" src="{% url "admin:core_flexformfield_widget_attrs" original.pk %}"></iframe>
+        <iframe id="widget_display" style="width: 100%"
+                src="{% url "admin:core_flexformfield_widget_display" original.pk %}"></iframe>
+        <iframe id="widget_code" style="display: none; width: 100%"
+                src="{% url "admin:core_flexformfield_widget_code" original.pk %}"></iframe>
+        <iframe id="widget_attrs" style="display: none; width: 100%"
+                src="{% url "admin:core_flexformfield_widget_attrs" original.pk %}"></iframe>
     </div>
     <table>
         <tr>
@@ -37,7 +22,13 @@
                 <form method="post" id="fieldAttrForm">
                     {% csrf_token %}
                     <fieldset>
-                        <h2>Field attributes</h2>
+                        <h2>Flex Field attributes</h2>
+                        <table>
+                            {{ form_field }}
+                        </table>
+                    </fieldset>
+                    <fieldset>
+                        <h2>Form Field attributes</h2>
                         <table>
                             {{ form_attrs }}
                         </table>
@@ -63,6 +54,7 @@
     </table>
     <script>
         (function ($) {
+            var refreshUrl = "{% url "admin:core_flexformfield_widget_refresh" original.pk %}";
             var ws_scheme = window.location.protocol === "https:" ? "wss://" : "ws://";
             const socket = new WebSocket(
                 ws_scheme
@@ -82,10 +74,20 @@
 
             function update() {
                 var formData = $("form").serialize();
-                socket.send(formData);
+                $.post(refreshUrl, formData)
+                    .done(function (data) {
+                        console.log(data)
+                    })
+                    .fail(function () {
+                        console.log(data)
+                    })
+                {#socket.send(formData);#}
             }
 
-            $('input[type=checkbox]').on('click', function () {
+            $('input[type=checkbox],input[type=radio]').on('click', function () {
+                update();
+            });
+            $('select').on('change', function () {
                 update();
             });
             $('input,textarea').on('keyup', function () {
@@ -94,10 +96,10 @@
                 $(this).data('timer', wait);
             });
 
-            $("#radio_display, #radio_code, #radio_attrs").on("click", function (){
-                $("#radio_display").is(":checked") ? $("#widget_display").show(): $("#widget_display").hide();
-                $("#radio_code").is(":checked") ? $("#widget_code").show(): $("#widget_code").hide();
-                $("#radio_attrs").is(":checked") ? $("#widget_attrs").show(): $("#widget_attrs").hide();
+            $("#radio_display, #radio_code, #radio_attrs").on("click", function () {
+                $("#radio_display").is(":checked") ? $("#widget_display").show() : $("#widget_display").hide();
+                $("#radio_code").is(":checked") ? $("#widget_code").show() : $("#widget_code").hide();
+                $("#radio_attrs").is(":checked") ? $("#widget_attrs").show() : $("#widget_attrs").hide();
             })
 
 

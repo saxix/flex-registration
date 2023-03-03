@@ -1,0 +1,23 @@
+#iframe-container {
+  display: block;
+  overflow: auto;
+  resize: vertical;
+}
+#iframe-container iframe {
+  height: 100%;
+}
+
+table {
+  width: 100%;
+}
+table tr th {
+  min-height: 200px;
+}
+table tr td {
+  width: 100%;
+}
+table tr td input, table tr td select {
+  width: 100%;
+}
+
+/*# sourceMappingURL=field_editor.css.map */

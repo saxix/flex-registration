@@ -1,3 +1,12 @@
+#iframe-container {
+  display: block;
+  overflow: auto;
+  resize: vertical;
+
+  iframe {
+    height: 100%;
+  }
+}
 table{
   width: 100%;
   tr{

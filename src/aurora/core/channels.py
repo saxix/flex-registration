@@ -1,6 +1,5 @@
-from collections import defaultdict
-
 import json
+from collections import defaultdict
 from urllib import parse
 
 from channels.generic.websocket import WebsocketConsumer

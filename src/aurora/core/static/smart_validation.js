@@ -51,7 +51,7 @@ smart = {
         if ($(sender).is("input[type=\"checkbox\"]")) {
             valid = $(sender).is(":checked");
         } else if ($(sender).is("input[type=\"radio\"]")) {
-            valid = $(sender).val() == "y";
+            valid = $(sender).val() === "y";
         } else {
             valid = !!$(sender).val();
         }
