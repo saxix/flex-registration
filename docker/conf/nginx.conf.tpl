@@ -56,7 +56,7 @@ http {
     }
     server {
         client_max_body_size ${NGINX_MAX_BODY_SIZE};
-        large_client_header_buffers 4 16k
+        large_client_header_buffers 4 16k;
         access_log /dev/stdout;
         listen 80;
         proxy_cache one;
