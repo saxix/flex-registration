@@ -1,22 +1,33 @@
 {% load static aurora %}
 <style>
-    body{
+    body {
         background-color: white;
     }
 </style>
 <link href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{% static "base.css" %}">
-<link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
-<link rel="stylesheet" href="{% static "admin/debug.css" %}">
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
 <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
 <script src="{% static "admin/js/jquery.init.js" %}"></script>
 <script src="{% static "smart_validation.js" %}"></script>
 <script src="{% static "smart.js" %}"></script>
-
-<form method="post" id="registrationForm">
-    {% csrf_token %}
-    {% for field in form %}
-        {% include "smart/_fieldset.html" %}
-    {% endfor %}
-    <input style="background-color: cornflowerblue" type="submit" value="Submit">
-</form>
+{% if request.method == "POST" %}
+    {% if valid %}
+        <div class="mb-10 w-full text-capitalize m-auto text-center text-xl border rounded">Success</div>
+    {% elif error %}
+        <div class="mb-10 w-full text-capitalize m-auto text-center alert-message text-xl border rounded">please fix the
+            errors below
+        </div>
+    {% endif %}
+{% endif %}
+<div id="formContainer" class="p-2">
+    <form method="post" id="registrationForm" action=".">
+        {% csrf_token %}
+        {% for field in form %}
+            {% include "smart/_fieldset.html" %}
+        {% endfor %}
+        <div class="submit-row">
+            <input style="background-color: cornflowerblue" type="submit" value="Submit">
+        </div>
+    </form>
+</div>

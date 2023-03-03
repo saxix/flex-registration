@@ -2,9 +2,10 @@
   display: block;
   overflow: auto;
   resize: vertical;
-
+  height: 200px;
   iframe {
     height: 100%;
+    border: 0 transparent;
   }
 }
 table{
@@ -19,5 +20,12 @@ table{
         width: 100%;
       }
     }
+  }
+}
+.toolbar{
+  margin: 10px;
+  label{
+    margin-right: 10px;
+    cursor: pointer;
   }
 }

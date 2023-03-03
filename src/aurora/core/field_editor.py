@@ -1,21 +1,30 @@
+import json
+
+from typing import Dict
+
 from django import forms
-from django.http import HttpResponse
+from django.core.cache import caches
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.functional import cached_property
 
 from aurora.core.models import FlexFormField
+from aurora.core.utils import merge_data
+
+cache = caches["default"]
 
 
 class AdvancendAttrsMixin:
     def __init__(self, *args, **kwargs):
         self.field = kwargs.pop("field", None)
         self.prefix = kwargs.get("prefix")
-        kwargs["initial"] = self.field.advanced.get(self.prefix, {})
+        if self.field:
+            kwargs["initial"] = self.field.advanced.get(self.prefix, {})
         super().__init__(*args, **kwargs)
 
 
 class FlexFieldAttributesForm(AdvancendAttrsMixin, forms.ModelForm):
-    required = forms.ChoiceField(widget=forms.CheckboxInput, required=False, choices=[("y", "Yes"), ("n", "No")])
+    required = forms.BooleanField(widget=forms.CheckboxInput, required=False)
 
     class Meta:
         model = FlexFormField
@@ -53,22 +62,54 @@ class FieldEditor:
         self.modeladmin = modeladmin
         self.request = request
         self.pk = pk
+        self.cache_key = f"/editor/field/{self.request.user.pk}/{self.pk}/"
 
     @cached_property
     def field(self):
         return FlexFormField.objects.get(pk=self.pk)
 
+    @cached_property
+    def patched_field(self):
+        fld = self.field
+        if config := cache.get(self.cache_key, None):
+            forms = self.get_forms(config)
+            fieldForm = forms.pop("field", None)
+            if fieldForm.is_valid():
+                for k, v in fieldForm.cleaned_data.items():
+                    setattr(fld, k, v)
+            for prefix, frm in forms.items():
+                frm.is_valid()
+                merged = merge_data(fld.advanced, {**{prefix: frm.cleaned_data}})
+                fld.advanced = merged
+        return fld
+        # formField = FlexFieldAttributesForm(config, prefix="field")
+        # formAttrs = FormFieldAttributesForm(config, prefix="kwargs")
+        # formWidget = WidgetAttributesForm(config, prefix="widget_kwargs")
+        # formSmart = SmartAttributesForm(config, prefix="smart")
+        # if all(map(lambda x: x.is_valid(), [formSmart, formWidget, formAttrs, formField])):
+        #     base.required = parse_bool(config.get("field", {}).pop("required", False))
+        #     for k, v in config.get("field", {}).items():
+        #         setattr(base, k, v)
+        #     if field_type := config.get("field", {}).pop("field_type", None):
+        #         base.field_type = field_type
+        #     #     base.field_type = field_type
+        #     config = merge_data(base.advanced, {**formWidget.cleaned_data})
+        #     base.advanced = config
+        # else:
+        #     raise ValidationError(formField.errors)
+        # instance = base.get_instance()
+        # return instance
+
     def patch(self, request, pk):
         pass
 
+    def get_configuration(self):
+        self.patched_field.get_instance()
+        rendered = json.dumps(self.field.advanced, indent=4)
+        return HttpResponse(rendered, content_type="text/plain")
+
     def get_code(self):
-        # config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
-        # base = self.get_object(request, pk)
-        # base.required = config.get("kwargs", {}).get("required") == "on"
-        # self._editor_get_instance(base, config)
-        # rendered = json.dumps(base.advanced, indent=4)
-        ctx = self.modeladmin.get_common_context(self.request)
-        instance = self.field.get_instance()
+        instance = self.patched_field.get_instance()
         form_class_attrs = {
             "sample": instance,
         }
@@ -79,32 +120,42 @@ class FieldEditor:
         return render(self.request, "admin/core/flexformfield/field_editor/code.html", ctx, content_type="text/plain")
 
     def render(self):
-        if self.request.method == "POST":
-            pass
-        instance = self.field.get_instance()
+        instance = self.patched_field.get_instance()
         form_class_attrs = {
             "sample": instance,
         }
         form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
         ctx = self.modeladmin.get_common_context(self.request)
-        ctx["form"] = form_class()
+        if self.request.method == "POST":
+            form = form_class(self.request.POST)
+            ctx["valid"] = form.is_valid()
+        else:
+            form = form_class()
+            ctx["valid"] = None
+
+        ctx["form"] = form
         ctx["instance"] = instance
 
         return render(self.request, "admin/core/flexformfield/field_editor/preview.html", ctx)
 
-        # config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
-        # base = self.get_object(request, pk)
-        # base.required = config.get("kwargs", {}).get("required") == "on"
-        # self._editor_get_instance(base, config)
-        # rendered = json.dumps(base.advanced, indent=4)
-        # rendered = ""
-        # return HttpResponse(rendered, content_type="text/plain")
-
-    def get_forms(self, instance=None):
-        return [Form(prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()]
+    def get_forms(self, data=None) -> Dict:
+        if data:
+            return {prefix: Form(data, prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()}
+        elif self.request.method == "POST":
+            return {
+                prefix: Form(self.request.POST, prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()
+            }
+        return {prefix: Form(prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()}
 
     def refresh(self):
-        return HttpResponse("Ok")
+        forms = self.get_forms()
+        if all(map(lambda f: f.is_valid(), forms.values())):
+            data = self.request.POST.dict()
+            data.pop("csrfmiddlewaretoken")
+            cache.set(self.cache_key, data)
+        else:
+            return JsonResponse({frm.prefix: frm.errors for frm in forms}, status=400)
+        return JsonResponse(data)
 
     def get(self, request, pk):
         ctx = self.modeladmin.get_common_context(request, pk)

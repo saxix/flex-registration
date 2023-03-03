@@ -372,7 +372,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     @view()
     def widget_attrs(self, request, pk):
         editor = FieldEditor(self, request, pk)
-        return editor.render()
+        return editor.get_configuration()
         # config = cache.get(f"/editor/field/{request.user.pk}/{pk}/", {})
         # base = self.get_object(request, pk)
         # base.required = config.get("kwargs", {}).get("required") == "on"

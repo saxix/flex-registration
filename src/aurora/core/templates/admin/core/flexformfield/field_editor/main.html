@@ -3,10 +3,10 @@
     <link rel="stylesheet" href="{% static "admin/field_editor/field_editor.css" %}">
     <script src="/static/admin/js/vendor/jquery/jquery.js"></script>
     <script src="/static/admin/js/jquery.init.js"></script>
-    <div>
-        <label for="radio_display">Render: <input type="radio" id="radio_display" checked name="output"></label>
-        <label for="radio_code">Code: <input type="radio" id="radio_code" name="output"></label>
-        <label for="radio_attrs">Advanced: <input type="radio" id="radio_attrs" name="output"></label>
+    <div class="toolbar">
+        <label for="radio_display"><input type="radio" id="radio_display" checked name="output">Render </label>
+        <label for="radio_code"><input type="radio" id="radio_code" name="output">Code </label>
+        <label for="radio_attrs"><input type="radio" id="radio_attrs" name="output">Advanced </label>
     </div>
     <div id="iframe-container">
         <iframe id="widget_display" style="width: 100%"
@@ -55,33 +55,25 @@
     <script>
         (function ($) {
             var refreshUrl = "{% url "admin:core_flexformfield_widget_refresh" original.pk %}";
-            var ws_scheme = window.location.protocol === "https:" ? "wss://" : "ws://";
-            const socket = new WebSocket(
-                ws_scheme
-                + window.location.host
-                + '/editor/field/'
-                + {{ user.pk }}
-                +'/'
-                + {{ original.pk }}
-                +'/'
-            );
+            var $iFrame1 = $('#widget_display');
+            var $iFrame2 = $('#widget_code');
+            var $iFrame3 = $('#widget_attrs');
 
-            socket.onmessage = function (e) {
-                document.getElementById('widget_display').contentWindow.location.reload();
-                document.getElementById('widget_code').contentWindow.location.reload();
-                document.getElementById('widget_attrs').contentWindow.location.reload();
-            };
+            var $radioRender = $("#radio_display");
+            var $radioCode = $('#radio_code');
+            var $radioAttributes = $('#radio_attrs');
 
             function update() {
                 var formData = $("form").serialize();
                 $.post(refreshUrl, formData)
                     .done(function (data) {
-                        console.log(data)
+                        $iFrame1[0].contentWindow.location = iFrame1[0].contentWindow.location.href;
+                        $iFrame2[0].contentWindow.location = iFrame2[0].contentWindow.location.href;
+                        $iFrame3[0].contentWindow.location = iFrame3[0].contentWindow.location.href;
                     })
-                    .fail(function () {
-                        console.log(data)
+                    .fail(function (xhr) {
+                        console.log("ERROR", xhr.responseJSON)
                     })
-                {#socket.send(formData);#}
             }
 
             $('input[type=checkbox],input[type=radio]').on('click', function () {
@@ -97,9 +89,9 @@
             });
 
             $("#radio_display, #radio_code, #radio_attrs").on("click", function () {
-                $("#radio_display").is(":checked") ? $("#widget_display").show() : $("#widget_display").hide();
-                $("#radio_code").is(":checked") ? $("#widget_code").show() : $("#widget_code").hide();
-                $("#radio_attrs").is(":checked") ? $("#widget_attrs").show() : $("#widget_attrs").hide();
+                $radioRender.is(":checked") ? $iFrame1.show() : $iFrame1.hide();
+                $radioCode.is(":checked") ? $iFrame2.show() : $iFrame2.hide();
+                $radioAttributes.is(":checked") ? $iFrame3.show() : $iFrame3.hide();
             })
 
 
