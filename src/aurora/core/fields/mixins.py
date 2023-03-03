@@ -33,6 +33,7 @@ class SmartFieldMixin:
         self.smart_attrs = kwargs.pop("smart_attrs", {})
         self.data_attrs = kwargs.pop("data", {})
         self.widget_kwargs = kwargs.pop("widget_kwargs", {})
+        self.datasource = kwargs.pop("datasource", None)
         super().__init__(*args, **kwargs)
 
     def is_stored(self):

@@ -1,14 +1,16 @@
+from functools import lru_cache
+
 import json
 
 from typing import Dict
 
 from django import forms
 from django.core.cache import caches
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.functional import cached_property
 
-from aurora.core.models import FlexFormField
+from aurora.core.models import FlexFormField, OptionSet
 from aurora.core.utils import merge_data
 
 cache = caches["default"]
@@ -26,9 +28,13 @@ class AdvancendAttrsMixin:
 class FlexFieldAttributesForm(AdvancendAttrsMixin, forms.ModelForm):
     required = forms.BooleanField(widget=forms.CheckboxInput, required=False)
 
+    def __init__(self, *args, **kwargs):
+        kwargs["instance"] = kwargs["field"]
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = FlexFormField
-        fields = ("field_type", "label", "name", "choices", "required", "validator", "regex")
+        fields = ("field_type", "label", "name", "required", "validator", "regex")
 
 
 class FormFieldAttributesForm(AdvancendAttrsMixin, forms.Form):
@@ -37,17 +43,24 @@ class FormFieldAttributesForm(AdvancendAttrsMixin, forms.Form):
 
 class WidgetAttributesForm(AdvancendAttrsMixin, forms.Form):
     placeholder = forms.CharField(required=False, help_text="placeholder for the input")
-    class_ = forms.CharField(label="Field class", required=False, help_text="Input CSS class to apply (will")
+    css_class = forms.CharField(label="Field class", required=False, help_text="Input CSS class to apply (will")
     extra_classes = forms.CharField(required=False, help_text="Input CSS classes to add input")
     fieldset = forms.CharField(label="Fieldset class", required=False, help_text="Fieldset CSS class to apply")
     onchange = forms.CharField(required=False, help_text="Javascfipt onchange event")
+
+
+@lru_cache()
+def get_datasources():
+    v = OptionSet.objects.values_list("name", flat=True)
+    return [("", "")] + list(zip(v, v))
 
 
 class SmartAttributesForm(AdvancendAttrsMixin, forms.Form):
     question = forms.CharField(required=False, help_text="If set, user must check related box to display the field")
     hint = forms.CharField(required=False, help_text="Text to display above the input")
     description = forms.CharField(required=False, help_text="Text to display below the input")
-    datasource = forms.CharField(required=False, help_text="Datasource name for ajax field")
+    datasource = forms.ChoiceField(choices=get_datasources, required=False, help_text="Datasource name for ajax field")
+    choices = forms.JSONField(required=False)
 
 
 class FieldEditor:
@@ -130,7 +143,7 @@ class FieldEditor:
             form = form_class(self.request.POST)
             ctx["valid"] = form.is_valid()
         else:
-            form = form_class()
+            form = form_class(initial={"sample": self.patched_field.get_default_value()})
             ctx["valid"] = None
 
         ctx["form"] = form
@@ -154,13 +167,11 @@ class FieldEditor:
             data.pop("csrfmiddlewaretoken")
             cache.set(self.cache_key, data)
         else:
-            return JsonResponse({frm.prefix: frm.errors for frm in forms}, status=400)
+            return JsonResponse({prefix: frm.errors for prefix, frm in forms.items()}, status=400)
         return JsonResponse(data)
 
     def get(self, request, pk):
         ctx = self.modeladmin.get_common_context(request, pk)
-        # i = {"field_type": fqn(obj.field_type)}
-        # i.update(**obj.advanced.get("kwargs", {}))
         formField = FlexFieldAttributesForm(prefix="field", instance=self.field, field=self.field)
         formAttrs = FormFieldAttributesForm(prefix="kwargs", field=self.field)
         formWidget = WidgetAttributesForm(prefix="widget_kwargs", field=self.field)
@@ -173,4 +184,7 @@ class FieldEditor:
         return render(request, "admin/core/flexformfield/field_editor/main.html", ctx)
 
     def post(self, request, pk):
-        pass
+        forms = self.get_forms()
+        if all(map(lambda f: f.is_valid(), forms.values())):
+            self.patched_field.save()
+            return HttpResponseRedirect("..")

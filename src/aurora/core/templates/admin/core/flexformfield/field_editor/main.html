@@ -16,6 +16,7 @@
         <iframe id="widget_attrs" style="display: none; width: 100%"
                 src="{% url "admin:core_flexformfield_widget_attrs" original.pk %}"></iframe>
     </div>
+    <div id="errors"></div>
     <table>
         <tr>
             <td>
@@ -52,50 +53,6 @@
             </td>
         </tr>
     </table>
-    <script>
-        (function ($) {
-            var refreshUrl = "{% url "admin:core_flexformfield_widget_refresh" original.pk %}";
-            var $iFrame1 = $('#widget_display');
-            var $iFrame2 = $('#widget_code');
-            var $iFrame3 = $('#widget_attrs');
+    <script id="field_editor_script" src="{% static "admin/field_editor/field_editor.js" %}" data-url="{% url "admin:core_flexformfield_widget_refresh" original.pk %}">
 
-            var $radioRender = $("#radio_display");
-            var $radioCode = $('#radio_code');
-            var $radioAttributes = $('#radio_attrs');
-
-            function update() {
-                var formData = $("form").serialize();
-                $.post(refreshUrl, formData)
-                    .done(function (data) {
-                        $iFrame1[0].contentWindow.location = iFrame1[0].contentWindow.location.href;
-                        $iFrame2[0].contentWindow.location = iFrame2[0].contentWindow.location.href;
-                        $iFrame3[0].contentWindow.location = iFrame3[0].contentWindow.location.href;
-                    })
-                    .fail(function (xhr) {
-                        console.log("ERROR", xhr.responseJSON)
-                    })
-            }
-
-            $('input[type=checkbox],input[type=radio]').on('click', function () {
-                update();
-            });
-            $('select').on('change', function () {
-                update();
-            });
-            $('input,textarea').on('keyup', function () {
-                clearTimeout($.data(this, 'timer'));
-                var wait = setTimeout(update, 500);
-                $(this).data('timer', wait);
-            });
-
-            $("#radio_display, #radio_code, #radio_attrs").on("click", function () {
-                $radioRender.is(":checked") ? $iFrame1.show() : $iFrame1.hide();
-                $radioCode.is(":checked") ? $iFrame2.show() : $iFrame2.hide();
-                $radioAttributes.is(":checked") ? $iFrame3.show() : $iFrame3.hide();
-            })
-
-
-        })(django.jQuery);
-
-    </script>
 {% endblock action-content %}

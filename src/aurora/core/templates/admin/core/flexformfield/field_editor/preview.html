@@ -11,6 +11,7 @@
 <script src="{% static "admin/js/jquery.init.js" %}"></script>
 <script src="{% static "smart_validation.js" %}"></script>
 <script src="{% static "smart.js" %}"></script>
+{{ form.media }}
 {% if request.method == "POST" %}
     {% if valid %}
         <div class="mb-10 w-full text-capitalize m-auto text-center text-xl border rounded">Success</div>
