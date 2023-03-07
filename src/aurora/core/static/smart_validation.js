@@ -74,6 +74,18 @@ smart = {
             console.error(error);
         }
     },
+    setRequired: function (targets, onOff) {
+        console.log(111.2, targets, onOff);
+        $(targets).each(function (i, e) {
+            if (onOff) {
+                $(e).attr("required", true);
+                $c.find('.required-label').show();
+            } else {
+                $(e).attr("required", false);
+                $c.find('.required-label').hide();
+            }
+        });
+    },
     setRequiredOnValue: function (sender, targets, value) {
         try {
             var cmp = value.toLowerCase();
@@ -147,5 +159,45 @@ smart = {
     },
     updateDeleteLabel: function (sender, label) {
         $(sender).parents(".form-container").find(".delete-button").text(label + $(sender).val());
+    },
+    getControlledField: function (questionCheckbox) {
+        var $container = $(questionCheckbox).parents("fieldset").find(".field-container");
+        return $container.find("input,select, textarea");
+    },
+    has_any_value: function ($sender) {
+        var inputType = $sender.attr('type')
+        if ((inputType === "radio") || (inputType === "checkbox")) {
+            $sender.is(":checked");
+        } else {
+            return $sender.val().trim() !== '';
+        }
+    },
+    getField: function ($sender) {
+        var $fieldset = $($sender).parents("fieldset");
+        var $form = $($sender).parents(".form-container");
+        var $container = $fieldset.find(".field-container");
+        var $question = $fieldset.find(".question");
+        var $input = $container.find("input,select, textarea");
+        var inputType = $sender.attr('type')
+        var value = null;
+        var hasValue = null;
+        if ((inputType === "radio") || (inputType === "checkbox")) {
+            value = $sender.val();
+            hasValue = $sender.is(":checked");
+        } else {
+            value = $sender.val();
+            hasValue = (value !== '');
+        }
+        return {
+            'fieldset': $fieldset,
+            'container': $container,
+            'question': $question,
+            'input': $input,
+            'inputType': inputType,
+            'form': $form,
+            'value': value,
+            'hasValue': hasValue,
+            'checked': $sender.is(":checked"),
+        }
     }
 };

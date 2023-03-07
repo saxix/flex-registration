@@ -1,13 +1,12 @@
-from functools import lru_cache
-
 import json
-
+from functools import lru_cache
 from typing import Dict
 
 from django import forms
 from django.core.cache import caches
-from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
+from django.template import Context, Template
 from django.utils.functional import cached_property
 
 from aurora.core.models import FlexFormField, OptionSet
@@ -46,7 +45,7 @@ class WidgetAttributesForm(AdvancendAttrsMixin, forms.Form):
     css_class = forms.CharField(label="Field class", required=False, help_text="Input CSS class to apply (will")
     extra_classes = forms.CharField(required=False, help_text="Input CSS classes to add input")
     fieldset = forms.CharField(label="Fieldset class", required=False, help_text="Fieldset CSS class to apply")
-    onchange = forms.CharField(required=False, help_text="Javascfipt onchange event")
+    onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascfipt onchange event")
 
 
 @lru_cache()
@@ -57,18 +56,44 @@ def get_datasources():
 
 class SmartAttributesForm(AdvancendAttrsMixin, forms.Form):
     question = forms.CharField(required=False, help_text="If set, user must check related box to display the field")
+    question_onchange = forms.CharField(
+        widget=forms.Textarea, required=False, help_text="Js to tigger on 'question' check/uncheck "
+    )
     hint = forms.CharField(required=False, help_text="Text to display above the input")
     description = forms.CharField(required=False, help_text="Text to display below the input")
     datasource = forms.ChoiceField(choices=get_datasources, required=False, help_text="Datasource name for ajax field")
     choices = forms.JSONField(required=False)
+    onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascfipt onchange event")
+    visible = forms.BooleanField(required=False, help_text="Hide/Show field")
+
+
+class CssForm(AdvancendAttrsMixin, forms.Form):
+    input = forms.CharField(required=False, help_text="")
+    label = forms.CharField(required=False, help_text="")
+    fieldset = forms.CharField(required=False, help_text="")
+    question = forms.CharField(required=False, help_text="")
+
+
+DEFAULTS = {
+    "css": {"question": "cursor-pointer", "label": "block uppercase tracking-wide text-gray-700 font-bold mb-2"},
+}
+
+
+def get_initial(field, prefix):
+    base = DEFAULTS.get(prefix, {})
+    for k, v in field.advanced.get(prefix, {}).items():
+        if v:
+            base[k] = v
+    return base
 
 
 class FieldEditor:
     FORMS = {
         "field": FlexFieldAttributesForm,
         "kwargs": FormFieldAttributesForm,
-        "widget_kwargs": WidgetAttributesForm,
+        "widget": WidgetAttributesForm,
         "smart": SmartAttributesForm,
+        "css": CssForm,
     }
 
     def __init__(self, modeladmin, request, pk):
@@ -95,23 +120,6 @@ class FieldEditor:
                 merged = merge_data(fld.advanced, {**{prefix: frm.cleaned_data}})
                 fld.advanced = merged
         return fld
-        # formField = FlexFieldAttributesForm(config, prefix="field")
-        # formAttrs = FormFieldAttributesForm(config, prefix="kwargs")
-        # formWidget = WidgetAttributesForm(config, prefix="widget_kwargs")
-        # formSmart = SmartAttributesForm(config, prefix="smart")
-        # if all(map(lambda x: x.is_valid(), [formSmart, formWidget, formAttrs, formField])):
-        #     base.required = parse_bool(config.get("field", {}).pop("required", False))
-        #     for k, v in config.get("field", {}).items():
-        #         setattr(base, k, v)
-        #     if field_type := config.get("field", {}).pop("field_type", None):
-        #         base.field_type = field_type
-        #     #     base.field_type = field_type
-        #     config = merge_data(base.advanced, {**formWidget.cleaned_data})
-        #     base.advanced = config
-        # else:
-        #     raise ValidationError(formField.errors)
-        # instance = base.get_instance()
-        # return instance
 
     def patch(self, request, pk):
         pass
@@ -130,7 +138,17 @@ class FieldEditor:
         ctx = self.modeladmin.get_common_context(self.request)
         ctx["form"] = form_class()
         ctx["instance"] = instance
-        return render(self.request, "admin/core/flexformfield/field_editor/code.html", ctx, content_type="text/plain")
+        code = Template(
+            "{% for field in form %}{% spaceless %}"
+            '{% include "smart/_fieldset.html" %}{% endspaceless %}{% endfor %}'
+        ).render(Context(ctx))
+        from pygments import highlight
+        from pygments.formatters.html import HtmlFormatter
+        from pygments.lexers import HtmlLexer
+
+        formatter = HtmlFormatter(style="default", full=True)
+        ctx["code"] = highlight(code, HtmlLexer(), formatter)
+        return render(self.request, "admin/core/flexformfield/field_editor/code.html", ctx, content_type="text/html")
 
     def render(self):
         instance = self.patched_field.get_instance()
@@ -154,11 +172,17 @@ class FieldEditor:
     def get_forms(self, data=None) -> Dict:
         if data:
             return {prefix: Form(data, prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()}
-        elif self.request.method == "POST":
+        if self.request.method == "POST":
             return {
-                prefix: Form(self.request.POST, prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()
+                prefix: Form(
+                    self.request.POST, prefix=prefix, field=self.field, initial=get_initial(self.field, prefix)
+                )
+                for prefix, Form in self.FORMS.items()
             }
-        return {prefix: Form(prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()}
+        return {
+            prefix: Form(prefix=prefix, field=self.field, initial=get_initial(self.field, prefix))
+            for prefix, Form in self.FORMS.items()
+        }
 
     def refresh(self):
         forms = self.get_forms()
@@ -172,19 +196,17 @@ class FieldEditor:
 
     def get(self, request, pk):
         ctx = self.modeladmin.get_common_context(request, pk)
-        formField = FlexFieldAttributesForm(prefix="field", instance=self.field, field=self.field)
-        formAttrs = FormFieldAttributesForm(prefix="kwargs", field=self.field)
-        formWidget = WidgetAttributesForm(prefix="widget_kwargs", field=self.field)
-        formSmart = SmartAttributesForm(prefix="smart", field=self.field)
-
-        ctx["form_field"] = formField
-        ctx["form_attrs"] = formAttrs
-        ctx["form_widget"] = formWidget
-        ctx["form_smart"] = formSmart
+        # formField = FlexFieldAttributesForm(prefix="field", instance=self.field, field=self.field)
+        # formAttrs = FormFieldAttributesForm(prefix="kwargs", field=self.field)
+        # formWidget = WidgetAttributesForm(prefix="widget_kwargs", field=self.field)
+        # formSmart = SmartAttributesForm(prefix="smart", field=self.field)
+        # cssFoem = SmartAttributesForm(prefix="smart", field=self.field)
+        for prefix, frm in self.get_forms().items():
+            ctx[f"form_{prefix}"] = frm
         return render(request, "admin/core/flexformfield/field_editor/main.html", ctx)
 
     def post(self, request, pk):
         forms = self.get_forms()
         if all(map(lambda f: f.is_valid(), forms.values())):
             self.patched_field.save()
-            return HttpResponseRedirect("..")
+            return HttpResponseRedirect(".")

@@ -1,7 +1,6 @@
-import re
-
 import json
 import logging
+import re
 from datetime import date, datetime, time
 from json import JSONDecodeError
 from pathlib import Path
@@ -514,7 +513,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
 
     flex_form = models.ForeignKey(FlexForm, on_delete=models.CASCADE, related_name="fields")
     label = models.CharField(max_length=2000)
-    name = CICharField(max_length=100, blank=True, validators=[RegexValidator("^[a-z_]*$")])
+    name = CICharField(max_length=100, blank=True, validators=[RegexValidator("^[a-z_0-9]*$")])
     field_type = StrategyClassField(registry=field_registry, import_error=import_custom_field)
     choices = models.CharField(max_length=2000, blank=True, null=True)
     required = models.BooleanField(default=False)
@@ -570,9 +569,15 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             # data_attrs
             field_type = self.field_type
             advanced = self.advanced.copy()
-
-            field_kwargs = self.advanced.get("kwargs", {}).copy()
-            widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
+            # backward compatibility code
+            if "field" not in self.advanced:
+                field_kwargs = self.advanced.get("field", {}).copy()
+            else:
+                field_kwargs = self.advanced.get("kwargs", {}).copy()
+            if "widget" not in self.advanced:
+                widget_kwargs = self.advanced.get("widget", {}).copy()
+            else:
+                widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             smart_attrs = advanced.pop("smart", {}).copy()
 
             field_kwargs["required"] = False
@@ -609,6 +614,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             field_kwargs["datasource"] = smart_attrs["datasource"]
         elif "datasource" in self.advanced:
             field_kwargs["datasource"] = self.advanced["datasource"]
+
         if hasattr(field_type, "choices"):
             if "choices" in smart_attrs:
                 field_kwargs["choices"] = smart_attrs["choices"]

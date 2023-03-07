@@ -23,7 +23,7 @@ table tr th {
 table tr td {
   width: 100%;
 }
-table tr td input, table tr td select {
+table tr td input, table tr td select, table tr td textarea {
   width: 100%;
 }
 
