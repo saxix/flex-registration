@@ -3,6 +3,8 @@ import logging
 import re
 from datetime import date, datetime, time
 from json import JSONDecodeError
+
+from django.utils.deconstruct import deconstructible
 from pathlib import Path
 
 import jsonpickle
@@ -472,6 +474,7 @@ FIELD_KWARGS = {
 }
 
 
+@deconstructible
 class RegexPatternValidator:
     def __call__(self, value):
         try:
