@@ -95,8 +95,13 @@ http {
             gzip_disable "MSIE [1-6]\.";
             gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
          }
-
         location / {
+            root /var/nginx/;
+            try_files /system/maintenance.html
+                      @aurora;
+        }
+        location @aurora {
+            try_files $uri /images/default.gif;
             http2_push https://browser.sentry-cdn.com/5.30.0/bundle.min.js;
             http2_push https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css;
 
