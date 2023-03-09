@@ -21,13 +21,17 @@
                     <th>#</th>
                     <th>Msg ID</th>
                     <th>{{ language }} ({{ language_code }})</th>
+                    <th>Found</th>
+                    <th>Match</th>
                 </tr>
 
                 {% for line in rows %}
                     <tr>
                         <td>{{ line.0 }}</td>
-                        <td>{{ line.1 }}</td>
-                        <td>{{ line.2 }}</td>
+                        <td>{{ line.1.msgid }}</td>
+                        <td>{{ line.1.msgstr }}</td>
+                        <td>{{ line.1.found }}</td>
+                        <td>{{ line.1.match }}</td>
                     </tr>
                 {% endfor %}</table>
             <input type="submit" name="save" id="save" value="Save">

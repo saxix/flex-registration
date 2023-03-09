@@ -92,7 +92,7 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
         ctx = self.get_common_context(request, media=self.media, title="Import Translations File", pre={}, post={})
         ctx["rows"] = []
         if request.method == "POST":
-            key = f"translation_{md5(request.session.session_key.encode()).hexdigest()}"
+            key = f"translation_{request.user.pk}_{md5(request.session.session_key.encode()).hexdigest()}"
             if "import" in request.POST:
                 form = ImportLanguageForm(request.POST, request.FILES)
                 opts_form = CSVOptionsForm(request.POST, prefix="csv")
@@ -116,7 +116,18 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
                         for row in reader:
                             if has_header and line_count == 1:
                                 continue
-                            ctx["rows"].append([line_count, *row])
+                            found = Message.objects.filter(msgid=row[0]).first()
+                            ctx["rows"].append(
+                                [
+                                    line_count,
+                                    {
+                                        "msgid": row[0],
+                                        "msgstr": row[1],
+                                        "found": bool(found),
+                                        "match": found and found.msgstr == row[1],
+                                    },
+                                ]
+                            )
                             line_count += 1
                         data = {
                             "language": ctx["language"],
@@ -124,12 +135,11 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
                             "messages": ctx["rows"],
                         }
                         cache.set(key, data, timeout=86400, version=1)
-
             elif "save" in request.POST:
                 data = cache.get(key, version=1)
                 lang = data["language_code"]
                 for row in data["messages"]:
-                    Message.objects.update_or_create(locale=lang, msgid=row[1], msgstr=row[2])
+                    Message.objects.update_or_create(locale=lang, msgid=row[1], defaults={"msgstr": row[2]})
                 self.message_user(request, "Messages updated")
                 base_url = reverse("admin:i18n_message_changelist")
                 return HttpResponseRedirect(f"{base_url}?locale__exact={lang}")

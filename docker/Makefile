@@ -86,7 +86,7 @@ dev:
 			-e ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
 			-e DJANGO_ADMIN_URL=admin/ \
 			-e ADMINS="" \
-			-e MAINTENANCE_MODE="on" \
+			-e MAINTENANCE_MODE="off" \
 			-e LANGUAGE_CODE="uk-ua" \
 			-e ALLOWED_HOSTS="*" \
 			-e DATABASE_URL="${DATABASE_URL}" \
