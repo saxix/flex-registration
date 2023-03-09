@@ -1,3 +1,5 @@
+from adminfilters.querystring import QueryStringFilter
+from django.db.transaction import atomic
 from hashlib import md5
 
 from django.core.cache import caches
@@ -11,7 +13,6 @@ from urllib.parse import unquote
 
 from admin_extra_buttons.decorators import button, view
 from adminfilters.combo import ChoicesFieldComboFilter
-from adminfilters.value import ValueFilter
 from dateutil.utils import today
 from django.conf import settings
 from django.contrib import messages
@@ -46,12 +47,8 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
         "draft",
         "used",
         ("locale", ChoicesFieldComboFilter),
-        ("msgid", ValueFilter),
-        ("msgstr", ValueFilter),
-        ("msgcode", ValueFilter),
-        ("md5", ValueFilter),
+        QueryStringFilter,
         "last_hit",
-        ("msgstr", ValueFilter),
     )
     fieldsets = (
         (
@@ -137,12 +134,34 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
                         cache.set(key, data, timeout=86400, version=1)
             elif "save" in request.POST:
                 data = cache.get(key, version=1)
+                selection = request.POST.getlist("selection")
                 lang = data["language_code"]
-                for row in data["messages"]:
-                    Message.objects.update_or_create(locale=lang, msgid=row[1], defaults={"msgstr": row[2]})
-                self.message_user(request, "Messages updated")
-                base_url = reverse("admin:i18n_message_changelist")
-                return HttpResponseRedirect(f"{base_url}?locale__exact={lang}")
+                processed = selected = updated = created = 0
+                ids = []
+                with atomic():
+                    for i, row in enumerate(data["messages"], 1):
+                        processed += 1
+                        if str(i) in selection:
+                            selected += 1
+                            info = row[1]
+                            __, c = Message.objects.update_or_create(
+                                locale=lang, msgid=info["msgid"], defaults={"msgstr": info["msgstr"]}
+                            )
+                            ids.append(str(__.pk))
+                            if c:
+                                created += 1
+                            else:
+                                updated += 1
+                    self.message_user(
+                        request,
+                        f"Messages processed: "
+                        f"Processed: {processed}, "
+                        f"Selected: {selected}, "
+                        f"Created: {created}, "
+                        f"Updated: {updated}",
+                    )
+                    base_url = reverse("admin:i18n_message_changelist")
+                    return HttpResponseRedirect(f"{base_url}?locale__exact={lang}&qs=id__in={','.join(ids)}")
         else:
             form = ImportLanguageForm()
             opts_form = CSVOptionsForm(prefix="csv", initial=CSVOptionsForm.defaults)
