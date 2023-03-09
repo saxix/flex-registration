@@ -454,7 +454,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
     @view()
     def create_translation(self, request, pk):
-        from aurora.i18n.forms import TranslationForm
+        from aurora.i18n.forms import LanguageForm
         from aurora.i18n.models import Message
 
         ctx = self.get_common_context(
@@ -465,7 +465,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         )
         instance: Registration = ctx["original"]
         if request.method == "POST":
-            form = TranslationForm(request.POST)
+            form = LanguageForm(request.POST)
             if form.is_valid():
                 locale = form.cleaned_data["locale"]
                 existing = Message.objects.filter(locale=locale).count()
@@ -505,7 +505,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             else:
                 ctx["form"] = form
         else:
-            form = TranslationForm()
+            form = LanguageForm()
             ctx["form"] = form
         return render(request, "admin/registration/registration/translation.html", ctx)
 

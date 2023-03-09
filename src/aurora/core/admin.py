@@ -114,6 +114,7 @@ class ProjectAdmin(SyncMixin, MPTTModelAdmin):
     mptt_indent_field = "name"
     search_fields = ("name",)
     protocol_class = AuroraSyncProjectProtocol
+    autocomplete_fields = "parent, "
 
     def get_search_results(self, request, queryset, search_term):
         queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)

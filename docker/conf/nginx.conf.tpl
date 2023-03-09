@@ -97,11 +97,10 @@ http {
          }
         location / {
             root /var/nginx/;
-            try_files /system/maintenance.html
-                      @aurora;
+            try_files $uri /system/maintenance.html @aurora;
         }
+
         location @aurora {
-            try_files $uri /images/default.gif;
             http2_push https://browser.sentry-cdn.com/5.30.0/bundle.min.js;
             http2_push https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css;
 
@@ -112,5 +111,6 @@ http {
             proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
             proxy_set_header X-Scheme ${DOLLAR}scheme;
         }
+
     }
 }
