@@ -9,7 +9,6 @@ from django.shortcuts import render
 from django.template import Context, Template
 from django.utils.functional import cached_property
 
-from aurora.core.fields.widgets import JavascriptEditor
 from aurora.core.models import FlexFormField, OptionSet
 from aurora.core.utils import merge_data
 
@@ -46,9 +45,10 @@ class WidgetAttributesForm(AdvancendAttrsMixin, forms.Form):
     css_class = forms.CharField(label="Field class", required=False, help_text="Input CSS class to apply (will")
     extra_classes = forms.CharField(required=False, help_text="Input CSS classes to add input")
     fieldset = forms.CharField(label="Fieldset class", required=False, help_text="Fieldset CSS class to apply")
-    onchange = forms.CharField(
-        widget=JavascriptEditor(toolbar=True), required=False, help_text="Javascript onchange event"
-    )
+    # onchange = forms.CharField(
+    #     widget=JavascriptEditor(toolbar=True), required=False, help_text="Javascript onchange event"
+    # )
+    onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onchange event")
 
 
 def get_datasources():
