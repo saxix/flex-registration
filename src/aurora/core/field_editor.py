@@ -49,6 +49,7 @@ class WidgetAttributesForm(AdvancendAttrsMixin, forms.Form):
     #     widget=JavascriptEditor(toolbar=True), required=False, help_text="Javascript onchange event"
     # )
     onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onchange event")
+    onblur = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onblur event")
 
 
 def get_datasources():
@@ -68,7 +69,8 @@ class SmartAttributesForm(AdvancendAttrsMixin, forms.Form):
         choices=get_datasources, required=False, help_text="Parent Datasource name for ajax field"
     )
     choices = forms.JSONField(required=False)
-    onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascfipt onchange event")
+    # onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onchange event")
+    # onblur = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onblur event")
     visible = forms.BooleanField(required=False, help_text="Hide/Show field")
 
 
