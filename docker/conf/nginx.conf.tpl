@@ -2,7 +2,7 @@ worker_processes 1;
 events {
   worker_connections 512;
 }
-daemon on;
+daemon ${NGINX_DAEMON};
 error_log /dev/stdout;
 
 http {
@@ -97,7 +97,11 @@ http {
          }
         location / {
             root /var/nginx/;
-            try_files $uri /system/maintenance.html @aurora;
+            try_files /var/nginx/system/maintenance.html
+                      /var/nginx/maintenance.html
+                      system/maintenance.html
+                      maintenance.html
+                      @aurora;
         }
 
         location @aurora {
