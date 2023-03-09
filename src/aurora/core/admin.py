@@ -27,7 +27,7 @@ from ..administration.filters import BaseAutoCompleteFilter
 from ..administration.mixin import LoadDumpMixin
 from .admin_sync import SyncMixin
 from .field_editor import FieldEditor
-from .fields.widgets import PythonEditor
+from .fields.widgets import JavascriptEditor
 from .forms import Select2Widget, ValidatorForm
 from .models import (
     FIELD_KWARGS,
@@ -82,9 +82,9 @@ class Select2RelatedFieldComboFilter(RelatedFieldComboFilter):
 
 class ValidatorTestForm(forms.Form):
     code = forms.CharField(
-        widget=PythonEditor,
+        widget=JavascriptEditor,
     )
-    input = forms.CharField(widget=PythonEditor(toolbar=False), required=False)
+    input = forms.CharField(widget=JavascriptEditor(toolbar=False), required=False)
 
 
 @register(Organization)

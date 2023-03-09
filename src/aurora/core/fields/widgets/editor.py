@@ -1,7 +1,7 @@
 from django import forms
 
 
-class PythonEditor(forms.Textarea):
+class JavascriptEditor(forms.Textarea):
     template_name = "admin/core/widgets/editor.html"
 
     def __init__(self, *args, **kwargs):

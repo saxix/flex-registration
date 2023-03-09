@@ -4,11 +4,11 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseFormSet
 from django.templatetags.static import static
 
-from .fields.widgets import PythonEditor
+from .fields.widgets import JavascriptEditor
 
 
 class ValidatorForm(forms.ModelForm):
-    code = forms.CharField(widget=PythonEditor)
+    code = forms.CharField(widget=JavascriptEditor)
 
 
 class Select2Widget(forms.Select):
