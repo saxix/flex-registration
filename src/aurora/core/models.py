@@ -3,8 +3,6 @@ import logging
 import re
 from datetime import date, datetime, time
 from json import JSONDecodeError
-
-from django.utils.deconstruct import deconstructible
 from pathlib import Path
 
 import jsonpickle
@@ -19,6 +17,7 @@ from django.db import models
 from django.forms import formset_factory
 from django.template.defaultfilters import pluralize, slugify
 from django.urls import reverse
+from django.utils.deconstruct import deconstructible
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language

@@ -187,7 +187,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 try:
     if REDIS_CONNSTR := env("REDIS_CONNSTR"):
-        os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR}"
+        os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR},client_class=django_redis.client.DefaultClient"
 except Exception as e:  # pragma: no cover
     logging.exception(e)
 

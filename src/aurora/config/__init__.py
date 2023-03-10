@@ -34,7 +34,7 @@ MANDATORY = {
 OPTIONS = {
     "ADMINS": (parse_emails, ""),
     "ADMIN_SYNC_CONFIG": (str, "admin_sync.conf.DjangoConstance"),
-    "ALLOWED_HOSTS": (list, "*"),
+    "ALLOWED_HOSTS": (list, ["*"]),
     "AUTHENTICATION_BACKENDS": (list, []),
     "AZURE_AUTHORITY_HOST": (str, ""),
     "AZURE_CLIENT_ID": (str, ""),

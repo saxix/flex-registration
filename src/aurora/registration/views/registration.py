@@ -150,7 +150,7 @@ class RegistrationMixin:
 def check_access(view_func):
     def wrapped_view(*args, **kwargs):
         view, request = args
-        if view.registration.protected:
+        if view.registration.protected and not state.collect_messages:
             login_url = "%s?next=%s" % (settings.LOGIN_URL, request.path)
             if request.user.is_anonymous:
                 return HttpResponseRedirect(login_url)
@@ -312,7 +312,8 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
             data["index2"] = data[form.indexes["2"]]
         if form.indexes["3"]:
             data["index3"] = data[form.indexes["3"]]
-        record = self.registration.add_record(data)
+        if not state.collect_messages:
+            record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)
 

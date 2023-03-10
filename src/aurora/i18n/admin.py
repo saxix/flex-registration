@@ -1,22 +1,19 @@
-from adminfilters.querystring import QueryStringFilter
-from django.db.transaction import atomic
-from hashlib import md5
-
-from django.core.cache import caches
-from io import TextIOWrapper
-
 import csv
-
 import logging
+from hashlib import md5
+from io import TextIOWrapper
 from unittest.mock import Mock
 from urllib.parse import unquote
 
 from admin_extra_buttons.decorators import button, view
 from adminfilters.combo import ChoicesFieldComboFilter
+from adminfilters.querystring import QueryStringFilter
 from dateutil.utils import today
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import register
+from django.core.cache import caches
+from django.db.transaction import atomic
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.template import loader
@@ -26,10 +23,11 @@ from django.utils.translation import get_language
 from smart_admin.modeladmin import SmartModelAdmin
 
 from ..core.admin_sync import SyncMixin
+from ..core.forms import CSVOptionsForm
 from ..core.models import FlexForm
 from ..state import state
 from .engine import translator
-from .forms import LanguageForm, ImportLanguageForm, CSVOptionsForm
+from .forms import ImportLanguageForm, LanguageForm
 from .models import Message
 
 logger = logging.getLogger(__name__)
@@ -102,7 +100,7 @@ class MessageAdmin(SyncMixin, SmartModelAdmin):
                         ctx["language"] = dict(form.fields["locale"].choices)[ctx["language_code"]]
                         self.message_user(
                             request,
-                            "Uploaded file successed (%.2f MB)" % (csv_file.size / 1000),
+                            "Uploaded file succeeded (%.2f MB)" % (csv_file.size / 1000),
                         )
                         rows = TextIOWrapper(csv_file, encoding="utf-8")
                         rows.seek(0)
