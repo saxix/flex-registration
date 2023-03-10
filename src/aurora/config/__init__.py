@@ -85,7 +85,7 @@ OPTIONS = {
     "SESSION_COOKIE_NAME": (str, "aurora_id"),
     "SESSION_COOKIE_SECURE": (bool, "false"),
     "SMART_ADMIN_BOOKMARKS": (parse_bookmarks, ""),
-    "STATICFILES_STORAGE": (str, "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"),
+    "STATICFILES_STORAGE": (str, "aurora.web.storage.ForgivingManifestStaticFilesStorage"),
     "USE_HTTPS": (bool, False),
     "USE_X_FORWARDED_HOST": (bool, "false"),
     "SITE_ID": (int, 1),

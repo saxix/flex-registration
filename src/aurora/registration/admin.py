@@ -187,25 +187,29 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             form = RegistrationExportForm(request.POST, initial={"include": ".*"})
             opts_form = CSVOptionsForm(request.POST, prefix="csv", initial=CSVOptionsForm.defaults)
             fmt_form = DateFormatsForm(request.POST, prefix="fmt", initial=DateFormatsForm.defaults)
-            if form.is_valid() and opts_form.is_valid() and fmt_form.is_valid():
-                filters, exclude = form.cleaned_data["filters"]
-                include_fields = form.cleaned_data["include"]
-                exclude_fields = form.cleaned_data["exclude"]
-                ctx["filters"] = filters
-                ctx["exclude"] = exclude
-                qs = (
-                    Record.objects.filter(registration__id=pk)
-                    .defer(
-                        "storage",
-                        "counters",
-                        "files",
+            try:
+                if form.is_valid() and opts_form.is_valid() and fmt_form.is_valid():
+                    filters, exclude = form.cleaned_data["filters"]
+                    include_fields = form.cleaned_data["include"]
+                    exclude_fields = form.cleaned_data["exclude"]
+                    ctx["filters"] = filters
+                    ctx["exclude"] = exclude
+                    qs = (
+                        Record.objects.filter(registration__id=pk)
+                        .defer(
+                            "storage",
+                            "counters",
+                            "files",
+                        )
+                        .filter(**filters)
+                        .exclude(**exclude)
+                        .values("fields", "id", "ignored", "timestamp", "registration_id")
                     )
-                    .filter(**filters)
-                    .exclude(**exclude)
-                    .values("fields", "id", "ignored", "timestamp", "registration_id")
-                )
-                records = [build_dict(r, **fmt_form.cleaned_data) for r in qs]
-                if records:
+                    if qs.count() >= 5000:
+                        raise Exception("Too many records please change your filters. (max 5000)")
+                    records = [build_dict(r, **fmt_form.cleaned_data) for r in qs]
+                    if not records:
+                        raise Exception("No records matching filtering criteria")
                     skipped = []
                     all_fields = []
                     for r in records:
@@ -241,8 +245,8 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                         ctx["all_fields"] = sorted(set(all_fields))
                         ctx["skipped"] = skipped
                         ctx["qs"] = records[:10]
-                else:
-                    self.message_user(request, "No records matching filtering criteria", messages.WARNING)
+            except Exception as e:
+                self.message_error_to_user(request, e)
         else:
             form = RegistrationExportForm(initial={"include": ".*"})
             opts_form = CSVOptionsForm(prefix="csv", initial=CSVOptionsForm.defaults)

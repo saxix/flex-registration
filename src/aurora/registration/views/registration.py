@@ -153,7 +153,9 @@ def check_access(view_func):
         if view.registration.protected and not state.collect_messages:
             login_url = "%s?next=%s" % (settings.LOGIN_URL, request.path)
             if request.user.is_anonymous:
-                return HttpResponseRedirect(login_url)
+                response = HttpResponseRedirect(login_url)
+                response.set_cookie("aurora_form", str(view.registration.pk))
+                return response
             if not request.user.has_perm("registration.register", view.registration):
                 messages.add_message(request, messages.ERROR, _("Sorry you do not have access to requested Form"))
                 return HttpResponseRedirect(login_url)

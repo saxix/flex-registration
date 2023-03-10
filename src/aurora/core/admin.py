@@ -1,5 +1,6 @@
 import json
 import logging
+from django.contrib import messages
 
 from admin_extra_buttons.decorators import button, link, view
 from admin_ordering.admin import OrderableAdmin
@@ -314,7 +315,9 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     def field_editor(self, request, pk):
         self.editor = FieldEditor(self, request, pk)
         if request.method == "POST":
-            return self.editor.post(request, pk)
+            ret = self.editor.post(request, pk)
+            self.message_user(request, "Saved", messages.SUCCESS)
+            return ret
         else:
             return self.editor.get(request, pk)
 
