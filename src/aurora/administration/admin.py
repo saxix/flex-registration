@@ -33,5 +33,12 @@ class AuroraUserAdmin(AdminActionPermMixin, UserAdmin):
         impersonate(request, hijacked)
 
 
+class AuroraUserAdminTemp(AuroraUserAdmin):
+    list_display = ("username", "email", "first_name", "last_name", "is_staff", "is_superuser", "user")
+
+    def get_list_display(self, request):
+        return super().get_list_display(request)
+
+
 class AuroraGroupAdmin(AdminActionPermMixin, SyncMixin, GroupAdmin):
     pass

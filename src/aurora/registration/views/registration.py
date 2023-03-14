@@ -154,7 +154,7 @@ def check_access(view_func):
             login_url = "%s?next=%s" % (settings.LOGIN_URL, request.path)
             if request.user.is_anonymous:
                 response = HttpResponseRedirect(login_url)
-                response.set_cookie("aurora_form", str(view.registration.pk))
+                response.set_cookie("aurora_form", str(view.registration.slug))
                 return response
             if not request.user.has_perm("registration.register", view.registration):
                 messages.add_message(request, messages.ERROR, _("Sorry you do not have access to requested Form"))
@@ -238,7 +238,7 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
         kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
-        m = forms.Media()
+        m = forms.Media(js=["smart_field.js"])
         m += ctx["form"].media
         for __, f in ctx["formsets"].items():
             m += f.media

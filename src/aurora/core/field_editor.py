@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.template import Context, Template
 from django.utils.functional import cached_property
 
+from aurora.core.fields.widgets import JavascriptEditor
 from aurora.core.models import FlexFormField, OptionSet
 from aurora.core.utils import merge_data
 
@@ -45,11 +46,9 @@ class WidgetAttributesForm(AdvancendAttrsMixin, forms.Form):
     css_class = forms.CharField(label="Field class", required=False, help_text="Input CSS class to apply (will")
     extra_classes = forms.CharField(required=False, help_text="Input CSS classes to add input")
     fieldset = forms.CharField(label="Fieldset class", required=False, help_text="Fieldset CSS class to apply")
-    # onchange = forms.CharField(
-    #     widget=JavascriptEditor(toolbar=True), required=False, help_text="Javascript onchange event"
-    # )
-    onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onchange event")
-    onblur = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onblur event")
+    onchange = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+    onblur = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+    onkeyup = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
 
 
 def get_datasources():
@@ -137,6 +136,12 @@ class FieldEditor:
         return HttpResponse(rendered, content_type="text/plain")
 
     def get_code(self):
+        from bs4 import BeautifulSoup as bs
+        from bs4 import formatter
+        from pygments import highlight
+        from pygments.formatters.html import HtmlFormatter
+        from pygments.lexers import HtmlLexer
+
         instance = self.patched_field.get_instance()
         form_class_attrs = {
             "sample": instance,
@@ -149,12 +154,12 @@ class FieldEditor:
             "{% for field in form %}{% spaceless %}"
             '{% include "smart/_fieldset.html" %}{% endspaceless %}{% endfor %}'
         ).render(Context(ctx))
-        from pygments import highlight
-        from pygments.formatters.html import HtmlFormatter
-        from pygments.lexers import HtmlLexer
+        formatter = formatter.HTMLFormatter(indent=2)
+        soup = bs(code)
+        prettyHTML = soup.prettify(formatter=formatter)
 
         formatter = HtmlFormatter(style="default", full=True)
-        ctx["code"] = highlight(code, HtmlLexer(), formatter)
+        ctx["code"] = highlight(prettyHTML, HtmlLexer(), formatter)
         return render(self.request, "admin/core/flexformfield/field_editor/code.html", ctx, content_type="text/html")
 
     def render(self):

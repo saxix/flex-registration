@@ -558,9 +558,10 @@ DEBUG_TOOLBAR_PANELS = [
 
 ROOT_TOKEN = env("ROOT_TOKEN")
 CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
-# Azure login
 
+# WARNING: Do NOT touch this line before it will reach out production
 AUTH_USER_MODEL = "auth.User"
+# AUTH_USER_MODEL = "security.AuroraUser"
 
 # Social Auth settings.
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env.str("AZURE_CLIENT_SECRET")
@@ -608,7 +609,7 @@ SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
 
 # fix admin name
 LOGIN_URL = "/login"
-LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
+LOGIN_REDIRECT_URL = "/logged-in/"
 
 # allow upload big file
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2  # 2M

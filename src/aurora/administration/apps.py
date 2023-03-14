@@ -12,10 +12,13 @@ class AuroraAuthConfig(SmartAuthConfig):
         from smart_admin.decorators import smart_register
         from smart_admin.smart_auth.admin import ContentTypeAdmin, PermissionAdmin
 
-        from aurora.administration.admin import AuroraGroupAdmin, AuroraUserAdmin
+        from .admin import AuroraGroupAdmin, AuroraUserAdmin, AuroraUserAdminTemp
 
         smart_register(Group)(AuroraGroupAdmin)
         smart_register(get_user_model())(AuroraUserAdmin)
+        from aurora.security.models import AuroraUser
+
+        smart_register(AuroraUser)(AuroraUserAdminTemp)
         smart_register(Permission)(PermissionAdmin)
         smart_register(ContentType)(ContentTypeAdmin)
 
