@@ -66,9 +66,7 @@ var DEFAULT = {
             initWebCamField(obj);
         });
         $(row).find(".ajaxSelect").each(function (i, obj) {
-            if ($(obj).data('select2')){
-                console.log(11111)
-            }else {
+            if (!$(obj).data('select2')){
                 $(obj).select2();
             }
         });

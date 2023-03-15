@@ -259,6 +259,7 @@ class FlexFormFieldForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        ret.setdefault("advanced", {})
         dict_setdefault(ret["advanced"], FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
         dict_setdefault(ret["advanced"], {"kwargs": FIELD_KWARGS.get(ret["field_type"], {})})
         return ret

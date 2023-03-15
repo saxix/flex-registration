@@ -27,10 +27,13 @@ window.aurora = {
         const $me = $(origin);
         const $fieldset = $me.parents('fieldset');
         const id = $fieldset.data("fid");
+        const pk = $fieldset.data("fpk");
+        const name = $fieldset.data("fname");
         const $form = $me.parents('form');
         const $fieldContainer = $me.parents('.field-container');
         const $formContainer = $me.parents('.form-container');
-        const $input = $fieldset.find(`#${id}`);
+        // const $input = $fieldset.find(`#${id}`);
+        const $input = $(origin);
         const initial = {
             required: $input.attr("required"),
         }
