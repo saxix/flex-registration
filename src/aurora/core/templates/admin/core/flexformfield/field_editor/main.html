@@ -7,7 +7,7 @@
     {{ forms_media }}
 {% endblock %}
 {% block object-tools %}{% endblock %}
-{% block content_title %}{% endblock %}
+{% block content_title %}<h1>Field: {{ original.name }}</h1>{% endblock %}
 {% block action-content %}
     <form method="post">
         <div id="fieldEditor">
@@ -38,11 +38,12 @@
                             <th data-target="widget"><a>Widget Field attributes</a></th>
                             <th data-target="smart"><a>Smart Field attributes</a></th>
                             <th data-target="css"><a>CSS Field attributes</a></th>
+                            <th data-target="events"><a>Events</a></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 {% csrf_token %}
                                 <table id="field" class="cfg-form collapse">
                                     {{ form_field }}
@@ -58,6 +59,22 @@
                                 </table>
                                 <table id="css" class="cfg-form collapse collapsed">
                                     {{ form_css }}
+                                </table>
+                                <table id="events" class="cfg-form collapse collapsed">
+                                    <tr><td>
+                                        <select id="event_selector">
+                                            <option>onblur</option>
+                                            <option>onchange</option>
+                                            <option>onkeyup</option>
+                                            <option>validation</option>
+                                        </select>
+                                    </td></tr>
+                                    <tr><td>
+                                        <div id="event_onchange" class="code selected">{{ form_events.onchange }}</div>
+                                        <div id="event_onblur" class="code">{{ form_events.onblur }}</div>
+                                        <div id="event_onkeyup" class="code">{{ form_events.onkeyup }}</div>
+                                        <div id="event_validation" class="code">{{ form_events.validation }}</div>
+                                    </td></tr>
                                 </table>
 
                             </td>

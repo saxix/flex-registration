@@ -523,6 +523,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
     validator = models.ForeignKey(
         Validator, blank=True, null=True, limit_choices_to={"target": Validator.FIELD}, on_delete=models.PROTECT
     )
+    validation = models.TextField(blank=True, null=True)
     regex = RegexField(blank=True, null=True, validators=[RegexPatternValidator()])
     advanced = models.JSONField(default=dict, blank=True, null=True)
 
@@ -551,6 +552,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             advanced = self.advanced.copy()
             smart_attrs = advanced.pop("smart", {}).copy()
             widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
+            events = self.advanced.get("events", {}).copy()
 
             field_type = self.field_type.custom.base_type
             field_kwargs = self.field_type.custom.attrs.copy()
@@ -581,6 +583,7 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             else:
                 widget_kwargs = self.advanced.get("widget_kwargs", {}).copy()
             smart_attrs = advanced.pop("smart", {}).copy()
+            events = self.advanced.get("events", {}).copy()
 
             field_kwargs["required"] = False
             regex = self.regex
@@ -634,6 +637,8 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
         field_kwargs["widget_kwargs"] = widget_kwargs
         field_kwargs["smart_attrs"] = smart_attrs
         field_kwargs.pop("default_value", "")
+        field_kwargs["smart_events"] = events
+        # these are for django FormField and handled by SmartFieldMixin
         return field_kwargs
 
     def get_instance(self):

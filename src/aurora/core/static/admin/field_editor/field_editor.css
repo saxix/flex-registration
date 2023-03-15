@@ -11,6 +11,7 @@ body {
 }
 #fieldEditor .submit-row {
   width: 100%;
+  z-index: 999;
 }
 #fieldEditor .submit-row div:first-child {
   float: left;
@@ -45,8 +46,10 @@ body {
 #fieldEditor #mainPanel .settings {
   overflow-y: scroll;
   width: 60%;
+  background: var(--breadcrumbs-bg);
 }
 #fieldEditor #mainPanel .settings table:first-child {
+  background: var(--breadcrumbs-bg);
   width: 100%;
   margin: 0;
   padding: 0;
@@ -80,8 +83,21 @@ body {
   background: var(--breadcrumbs-bg);
   border-bottom: none;
 }
+#fieldEditor #mainPanel .settings table:first-child tbody {
+  background: var(--breadcrumbs-bg);
+}
+#fieldEditor #mainPanel .settings table:first-child tbody td {
+  background: var(--breadcrumbs-bg);
+}
 #fieldEditor #mainPanel .settings table:first-child .cfg-form {
   width: 100%;
+  background: var(--breadcrumbs-bg);
+}
+#fieldEditor #mainPanel .settings table:first-child .cfg-form tr {
+  background: var(--breadcrumbs-bg);
+}
+#fieldEditor #mainPanel .settings table:first-child .cfg-form th {
+  width: 10%;
 }
 #fieldEditor #mainPanel .settings table:first-child .cfg-form td {
   text-align: left;
@@ -90,6 +106,9 @@ body {
 }
 #fieldEditor #mainPanel .settings table:first-child .cfg-form td input:not([type=checkbox]), #fieldEditor #mainPanel .settings table:first-child .cfg-form td textarea {
   width: 97%;
+}
+#fieldEditor #mainPanel .settings table:first-child .cfg-form td textarea {
+  height: 50px;
 }
 #fieldEditor #mainPanel .settings table:first-child .cfg-form td select {
   width: 100%;
@@ -136,13 +155,20 @@ table2 tr td input, table2 tr td select, table2 tr td textarea {
   cursor: pointer;
 }
 
+#events .code {
+  display: none;
+}
+#events .code.selected {
+  display: block;
+}
+
 .cm-container {
-  margin: 10px;
+  margin: 0;
   background-color: var(--body-bg);
   width: 100%;
 }
 .cm-container .cm-toolbar a.toolbutton {
-  margin: 0 3px 0 0;
+  margin: 0 3px 5px 0;
   padding: 5px;
   font-variant: none;
 }

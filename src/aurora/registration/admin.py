@@ -662,6 +662,9 @@ class RecordAdmin(SmartModelAdmin):
     change_list_template = None
     paginator = LargeTablePaginator
     show_full_result_count = False
+    raw_id_fields = [
+        "registrar",
+    ]
 
     def get_actions(self, request):
         return {}

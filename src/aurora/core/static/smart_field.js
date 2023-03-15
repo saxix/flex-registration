@@ -1,4 +1,26 @@
 window.aurora = {
+    Module: function (config) {
+        var self = this;
+        $form = $("#registrationForm");
+        self.config = config;
+        self.name = config.name;
+        self.valid = true;
+        $form.on('submit', function () {
+            if (self.valid) {
+                $(this).find("input[type=submit]").prop("disabled", "disabled").val(gettext("Please wait..."));
+            } else {
+                return false;
+            }
+        });
+
+        self.enableSubmit = function (onOff) {
+            if (onOff) {
+                $form.find("input[type=submit]").prop("disabled", "")
+            } else {
+                $form.find("input[type=submit]").prop("disabled", "disabled")
+            }
+        }
+    },
     Field: function (origin) {
         var self = this;
         self.origin = origin;
@@ -34,17 +56,46 @@ window.aurora = {
             }
             return self;
         };
-        self.setValue = function (value) {
-            $input.val(value);
-            return self;
+
+        self.isChecked = function () {
+            if ((inputType === "radio") || (inputType === "checkbox")) {
+                return $input.is(":checked");
+            }
         };
         self.hasValue = function () {
             var inputType = $input.attr('type')
             if ((inputType === "radio") || (inputType === "checkbox")) {
-                $input.is(":checked");
+                return $input.is(":checked");
             } else {
                 return $input.val().trim() !== '';
             }
+        };
+        self.setError = function (text) {
+            if (text) {
+                $fieldset.find(".errors").html(`<ul class="errorlist"><li>${text}</li></ul>`);
+            } else {
+                $fieldset.find(".errors").html("");
+            }
+            return self;
+        }
+        self.assertBetween = function (min, max) {
+
+        };
+        self.assertDateBetween = function (min, max) {
+
+        };
+
+        self.sameAs = function (target) {
+            const $target = self.sibling(target);
+            if ($target.getValue() == self.getValue()) {
+                $input.css("background-color", "#d7f6ca");
+            } else {
+                $input.css("background-color", "#e1adad");
+            }
+        }
+        self.setValue = function (value) {
+            $input.val(value);
+            return self;
         };
         self.getValue = function () {
             return $input.val();
@@ -58,8 +109,11 @@ window.aurora = {
             return self;
         };
         self.sibling = function (name) {
-            var target = $formContainer.find(`input[name=${name}]`);
-            return new aurora.Field(target);
+            var $target = $formContainer.find(`input[data-flex=${name}]`);
+            if (!$target[0]) {
+                alert(`Cannot find "input[name=${name}]"`)
+            }
+            return new aurora.Field($target);
         };
         self.setRequiredOnValue = function (value, targets) {
             try {
@@ -80,7 +134,8 @@ window.aurora = {
             }
         };
         self.inspect = function () {
-            console.log(2222, {
+            console.log(`${id}: `, {
+                value: self.getValue(),
                 id: id,
                 me: $me,
                 form: $form,
