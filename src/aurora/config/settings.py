@@ -435,11 +435,14 @@ CONSTANCE_CONFIG = OrderedDict(
 )
 
 SMART_ADMIN_SECTIONS = {
-    "Organization": ["core.Organization", "core.Project"],
     "Registration": ["registration", "dbtemplates", "flatpages"],
+    "Security": ["social_auth", "security"],
     "Form Builder": ["core"],
+    "Organization": ["core.Organization", "core.Project"],
     "Configuration": ["constance", "flags"],
-    "Security": ["auth", "social_auth", "security"],
+    "i18N": [
+        "i18n",
+    ],
     "Other": [],
     "_hidden_": [],
 }

@@ -9,6 +9,8 @@ from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.smart_auth.admin import GroupAdmin as GroupAdmin_
 from smart_admin.smart_auth.admin import UserAdmin as UserAdmin_
 
+from admin_sync.exceptions import SyncError
+from admin_sync.protocol import LoadDumpProtocol
 from aurora.administration.hijack import impersonate
 from aurora.core.admin_sync import SyncMixin
 from aurora.core.utils import is_root
@@ -19,8 +21,20 @@ from .forms import AuroraRoleForm
 logger = logging.getLogger(__name__)
 
 
+class GroupProtocol(LoadDumpProtocol):
+    def collect(self, data):
+        from django.contrib.auth.models import Group
+
+        if len(data) == 0:
+            raise SyncError("Empty queryset")  # pragma: no cover
+
+        if not isinstance(data[0], Group):  # pragma: no cover
+            raise ValueError("GroupProtocol can be used only for Registration")
+        return list(data)
+
+
 class GroupAdmin(AdminActionPermMixin, SyncMixin, GroupAdmin_):
-    pass
+    protocol_class = GroupProtocol
 
 
 class UserAdmin(AdminActionPermMixin, ADUSerMixin, UserAdmin_):

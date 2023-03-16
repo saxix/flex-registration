@@ -13,6 +13,7 @@ class Config(AppConfig):
         from . import admin, models
 
         smart_register(models.AuroraPermission)(PermissionAdmin)
+        smart_register(models.Permission)(PermissionAdmin)
         smart_register(models.AuroraGroup)(admin.GroupAdmin)
         smart_register(models.AuroraUser)(admin.UserAdmin)
         smart_register(models.AuroraRole)(admin.AuroraRoleAdmin)
