@@ -1,18 +1,4 @@
 from django.apps import AppConfig
-from smart_admin.apps import SmartAuthConfig
-
-
-class AuroraAuthConfig(SmartAuthConfig):
-    name = "smart_admin.smart_auth"
-
-    def ready(self):
-        from django.contrib.auth.models import Permission
-        from django.contrib.contenttypes.models import ContentType
-        from smart_admin.decorators import smart_register
-        from smart_admin.smart_auth.admin import ContentTypeAdmin, PermissionAdmin
-
-        smart_register(Permission)(PermissionAdmin)
-        smart_register(ContentType)(ContentTypeAdmin)
 
 
 class AuroraAdminConfig(AppConfig):

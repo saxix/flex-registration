@@ -182,7 +182,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         if self.unique_field_path and not kwargs.get("unique_field", None):
             unique_value = self.get_unique_value(fields)
             kwargs["unique_field"] = unique_value
-        if state.request.user.is_authenticated:
+        if state.request and state.request.user.is_authenticated:
             registrar = state.request.user
         else:
             registrar = None
