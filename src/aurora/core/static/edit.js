@@ -13,7 +13,10 @@
             "<div class=\"hidden md:inline-flex \">" +
             "<a href=\"{{admin_url}}\">Admin</a>&nbsp; | " +
             "</div>" +
-            "<div class=\"ml-2 mr-5\"><input id=\"staff-editor\" type=\"checkbox\" class=\" mt-1 cursor-pointer\"></div>" +
+            "<div class=\"ml-2 mr-5\">" +
+            "<input id=\"staff-editor\" type=\"checkbox\" class=\" mt-1 chk cursor-pointer\">" +
+            "<input id=\"staff-i18n\" type=\"checkbox\" class=\" mt-1 chk cursor-pointer\">" +
+            "</div>" +
             "</div>";
 
         var seed = Date.now() + Math.random();
@@ -28,6 +31,14 @@
                     $("body").prepend(html);
                     i18n.displayIcons(resp);
                     $editCheckBox = $("#staff-editor");
+                    $i18nCheckBox = $("#staff-i18n");
+                    var setI18NIcons = function (onOff) {
+                        if (onOff) {
+                            $(".staff-18n").show();
+                        } else {
+                            $(".staff-i18n").hide();
+                        }
+                    };
                     var setEditorIcons = function (onOff) {
                         if (onOff) {
                             $(".staff-editor").show();
@@ -35,13 +46,18 @@
                             $(".staff-editor").hide();
                         }
                     };
+                    $('.staff-toolbar input[type=checkbox]').on("click", function(){
+                        console.log(11111, $(this))
+                    });
                     $editCheckBox.on("click", function () {
                         setEditorIcons($editCheckBox.is(":checked"));
                         Cookies.set("staff-editor", $editCheckBox.is(":checked"));
                     });
-                    var pref = Cookies.get("staff-editor") === "true";
-                    $editCheckBox.prop("checked", pref);
+
+                    $editCheckBox.prop("checked",  Cookies.get("staff-editor") === "true";
+                    $i18nCheckBox.prop("checked",  Cookies.get("staff-i18n") === "true";
                     setEditorIcons(pref);
+                    setI18NIcons(pref);
                 });
             }else{
                 $(".staff-editor").html("").hide();

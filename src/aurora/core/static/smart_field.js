@@ -20,6 +20,9 @@ window.aurora = {
                 $form.find("input[type=submit]").prop("disabled", "disabled")
             }
         }
+        $form.find('input').each(function(){
+            console.log(1111, this);
+        });
     },
     Field: function (origin) {
         var self = this;

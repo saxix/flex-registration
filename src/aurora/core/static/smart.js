@@ -38,13 +38,10 @@ if ($ === undefined) {
                 $(e).prop("checked", "checked");
                 $container.show();
             }
-            // if ($input.val().trim() !== '') {
-            //     $(e).prop("checked", "checked");
-            //     $container.show();
-            // }
         }).on("click", function () {
             smart.handleQuestion(this);
         });
+        // trigger onload events
         $('[data-onload]').each(function () {
             eval($(this).data('onload'));
         });

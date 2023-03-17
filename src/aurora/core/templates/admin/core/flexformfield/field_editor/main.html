@@ -79,7 +79,7 @@
                                     <tr><td>
                                         {% for n,f in form_events.fields.items %}
                                             {% with form_events|get:n as ff %}
-                                            <div id="event_{{ n }}" class="code">{{ ff }}</div>
+                                            <div id="event_{{ n }}" class="code {% if forloop.counter == 1 %} selected{% endif %}">{{ ff }}</div>
                                             {% endwith %}
                                         {% endfor %}
 

@@ -62,7 +62,8 @@ class SmartFieldMixin:
 
         if not self.flex_field.required:
             attrs.pop("required", "")
-        attrs["flex_field"] = self.flex_field
+        # attrs["flex_field"] = self.flex_field
+        attrs["data-flex-name"] = self.flex_field.name
         for attr in [
             "onblur",
             "onchange",
