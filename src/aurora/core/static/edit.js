@@ -47,17 +47,22 @@
                         }
                     };
                     $('.staff-toolbar input[type=checkbox]').on("click", function(){
-                        console.log(11111, $(this))
+                        var t = $(this).attr('id');
+                        if ( $(this).is(":checked")) {
+                            $(`.${t}`).show();
+                        } else {
+                            $(`.${t}`).hide();
+                        }
                     });
-                    $editCheckBox.on("click", function () {
-                        setEditorIcons($editCheckBox.is(":checked"));
-                        Cookies.set("staff-editor", $editCheckBox.is(":checked"));
-                    });
+                    // $editCheckBox.on("click", function () {
+                    //     setEditorIcons($editCheckBox.is(":checked"));
+                    //     Cookies.set("staff-editor", $editCheckBox.is(":checked"));
+                    // });
 
-                    $editCheckBox.prop("checked",  Cookies.get("staff-editor") === "true";
-                    $i18nCheckBox.prop("checked",  Cookies.get("staff-i18n") === "true";
-                    setEditorIcons(pref);
-                    setI18NIcons(pref);
+                    $editCheckBox.prop("checked", Cookies.get("staff-editor") === "true")
+                    $i18nCheckBox.prop("checked", Cookies.get("staff-i18n") === "true");
+                    setEditorIcons($editCheckBox.is(':checked'));
+                    setI18NIcons($i18nCheckBox.is(':checked'));
                 });
             }else{
                 $(".staff-editor").html("").hide();
