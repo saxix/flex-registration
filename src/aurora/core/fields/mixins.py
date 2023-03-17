@@ -64,13 +64,21 @@ class SmartFieldMixin:
             attrs.pop("required", "")
         attrs["flex_field"] = self.flex_field
         for attr in [
-            "onchange",
             "onblur",
+            "onchange",
             "onkeyup",
         ]:
             if attr in self.smart_events:
                 if self.smart_events[attr]:
                     attrs[attr] = oneline(self.smart_events[attr])
+
+        for attr in [
+            "onload",
+        ]:
+            if attr in self.smart_events:
+                if self.smart_events[attr]:
+                    attrs[f"data-{attr}"] = oneline(self.smart_events[attr])
+
         if validation := self.smart_events.get("validation", None):
             attrs["data-validation"] = oneline(validation)
         widget.smart_attrs = self.smart_attrs

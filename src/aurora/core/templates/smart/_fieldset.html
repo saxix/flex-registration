@@ -41,4 +41,11 @@
             {% trans ADV.smart.hint %}
         </div>
     </div>
+    {% if ADV.events.init %}
+    <pre>function(){
+        {{ ADV.events.init }}
+    }
+    </pre>
+    <script>{{ ADV.events.init }}</script>
+    {% endif %}
 </fieldset>{% endwith %}

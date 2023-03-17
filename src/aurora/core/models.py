@@ -26,6 +26,7 @@ from mptt.managers import TreeManager
 from mptt.models import MPTTModel
 from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from py_mini_racer.py_mini_racer import MiniRacerBaseException
+from sentry_sdk import set_tag
 from strategy_field.utils import fqn
 
 from ..i18n.gettext import gettext as _
@@ -201,6 +202,8 @@ _.is_adult = function(d) { return !_.is_child(d)};
 
     def validate(self, value, registration=None):
         from py_mini_racer import MiniRacer
+
+        set_tag("Validator", self.name)
 
         if self.active:
             self.monitor(self.STATUS_UNKNOWN, value)

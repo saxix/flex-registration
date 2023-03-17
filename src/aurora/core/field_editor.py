@@ -86,7 +86,11 @@ class EventForm(AdvancendAttrsMixin, forms.Form):
     onchange = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
     onblur = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
     onkeyup = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+    onload = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+    onfocus = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+
     validation = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+    init = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
 
 
 DEFAULTS = {
@@ -154,7 +158,7 @@ class FieldEditor:
 
         instance = self.patched_field.get_instance()
         form_class_attrs = {
-            "sample": instance,
+            self.field.name: instance,
         }
         form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
         ctx = self.get_context(self.request)
@@ -175,7 +179,7 @@ class FieldEditor:
     def render(self):
         instance = self.patched_field.get_instance()
         form_class_attrs = {
-            "sample": instance,
+            self.field.name: instance,
         }
         form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
         ctx = self.get_context(self.request)

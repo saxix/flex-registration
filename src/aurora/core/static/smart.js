@@ -1,4 +1,4 @@
-if ($ === undefined){
+if ($ === undefined) {
     $ = django.jQuery;
 }
 
@@ -34,7 +34,7 @@ if ($ === undefined){
         $(".question-visibility").each(function (i, e) {
             var $container = $(e).parents("fieldset").find(".field-container");
             var $input = $container.find("input,select, textarea");
-            if (smart.has_any_value($input)){
+            if (smart.has_any_value($input)) {
                 $(e).prop("checked", "checked");
                 $container.show();
             }
@@ -45,6 +45,8 @@ if ($ === undefined){
         }).on("click", function () {
             smart.handleQuestion(this);
         });
-
+        $('[data-onload]').each(function () {
+            eval($(this).data('onload'));
+        });
     });
 })($);

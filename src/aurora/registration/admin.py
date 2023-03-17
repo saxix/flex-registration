@@ -1,3 +1,5 @@
+import re
+
 import csv
 import io
 import json
@@ -644,9 +646,38 @@ class HourFilter(SimpleListFilter):
         return queryset
 
 
+class DateRangeFilter(NumberFilter):
+    only_year = re.compile(r"^[0-9]{4}$")
+    rex1 = re.compile(r"^(>=|<=|>|<|=)?([-+]?[0-9-]+)$")
+    re_range = re.compile(r"^(\d+)\.{2,}(\d+)$")
+    re_list = re.compile(r"(\d+),?")
+    re_unlike = re.compile(r"^(<>)([-+]?[0-9]+)$")
+
+    def get_range(self, request):
+        try:
+            raw_value = self.value()
+            value = raw_value
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                f"{value}",
+            )
+        except Exception as e:
+            messages.add_message(request, messages.ERROR, f"{e}")
+
+    def queryset(self, request, queryset):
+        self.get_range(request)
+        return queryset
+        # try:
+        #     return super().queryset(request, queryset)
+        # except Exception as e:
+        #     messages.add_message(request, f"{e}", messages.ERROR)
+        #     raise
+
+
 @register(Record)
 class RecordAdmin(SmartModelAdmin):
-    date_hierarchy = "timestamp"
+    # date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored", "unique_field")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id", "fields", "counters")
@@ -654,6 +685,7 @@ class RecordAdmin(SmartModelAdmin):
     list_filter = (
         ("registration", AutoCompleteFilter),
         ("id", NumberFilter),
+        ("timestamp", DateRangeFilter),
         HourFilter,
         ("unique_field", ValueFilter),
         "ignored",

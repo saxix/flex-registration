@@ -60,6 +60,10 @@ window.aurora = {
             return self;
         };
 
+        self.isTrue = function () {
+            var value =  $fieldset.find(`input:radio[data-flex='${name}']:checked`).val();
+            return ["y", "yes", "1", "t", "true"].includes(value);
+        };
         self.isChecked = function () {
             if ((inputType === "radio") || (inputType === "checkbox")) {
                 return $input.is(":checked");
