@@ -24,7 +24,9 @@ class SyncMixin(SyncMixin_):
     )
     def get_version(self, request, key):
         obj = self.model.objects.get_by_natural_key(*key.split("|"))
-        return SyncResponse({"version": obj.version, "last_update_date": obj.last_update_date})
+        return SyncResponse(
+            {"version": obj.version, "last_update_date": obj.last_update_date.strftime("%Y-%m-%d %H:%M:%S")}
+        )
 
     def get_remote_version(self, request, pk):
         obj = self.get_object(request, pk)
