@@ -1,6 +1,8 @@
 import logging
 
 from admin_extra_buttons.decorators import button
+from admin_sync.exceptions import SyncError
+from admin_sync.protocol import LoadDumpProtocol
 from adminactions.helpers import AdminActionPermMixin
 from adminfilters.autocomplete import AutoCompleteFilter
 from django.utils.translation import gettext_lazy as _
@@ -9,8 +11,6 @@ from smart_admin.modeladmin import SmartModelAdmin
 from smart_admin.smart_auth.admin import GroupAdmin as GroupAdmin_
 from smart_admin.smart_auth.admin import UserAdmin as UserAdmin_
 
-from admin_sync.exceptions import SyncError
-from admin_sync.protocol import LoadDumpProtocol
 from aurora.administration.hijack import impersonate
 from aurora.core.admin_sync import SyncMixin
 from aurora.core.utils import is_root
