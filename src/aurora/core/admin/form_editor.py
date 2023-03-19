@@ -6,36 +6,31 @@ from django.core.cache import caches
 from django.forms import Media
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.template import Context, Template
+from django.template.loader import get_template
 from django.utils.functional import cached_property
 
+from aurora.core.fields.widgets import JavascriptEditor
 from aurora.core.models import FlexForm
 
 cache = caches["default"]
 
+
+class AdvancendAttrsMixin:
+    def __init__(self, *args, **kwargs):
+        self.form = kwargs.pop("form", None)
+        super().__init__(*args, **kwargs)
+
+
 #
-# class AdvancendAttrsMixin:
-#     def __init__(self, *args, **kwargs):
-#         self.field = kwargs.pop("field", None)
-#         self.prefix = kwargs.get("prefix")
-#         if self.field:
-#             kwargs["initial"] = self.field.advanced.get(self.prefix, {})
-#         super().__init__(*args, **kwargs)
-#
-#
-# class FlexFieldAttributesForm(AdvancendAttrsMixin, forms.ModelForm):
-#     required = forms.BooleanField(widget=forms.CheckboxInput, required=False)
-#     enabled = forms.BooleanField(widget=forms.CheckboxInput, required=False)
-#     # onchange = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#
-#     def __init__(self, *args, **kwargs):
-#         kwargs["instance"] = kwargs["field"]
-#         super().__init__(*args, **kwargs)
-#
-#     class Meta:
-#         model = FlexFormField
-#         fields = ("field_type", "label", "required", "enabled", "validator", "regex", "validation")
-#
+class FlexFormAttributesForm(AdvancendAttrsMixin, forms.ModelForm):
+    class Meta:
+        model = FlexForm
+        fields = (
+            "name",
+            "base_type",
+        )
+
+
 #
 # class FormFieldAttributesForm(AdvancendAttrsMixin, forms.Form):
 #     default_value = forms.CharField(required=False, help_text="default value for the field")
@@ -81,38 +76,34 @@ cache = caches["default"]
 #     question = forms.CharField(required=False, help_text="")
 #
 #
-# class EventForm(AdvancendAttrsMixin, forms.Form):
-#     onchange = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#     onblur = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#     onkeyup = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#     onload = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#     onfocus = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#
-#     validation = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#     init = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#
-#
+class EventForm(AdvancendAttrsMixin, forms.Form):
+    onsubmit = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+    onload = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+    validation = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
+
+
 DEFAULTS = {
+    #     "css": {"question": "cursor-pointer", "label": "block uppercase tracking-wide text-gray-700 font-bold mb-2"},
     #     "css": {"question": "cursor-pointer", "label": "block uppercase tracking-wide text-gray-700 font-bold mb-2"},
 }
 
 
 def get_initial(field, prefix):
     base = DEFAULTS.get(prefix, {})
-    #     for k, v in field.advanced.get(prefix, {}).items():
-    #         if v:
-    #             base[k] = v
+    for k, v in field.advanced.get(prefix, {}).items():
+        if v:
+            base[k] = v
     return base
 
 
 class FormEditor:
     FORMS = {
-        # "field": FlexFieldAttributesForm,
+        "frm": FlexFormAttributesForm,
         # "kwargs": FormFieldAttributesForm,
         # "widget": WidgetAttributesForm,
         # "smart": SmartAttributesForm,
         # "css": CssForm,
-        # "events": EventForm,
+        "events": EventForm,
     }
 
     def __init__(self, modeladmin, request, pk):
@@ -126,8 +117,8 @@ class FormEditor:
         return FlexForm.objects.get(pk=self.pk)
 
     @cached_property
-    def patched_field(self):
-        fld = self.flex_form
+    def patched_form(self):
+        fld = self.flex_form.get_form_class()
         # if config := cache.get(self.cache_key, None):
         #     forms = self.get_forms(config)
         #     fieldForm = forms.pop("field", None)
@@ -144,7 +135,7 @@ class FormEditor:
         pass
 
     def get_configuration(self):
-        self.patched_field.get_instance()
+        self.patched_form.get_instance()
         rendered = json.dumps(self.flex_form.advanced, indent=4)
         return HttpResponse(rendered, content_type="text/plain")
 
@@ -155,18 +146,18 @@ class FormEditor:
         from pygments.formatters.html import HtmlFormatter
         from pygments.lexers import HtmlLexer
 
-        instance = self.patched_field.get_instance()
-        form_class_attrs = {
-            self.field.name: instance,
-        }
-        form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+        instance = self.patched_form()
+        # form_class_attrs = {
+        #     self.field.name: instance,
+        # }
+        # form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
         ctx = self.get_context(self.request)
-        ctx["form"] = form_class()
+        ctx["form"] = self.flex_form.get_form_class()
         ctx["instance"] = instance
-        code = Template(
-            "{% for field in form %}{% spaceless %}"
-            '{% include "smart/_fieldset.html" %}{% endspaceless %}{% endfor %}'
-        ).render(Context(ctx))
+        # code = Template(
+        #     "{{ form }}"
+        # ).render(Context(ctx))
+        code = get_template("smart/_form.html").render(ctx)
         formatter = formatter.HTMLFormatter(indent=2)
         soup = bs(code)
         prettyHTML = soup.prettify(formatter=formatter)
@@ -176,17 +167,17 @@ class FormEditor:
         return render(self.request, "admin/core/flexformfield/field_editor/code.html", ctx, content_type="text/html")
 
     def render(self):
-        instance = self.patched_field.get_instance()
-        form_class_attrs = {
-            self.field.name: instance,
-        }
-        form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+        instance = self.patched_form
+        # form_class_attrs = {
+        #     'fo': instance,
+        # }
+        form_class = self.flex_form.get_form_class()
         ctx = self.get_context(self.request)
         if self.request.method == "POST":
             form = form_class(self.request.POST)
             ctx["valid"] = form.is_valid()
         else:
-            form = form_class(initial={"sample": self.patched_field.get_default_value()})
+            form = form_class()
             ctx["valid"] = None
 
         ctx["form"] = form
@@ -196,16 +187,16 @@ class FormEditor:
 
     def get_forms(self, data=None) -> Dict:
         if data:
-            return {prefix: Form(data, prefix=prefix, field=self.field) for prefix, Form in self.FORMS.items()}
+            return {prefix: Form(data, prefix=prefix, form=self.flex_form) for prefix, Form in self.FORMS.items()}
         if self.request.method == "POST":
             return {
                 prefix: Form(
-                    self.request.POST, prefix=prefix, field=self.field, initial=get_initial(self.field, prefix)
+                    self.request.POST, prefix=prefix, form=self.flex_form, initial=get_initial(self.field, prefix)
                 )
                 for prefix, Form in self.FORMS.items()
             }
         return {
-            prefix: Form(prefix=prefix, field=self.field, initial=get_initial(self.field, prefix))
+            prefix: Form(prefix=prefix, form=self.flex_form, initial=get_initial(self.flex_form, prefix))
             for prefix, Form in self.FORMS.items()
         }
 

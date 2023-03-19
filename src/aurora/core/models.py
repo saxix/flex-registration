@@ -292,6 +292,7 @@ class FlexForm(I18NModel, NaturalKeyModel):
     validator = models.ForeignKey(
         Validator, limit_choices_to={"target": Validator.FORM}, blank=True, null=True, on_delete=models.PROTECT
     )
+    advanced = models.JSONField(default=dict, blank=True)
 
     class Meta:
         verbose_name = "Flex Form"

@@ -187,7 +187,7 @@ class FieldEditor:
             form = form_class(self.request.POST)
             ctx["valid"] = form.is_valid()
         else:
-            form = form_class(initial={"sample": self.patched_field.get_default_value()})
+            form = form_class(initial={self.field.name: self.patched_field.get_default_value()})
             ctx["valid"] = None
 
         ctx["form"] = form

@@ -23,7 +23,6 @@ class RecordAdmin(SmartModelAdmin):
     search_fields = ("registration__name",)
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id", "fields", "counters")
-    autocomplete_fields = ("registration",)
     list_filter = (
         ("registration", AutoCompleteFilter),
         ("registrar", AutoCompleteFilter),
@@ -39,6 +38,7 @@ class RecordAdmin(SmartModelAdmin):
     show_full_result_count = False
     raw_id_fields = [
         "registrar",
+        "registration",
     ]
 
     def get_actions(self, request):

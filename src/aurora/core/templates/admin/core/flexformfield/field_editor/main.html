@@ -46,6 +46,7 @@
                             <td colspan="6">
                                 {% csrf_token %}
                                 <table id="field" class="cfg-form collapse">
+                                    <tr><td>Form</td><td><a href="{% url "admin:core_flexform_form_editor" original.flex_form.pk %}">{{ original.flex_form }}</a></td></tr>
                                     {{ form_field }}
                                 </table>
                                 <table id="form" class="cfg-form collapse collapsed">

@@ -1,8 +1,8 @@
 from django.contrib.admin import register
 
+from ..models import Record, Registration
 from .record import RecordAdmin
 from .registration import RegistrationAdmin
-from ..models import Record, Registration
 
 register(Registration)(RegistrationAdmin)
 register(Record)(RecordAdmin)
