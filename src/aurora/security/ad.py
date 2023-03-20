@@ -33,9 +33,9 @@ DJANGO_USER_MAP = {
 class LoadUsersForm(forms.Form):
     emails = forms.CharField(widget=forms.Textarea, help_text="Emails must be space separated")
     role = forms.ModelChoiceField(queryset=Group.objects.all())
-    organization = forms.ModelChoiceField(queryset=Organization.objects.all())
-    project = forms.ModelChoiceField(queryset=Project.objects.all())
-    registration = forms.ModelChoiceField(queryset=Registration.objects.all())
+    organization = forms.ModelChoiceField(queryset=Organization.objects.all(), required=False)
+    project = forms.ModelChoiceField(queryset=Project.objects.all(), required=False)
+    registration = forms.ModelChoiceField(queryset=Registration.objects.all(), required=False)
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.request = kwargs.pop("request", None)
