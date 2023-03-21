@@ -50,6 +50,9 @@ class OrganizationManager(TreeManager):
 
 
 class Organization(MPTTModel):
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
+
     name = CICharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True, null=True)
     parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
@@ -77,6 +80,9 @@ class ProjectManager(TreeManager):
 
 
 class Project(MPTTModel):
+    version = AutoIncVersionField()
+    last_update_date = models.DateTimeField(auto_now=True)
+
     name = CICharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, blank=True, null=True)
     organization = models.ForeignKey(Organization, null=True, related_name="projects", on_delete=models.CASCADE)
