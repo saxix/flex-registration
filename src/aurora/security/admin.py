@@ -63,7 +63,9 @@ class UserAdmin(AdminActionPermMixin, ADUSerMixin, UserAdmin_):
 
 
 class UserProfileAdmin(SmartModelAdmin):
-    pass
+    search_fields = ("user__username",)
+    list_display = ("user", "job_title")
+    raw_id_fields = ("user",)
 
 
 class AuroraRoleAdmin(SyncMixin, SmartModelAdmin):
