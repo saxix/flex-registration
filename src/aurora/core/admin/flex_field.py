@@ -57,7 +57,7 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     form = FlexFormFieldForm
     ordering_field = "ordering"
     order = "ordering"
-    readonly_fields = ("version", "last_update_date", "advanced")
+    readonly_fields = ("version", "last_update_date")
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("flex_form")

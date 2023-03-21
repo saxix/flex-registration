@@ -1,5 +1,6 @@
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
+from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
 
 from ...registration.models import Record
@@ -16,10 +17,16 @@ class RecordFilter(filters.FilterSet):
         fields = ["registration", "after", "id"]
 
 
+class RecordPaginator(CursorPagination):
+    page_size = 10
+    ordering = "-id"
+
+
 class RecordViewSet(SmartViewSet):
     queryset = Record.objects.all()
     serializer_class = RecordSerializer
     filterset_class = RecordFilter
+    pagination_class = RecordPaginator
 
     @action(detail=False)
     def metadata(self, request, pk=None):
