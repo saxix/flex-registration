@@ -1,9 +1,9 @@
 {% load itrans aurora %}{% with field.field.flex_field.advanced as ADV %}
     {% if can_edit_inpage %}{% include "registration/_staff_edit_field.html" %}{% endif %}
     <fieldset data-fpk="{{ field.field.flex_field.pk }}" data-fname="{{ field.name }}" data-fid="{{ field.auto_id }}"  class="{{ field.name }} {{ field.field.flex_field.advanced.widget_kwargs.fieldset }}">
-{#    {% if field.field.flex_field.validator and registration.client_validation %}#}
-{#        <script src="/api/validator/{{ field.field.flex_field.validator.pk }}/script/"></script>#}
-{#    {% endif %}#}
+    {% if field.field.flex_field.validator and registration.client_validation %}
+        <script src="/api/validator/{{ field.field.flex_field.validator.pk }}/script/"></script>
+    {% endif %}
     <a id="anchor_{{ field.name }}" class="float-left">{% if ADV.smart.marker %}&gt;{% endif %}</a>
     {% if ADV.smart.question %}
             <label for="question_{{ field.auto_id }}" class="cursor-pointer">

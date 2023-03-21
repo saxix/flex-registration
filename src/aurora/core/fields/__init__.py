@@ -13,6 +13,7 @@ from .radio import RadioField, YesNoChoice, YesNoRadio
 from .remote_ip import RemoteIpField
 from .select import AjaxSelectField, SelectField, SmartSelectWidget
 from .webcam import WebcamField
+from .captcha import CaptchaField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},
