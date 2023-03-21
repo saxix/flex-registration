@@ -1,6 +1,7 @@
 from django import forms
 
 from . import widgets
+from .captcha import CaptchaField
 from .compilation_time import CompilationTimeField
 from .document import DocumentField
 from .file import SmartFileField
@@ -13,7 +14,6 @@ from .radio import RadioField, YesNoChoice, YesNoRadio
 from .remote_ip import RemoteIpField
 from .select import AjaxSelectField, SelectField, SmartSelectWidget
 from .webcam import WebcamField
-from .captcha import CaptchaField
 
 WIDGET_FOR_FORMFIELD_DEFAULTS = {
     forms.DateField: {"widget": widgets.SmartDateWidget},

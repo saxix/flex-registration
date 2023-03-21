@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 class RecordAdmin(SmartModelAdmin):
-    # date_hierarchy = "timestamp"
     search_fields = ("registration__name",)
     list_display = ("timestamp", "remote_ip", "id", "registration", "ignored")
     readonly_fields = ("registration", "timestamp", "remote_ip", "id", "fields", "counters")
