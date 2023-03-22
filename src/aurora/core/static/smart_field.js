@@ -22,14 +22,6 @@
                 return errorsStack.length === 0;
             }
 
-            self.$form.on('submit', function () {
-                if (self.isValid()) {
-                    $(this).find("input[type=submit]").prop("disabled", "disabled").val(gettext("Please wait..."));
-                } else {
-                    return false;
-                }
-            });
-
             self.enableSubmit = function (onOff) {
                 if (onOff) {
                     $form.find("input[type=submit]").prop("disabled", "")
@@ -37,9 +29,12 @@
                     $form.find("input[type=submit]").prop("disabled", "disabled")
                 }
             }
+
             $form.on('submit', function (e) {
                 e.preventDefault();
-                if (!self.isValid()) {
+                if (self.isValid()) {
+                    $(this).find("input[type=submit]").prop("disabled", "disabled").val(gettext("Please wait..."));
+                } else {
                     return false;
                 }
             });
