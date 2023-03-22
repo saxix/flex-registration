@@ -388,6 +388,38 @@ class FlexForm(I18NModel, NaturalKeyModel):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super().save(force_insert, force_update, using, update_fields)
 
+    def get_usage(self):
+        ret = []
+
+        for reg in self.registration_set.all():
+            ret.append(
+                {
+                    "type": "Registration",
+                    "obj": reg,
+                    "editor_url": reverse("admin:registration_registration_change", args=[reg.pk]),
+                    "change_url": reverse("admin:registration_registration_change", args=[reg.pk]),
+                }
+            )
+        for fs in self.formsets.all():
+            ret.append(
+                {
+                    "type": "Parend Of",
+                    "obj": fs.flex_form,
+                    "editor_url": reverse("admin:core_flexform_form_editor", args=[fs.flex_form.pk]),
+                    "change_url": reverse("admin:core_flexform_change", args=[fs.flex_form.pk]),
+                }
+            )
+        for fs in self.formset_set.all():
+            ret.append(
+                {
+                    "type": "Child Of",
+                    "obj": fs.parent,
+                    "editor_url": reverse("admin:core_flexform_form_editor", args=[fs.parent.pk]),
+                    "change_url": reverse("admin:core_flexform_change", args=[fs.parent.pk]),
+                }
+            )
+        return ret
+
 
 class FormSet(NaturalKeyModel, OrderableModel):
     FORMSET_DEFAULT_ATTRS = {
@@ -681,6 +713,18 @@ class FlexFormField(NaturalKeyModel, I18NModel, OrderableModel):
             self.name = namify(self.label)[:100]
 
         super().save(force_insert, force_update, using, update_fields)
+
+    def get_usage(self):
+        ret = []
+        ret.append(
+            {
+                "type": "Form",
+                "obj": self.flex_form,
+                "editor_url": reverse("admin:registration_registration_change", args=[self.flex_form.pk]),
+                "change_url": reverse("admin:registration_registration_change", args=[self.flex_form.pk]),
+            }
+        )
+        return ret
 
 
 class OptionSetManager(NaturalKeyModelManager):

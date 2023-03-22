@@ -31,51 +31,6 @@ class FlexFormAttributesForm(AdvancendAttrsMixin, forms.ModelForm):
         )
 
 
-#
-# class FormFieldAttributesForm(AdvancendAttrsMixin, forms.Form):
-#     default_value = forms.CharField(required=False, help_text="default value for the field")
-#
-#
-# class WidgetAttributesForm(AdvancendAttrsMixin, forms.Form):
-#     placeholder = forms.CharField(required=False, help_text="placeholder for the input")
-#     css_class = forms.CharField(label="Field class", required=False, help_text="Input CSS class to apply (will")
-#     extra_classes = forms.CharField(required=False, help_text="Input CSS classes to add input")
-#     fieldset = forms.CharField(label="Fieldset class", required=False, help_text="Fieldset CSS class to apply")
-#     # onchange = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#     # onblur = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#     # onkeyup = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
-#
-#
-# def get_datasources():
-#     v = OptionSet.objects.order_by("name").values_list("name", flat=True)
-#     return [("", "")] + list(zip(v, v))
-#
-#
-# class SmartAttributesForm(AdvancendAttrsMixin, forms.Form):
-#     question = forms.CharField(required=False, help_text="If set, user must check related box to display the field")
-#     question_onchange = forms.CharField(
-#         widget=forms.Textarea, required=False, help_text="Js to tigger on 'question' check/uncheck "
-#     )
-#     hint = forms.CharField(required=False, help_text="Text to display above the input")
-#     description = forms.CharField(required=False, help_text="Text to display below the input")
-#     datasource = forms.ChoiceField(choices=get_datasources,
-#     required=False, help_text="Datasource name for ajax field")
-#     parent_datasource = forms.ChoiceField(
-#         choices=get_datasources, required=False, help_text="Parent Datasource name for ajax field"
-#     )
-#     choices = forms.JSONField(required=False)
-#     # onchange = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onchange event")
-#     # onblur = forms.CharField(widget=forms.Textarea, required=False, help_text="Javascript onblur event")
-#     visible = forms.BooleanField(required=False, help_text="Hide/Show field")
-#
-#
-# class CssForm(AdvancendAttrsMixin, forms.Form):
-#     input = forms.CharField(required=False, help_text="")
-#     label = forms.CharField(required=False, help_text="")
-#     fieldset = forms.CharField(required=False, help_text="")
-#     question = forms.CharField(required=False, help_text="")
-#
-#
 class EventForm(AdvancendAttrsMixin, forms.Form):
     onsubmit = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)
     onload = forms.CharField(widget=JavascriptEditor(toolbar=True), required=False)

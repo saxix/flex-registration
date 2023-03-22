@@ -39,6 +39,7 @@
                             <th data-target="smart"><a>Smart Field attributes</a></th>
                             <th data-target="css"><a>CSS Field attributes</a></th>
                             <th data-target="events"><a>Events</a></th>
+                            <th data-target="usage"><a>Usage</a></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -46,7 +47,12 @@
                             <td colspan="6">
                                 {% csrf_token %}
                                 <table id="field" class="cfg-form collapse">
-                                    <tr><td>Form</td><td><a href="{% url "admin:core_flexform_form_editor" original.flex_form.pk %}">{{ original.flex_form }}</a></td></tr>
+                                    <tr>
+                                        <td>Form</td>
+                                        <td>
+                                            <a href="{% url "admin:core_flexform_form_editor" original.flex_form.pk %}">{{ original.flex_form }}</a>
+                                        </td>
+                                    </tr>
                                     {{ form_field }}
                                 </table>
                                 <table id="form" class="cfg-form collapse collapsed">
@@ -62,31 +68,64 @@
                                     {{ form_css }}
                                 </table>
                                 <table id="events" class="cfg-form collapse collapsed">
-                                    <tr><td>
+                                    <tr>
+                                        <td>
 
-                                        <select id="event_selector">
-                                        {% for n,f in form_events.fields.items %}
-                                            {% with form_events|get:n as ff %}
-                                            <option value="{{ n }}">{{ n }} {% if ff.value %} *{% endif %}</option>
-                                            {% endwith %}
-                                        {% endfor %}
-                                        </select>
-                                    </td></tr>
-                                    <tr><td>
-                                        {% for n,f in form_events.fields.items %}
-                                            {% with form_events|get:n as ff %}
-                                            <div id="event_{{ n }}" class="code {% if forloop.counter == 1 %} selected{% endif %}">{{ ff }}</div>
-                                            {% endwith %}
-                                        {% endfor %}
+                                            <select id="event_selector">
+                                                {% for n,f in form_events.fields.items %}
+                                                    {% with form_events|get:n as ff %}
+                                                        <option value="{{ n }}">{{ n }} {% if ff.value %}
+                                                            *{% endif %}</option>
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            {% for n,f in form_events.fields.items %}
+                                                {% with form_events|get:n as ff %}
+                                                    <div id="event_{{ n }}"
+                                                         class="code {% if forloop.counter == 1 %} selected{% endif %}">{{ ff }}</div>
+                                                {% endwith %}
+                                            {% endfor %}
 
-{#                                        <div id="event_onchange" class="code selected">{{ form_events.onchange }}</div>#}
-{#                                        <div id="event_onblur" class="code">{{ form_events.onblur }}</div>#}
-{#                                        <div id="event_onkeyup" class="code">{{ form_events.onkeyup }}</div>#}
-{#                                        <div id="event_validation" class="code">{{ form_events.validation }}</div>#}
-{#                                        <div id="event_init" class="code">{{ form_events.init }}</div>#}
-                                    </td></tr>
+                                            {#                                        <div id="event_onchange" class="code selected">{{ form_events.onchange }}</div>#}
+                                            {#                                        <div id="event_onblur" class="code">{{ form_events.onblur }}</div>#}
+                                            {#                                        <div id="event_onkeyup" class="code">{{ form_events.onkeyup }}</div>#}
+                                            {#                                        <div id="event_validation" class="code">{{ form_events.validation }}</div>#}
+                                            {#                                        <div id="event_init" class="code">{{ form_events.init }}</div>#}
+                                        </td>
+                                    </tr>
                                 </table>
 
+{#                                <table id="usage" class="cfg-form collapse collapsed">#}
+{#                                    <tr>#}
+{#                                        <td>Form</td>#}
+{#                                        <td><a target="_inspect"#}
+{#                                               href="{% url "admin:core_flexform_change" original.flex_form.pk %}">{{ original.flex_form }}</a>#}
+{#                                        </td>#}
+{#                                        <td></td>#}
+{#                                    </tr>#}
+{#                                </table>#}
+                                <table id="usage" class="cfg-form collapse collapsed">
+                                    {% for usage in original.get_usage %}
+                                        <tr>
+                                            <td>{{ usage.type }}</td>
+                                            <td>
+                                                <a target="_inspect" href="{{ usage.editor_url }}">{{ usage.obj }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    {% for usage in original.flex_form.get_usage %}
+                                        <tr>
+                                            <td>Form / {{ usage.type }}</td>
+                                            <td>
+                                                <a target="_inspect" href="{{ usage.editor_url }}">{{ usage.obj }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
                             </td>
                         </tr>
                         </tbody>

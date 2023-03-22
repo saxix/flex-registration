@@ -36,14 +36,13 @@
                             <th data-target="frm" class="selected"><a>Form attributes</a></th>
                             <th data-target="fields"><a>Fields</a></th>
                             <th data-target="struct"><a>Structure</a></th>
-                            {#                            <th data-target="smart"><a>Smart Field attributes</a></th>#}
-                            {#                            <th data-target="css"><a>CSS Field attributes</a></th>#}
                             <th data-target="events"><a>Events</a></th>
+                            <th data-target="usage"><a>Usage</a></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="4">
+                            <td colspan="5">
                                 {% csrf_token %}
                                 <table id="frm" class="cfg-form collapse">
                                     {{ form_frm }}
@@ -51,33 +50,47 @@
                                 <table id="fields" class="cfg-form collapse collapsed">
                                     {% for fld in original.fields.all %}
                                         <tr>
-                                            <td><a href="{% url "admin:core_flexformfield_field_editor" fld.pk %}">{{ fld.label }}</a></td>
+                                            <td>
+                                                <a href="{% url "admin:core_flexformfield_field_editor" fld.pk %}">{{ fld.label }}</a>
+                                            </td>
                                             <td>{{ fld.type_name }}</td>
                                         </tr>
                                     {% endfor %}
                                 </table>
                                 <table id="struct" class="cfg-form collapse collapsed">
-                                    <tr><td>Parents</td></tr>
+                                    <tr>
+                                        <td>Parents</td>
+                                    </tr>
                                     {% for fs in original.formset_set.all %}
                                         <tr>
-                                            <td><a href="{% url "admin:core_flexform_form_editor" fs.parent.pk %}">{{ fs.parent }}</a></td>
+                                            <td>
+                                                <a href="{% url "admin:core_flexform_form_editor" fs.parent.pk %}">{{ fs.parent }}</a>
+                                            </td>
                                             <td><a href="{% url "admin:core_formset_change" fs.pk %}">{{ fs }}</a></td>
                                         </tr>
                                     {% endfor %}
-                                    <tr><td>Children</td></tr>
+                                    <tr>
+                                        <td>Children</td>
+                                    </tr>
                                     {% for fs in original.formsets.all %}
                                         <tr>
-                                            <td><a href="{% url "admin:core_flexform_form_editor" fs.flex_form.pk %}">{{ fs.flex_form }}</a></td>
+                                            <td>
+                                                <a href="{% url "admin:core_flexform_form_editor" fs.flex_form.pk %}">{{ fs.flex_form }}</a>
+                                            </td>
                                             <td><a href="{% url "admin:core_formset_change" fs.pk %}">{{ fs }}</a></td>
                                         </tr>
                                     {% endfor %}
                                 </table>
-                                {#                                <table id="smart" class="cfg-form collapse collapsed">#}
-                                {#                                    {{ form_smart }}#}
-                                {#                                </table>#}
-                                {#                                <table id="css" class="cfg-form collapse collapsed">#}
-                                {#                                    {{ form_css }}#}
-                                {#                                </table>#}
+                                <table id="usage" class="cfg-form collapse collapsed">
+                                    {% for usage in original.get_usage %}
+                                        <tr>
+                                            <td>{{ usage.type }}</td>
+                                            <td>
+                                                <a target="_inspect" href="{{ usage.editor_url }}">{{ usage.obj }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
                                 <table id="events" class="cfg-form collapse collapsed">
                                     <tr>
                                         <td>
