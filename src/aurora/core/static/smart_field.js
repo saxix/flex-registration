@@ -31,7 +31,6 @@
             }
 
             $form.on('submit', function (e) {
-                e.preventDefault();
                 if (self.isValid()) {
                     $(this).find("input[type=submit]").prop("disabled", "disabled").val(gettext("Please wait..."));
                 } else {
