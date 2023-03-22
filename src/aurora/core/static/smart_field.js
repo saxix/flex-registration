@@ -7,7 +7,6 @@
             $form = $("#registrationForm");
             self.config = config;
             self.name = config.name;
-            self.valid = true;
 
             self.pushError = function () {
                 self.enableSubmit(False);
@@ -24,7 +23,7 @@
             }
 
             self.$form.on('submit', function () {
-                if (self.valid) {
+                if (self.isValid()) {
                     $(this).find("input[type=submit]").prop("disabled", "disabled").val(gettext("Please wait..."));
                 } else {
                     return false;
