@@ -99,15 +99,6 @@
                                     </tr>
                                 </table>
 
-{#                                <table id="usage" class="cfg-form collapse collapsed">#}
-{#                                    <tr>#}
-{#                                        <td>Form</td>#}
-{#                                        <td><a target="_inspect"#}
-{#                                               href="{% url "admin:core_flexform_change" original.flex_form.pk %}">{{ original.flex_form }}</a>#}
-{#                                        </td>#}
-{#                                        <td></td>#}
-{#                                    </tr>#}
-{#                                </table>#}
                                 <table id="usage" class="cfg-form collapse collapsed">
                                     {% for usage in original.get_usage %}
                                         <tr>
