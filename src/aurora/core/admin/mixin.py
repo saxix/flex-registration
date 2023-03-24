@@ -11,25 +11,24 @@ from adminfilters.value import ValueFilter
 from concurrency.api import disable_concurrency
 from django import forms
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.admin import TabularInline, register
 from django.contrib.admin.options import IncorrectLookupParameters
 from django.core.cache import caches
 from django.core.exceptions import ValidationError
 from django.db.models import JSONField, Q
-from django.http import HttpResponseRedirect
 from django.urls import NoReverseMatch, reverse
 from jsoneditor.forms import JSONEditor
 from mptt.admin import MPTTModelAdmin
 from reversion_compare.admin import CompareVersionAdmin
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ..administration.filters import BaseAutoCompleteFilter
-from ..administration.mixin import LoadDumpMixin
-from .admin_sync import SyncMixin
-from .field_editor import FieldEditor
-from .fields.widgets import PythonEditor
-from .forms import Select2Widget, ValidatorForm
-from .models import (
+from ...administration.filters import BaseAutoCompleteFilter
+from ...administration.mixin import LoadDumpMixin
+from ..admin_sync import SyncMixin
+from ..fields.widgets import JavascriptEditor
+from ..forms import Select2Widget, ValidatorForm
+from ..models import (
     FIELD_KWARGS,
     CustomFieldType,
     FlexForm,
@@ -40,8 +39,10 @@ from .models import (
     Project,
     Validator,
 )
+from ..utils import dict_setdefault, is_root, render
+from .field_editor import FieldEditor
+from .form_editor import FormEditor
 from .protocols import AuroraSyncOrganizationProtocol, AuroraSyncProjectProtocol
-from .utils import dict_setdefault, is_root, render
 
 logger = logging.getLogger(__name__)
 
@@ -82,9 +83,9 @@ class Select2RelatedFieldComboFilter(RelatedFieldComboFilter):
 
 class ValidatorTestForm(forms.Form):
     code = forms.CharField(
-        widget=PythonEditor,
+        widget=JavascriptEditor,
     )
-    input = forms.CharField(widget=PythonEditor(toolbar=False), required=False)
+    input = forms.CharField(widget=JavascriptEditor(toolbar=False), required=False)
 
 
 @register(Organization)
@@ -114,6 +115,7 @@ class ProjectAdmin(SyncMixin, MPTTModelAdmin):
     mptt_indent_field = "name"
     search_fields = ("name",)
     protocol_class = AuroraSyncProjectProtocol
+    autocomplete_fields = "parent, "
 
     def get_search_results(self, request, queryset, search_term):
         queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
@@ -257,6 +259,7 @@ class FlexFormFieldForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        ret.setdefault("advanced", {})
         dict_setdefault(ret["advanced"], FlexFormField.FLEX_FIELD_DEFAULT_ATTRS)
         dict_setdefault(ret["advanced"], {"kwargs": FIELD_KWARGS.get(ret["field_type"], {})})
         return ret
@@ -274,18 +277,23 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     )
     autocomplete_fields = ("flex_form", "validator")
     save_as = True
-    readonly_fields = ("version", "last_update_date")
     formfield_overrides = {
         JSONField: {"widget": JSONEditor},
     }
     form = FlexFormFieldForm
     ordering_field = "ordering"
     order = "ordering"
+    readonly_fields = ("version", "last_update_date")
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("flex_form")
 
     # change_list_template = "reversion/change_list.html"
+    def get_readonly_fields(self, request, obj=None):
+        if is_root(request):
+            return []
+        else:
+            return super().get_readonly_fields(request, obj)
 
     def field_type(self, obj):
         if obj.field_type:
@@ -313,7 +321,9 @@ class FlexFormFieldAdmin(LoadDumpMixin, SyncMixin, ConcurrencyVersionAdmin, Orde
     def field_editor(self, request, pk):
         self.editor = FieldEditor(self, request, pk)
         if request.method == "POST":
-            return self.editor.post(request, pk)
+            ret = self.editor.post(request, pk)
+            self.message_user(request, "Saved", messages.SUCCESS)
+            return ret
         else:
             return self.editor.get(request, pk)
 
@@ -488,7 +498,7 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
 
     @button(html_attrs={"class": "aeb-danger"})
     def invalidate_cache(self, request):
-        from .cache import cache
+        from ..cache import cache
 
         cache.clear()
 
@@ -497,11 +507,41 @@ class FlexFormAdmin(SyncMixin, ConcurrencyVersionAdmin, SmartModelAdmin):
         obj = self.get_object(request, pk)
         obj.save()
 
-    @button(label="Fields")
-    def _fields(self, request, pk):
-        url = reverse("admin:core_flexformfield_changelist")
-        url = f"{url}?flex_form__exact={pk}"
-        return HttpResponseRedirect(url)
+    @button()
+    def inspect(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        ctx["title"] = str(ctx["original"])
+        return render(request, "admin/core/flexform/inspect.html", ctx)
+
+    @button(label="editor")
+    def form_editor(self, request, pk):
+        self.editor = FormEditor(self, request, pk)
+        if request.method == "POST":
+            ret = self.editor.post(request, pk)
+            self.message_user(request, "Saved", messages.SUCCESS)
+            return ret
+        else:
+            return self.editor.get(request, pk)
+
+    @view()
+    def widget_attrs(self, request, pk):
+        editor = FormEditor(self, request, pk)
+        return editor.get_configuration()
+
+    @view()
+    def widget_refresh(self, request, pk):
+        editor = FormEditor(self, request, pk)
+        return editor.refresh()
+
+    @view()
+    def widget_code(self, request, pk):
+        editor = FormEditor(self, request, pk)
+        return editor.get_code()
+
+    @view()
+    def widget_display(self, request, pk):
+        editor = FormEditor(self, request, pk)
+        return editor.render()
 
     @button()
     def test(self, request, pk):

@@ -15,10 +15,11 @@ echo "created support dirs /var/run ${MEDIA_ROOT} ${STATIC_ROOT}"
 if [ $# -eq 0 ]; then
     envsubst < /conf/nginx.conf.tpl > /conf/nginx.conf && nginx -tc /conf/nginx.conf
     envsubst < /conf/redis.conf.tpl > /conf/redis.conf
-    redis-server /conf/redis.conf
+
     django-admin upgrade --no-input
 
     nginx -c /conf/nginx.conf
+    redis-server /conf/redis.conf
     exec uwsgi --ini /conf/uwsgi.ini
 #   exec gunicorn aurora.config.wsgi -c /conf/gunicorn_config.py
 else

@@ -29,7 +29,7 @@ FERNET_KEY = env("FERNET_KEY")
 DEBUG = env("DEBUG")
 DEBUG_PROPAGATE_EXCEPTIONS = env("DEBUG_PROPAGATE_EXCEPTIONS")
 
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 DJANGO_ADMIN_URL = env("DJANGO_ADMIN_URL")
 
 # Application definition
@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     # "smart_admin.apps.SmartAuthConfig",
     "smart_admin.apps.SmartConfig",
     "aurora.administration.apps.AuroraAdminConfig",
-    "aurora.administration.apps.AuroraAuthConfig",
+    "front_door.contrib",
     "hijack",
     "rest_framework",
     "rest_framework.authtoken",
@@ -94,6 +94,7 @@ MIDDLEWARE = [
     # "django.middleware.cache.UpdateCacheMiddleware",
     "aurora.web.middlewares.thread_local.ThreadLocalMiddleware",
     "aurora.web.middlewares.sentry.SentryMiddleware",
+    "front_door.middleware.FrontDoorMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "aurora.web.middlewares.maintenance.MaintenanceMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -185,7 +186,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 try:
     if REDIS_CONNSTR := env("REDIS_CONNSTR"):
-        os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR}"
+        os.environ["CACHE_DEFAULT"] = f"redisraw://{REDIS_CONNSTR},client_class=django_redis.client.DefaultClient"
 except Exception as e:  # pragma: no cover
     logging.exception(e)
 
@@ -276,8 +277,9 @@ STATICFILES_DIRS = [
 # -------- Added Settings
 ADMINS = env("ADMINS")
 AUTHENTICATION_BACKENDS = [
-    "aurora.security.backend.RegistrationAuthBackend",
-    "aurora.security.backend.OrganizationAuthBackend",
+    "aurora.security.backend.AuroraAuthBackend",
+    # "aurora.security.backend.RegistrationAuthBackend",
+    # "aurora.security.backend.OrganizationAuthBackend",
     # "django.contrib.auth.backends.ModelBackend",
     "social_core.backends.azuread_tenant.AzureADTenantOAuth2",
 ] + env("AUTHENTICATION_BACKENDS")
@@ -327,6 +329,14 @@ LOGGING = {
         "flags": {
             "handlers": ["console"],
             "level": "ERROR",
+        },
+        "front_door": {
+            "handlers": ["console"],
+            "level": "ERROR",
+        },
+        "front_door.middleware": {
+            "handlers": ["console"],
+            "level": "CRITICAL",
         },
         "django": {
             "handlers": ["console"],
@@ -425,11 +435,14 @@ CONSTANCE_CONFIG = OrderedDict(
 )
 
 SMART_ADMIN_SECTIONS = {
-    "Organization": ["core.Organization", "core.Project"],
     "Registration": ["registration", "dbtemplates", "flatpages"],
+    "Security": ["social_auth", "security"],
     "Form Builder": ["core"],
+    "Organization": ["core.Organization", "core.Project"],
     "Configuration": ["constance", "flags"],
-    "Security": ["auth", "social_auth", "security"],
+    "i18N": [
+        "i18n",
+    ],
     "Other": [],
     "_hidden_": [],
 }
@@ -548,9 +561,10 @@ DEBUG_TOOLBAR_PANELS = [
 
 ROOT_TOKEN = env("ROOT_TOKEN")
 CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
-# Azure login
 
+# WARNING: Do NOT touch this line before it will reach out production
 AUTH_USER_MODEL = "auth.User"
+# AUTH_USER_MODEL = "security.AuroraUser"
 
 # Social Auth settings.
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env.str("AZURE_CLIENT_SECRET")
@@ -579,6 +593,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.associate_user",
     "social_core.pipeline.social_auth.load_extra_data",
     "aurora.core.authentication.user_details",
+    "aurora.core.authentication.redir_to_form",
 )
 SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_USER_FIELDS = [
     "email",
@@ -597,7 +612,7 @@ SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
 
 # fix admin name
 LOGIN_URL = "/login"
-LOGIN_REDIRECT_URL = f"/{DJANGO_ADMIN_URL}"
+LOGIN_REDIRECT_URL = "/logged-in/"
 
 # allow upload big file
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 2  # 2M
@@ -781,3 +796,25 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissions",
     ],
 }
+
+
+FRONT_DOOR_CONFIG = "front_door.conf.DjangoConstance"
+FRONT_DOOR_ENABLED = env("FRONT_DOOR_ENABLED")
+FRONT_DOOR_ALLOWED_PATHS = env("FRONT_DOOR_ALLOWED_PATHS")
+FRONT_DOOR_TOKEN = env("FRONT_DOOR_TOKEN")
+FRONT_DOOR_HEADER = "x-aurora"
+FRONT_DOOR_COOKIE_NAME = "x-aurora"
+FRONT_DOOR_COOKIE_PATTERN = ".*"
+# FRONT_DOOR_ERROR_CODE = 404
+# FRONT_DOOR_REDIR_URL = "https://www.sosbob.com/"
+FRONT_DOOR_LOG_LEVEL = env("FRONT_DOOR_LOG_LEVEL")  # LOG_RULE_FAIL
+FRONT_DOOR_RULES = [
+    # "front_door.rules.internal_ip",  # grant access to settings.INTERNAL_IPS
+    # "front_door.rules.forbidden_path",  # DENY access to FORBIDDEN_PATHS
+    "front_door.rules.allowed_path",  # grant access to ALLOWED_PATHS
+    "front_door.rules.allowed_ip",  # grant access to ALLOWED_IPS
+    "front_door.rules.special_header",  # grant access if request has Header[HEADER] == TOKEN
+    # "front_door.rules.has_header",  # grant access if request has HEADER
+    "front_door.rules.cookie_value",  # grant access if request.COOKIES[COOKIE_NAME]
+    # "front_door.rules.cookie_exists",  # grant access ir COOKIE_NAME in request.COOKIES
+]

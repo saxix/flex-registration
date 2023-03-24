@@ -84,7 +84,18 @@ http {
             add_header Cache-Control "public, no-transform, immutable";
             expires 1d;
          }
-         location ${STATIC_URL} {
+         location /on/ {
+            alias ${STATIC_ROOT}${STATIC_URL};
+            autoindex on;
+            etag off;
+            if_modified_since off;
+            add_header Cache-Control "public, no-transform, immutable";
+            expires 1y;
+            gzip on;
+            gzip_disable "MSIE [1-6]\.";
+            gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
+         }
+          location ${STATIC_URL} {
             root ${STATIC_ROOT};
             autoindex off;
             etag off;

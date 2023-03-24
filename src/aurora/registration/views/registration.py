@@ -39,6 +39,7 @@ from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
 from aurora.stubs import FormSet
+from aurora.web.middlewares.admin import is_admin_site, is_public_site
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +118,17 @@ class RegisterRouter(FormView):
         return HttpResponseRedirect(url)
 
 
+class AdminAccesMixin:
+    def is_admin_site(self):
+        return is_admin_site(self.request)
+
+    def is_public_site(self):
+        return is_public_site(self.request)
+
+    def is_post_allowed(self):
+        return is_public_site(self.request) or self.reuest.user.is_staff
+
+
 class RegistrationMixin:
     @cached_property
     def registration(self):
@@ -138,10 +150,12 @@ class RegistrationMixin:
 def check_access(view_func):
     def wrapped_view(*args, **kwargs):
         view, request = args
-        if view.registration.protected:
+        if view.registration.protected and not state.collect_messages:
             login_url = "%s?next=%s" % (settings.LOGIN_URL, request.path)
             if request.user.is_anonymous:
-                return HttpResponseRedirect(login_url)
+                response = HttpResponseRedirect(login_url)
+                response.set_cookie("aurora_form", str(view.registration.slug))
+                return response
             if not request.user.has_perm("registration.register", view.registration):
                 messages.add_message(request, messages.ERROR, _("Sorry you do not have access to requested Form"))
                 return HttpResponseRedirect(login_url)
@@ -152,7 +166,7 @@ def check_access(view_func):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class RegisterView(RegistrationMixin, FormView):
+class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
     template_name = "registration/register.html"
 
     def get_template_names(self):
@@ -164,6 +178,8 @@ class RegisterView(RegistrationMixin, FormView):
     def get(self, request, *args, **kwargs):
         # if request.user.is_authenticated and not request.GET.get("s"):
         #     return HttpResponseRedirect(self.registration.get_absolute_url())
+        if not self.is_post_allowed():
+            return HttpResponse("Not Allowed")
 
         if state.collect_messages:
             self.res_etag = get_etag(request, time.time())
@@ -222,7 +238,7 @@ class RegisterView(RegistrationMixin, FormView):
         kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
-        m = forms.Media()
+        m = forms.Media(js=["smart_field.js"])
         m += ctx["form"].media
         for __, f in ctx["formsets"].items():
             m += f.media
@@ -249,6 +265,9 @@ class RegisterView(RegistrationMixin, FormView):
 
     @check_access
     def post(self, request, *args, **kwargs):
+        if not self.is_post_allowed():
+            return HttpResponse("Not Allowed")
+
         slug = request.resolver_match.kwargs.get("slug")
         registration = Registration.objects.filter(slug=slug).first()
         if registration and registration.is_pwa_enabled:
@@ -295,7 +314,8 @@ class RegisterView(RegistrationMixin, FormView):
             data["index2"] = data[form.indexes["2"]]
         if form.indexes["3"]:
             data["index3"] = data[form.indexes["3"]]
-        record = self.registration.add_record(data)
+        if not state.collect_messages:
+            record = self.registration.add_record(data)
         success_url = reverse("register-done", args=[self.registration.pk, record.pk])
         return HttpResponseRedirect(success_url)
 

@@ -11,13 +11,14 @@ from ...registration.models import Record
 
 
 class RecordSerializer(serializers.ModelSerializer):
-    registration = serializers.SerializerMethodField()
+    registration_url = serializers.SerializerMethodField()
+    registrar = serializers.CharField()
 
     class Meta:
         model = Record
         exclude = ("storage", "files")
 
-    def get_registration(self, obj):
+    def get_registration_url(self, obj):
         req = self.context["request"]
         return req.build_absolute_uri(reverse("api:registration-detail", kwargs={"pk": obj.registration_id}))
 
@@ -49,10 +50,6 @@ class DataTableRecordSerializer(serializers.ModelSerializer):
         for field_name, field_defs in self.metadata["base"]["fields"].items():
             if field_defs["type"] not in [fqn(LabelOnlyField)]:
                 fields[field_name] = serializers.CharField(read_only=True, source=f"fields.{field_name}", default="N/A")
-
-            # print("src/aurora/api/serializers/record.py: 46", e)
-            # fields[e["name"]] = serializers.CharField(read_only=True, source="fields.name", default="N/A")
-        # fields["flatten"] = serializers.JSONField(read_only=True, default="N/A")
         fields["flatten"] = serializers.SerializerMethodField(read_only=True, default="N/A")
         return fields
 

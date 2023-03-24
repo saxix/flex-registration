@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django.conf import settings
 from sentry_sdk import configure_scope
@@ -13,5 +14,7 @@ class SentryMiddleware:
     def __call__(self, request):
         with configure_scope() as scope:
             scope.set_tag("debug", settings.DEBUG)
+            scope.set_tag("Version", os.environ.get("VERSION", "?"))
+            scope.set_tag("Build", os.environ.get("BUILD_DATE", "?"))
             response = self.get_response(request)
         return response

@@ -31,11 +31,12 @@ GLOBAL_EXCLUDED_BUTTONS = RegexList(
     [
         r".*:publish",
         r".*:_recoverlist_view",
+        r".*:check_remote_version",
         r"core.ValidatorAdmin:test",
         r"registration.RecordAdmin:preview",
         r"registration.RecordAdmin:inspect",
         r"registration.RecordAdmin:decrypt",
-        "auth.AuroraUserAdmin:hijack",
+        "auth.UserAdmin:hijack",
     ]
 )
 

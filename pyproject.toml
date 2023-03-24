@@ -65,6 +65,7 @@ channels-redis = "^4.0.0"
 django-mdeditor = "^0.1.20"
 djangorestframework-datatables = "^0.7.0"
 django-filter = "^22.1"
+django-front-door = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
@@ -88,6 +89,7 @@ pytest-pythonpath = "^0.7.3"
 pytest-selenium = "^2.0"
 tox = "*"
 watchdog = "^2.1.6"
+django-stubs = {extras = ["compatible-mypy"], version = "^1.16.0"}
 
 [build-system]
 requires = ["poetry-core>=1.1.4"]

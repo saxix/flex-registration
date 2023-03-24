@@ -30,9 +30,9 @@
         {% include "i18n/_select_language.html" with languages=registration.languages %}
     </div>
     {% endif %}
-    {% if user.is_authenticated and registration.protected %}<div class="flex-shrink">
-        <a href="{% url "logout" %}">logout</a>
-    </div>{% endif %}
+    {% if user.is_authenticated and registration.protected %}
+    <div class="flex-shrink"><a href="{% url "logout" %}">logout</a></div>
+    {% endif %}
     </div>
 {#    {% endif %}#}
 {% endblock %}

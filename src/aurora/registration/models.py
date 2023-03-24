@@ -182,9 +182,13 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         if self.unique_field_path and not kwargs.get("unique_field", None):
             unique_value = self.get_unique_value(fields)
             kwargs["unique_field"] = unique_value
-
+        if state.request and state.request.user.is_authenticated:
+            registrar = state.request.user
+        else:
+            registrar = None
         kwargs.update(
             {
+                "registrar": registrar,
                 "size": total_size(fields) + total_size(files),
                 "counters": fields_data.get("counters", {}),
                 "index1": fields_data.get("index1", None),
@@ -279,6 +283,7 @@ class Record(models.Model):
     index3 = models.CharField(null=True, blank=True, max_length=255)
 
     is_offline = models.BooleanField(default=False)
+    registrar = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL)
 
     @property
     def fields_data(self):

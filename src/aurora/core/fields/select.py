@@ -25,7 +25,11 @@ class AjaxSelectWidget(TailWindMixin, forms.Select):
     def __init__(self, attrs=None):
         super().__init__(attrs=attrs)
         self.attrs.setdefault("class", {})
-        self.attrs["class"] += " ajaxSelect"
+        # self.attrs["class"] += " ajaxSelect"
+
+    def build_attrs(self, base_attrs, extra_attrs=None):
+        base_attrs["class"] += " ajaxSelect"
+        return super().build_attrs(base_attrs, extra_attrs)
 
     @property
     def media(self):
@@ -50,7 +54,7 @@ class SelectField(forms.ChoiceField):
     def __init__(self, **kwargs):
         self._choices = ()
         self.language = kwargs.pop("language", get_language())
-        self.parent = kwargs.pop("parent", None)
+        self.parent = kwargs.pop("parent_datasource", None)
         options = kwargs.pop("datasource", "")
         super().__init__(**kwargs)
         self.choices = options
@@ -83,13 +87,14 @@ class AjaxSelectField(forms.Field):
     widget = AjaxSelectWidget
 
     def __init__(self, **kwargs):
-        self.parent = kwargs.pop("parent", "")
         if hasattr(self, "smart_attrs"):
+            self.parent = self.smart_attrs.get("parent_datasource", None)
             self.datasource = self.smart_attrs.get("datasource", None)
         elif "datasource" in kwargs:
             self.datasource = kwargs["datasource"]
         else:
             self.datasource = None
+            self.parent = None
 
         super().__init__(**kwargs)
 
@@ -97,8 +102,9 @@ class AjaxSelectField(forms.Field):
         from aurora.core.models import OptionSet
 
         attrs = super().widget_attrs(widget)
-        # attrs["data-parent"] = self.parent
         try:
+            if self.parent:
+                attrs["data-parent"] = self.parent
             attrs["data-source"] = self.datasource
             attrs["data-ajax--url"] = reverse("optionset", args=[self.datasource])
         except (OptionSet.DoesNotExist, NoReverseMatch, TypeError) as e:
