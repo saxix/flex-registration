@@ -30,25 +30,26 @@ if __name__ == "__main__":
     else:
         urls = sys.argv[1:]
     rnd = time()
-    latest_ref = None
-    latest_ver = None
+    latest_ref = {}
+    latest_ver = {}
     while True:
         for url in urls:
             ret = requests.get(f"{url}?{rnd}")
             ver = ret.headers.get("X-Aurora-Version", "N/A")
             ref = ret.headers.get("X-Azure-Ref", "N/A")
-            if ver != latest_ver:
-                marker = COLORS.WARNING
-            else:
-                marker = COLORS.RESET
-            print(
-                f"{marker}{url} {ret.status_code} "
-                f"{latest_ver} - "
-                f"{ret.headers.get('X-Aurora-Build', 'N/A')} - "
-                f"{ret.headers.get('X-Aurora-Time', 'N/A')} - "
-                f"{ret.headers.get('X-Azure-Ref', 'N/A')[:20]}{COLORS.RESET}"
-            )
-            latest_ref = ref
-            latest_ver = ver
+            if latest_ver.get(url):
+                if ver != latest_ver.get(url):
+                    marker = COLORS.WARNING
+                else:
+                    marker = COLORS.RESET
+                print(
+                    f"{marker}...{url[-20:]} - {ret.status_code} - "
+                    f"{latest_ver[url]} - "
+                    f"{ret.headers.get('X-Aurora-Build', 'N/A')} - "
+                    f"{ret.headers.get('X-Aurora-Time', 'N/A')} - "
+                    f"{ret.headers.get('X-Azure-Ref', 'N/A')[:20]}{COLORS.RESET}"
+                )
+            latest_ref[url] = ref
+            latest_ver[url] = ver
 
         sleep(1)
