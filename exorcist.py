@@ -29,10 +29,10 @@ if __name__ == "__main__":
         urls = ["https://register.unicef.org/"]
     else:
         urls = sys.argv[1:]
-    rnd = time()
     latest_ref = {}
     latest_ver = {}
     while True:
+        rnd = time()
         for url in urls:
             ret = requests.get(f"{url}?{rnd}")
             ver = ret.headers.get("X-Aurora-Version", "N/A")
