@@ -13,6 +13,7 @@ http {
     proxy_cache_min_uses 5;
     add_header X-Aurora-Version "${AURORA_VERSION}";
     add_header X-Aurora-Build "${AURORA_BUILD}";
+    add_header X-Aurora-Time "${DOLLAR}date_gmt";
 
     map ${DOLLAR}status ${DOLLAR}status_text {
       400 'Bad Request';
@@ -66,6 +67,7 @@ http {
         error_page 502 503 504 /50x.html;
         add_header X-Aurora-Version "${AURORA_VERSION}";
         add_header X-Aurora-Build "${AURORA_BUILD}";
+        add_header X-Aurora-Time "${DOLLAR}date_gmt";
 
         location /50x.html {
           ssi on;
@@ -89,6 +91,7 @@ http {
             add_header Cache-Control "public, no-transform, immutable";
             add_header X-Aurora-Version "${AURORA_VERSION}";
             add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
             expires 1d;
          }
          location /on/ {
@@ -99,6 +102,7 @@ http {
             add_header Cache-Control "public, no-transform, immutable";
             add_header X-Aurora-Version "${AURORA_VERSION}";
             add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
             expires 1y;
             gzip on;
             gzip_disable "MSIE [1-6]\.";
@@ -112,6 +116,7 @@ http {
             add_header Cache-Control "public, no-transform, immutable";
             add_header X-Aurora-Version "${AURORA_VERSION}";
             add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
 
             expires 1y;
             gzip on;
@@ -126,6 +131,7 @@ http {
             add_header X-Cache-Status ${DOLLAR}upstream_cache_status;
             add_header X-Aurora-Version "${AURORA_VERSION}";
             add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
 
             proxy_pass http://127.0.0.1:8000;
             proxy_set_header Host ${DOLLAR}host;
