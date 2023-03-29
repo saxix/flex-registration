@@ -147,7 +147,7 @@
                 return self;
             };
             self.sibling = function (name) {
-                var $target = $formContainer.find(`input[data-flex=${name}]`);
+                var $target = $formContainer.find(`:input[data-flex=${name}]`);
                 if (!$target[0]) {
                     alert(`Cannot find "input[name=${name}]"`)
                 }
