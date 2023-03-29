@@ -100,7 +100,7 @@ http {
             return 504;
         }
         location /favicon.ico {
-            alias ${STATIC_ROOT}favicon/favicon.ico;
+            alias ${STATIC_ROOT}/static/favicon/favicon.ico;
             etag off;
             if_modified_since off;
             add_header Cache-Control "public, no-transform, immutable";
