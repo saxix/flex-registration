@@ -25,32 +25,41 @@ class COLORS:
 
 
 if __name__ == "__main__":
+    if "--random" in sys.argv:
+        rnd = time
+    else:
+        rnd = lambda: ""
+
     if len(sys.argv) == 1:
         urls = ["https://register.unicef.org/"]
     else:
-        urls = sys.argv[1:]
+        urls = [u for u in sys.argv[1:] if u.startswith("http")]
+
     latest_ref = {}
     latest_ver = {}
+    lastest_version = None
     while True:
-        rnd = time()
+        seed = rnd()
         for url in urls:
-            ret = requests.get(f"{url}?{rnd}")
+            ret = requests.get(f"{url}?{seed}")
             ver = ret.headers.get("X-Aurora-Version", "N/A")
             ref = ret.headers.get("X-Azure-Ref", "N/A")
-            if latest_ver.get(url):
-                if ver != latest_ver.get(url):
+            if lastest_version is not None:
+                if ver != lastest_version:
                     marker = COLORS.WARNING
+                if ver != latest_ver.get(url):
+                    marker = COLORS.FAIL
                 else:
                     marker = COLORS.RESET
                 print(
                     f"{marker}...{url[-20:]} - {ret.status_code} - "
-                    f"{latest_ver[url]} - "
-                    f"{ret.headers.get('X-Aurora-Build', 'N/A')} - "
+                    f"{ver:<7} - "
+                    f"{ret.headers.get('X-Aurora-Build', 'N/A'):<16} - "
                     f"{ret.headers.get('X-Aurora-Time', 'N/A')} - "
                     f"{ret.headers.get('X-Azure-Ref', 'N/A')[:20]}{COLORS.RESET}"
                 )
             latest_ref[url] = ref
-            latest_ver[url] = ver
+            lastest_version = latest_ver[url] = ver
         if len(urls) > 1:
             print("=====")
 
