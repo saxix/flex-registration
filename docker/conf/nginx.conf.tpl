@@ -70,18 +70,30 @@ http {
         add_header X-Aurora-Time "${DOLLAR}date_gmt";
 
         location /50x.html {
-          ssi on;
-          internal;
-          auth_basic off;
-          root /var/nginx/;
+            ssi on;
+            add_header X-Aurora-Version "${AURORA_VERSION}";
+            add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
+            internal;
+            auth_basic off;
+            root /var/nginx/;
         }
         location /error/502  {
+            add_header X-Aurora-Version "${AURORA_VERSION}";
+            add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
             return 502;
         }
         location /error/503  {
+            add_header X-Aurora-Version "${AURORA_VERSION}";
+            add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
             return 503;
         }
         location /error/504  {
+            add_header X-Aurora-Version "${AURORA_VERSION}";
+            add_header X-Aurora-Build "${AURORA_BUILD}";
+            add_header X-Aurora-Time "${DOLLAR}date_gmt";
             return 504;
         }
         location /favicon.ico {
