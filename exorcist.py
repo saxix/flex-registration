@@ -51,5 +51,7 @@ if __name__ == "__main__":
                 )
             latest_ref[url] = ref
             latest_ver[url] = ver
+        if len(urls) > 1:
+            print("=====")
 
         sleep(1)
