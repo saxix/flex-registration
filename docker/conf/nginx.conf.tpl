@@ -63,7 +63,8 @@ http {
         large_client_header_buffers 4 16k;
         access_log /dev/stdout;
         listen 80;
-        proxy_cache one;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
         error_page 502 503 504 /50x.html;
         add_header X-Aurora-Version "${AURORA_VERSION}";
         add_header X-Aurora-Build "${AURORA_BUILD}";
@@ -97,7 +98,7 @@ http {
             return 504;
         }
         location /favicon.ico {
-            alias ${STATIC_URL}favicon/favicon.ico;
+            alias ${STATIC_ROOT}favicon/favicon.ico;
             etag off;
             if_modified_since off;
             add_header Cache-Control "public, no-transform, immutable";
