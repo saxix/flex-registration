@@ -65,6 +65,8 @@ http {
         listen 80;
         proxy_no_cache 1;
         proxy_cache_bypass 1;
+        proxy_cache off;
+
         error_page 502 503 504 /50x.html;
         add_header X-Aurora-Version "${AURORA_VERSION}";
         add_header X-Aurora-Build "${AURORA_BUILD}";
