@@ -86,11 +86,14 @@ class FlexFormBaseForm(forms.Form):
     def media(self):
         extra = "" if settings.DEBUG else ".min"
         base = super().media
-        return base + forms.Media(
-            js=[
-                static("smart_validation%s.js" % extra),
-                static("smart%s.js" % extra),
-            ]
+        return (
+            VersionMedia(
+                js=[
+                    static("smart_validation%s.js" % extra),
+                    static("smart%s.js" % extra),
+                ]
+            )
+            + base
         )
 
     def get_storage_mapping(self):
