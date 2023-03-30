@@ -14,7 +14,6 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core import signing
 from django.core.exceptions import ValidationError
-from django.forms import forms
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -28,6 +27,7 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from sentry_sdk import set_tag
 
+from aurora.core.forms import VersionMedia
 from aurora.core.utils import (
     get_etag,
     get_qrcode,
@@ -237,7 +237,7 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
         kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
-        m = forms.Media(js=["smart_field.js"])
+        m = VersionMedia(js=["smart_field.js"])
         m += ctx["form"].media
         for __, f in ctx["formsets"].items():
             m += f.media

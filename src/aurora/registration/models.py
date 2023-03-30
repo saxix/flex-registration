@@ -5,7 +5,6 @@ import logging
 import jmespath
 from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
-from django import forms
 from django.conf import settings
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.postgres.fields import CICharField
@@ -20,6 +19,7 @@ from strategy_field.utils import fqn
 
 from aurora.core.crypto import Crypto, crypt, decrypt, decrypt_offline
 from aurora.core.fields import AjaxSelectField, LabelOnlyField
+from aurora.core.forms import VersionMedia
 from aurora.core.models import FlexForm, FlexFormField, Project, Validator
 from aurora.core.utils import (
     cache_aware_reverse,
@@ -123,7 +123,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     @property
     def media(self):
-        return forms.Media(js=[script.get_script_url() for script in self.scripts.all()])
+        return VersionMedia(js=[script.get_script_url() for script in self.scripts.all()])
 
     def __str__(self):
         return self.name
