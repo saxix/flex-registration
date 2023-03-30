@@ -606,7 +606,6 @@ SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
     "profile",
 ]
 
-
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
 
@@ -797,7 +796,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-
 FRONT_DOOR_CONFIG = "front_door.conf.DjangoConstance"
 FRONT_DOOR_ENABLED = env("FRONT_DOOR_ENABLED")
 FRONT_DOOR_ALLOWED_PATHS = env("FRONT_DOOR_ALLOWED_PATHS")
@@ -818,3 +816,7 @@ FRONT_DOOR_RULES = [
     "front_door.rules.cookie_value",  # grant access if request.COOKIES[COOKIE_NAME]
     # "front_door.rules.cookie_exists",  # grant access ir COOKIE_NAME in request.COOKIES
 ]
+
+TRANSLATOR_SERVICE = env("TRANSLATOR_SERVICE")
+AZURE_TRANSLATOR_KEY = env("AZURE_TRANSLATOR_KEY")
+AZURE_TRANSLATOR_LOCATION = env("AZURE_TRANSLATOR_LOCATION")

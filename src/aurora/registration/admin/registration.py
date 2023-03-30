@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import logging
+from django.utils.module_loading import import_string
 from hashlib import md5
 
 from admin_extra_buttons.decorators import button, choice, view
@@ -35,7 +36,8 @@ from aurora.core.utils import (
     is_root,
     namify,
 )
-from aurora.i18n.forms import TemplateForm
+from aurora.i18n.forms import TemplateForm, TranslationForm
+from aurora.i18n.translate import Translator
 from aurora.registration.admin.filters import (
     OrganizationFilter,
     RegistrationProjectFilter,
@@ -402,8 +404,6 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
     @view()
     def prepare_translation(self, request, pk):
-        from aurora.i18n.forms import LanguageForm
-
         ctx = self.get_common_context(
             request,
             pk,
@@ -413,12 +413,13 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         instance: Registration = ctx["original"]
         if request.method == "POST":
             if "create" in request.POST:
-                form = LanguageForm(request.POST)
+                form = TranslationForm(request.POST)
                 if form.is_valid():
                     key = f"i18n_{request.user.pk}_{md5(request.session.session_key.encode()).hexdigest()}"
                     con = get_redis_connection("default")
                     con.delete(key)
                     locale = form.cleaned_data["locale"]
+                    translate = form.cleaned_data["translate"]
                     if locale not in instance.locales:
                         self.message_user(request, "Language not enabled for this registration", messages.ERROR)
                         return HttpResponseRedirect(".")
@@ -429,7 +430,15 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
 
                     entries = list(Message.objects.filter(locale=locale).values_list("msgid", "msgstr"))
                     data = dict(entries)
-                    ctx["collected"] = {c: data.get(c, "") for c in collected}
+                    if translate == "2":
+                        t: Translator = import_string(settings.TRANSLATOR_SERVICE)()
+                        func = lambda x: t.translate(locale, x)
+                    elif translate == "1":
+                        t: Translator = import_string(settings.TRANSLATOR_SERVICE)()
+                        func = lambda x: x if data.get(x, "") == x else t.translate(locale, x)
+                    else:
+                        func = lambda x: data.get(x, "")
+                    ctx["collected"] = {c: func(c) for c in collected}
                     ctx["language_code"] = locale
             elif "export" in request.POST:
                 selection = request.POST.getlist("selection")
@@ -447,7 +456,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                 # for i, row in enumerate(data["messages"], 1):
 
         else:
-            form = LanguageForm()
+            form = TranslationForm()
             ctx["form"] = form
 
         return render(request, "admin/registration/registration/translation.html", ctx)
