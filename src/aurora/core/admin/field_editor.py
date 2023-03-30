@@ -1,15 +1,17 @@
 import json
+from django.conf import settings
+from django.templatetags.static import static
 from typing import Dict
 
 from django import forms
 from django.core.cache import caches
-from django.forms import Media
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.template import Context, Template
 from django.utils.functional import cached_property
 
 from aurora.core.fields.widgets import JavascriptEditor
+from aurora.core.forms import VersionMedia
 from aurora.core.models import FlexFormField, OptionSet
 from aurora.core.utils import merge_data
 
@@ -228,7 +230,17 @@ class FieldEditor:
 
     def get(self, request, pk):
         ctx = self.get_context(request, pk)
-        ctx["forms_media"] = Media()
+        extra = "" if settings.DEBUG else ".min"
+        ctx["forms_media"] = VersionMedia(
+            js=[
+                static("admin/js/vendor/jquery/jquery%s.js" % extra),
+                static("admin/js/jquery.init%s.js" % extra),
+                static("admin/js/jquery.compat%s.js" % extra),
+                static("smart_validation%s.js" % extra),
+                static("smart%s.js" % extra),
+                static("smart_field%s.js" % extra),
+            ]
+        )
         for prefix, frm in self.get_forms().items():
             ctx[f"form_{prefix}"] = frm
             ctx["forms_media"] += frm.media

@@ -25,7 +25,7 @@ from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
 
 from aurora.core.admin.base import ConcurrencyVersionAdmin
-from aurora.core.forms import CSVOptionsForm, DateFormatsForm
+from aurora.core.forms import CSVOptionsForm, DateFormatsForm, VersionMedia
 from aurora.core.models import FormSet
 from aurora.core.utils import (
     build_dict,
@@ -128,10 +128,16 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     def media(self):
         extra = "" if settings.DEBUG else ".min"
         base = super().media
-        return base + forms.Media(
-            js=[
-                "/static/clipboard%s.js" % extra,
-            ]
+        return (
+            VersionMedia(
+                js=[
+                    "admin/js/vendor/jquery/jquery%s.js" % extra,
+                    "admin/js/jquery.init%s.js" % extra,
+                    "admin/js/vendor/jquery/jquery%s.js" % extra,
+                    "/static/clipboard%s.js" % extra,
+                ]
+            )
+            + base
         )
 
     @view(permission=can_export_data)

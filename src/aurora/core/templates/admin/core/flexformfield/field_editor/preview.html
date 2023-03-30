@@ -9,11 +9,13 @@
 <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
 <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>
 <script src="{% static "admin/js/jquery.init.js" %}"></script>
+<script src="{% static "jquery.compat.js" %}"></script>
 <script src="{% static "smart_validation.js" %}"></script>
 <script src="{% static "smart.js" %}"></script>
 <script src="{% static "smart_field.js" %}"></script>
 
-<script>jQuery = $ = django.jQuery;</script>
+{#<script>window.jQuery = window.$ = django.jQuery;</script>#}
+{#<script>console.log(  111111, jQuery)</script>#}
 {{ form.media }}
 {% if request.method == "POST" %}
     {% if valid %}

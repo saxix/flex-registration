@@ -8,7 +8,18 @@
         }
         return this;
     };
-
+    window.debug = function (arguments){
+        var log;
+        if (window.parent.document.getElementById('debugLog') ){
+            log = window.parent.document.getElementById('debugLog');
+        }else{
+            log = window.document.getElementById('debugLog');
+        }
+        if (log){
+            $(log).append(arguments);
+            $(log).append("\n");
+        }
+    }
     window.aurora = {
         Module: function (config) {
             var self = this;
