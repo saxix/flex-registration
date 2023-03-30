@@ -1,18 +1,30 @@
 ;(function ($) {
+    var highLight = function (onOff) {
+        if (onOff) {
+            this.__oldBorder = this.$.css("border");
+            this.$.css("border", "1px solid red");
+        } else {
+            this.$.css("border", this.__oldBorder);
+        }
+        return this;
+    };
+
     window.aurora = {
         Module: function (config) {
             var self = this;
             var errorsStack = {};
 
-            $form = $("#registrationForm");
+            self.$ = $("#formContainer");
+            var $form = $("#registrationForm");
             self.config = config;
             self.name = config.name;
-
+            self.setError = function (msg){
+                self.$.find('.alert-message').html(msg);
+            };
             self.pushError = function (f) {
                 self.enableSubmit(false);
                 errorsStack[f] = true;
-            }
-
+            };
             self.popError = function (f) {
                 errorsStack[f] = false;
                 self.enableSubmit(self.isValid());
@@ -20,7 +32,7 @@
 
             self.isValid = function () {
                 for (let i = 0, keys = Object.keys(errorsStack), ii = keys.length; i < ii; i++) {
-                    if (errorsStack[i] === false){
+                    if (errorsStack[i] === false) {
                         return false
                     }
                 }
@@ -43,6 +55,40 @@
                 }
             });
         },
+        ChildForm: function (fs, index, origin) {
+            var self = this;
+            self.origin = origin;
+            self.formset = fs;
+            const $me = $(self.origin);
+            self.$ = $me;
+            const number = index;
+            self.highLight = highLight;
+            var _fields = null;
+            self.fields = function () {
+                if (_fields == null) {
+                    _fields = {}
+                    $me.find(`:input[data-flex]`).each(function (i, e) {
+                        var f = new aurora.Field(e);
+                        _fields[f.name] = f;
+                    });
+                }
+                return _fields
+            };
+        },
+        Formset: function (name) {
+            var self = this;
+            const $me = $(".formset.formset-" + name);
+            self.name = name;
+            self.$ = $me;
+            self.entries = function () {
+                var ret = [];
+                $me.find('.form-container.' + self.name).each(function (i, e) {
+                    ret.push(new aurora.ChildForm(self, i, e));
+                })
+                return ret;
+            }
+            self.highLight = highLight;
+        },
         Field: function (origin) {
             var self = this;
             self.origin = origin;
@@ -50,7 +96,6 @@
             const $fieldset = $me.parents('fieldset');
             const id = $fieldset.data("fid");
             const pk = $fieldset.data("fpk");
-            const name = $fieldset.data("fname");
             const $form = $me.parents('form');
             const $fieldContainer = $me.parents('.field-container');
             const $formContainer = $me.parents('.form-container');
@@ -59,6 +104,10 @@
             const initial = {
                 required: $input.attr("required"),
             }
+            self.$ = $fieldset;
+            self.name = $fieldset.data("fname");
+
+            self.highLight = highLight;
             self.setRequired = function (onOff) {
                 $input.attr("required", onOff);
                 onOff ? $fieldset.find('.required-label').show() : $fieldset.find('.required-label').hide();
@@ -153,6 +202,14 @@
                 }
                 return new aurora.Field($target);
             };
+            self.formsets = function (name) {
+                var $target = $formContainer.find(`input[data-flex=${name}]`);
+                if (!$target[0]) {
+                    alert(`Cannot find "input[name=${name}]"`)
+                }
+                return new aurora.Field($target);
+            };
+
             self.setRequiredOnValue = function (value, targets) {
                 try {
                     const cmp = value.toString().toLowerCase();
