@@ -4,7 +4,7 @@
 {#        {% if invalid %}#}
             <div data-msgid="please fix the errors below"
                     class="itrans mb-10 w-full text-capitalize m-auto text-center alert-message text-xl">
-                {% if invalid %}#}{% trans "please fix the errors below" %}{% endif %}
+                {% if invalid %}{% trans "please fix the errors below" %}{% endif %}
             </div>
             <ul class="block errorlist">{% for e in errors %}
                 {% for msg in e %}

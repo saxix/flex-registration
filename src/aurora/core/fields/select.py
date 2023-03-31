@@ -3,7 +3,6 @@ import logging
 from django import forms
 from django.conf import settings
 from django.forms import BoundField
-from django.templatetags.static import static
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import get_language
 
@@ -38,9 +37,9 @@ class AjaxSelectWidget(TailWindMixin, forms.Select):
         base = super().media
         return base + forms.Media(
             js=[
-                static("admin/js/vendor/jquery/jquery%s.js" % extra),
-                static("admin/js/jquery.init%s.js" % extra),
-                static("jquery.compat%s.js" % extra),
+                "admin/js/vendor/jquery/jquery%s.js" % extra,
+                "admin/js/jquery.init%s.js" % extra,
+                "jquery.compat%s.js" % extra,
                 "https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js",
                 "select2/ajax_select%s.js" % extra,
             ],

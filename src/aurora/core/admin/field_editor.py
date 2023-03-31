@@ -1,6 +1,5 @@
 import json
 from django.conf import settings
-from django.templatetags.static import static
 from typing import Dict
 
 from django import forms
@@ -233,12 +232,12 @@ class FieldEditor:
         extra = "" if settings.DEBUG else ".min"
         ctx["media"] = VersionMedia(
             js=[
-                static("admin/js/vendor/jquery/jquery%s.js" % extra),
-                static("admin/js/jquery.init%s.js" % extra),
-                static("jquery.compat%s.js" % extra),
-                static("smart_validation%s.js" % extra),
-                static("smart%s.js" % extra),
-                static("smart_field%s.js" % extra),
+                "admin/js/vendor/jquery/jquery%s.js" % extra,
+                "admin/js/jquery.init%s.js" % extra,
+                "jquery.compat%s.js" % extra,
+                "smart_validation%s.js" % extra,
+                "smart%s.js" % extra,
+                "smart_field%s.js" % extra,
             ]
         )
         for prefix, frm in self.get_forms().items():

@@ -5,7 +5,6 @@ from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms import BaseFormSet
-from django.templatetags.static import static
 from django.utils import formats
 from django.utils.translation import gettext as _
 
@@ -45,12 +44,12 @@ class FlexFormBaseForm(forms.Form):
         return (
             VersionMedia(
                 js=[
-                    static("admin/js/vendor/jquery/jquery%s.js" % extra),
-                    static("admin/js/jquery.init%s.js" % extra),
-                    static("jquery.compat%s.js" % extra),
-                    static("smart_validation%s.js" % extra),
-                    static("smart%s.js" % extra),
-                    static("smart_field%s.js" % extra),
+                    "admin/js/vendor/jquery/jquery%s.js" % extra,
+                    "admin/js/jquery.init%s.js" % extra,
+                    "jquery.compat%s.js" % extra,
+                    "smart_validation%s.js" % extra,
+                    "smart%s.js" % extra,
+                    "smart_field%s.js" % extra,
                 ]
             )
             + base
@@ -103,11 +102,11 @@ class SmartBaseFormSet(BaseFormSet):
         return (
             VersionMedia(
                 js=[
-                    static("admin/js/vendor/jquery/jquery%s.js" % extra),
-                    static("admin/js/jquery.init%s.js" % extra),
-                    static("jquery.compat%s.js" % extra),
-                    static("jquery.formset%s.js" % extra),
-                    static("smart.formset%s.js" % extra),
+                    "admin/js/vendor/jquery/jquery%s.js" % extra,
+                    "admin/js/jquery.init%s.js" % extra,
+                    "jquery.compat%s.js" % extra,
+                    "jquery.formset%s.js" % extra,
+                    "smart.formset%s.js" % extra,
                 ]
             )
             + base

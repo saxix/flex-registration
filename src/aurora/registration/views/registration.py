@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import time
-from django.templatetags.static import static
 from functools import wraps
 from hashlib import md5
 from json import JSONDecodeError
@@ -239,13 +238,14 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
 
         mine = VersionMedia(
             js=[
-                static("admin/js/vendor/jquery/jquery%s.js" % extra),
-                static("admin/js/jquery.init%s.js" % extra),
-                static("jquery.compat%s.js" % extra),
-                static("i18n/i18n%s.js" % extra),
-                static("registration/auth%s.js" % extra),
-                static("registration/survey%s.js" % extra),
-                static("page%s.js" % extra),
+                "admin/js/vendor/jquery/jquery%s.js" % extra,
+                "admin/js/jquery.init%s.js" % extra,
+                "jquery.compat%s.js" % extra,
+                "sentry%s.js" % extra,
+                "i18n/i18n%s.js" % extra,
+                "registration/auth%s.js" % extra,
+                "registration/survey%s.js" % extra,
+                "page%s.js" % extra,
             ]
         )
         return mine + m
