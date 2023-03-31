@@ -27,7 +27,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from aurora.core.admin.base import ConcurrencyVersionAdmin
 from aurora.core.forms import CSVOptionsForm, DateFormatsForm, VersionMedia
-from aurora.core.models import FormSet
+from aurora.core.models import FormSet, Validator, FlexForm, FlexFormField
 from aurora.core.utils import (
     build_dict,
     build_form_fake_data,
@@ -42,6 +42,7 @@ from aurora.registration.admin.filters import (
     OrganizationFilter,
     RegistrationProjectFilter,
 )
+from aurora.registration.admin.forms import DebugForm
 from aurora.registration.admin.protocol import AuroraSyncRegistrationProtocol
 from aurora.registration.forms import (
     CloneForm,
@@ -286,8 +287,34 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
             self.create_translation,
             self.prepare_translation,
             self.create_custom_template,
+            self.debug,
         ]
         return button
+
+    @view()
+    def debug(self, request, pk):
+        ctx = self.get_common_context(request, pk)
+        if request.method == "POST":
+            form = DebugForm(request.POST)
+            if form.is_valid():
+                target = form.cleaned_data["search"]
+                v = Validator.objects.filter(code__icontains=target).defer("code")
+                fss = FormSet.objects.filter(advanced__icontains=target).defer("advanced")
+                frms = FlexForm.objects.filter(advanced__icontains=target).defer("advanced")
+                flds = FlexFormField.objects.filter(advanced__icontains=target).defer("advanced")
+                ctx["results"] = {
+                    "validators": [(str(e), e.get_admin_change_url()) for e in v],
+                    "forms": [(str(e), e.get_admin_change_url()) for e in frms],
+                    "fields": [(str(e), e.get_admin_change_url()) for e in flds],
+                    "formsets": [(str(e), e.get_admin_change_url()) for e in fss],
+                }
+            else:
+                pass
+        else:
+            form = DebugForm()
+
+        ctx["form"] = form
+        return render(request, "admin/registration/registration/debug.html", ctx)
 
     @view()
     def inspect(self, request, pk):

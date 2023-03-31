@@ -91,6 +91,7 @@ class FlexFormBaseForm(forms.Form):
                 js=[
                     static("smart_validation%s.js" % extra),
                     static("smart%s.js" % extra),
+                    static("smart_field%s.js" % extra),
                 ]
             )
             + base
@@ -145,10 +146,6 @@ class SmartBaseFormSet(BaseFormSet):
                 js=[
                     static("jquery.formset%s.js" % extra),
                     static("smart.formset%s.js" % extra),
-                    static("page%s.js" % extra),
-                    static("registration/auth%s.js" % extra),
-                    static("registration/survey%s.js" % extra),
-                    static("i18n/i18n%s.js" % extra),
                 ]
             )
             + base

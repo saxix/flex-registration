@@ -235,6 +235,13 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     @cached_property
     def metadata(self):
+        script: Validator
+
+        def _get_validator(owner):
+            if owner.validator:
+                return {}
+            return {}
+
         def _get_field_details(flex_field: FlexFormField):
             kwargs = flex_field.get_field_kwargs()
             return {
@@ -244,6 +251,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 "smart_attrs": kwargs["smart_attrs"],
                 "widget_kwargs": kwargs["widget_kwargs"],
                 "choices": kwargs.get("choices"),
+                "validator": _get_validator(flex_field),
             }
 
         def _process_form(frm):
@@ -253,13 +261,22 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 if field.field_type not in [LabelOnlyField]
             }
 
-        metadata = {"base": {"fields": _process_form(self.flex_form)}}
+        metadata = {
+            "base": {"fields": _process_form(self.flex_form)},
+            "scripts": [],
+            "validator": _get_validator(self.flex_form),
+        }
         for name, fs in self.flex_form.get_formsets({}).items():
             metadata[name] = {
                 "fields": _process_form(fs.form.flex_form),
                 "min_num": fs.min_num,
                 "max_num": fs.max_num,
+                "validator": _get_validator(fs.form.flex_form),
             }
+
+        for script in self.scripts.all():
+            url = state.request.build_absolute_uri(script.get_script_url())
+            metadata["scripts"].append({"name": script.name, "url": url})
 
         return metadata
 

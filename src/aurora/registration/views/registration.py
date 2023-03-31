@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+from django.templatetags.static import static
 from functools import wraps
 from hashlib import md5
 from json import JSONDecodeError
@@ -229,6 +230,18 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
             formsets[name] = fs(prefix=f"{name}", **attrs)
         return formsets
 
+    @property
+    def media(self):
+        extra = "" if settings.DEBUG else ".min"
+        return VersionMedia(
+            js=[
+                static("i18n/i18n%s.js" % extra),
+                static("registration/auth%s.js" % extra),
+                static("registration/survey%s.js" % extra),
+                static("page%s.js" % extra),
+            ]
+        )
+
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
             kwargs["formsets"] = self.get_formsets()
@@ -237,10 +250,11 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
         kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
-        m = VersionMedia(js=["smart_field.js"])
-        m += ctx["form"].media
-        for __, f in ctx["formsets"].items():
-            m += f.media
+        m = ctx["form"].media
+        for __, fs in ctx["formsets"].items():
+            m += fs.media
+
+        m += self.media
         ctx["media"] = m
         return ctx
 
@@ -359,8 +373,6 @@ class RegisterAuthView(RegistrationMixin, View):
                 "project": project,
                 "user": {
                     "username": request.user.username,
-                    # "perms": request.user.get_all_permissions(self.registration),
-                    # "authenticated": request.user.is_authenticated,
                     "anonymous": not request.user.is_authenticated,
                 },
             }
