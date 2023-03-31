@@ -11,7 +11,7 @@ from django.template import Context, Template
 from django.utils.functional import cached_property
 
 from aurora.core.fields.widgets import JavascriptEditor
-from aurora.core.forms import VersionMedia
+from aurora.core.forms import VersionMedia, FlexFormBaseForm
 from aurora.core.models import FlexFormField, OptionSet
 from aurora.core.utils import merge_data
 
@@ -183,7 +183,7 @@ class FieldEditor:
         form_class_attrs = {
             self.field.name: instance,
         }
-        form_class = type(forms.Form)("TestForm", (forms.Form,), form_class_attrs)
+        form_class = type(FlexFormBaseForm)("TestForm", (FlexFormBaseForm,), form_class_attrs)
         ctx = self.get_context(self.request)
         if self.request.method == "POST":
             form = form_class(self.request.POST)
@@ -231,7 +231,7 @@ class FieldEditor:
     def get(self, request, pk):
         ctx = self.get_context(request, pk)
         extra = "" if settings.DEBUG else ".min"
-        ctx["forms_media"] = VersionMedia(
+        ctx["media"] = VersionMedia(
             js=[
                 static("admin/js/vendor/jquery/jquery%s.js" % extra),
                 static("admin/js/jquery.init%s.js" % extra),
@@ -243,7 +243,7 @@ class FieldEditor:
         )
         for prefix, frm in self.get_forms().items():
             ctx[f"form_{prefix}"] = frm
-            ctx["forms_media"] += frm.media
+            ctx["media"] += frm.media
         return render(request, "admin/core/flexformfield/field_editor/main.html", ctx)
 
     def post(self, request, pk):

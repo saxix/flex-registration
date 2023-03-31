@@ -23,8 +23,10 @@ if ($ === undefined) {
         $("[data-visibility=hidden]").parents(".field-container").hide();
 
         $("[data-trigger=change]").each(function (i, e) {
-            Sentry.setTag(e);
-            $(e).trigger("change");
+            try{
+                $(e).trigger("change");
+            }catch (e){
+            }
         });
 
         $(".errorlist").each(function (i, e) {
@@ -44,7 +46,6 @@ if ($ === undefined) {
         });
         // trigger onload events
         $('[data-onload]').each(function () {
-            Sentry.setTag(this);
             eval($(this).data('onload'));
         });
     });

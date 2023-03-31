@@ -89,6 +89,9 @@ class FlexFormBaseForm(forms.Form):
         return (
             VersionMedia(
                 js=[
+                    static("admin/js/vendor/jquery/jquery%s.js" % extra),
+                    static("admin/js/jquery.init%s.js" % extra),
+                    static("admin/js/jquery.compat%s.js" % extra),
                     static("smart_validation%s.js" % extra),
                     static("smart%s.js" % extra),
                     static("smart_field%s.js" % extra),

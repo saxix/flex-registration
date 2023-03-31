@@ -27,6 +27,7 @@
 
             self.$ = $("#formContainer");
             var $form = $("#registrationForm");
+            self.$submit = $form.find("input[type=submit]");
             self.config = config;
             self.name = config.name;
             self.setError = function (msg){
@@ -52,10 +53,11 @@
 
             self.enableSubmit = function (onOff) {
                 if (onOff) {
-                    $form.find("input[type=submit]").prop("disabled", "")
+                    self.$submit.prop("disabled", "")
                 } else {
-                    $form.find("input[type=submit]").prop("disabled", "disabled")
+                    self.$submit.prop("disabled", "disabled")
                 }
+                return self;
             }
 
             $form.on('submit', function (e) {
@@ -251,4 +253,9 @@
             };
         }
     };
-})(jQuery);
+    $(function () {
+        if (!window.module) {
+            window.module = new aurora.Module({});
+        }
+    });
+})(jQuery||django.jQuery);
