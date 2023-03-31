@@ -28,7 +28,8 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from sentry_sdk import set_tag
 
-from aurora.core.forms import VersionMedia
+from aurora.core.version_media import VersionMedia
+from aurora.core.models import FormSet
 from aurora.core.utils import (
     get_etag,
     get_qrcode,
@@ -38,7 +39,6 @@ from aurora.core.utils import (
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
-from aurora.stubs import FormSet
 from aurora.web.middlewares.admin import is_admin_site, is_public_site
 
 logger = logging.getLogger(__name__)
@@ -220,7 +220,7 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
     def get_initial(self):
         return self.registration.flex_form.get_initial()
 
-    def get_formsets(self):
+    def get_formsets(self) -> Dict[str, FormSet]:
         formsets = {}
         attrs = self.get_form_kwargs().copy()
         attrs["initial"] = []
@@ -233,14 +233,22 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
     @property
     def media(self):
         extra = "" if settings.DEBUG else ".min"
-        return VersionMedia(
+        m = self.registration.flex_form.get_form_class()().media
+        for __, fs in self.get_formsets().items():
+            m += fs.media
+
+        mine = VersionMedia(
             js=[
+                static("admin/js/vendor/jquery/jquery%s.js" % extra),
+                static("admin/js/jquery.init%s.js" % extra),
+                static("jquery.compat%s.js" % extra),
                 static("i18n/i18n%s.js" % extra),
                 static("registration/auth%s.js" % extra),
                 static("registration/survey%s.js" % extra),
                 static("page%s.js" % extra),
             ]
         )
+        return mine + m
 
     def get_context_data(self, **kwargs):
         if "formsets" not in kwargs:
@@ -250,12 +258,7 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
         kwargs["can_translate"] = self.request.user.is_staff
 
         ctx = super().get_context_data(**kwargs)
-        m = ctx["form"].media
-        for __, fs in ctx["formsets"].items():
-            m += fs.media
-
-        m += self.media
-        ctx["media"] = m
+        ctx["media"] = self.media
         return ctx
 
     def validate(self, cleaned_data):

@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import logging
+from django.templatetags.static import static
 from django.utils.module_loading import import_string
 from hashlib import md5
 
@@ -134,9 +135,9 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
         return (
             VersionMedia(
                 js=[
-                    "admin/js/vendor/jquery/jquery%s.js" % extra,
-                    "admin/js/jquery.init%s.js" % extra,
-                    "admin/js/vendor/jquery/jquery%s.js" % extra,
+                    static("admin/js/vendor/jquery/jquery%s.js" % extra),
+                    static("admin/js/jquery.init%s.js" % extra),
+                    static("jquery.compat%s.js" % extra),
                     "/static/clipboard%s.js" % extra,
                 ]
             )

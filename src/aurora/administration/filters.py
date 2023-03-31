@@ -3,6 +3,7 @@ from adminfilters.mixin import MediaDefinitionFilter, SmartFieldListFilter
 from django.conf import settings
 from django.contrib.admin.widgets import SELECT2_TRANSLATIONS
 from django.forms import forms
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.translation import get_language
 
@@ -46,7 +47,9 @@ class BaseAutoCompleteFilter(SmartFieldListFilter, MediaDefinitionFilter):
         i18n_file = ("admin/js/vendor/select2/i18n/%s.js" % i18n_name,) if i18n_name else ()
         return forms.Media(
             js=(
-                "admin/js/vendor/jquery/jquery%s.js" % extra,
+                static("admin/js/vendor/jquery/jquery%s.js" % extra),
+                static("admin/js/jquery.init%s.js" % extra),
+                static("jquery.compat%s.js" % extra),
                 "admin/js/vendor/select2/select2.full%s.js" % extra,
             )
             + i18n_file

@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.forms import widgets
+from django.templatetags.static import static
 
 
 class CompilationTimeWidget(forms.MultiWidget):
@@ -27,7 +28,10 @@ class CompilationTimeWidget(forms.MultiWidget):
         base = super().media
         return base + forms.Media(
             js=[
-                "elapsed%s.js" % extra,
+                static("admin/js/vendor/jquery/jquery%s.js" % extra),
+                static("admin/js/jquery.init%s.js" % extra),
+                static("jquery.compat%s.js" % extra),
+                static("elapsed%s.js" % extra),
             ],
         )
 
