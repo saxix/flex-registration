@@ -566,6 +566,11 @@ CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
 AUTH_USER_MODEL = "auth.User"
 # AUTH_USER_MODEL = "security.AuroraUser"
 
+# Graph API
+AZURE_GRAPH_API_BASE_URL = "https://graph.microsoft.com"
+AZURE_GRAPH_API_VERSION = "v1.0"
+AZURE_TOKEN_URL = "https://login.microsoftonline.com/unicef.org/oauth2/token"
+
 # Social Auth settings.
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env.str("AZURE_CLIENT_SECRET")
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_ID")
