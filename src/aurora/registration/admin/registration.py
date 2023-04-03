@@ -171,7 +171,8 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                     )
                     if qs.count() >= 5000:
                         raise Exception("Too many records please change your filters. (max 5000)")
-                    records = [build_dict(r, **fmt_form.cleaned_data) for r in qs]
+                    valid = fmt_form.cleaned_data
+                    records = [build_dict(r, **valid) for r in qs]
                     if not records:
                         raise Exception("No records matching filtering criteria")
                     skipped = []
