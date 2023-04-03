@@ -219,7 +219,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
     def validate(self, value, registration=None):
         from py_mini_racer import MiniRacer
 
-        set_tag("Validator", self.name)
+        set_tag("validator", self.name)
 
         if self.active:
             self.monitor(self.STATUS_UNKNOWN, value)
@@ -233,6 +233,7 @@ _.is_adult = function(d) { return !_.is_child(d)};
                 base = f"{self.CONSOLE};{self.LIB}; var value = {pickled};"
 
                 ctx.eval(base)
+
                 result = ctx.eval(self.code)
 
                 if result is None:

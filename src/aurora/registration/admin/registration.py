@@ -210,6 +210,7 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
                         ctx["skipped"] = skipped
                         ctx["qs"] = records[:10]
             except Exception as e:
+                logger.exception(e)
                 self.message_error_to_user(request, e)
         else:
             form = RegistrationExportForm(initial={"include": ".*"})
