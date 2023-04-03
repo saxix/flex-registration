@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.postgres.fields import CICharField
 from django.db import models
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
@@ -129,6 +129,10 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         return self.name
 
     def get_absolute_url(self):
+        return cache_aware_reverse("register", args=[self.slug, self.version])
+
+    def get_i18n_url(self, lang=None):
+        translation.activate(language=lang or self.locale)
         return cache_aware_reverse("register", args=[self.slug, self.version])
 
     def get_welcome_url(self):

@@ -7,6 +7,7 @@
     <meta name="RegId" content="{{ registration.pk }}">
     <meta name="Version" content="{{ registration.version }}">
     <meta name="User" content="{% if user.is_authenticated %}{{ session_id }}{% endif %}">
+    <meta name="Language" content="{{ LANGUAGE_CODE }}">
 
 {% endblock meta %}
 {% block cache %}{% endblock %}
