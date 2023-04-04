@@ -144,17 +144,20 @@ http {
          location ${STATIC_URL} {
             root ${STATIC_ROOT};
             autoindex off;
-            etag off;
-            if_modified_since off;
-            add_header Cache-Control "public, no-transform, immutable";
             add_header X-Aurora-Version "${AURORA_VERSION}";
             add_header X-Aurora-Build "${AURORA_BUILD}";
             add_header X-Aurora-Time "${DOLLAR}date_gmt";
 
-            expires 1y;
-            gzip on;
-            gzip_disable "MSIE [1-6]\.";
-            gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
+            expires max;
+            gzip_static on;
+            add_header Cache-Control public;
+
+            etag on;
+            #if_modified_since off;
+            #add_header Cache-Control "public, no-transform, immutable";
+            #gzip on;
+            #gzip_disable "MSIE [1-6]\.";
+            #gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
          }
 
         location / {

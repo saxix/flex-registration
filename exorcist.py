@@ -55,7 +55,7 @@ if __name__ == "__main__":
                     f"{ver:<7} - "
                     f"{ret.headers.get('X-Aurora-Build', 'N/A'):<16} - "
                     f"{ret.headers.get('X-Aurora-Time', 'N/A')} - "
-                    f"{ret.headers.get('X-Azure-Ref', 'N/A')[:20]}{COLORS.RESET}"
+                    f"{ret.headers.get('ETag', 'N/A')[:20]}{COLORS.RESET}"
                 )
             lastest_version = latest_ver[url] = ver
         if len(urls) > 1:
