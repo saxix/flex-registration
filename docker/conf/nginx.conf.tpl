@@ -68,18 +68,35 @@ http {
         proxy_cache off;
 
         error_page 502 503 504 /50x.html;
-        add_header X-Aurora-Version "${AURORA_VERSION}";
-        add_header X-Aurora-Build "${AURORA_BUILD}";
-        add_header X-Aurora-Time "${DOLLAR}date_gmt";
+        error_page 404 /404.html;
+        add_header X-Aurora-Version "${AURORA_VERSION}" always;
+        add_header X-Aurora-Build "${AURORA_BUILD}" always;
+        add_header X-Aurora-Time "${DOLLAR}date_gmt" always;
+
+        location /404.html {
+            root /var/nginx/;
+            ssi on;
+            set ${DOLLAR}version "${AURORA_VERSION}";
+            set ${DOLLAR}build "${AURORA_BUILD}";
+
+            add_header X-Aurora-Version "${AURORA_VERSION}" always;
+            add_header X-Aurora-Build "${AURORA_BUILD}" always;
+            add_header X-Aurora-Time "${DOLLAR}date_gmt" always;
+            internal;
+            auth_basic off;
+        }
 
         location /50x.html {
+            root /var/nginx/;
             ssi on;
+            set ${DOLLAR}version "${AURORA_VERSION}";
+            set ${DOLLAR}build "${AURORA_BUILD}";
+
             add_header X-Aurora-Version "${AURORA_VERSION}";
             add_header X-Aurora-Build "${AURORA_BUILD}";
             add_header X-Aurora-Time "${DOLLAR}date_gmt";
             internal;
             auth_basic off;
-            root /var/nginx/;
         }
         location /error/502  {
             add_header X-Aurora-Version "${AURORA_VERSION}";
@@ -123,7 +140,8 @@ http {
             gzip_disable "MSIE [1-6]\.";
             gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
          }
-          location ${STATIC_URL} {
+
+         location ${STATIC_URL} {
             root ${STATIC_ROOT};
             autoindex off;
             etag off;
