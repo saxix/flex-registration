@@ -1,6 +1,6 @@
-worker_processes 1;
+worker_processes auto;
 events {
-  worker_connections 512;
+  #worker_connections 512;
 }
 daemon on;
 error_log /dev/stdout;

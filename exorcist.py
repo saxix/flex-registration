@@ -41,7 +41,7 @@ if __name__ == "__main__":
     while True:
         seed = rnd()
         for url in urls:
-            ret = requests.get(f"{url}?{seed}")
+            ret = requests.get(f"{url}?{seed}", headers={"User-Agent": "Exorcist/1.0 "})
             ver = ret.headers.get("X-Aurora-Version", "N/A")
             if lastest_version is not None:
                 if ver != lastest_version:
