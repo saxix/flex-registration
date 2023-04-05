@@ -30,6 +30,5 @@ jobs:
       - name: Scan
         run: |
           trivy fs  \
-          --output json
           --exit-code 0 \
           src/
