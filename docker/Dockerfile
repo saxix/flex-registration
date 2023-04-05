@@ -46,7 +46,6 @@ ENV PATH="${PATH}:/root/.local/bin" \
     SENTRY_DSN="" \
     STATIC_ROOT="/var/static" \
     STATIC_URL="/static/" \
-    STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage" \
     UWSGI_PROCESSES=4 \
     VERSION=${VERSION} \
     POETRY_VERSION=${POETRY_VERSION}
