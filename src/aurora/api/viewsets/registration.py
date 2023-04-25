@@ -174,7 +174,7 @@ class RegistrationViewSet(SmartViewSet):
             include_fields = form.cleaned_data["include"]
             exclude_fields = form.cleaned_data["exclude"]
             qs = (
-                Record.objects.filter(pk=pk)
+                Record.objects.filter(registration__pk=pk)
                 .defer(
                     "storage",
                     "counters",
