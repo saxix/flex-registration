@@ -229,6 +229,10 @@ class RegistrationViewSet(SmartViewSet):
 
                 return Response(
                     {
+                        "reg": {
+                            "name": reg.name,
+                            "slug": reg.slug,
+                        },
                         "data": {
                             "download": request.build_absolute_uri(
                                 "?download=1&" + parse.urlencode(request.GET.dict(), doseq=False)
