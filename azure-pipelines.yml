@@ -26,7 +26,7 @@ variables:
     - name: appName
       value: "uni-hope-ukr-sr"
   - ${{ elseif eq(variables['Build.SourceBranchName'], 'staging') }}:
-    - group: flex-registration-dev
+    - group: flex-registration-stg
     - name: Docker.registry
       value: "unihopeukrsrdev"
     - name: azureSubscription
