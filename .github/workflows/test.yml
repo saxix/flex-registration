@@ -35,13 +35,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        django-version: [ "3.2", ]
+        django-version: [ "4.2", ]
         python-version: [ "3.9", ]
         experimental: [ false ]
-        include:
-          - django-version: "4.2"
-            python-version: "3.9"
-            experimental: true
+#        include:
+#          - django-version: "4.2"
+#            python-version: "3.9"
+#            experimental: true
     continue-on-error: ${{ matrix.experimental }}
     env:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/aurora
