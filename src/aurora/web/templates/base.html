@@ -1,6 +1,4 @@
-{% load static feature_flags http2 %}
-
-<!DOCTYPE html>
+{% load static feature_flags http2 %}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -15,8 +13,8 @@
     <link href="{% static "staff-toolbar.css" %}" type="text/css" media="all" rel="stylesheet">
     <link rel="stylesheet" href="{% static "admin/debug.css" %}">
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+{#    <script src="https://code.jquery.com/jquery-3.6.0.min.js"#}
+{#            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>#}
     {% block cache %}{#<script src="{% static "cache.min.js" %}"></script>#}{% endblock %}
 
     {% block head %}{% endblock head %}
@@ -25,8 +23,34 @@
 <script>
     const LANGUAGE_CODE = "{{ LANGUAGE_CODE }}";
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function (event) {
+        const url = window.location.href;
+        let color = '';
+        let text = '';
+        if (window.location.hostname === 'localhost') {
+            color = '#FF6600';
+            text = 'localhost';
+        } else if (url.includes('-trn')) {
+            color = '#BF360C';
+            text = 'training';
+        } else if (url.includes('-stg')) {
+            color = '#673AB7';
+            text = 'staging';
+        } else if (url.includes('-dev')) {
+            color = '#00796B';
+            text = 'test';
+        } else {
+            color = '#00ADEF';
+        }
+        document.getElementById("header").style.backgroundColor = color;
+        var element = document.createElement("div");
+        element.appendChild(document.createTextNode(text));
+        document.getElementById('header').appendChild(element);
+    });
+</script>
 {% block header %}
-    <header class="text-gray-700 body-font border-b border-gray-200 header sticky top-0">
+    <header id="header" class="text-gray-700 body-font border-b border-gray-200 header sticky top-0">
         <div class="container-fluid w-100 mx-auto flex flex-wrap p-5 md:flex-row items-center">
             <div class="flex-none align-middle">
                 {% block logo %}
@@ -43,11 +67,8 @@
         </div>
     </header>
 {% endblock %}
-{% block body %}
-{% endblock body %}
-{% block footer %}{% include "_footer.html" %}
-
-{% endblock %}
+{% block body %}{% endblock body %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
 
 {#<script type="text/javascript">#}
 {#    let db;#}

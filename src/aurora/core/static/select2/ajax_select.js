@@ -1,25 +1,19 @@
 (function ($) {
-    $(function () {
-        var CACHE = {};
-        var $targets = $(".ajaxSelect");
-        $targets.each(function (i, e) {
+    window._select2 = {
+        collect_subscribers: function (e) {
             var $target = $(e);
             var parentName = $target.data("parent");
             $target.data("subscribers", $target.data("subscribers") || []);
-
             if (parentName) {
                 var $formContainer = $target.parents(".form-container");
-                $parent = $formContainer.find("[data-source=" + parentName + "]");
+                var $parent = $formContainer.find("[data-source=" + parentName + "]");
                 var subscribers = $parent.data("subscribers") || [];
                 subscribers.push($(e).attr("id"));
                 $parent.data("subscribers", subscribers);
-                $target.data("parent", $parent);
+                $target.data("parentObject", $parent);
             }
-        });
-        // var getData = function(url){
-        //     $.getJSON(url).then
-        // };
-        $targets.each(function (i, e) {
+        },
+        init: function (e) {
             if ($(e).data("select2")) {
                 return;
             }
@@ -27,10 +21,9 @@
             var url = $target.data("ajax-url");
             var selected = $target.data("selected");
             var parentName = $target.data("parent");
-            var placeholder = $target.data("placeholder") ;
+            var placeholder = $target.data("placeholder");
             var label = $target.data("label");
-            var $parent = $target.data("parent");
-
+            var $parent = $target.data("parentObject");
             $target.select2({
                 placeholder: placeholder,
                 ajax: {
@@ -62,6 +55,32 @@
                     $target.append(newOption).trigger("change");
                 });
             }
+        }
+    }
+    $(function () {
+        var CACHE = {};
+        var $targets = $(".ajaxSelect");
+        console.log("Select2 library loaded", window._select2);
+        $targets.each(function (i, e) {
+            _select2.collect_subscribers(e);
+            // var $target = $(e);
+            // var parentName = $target.data("parent");
+            // $target.data("subscribers", $target.data("subscribers") || []);
+            //
+            // if (parentName) {
+            //     var $formContainer = $target.parents(".form-container");
+            //     var $parent = $formContainer.find("[data-source=" + parentName + "]");
+            //     var subscribers = $parent.data("subscribers") || [];
+            //     subscribers.push($(e).attr("id"));
+            //     $parent.data("subscribers", subscribers);
+            //     $target.data("parent", $parent);
+            // }
+        });
+        // var getData = function(url){
+        //     $.getJSON(url).then
+        // };
+        $targets.each(function (i, e) {
+            window._select2.init(e);
         });
 
         $targets.each(function (i, e) {
@@ -71,10 +90,10 @@
                     var $self = $(e.target);
                     $self.data("subscribers").forEach(function (e, i) {
                         var child = $("#" + e);
-                        if (!child.data("selected")){
+                        if (!child.data("selected")) {
                             child.val("").trigger("change");
                             child.prop("disabled", !$self.val());
-                        }else{
+                        } else {
                             child.data("selected", "")
                         }
                     });

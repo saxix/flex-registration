@@ -118,6 +118,12 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 
 ROOT_URLCONF = "aurora.config.urls"
 
+TEMPLATE_LOADERS = (
+    "dbtemplates.loader.Loader",
+    "django.template.loaders.filesystem.Loader",
+    "django.template.loaders.app_directories.Loader",
+)
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -132,11 +138,7 @@ TEMPLATES = [
         ],
         "APP_DIRS": False,
         "OPTIONS": {
-            "loaders": [
-                "dbtemplates.loader.Loader",
-                "django.template.loaders.filesystem.Loader",
-                "django.template.loaders.app_directories.Loader",
-            ],
+            "loaders": TEMPLATE_LOADERS,
             # 'builtins': [
             #     'http2.templatetags',
             # ],
@@ -554,7 +556,6 @@ DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.templates.TemplatesPanel",
     "debug_toolbar.panels.cache.CachePanel",
     "debug_toolbar.panels.signals.SignalsPanel",
-    "debug_toolbar.panels.logging.LoggingPanel",
     "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
@@ -565,6 +566,11 @@ CSRF_FAILURE_VIEW = "aurora.web.views.site.error_csrf"
 # WARNING: Do NOT touch this line before it will reach out production
 AUTH_USER_MODEL = "auth.User"
 # AUTH_USER_MODEL = "security.AuroraUser"
+
+# Graph API
+AZURE_GRAPH_API_BASE_URL = "https://graph.microsoft.com"
+AZURE_GRAPH_API_VERSION = "v1.0"
+AZURE_TOKEN_URL = "https://login.microsoftonline.com/unicef.org/oauth2/token"
 
 # Social Auth settings.
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env.str("AZURE_CLIENT_SECRET")
@@ -606,7 +612,6 @@ SOCIAL_AUTH_AZUREAD_B2C_OAUTH2_SCOPE = [
     "profile",
 ]
 
-
 SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 SOCIAL_AUTH_JWT_LEEWAY = env.int("JWT_LEEWAY", 0)
 
@@ -623,26 +628,37 @@ HTTP2_PRESEND_CACHED_HEADERS = True
 HTTP2_SERVER_PUSH = False
 # CSP
 SOURCES = (
-    "self",
+    "'self'",
     "inline",
     "unsafe-inline",
-    "http://localhost:8000",
-    "https://unpkg.com",
-    "https://browser.sentry-cdn.com",
-    "https://cdnjs.cloudflare.com",
-    "data",
-    "unsafe-inline",
+    "data:",
+    "blob:",
+    "'unsafe-inline'",
+    "localhost:8000",
+    "unpkg.com",
+    "browser.sentry-cdn.com",
+    "cdnjs.cloudflare.com",
+    "register.unicef.org",
+    "uni-hope-ukr-sr.azurefd.net",
+    "uni-hope-ukr-sr-dev.azurefd.net",
+    "uni-hope-ukr-sr-dev.unitst.org",
 )
-# MIDDLEWARE += ["csp.middleware.CSPMiddleware", ]
+MIDDLEWARE += [
+    "csp.middleware.CSPMiddleware",
+]
 CSP_DEFAULT_SRC = SOURCES
-# CSP_SCRIPT_SRC = ("self",)
-CSP_STYLE_SRC = (
-    "self",
-    "unsafe-inline",
-    "https://unpkg.com",
-    "http://localhost:8000",
-    "https://cdnjs.cloudflare.com",
-)
+CSP_FRAME_SRC = []
+# CSP_SCRIPT_SRC = SOURCES
+# CSP_STYLE_SRC = (
+#     "'self'",
+#     "'data'",
+#     "'unsafe-inline'",
+#     "https://unpkg.com",
+#     "http://localhost:8000",
+#     "https://cdnjs.cloudflare.com",
+#     "http://cdnjs.cloudflare.com",
+#
+# )
 # CSP_OBJECT_SRC = ("self",)
 # CSP_BASE_URI = ("self", "http://localhost:8000",)
 # CSP_CONNECT_SRC = ("self",)
@@ -672,6 +688,9 @@ worker-src 'none';
 # CSP_REPORT_ONLY = env("CSP_REPORT_ONLY")
 # CSP_DEFAULT_SRC = env("CSP_DEFAULT_SRC")
 # CSP_SCRIPT_SRC = env("CSP_SCRIPT_SRC")
+
+SECURE_HSTS_SECONDS = 60
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # Add reversion models to admin interface:
 ADD_REVERSION_ADMIN = True
@@ -797,7 +816,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-
 FRONT_DOOR_CONFIG = "front_door.conf.DjangoConstance"
 FRONT_DOOR_ENABLED = env("FRONT_DOOR_ENABLED")
 FRONT_DOOR_ALLOWED_PATHS = env("FRONT_DOOR_ALLOWED_PATHS")
@@ -818,3 +836,10 @@ FRONT_DOOR_RULES = [
     "front_door.rules.cookie_value",  # grant access if request.COOKIES[COOKIE_NAME]
     # "front_door.rules.cookie_exists",  # grant access ir COOKIE_NAME in request.COOKIES
 ]
+
+TRANSLATOR_SERVICE = env("TRANSLATOR_SERVICE")
+AZURE_TRANSLATOR_KEY = env("AZURE_TRANSLATOR_KEY")
+AZURE_TRANSLATOR_LOCATION = env("AZURE_TRANSLATOR_LOCATION")
+
+AZURE_CLIENT_ID = env("AZURE_CLIENT_ID")
+AZURE_CLIENT_SECRET = env("AZURE_CLIENT_SECRET")

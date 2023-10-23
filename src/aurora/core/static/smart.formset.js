@@ -3,6 +3,9 @@ var configureFormsets = function (configs) {
         var config = {};
         $.extend(true, config, DEFAULT, c);
         var $target = $("." + config.formCssClass);
+        if (!$target){
+            throw Error(configs)
+        }
         config.initialized = function ($$) {
             if ($$.options.showCounter) {
                 updateCounter($$, null);
@@ -65,11 +68,7 @@ var DEFAULT = {
         $(row).find(".vPictureField").each(function (i, obj) {
             initWebCamField(obj);
         });
-        $(row).find(".ajaxSelect").each(function (i, obj) {
-            if (!$(obj).data('select2')){
-                $(obj).select2();
-            }
-        });
+
         $(row).find(".question-visibility").each(function (i, e) {
             $(e).on("click", function () {
                 smart.handleQuestion(this);
@@ -86,7 +85,6 @@ var DEFAULT = {
             var value = JSON.parse($e.text());
             formsetConfig.push(value);
         });
-
         if (formsetConfig.length > 0) {
             configureFormsets(formsetConfig);
         }

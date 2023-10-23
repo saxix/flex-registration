@@ -28,5 +28,5 @@ def test_panel(panel, django_app, admin_user):
 def test_panel_email(django_app, admin_user):
     url = reverse("admin:email")
     res = django_app.get(url, user=admin_user)
-    res = res.form.submit()
+    res = res.forms[1].submit()
     assert res.status_code == 200

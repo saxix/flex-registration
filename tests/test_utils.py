@@ -8,6 +8,8 @@ from aurora.core.utils import (
     merge_data,
     namify,
     underscore_to_camelcase,
+    apply_nested,
+    flatten_dict,
 )
 from aurora.registration.storage import Router
 
@@ -73,3 +75,51 @@ def test_merge():
     d1 = {"a": "1", "b": 2, "d": [{"bb": 3}]}
     d2 = {"c": [1], "d": [{"aa": 2}], "aa": {"vv": 1}}
     assert merge_data(d1, d2) == {"a": "1", "b": 2, "c": [1], "d": [{"aa": 2, "bb": 3}], "aa": {"vv": 1}}
+
+
+@pytest.mark.parametrize(
+    "value,expected", [({"languages": ["1"], "name": "eeeeee"}, {"languages": ["1"], "name": "eeeeee"})]
+)
+def test_apply_nested(value, expected):
+    assert apply_nested(value) == expected
+
+
+sss1 = {
+    "label": "Name",
+    "code": "CZ020",
+}
+
+sss2 = {
+    "label": "Name",
+    "individuals": [sss1],
+}
+sss3 = {
+    "label": "Name",
+    "lang": ["russian", "hungarian"],
+}
+
+sss4 = {"label": "Name", "individuals": [{"label": "Name", "lang": ["russian", "hungarian"]}]}
+
+
+def test_flatten_dict1():
+    assert flatten_dict(sss1) == {"code": "CZ020", "label": "Name"}
+
+
+def test_flatten_dict2():
+    assert flatten_dict(sss2) == {
+        "label": "Name",
+        "individuals_0_code": "CZ020",
+        "individuals_0_label": "Name",
+    }
+
+
+def test_flatten_dict3():
+    assert flatten_dict(sss3) == {"label": "Name", "lang": "russian,hungarian"}
+
+
+def test_flatten_dict4():
+    assert flatten_dict(sss4) == {
+        "label": "Name",
+        "individuals_0_lang": "russian,hungarian",
+        "individuals_0_label": "Name",
+    }

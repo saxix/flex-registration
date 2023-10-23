@@ -42,7 +42,7 @@ def test_create_translation(django_app, simple_registration, admin_user):
     # assert url == f"/en-us/register/registration-1/{simple_registration.version}/"
     res = django_app.get(url, user=admin_user)
     # translation-form
-    res = res.form.submit()
+    res = res.forms[1].submit()
     # res = res.form.submit()
     # res.form["first_name"] = "first_name"
     # res.form["last_name"] = "f"

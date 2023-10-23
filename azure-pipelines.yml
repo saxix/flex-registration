@@ -4,6 +4,7 @@ trigger:
     include:
     - develop
     - master
+    - staging
     - ops/*
 pr: none
 resources:
@@ -24,6 +25,14 @@ variables:
       value: "UNI_WEBS rs-uni-hope-ukr-sr"
     - name: appName
       value: "uni-hope-ukr-sr"
+  - ${{ elseif eq(variables['Build.SourceBranchName'], 'staging') }}:
+    - group: flex-registration-stg
+    - name: Docker.registry
+      value: "unihopeukrsrdev"
+    - name: azureSubscription
+      value: "UNI_WEBS rs-uni-hope-ukr-sr-dev"
+    - name: appName
+      value: "uni-hope-ukr-sr-stg"
   - ${{ else }}:
     - group: flex-registration-dev
     - name: Docker.registry
@@ -49,6 +58,12 @@ stages:
           - script: "docker pull $(Docker.registry).azurecr.io/$(Docker.repository):latest"
             displayName: Pull latest for layer caching
             continueOnError: true # for first build, no cache
+          - script: |
+              commitHash=${sourceVersion:0:7}
+              echo "##vso[task.setvariable variable=commitHash]$commitHash" ## Set variable for using in other tasks.
+            env: { sourceVersion: $(Build.SourceVersion) }
+            displayName: Git Hash 7-digit
+            continueOnError: true # for first build, no cache
           - task: Docker@2
             displayName: Build
             inputs:
@@ -56,7 +71,8 @@ stages:
               dockerfile: $(Docker.filePath)
               repository: $(Docker.repository)
               buildContext: "**/.."
-              arguments: '--build-arg VERSION=$(Build.SourceVersion) --build-arg BUILD_DATE="$(buildDate)" --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
+#              arguments: '--build-arg VERSION=$(Build.SourceVersion) --build-arg BUILD_DATE="$(buildDate)" --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
+              arguments: '--build-arg VERSION="$(commitHash)" --build-arg BUILD_DATE="$(buildDate)" --cache-from=$(Docker.registry).azurecr.io/$(Docker.repository):latest'
               tags: |
                 $(Build.BuildId)
                 $(Build.SourceVersion)
@@ -98,9 +114,11 @@ stages:
                             -ADMIN_PASSWORD $(ADMIN_PASSWORD)
                             -ROOT_TOKEN $(ROOT_TOKEN)
                             -DEBUG $(DEBUG)
+                            -BUILD_VERSION $(Build.SourceVersion)
                             -LANGUAGE_CODE $(LANGUAGE_CODE)
                             -USE_X_FORWARDED_HOST $(USE_X_FORWARDED_HOST)
                             -LANGUAGE_CODE $(LANGUAGE_CODE)
+                            -AZURE_CLIENT_ID $(KEY_VALUT_AZURE_CLIENT_ID)
                             -AZURE_CLIENT_KEY $(KEY_VALUT_AZURE_CLIENT_ID)
                             -AZURE_CLIENT_SECRET $(KEY_VALUT_AZURE_CLIENT_SECRET)
                             -AZURE_TENANT_ID $(KEY_VALUT_AZURE_TENANT_KEY)"

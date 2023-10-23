@@ -5,33 +5,33 @@ import logging
 import jmespath
 from concurrency.fields import AutoIncVersionField
 from Crypto.PublicKey import RSA
-from django import forms
 from django.conf import settings
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.postgres.fields import CICharField
 from django.db import models
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from natural_keys import NaturalKeyModel
+from strategy_field.fields import StrategyField
 from strategy_field.utils import fqn
 
 from aurora.core.crypto import Crypto, crypt, decrypt, decrypt_offline
 from aurora.core.fields import AjaxSelectField, LabelOnlyField
+from aurora.core.forms import VersionMedia
 from aurora.core.models import FlexForm, FlexFormField, Project, Validator
 from aurora.core.utils import (
     cache_aware_reverse,
     dict_setdefault,
     get_client_ip,
     get_registration_id,
-    jsonfy,
     safe_json,
-    total_size,
 )
 from aurora.i18n.models import I18NModel
 from aurora.registration.fields import ChoiceArrayField
 from aurora.registration.storage import router
+from aurora.registration.strategies import SaveToDB, strategies
 from aurora.state import state
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     name = CICharField(max_length=255, unique=True)
     title = models.CharField(max_length=500, blank=True, null=True)
     slug = models.SlugField(max_length=500, blank=True, null=True, unique=True)
+    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
 
     flex_form = models.ForeignKey(FlexForm, on_delete=models.PROTECT)
     start = models.DateField(default=timezone.now, editable=True)
@@ -69,6 +70,8 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     locale = models.CharField(
         verbose_name="Default locale", max_length=10, choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE
     )
+    dry_run = models.BooleanField(default=False)
+    handler = StrategyField(registry=strategies, default=None, blank=True, null=True)
     show_in_homepage = models.BooleanField(default=False)
     welcome_page = models.ForeignKey(FlatPage, blank=True, null=True, on_delete=models.SET_NULL)
     locales = ChoiceArrayField(models.CharField(max_length=10, choices=settings.LANGUAGES), blank=True, null=True)
@@ -106,7 +109,6 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
     )
     is_pwa_enabled = models.BooleanField(default=False)
     export_allowed = models.BooleanField(default=False)
-    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         get_latest_by = "start"
@@ -121,12 +123,16 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     @property
     def media(self):
-        return forms.Media(js=[script.get_script_url() for script in self.scripts.all()])
+        return VersionMedia(js=[script.get_script_url() for script in self.scripts.all()])
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
+        return cache_aware_reverse("register", args=[self.slug, self.version])
+
+    def get_i18n_url(self, lang=None):
+        translation.activate(language=lang or self.locale)
         return cache_aware_reverse("register", args=[self.slug, self.version])
 
     def get_welcome_url(self):
@@ -159,43 +165,49 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
         return crypt(value, self.public_key)
 
     def add_record(self, fields_data):
-        fields, files = router.decompress(fields_data)
-        crypter = Crypto()
-        if self.public_key:
-            kwargs = {
-                # "storage": self.encrypt(fields_data),
-                "files": self.encrypt(files),
-                "fields": base64.b64encode(self.encrypt(fields)).decode(),
-            }
-        elif self.encrypt_data:
-            kwargs = {
-                # "storage": Crypto().encrypt(fields_data).encode(),
-                "files": crypter.encrypt(files).encode(),
-                "fields": crypter.encrypt(fields),
-            }
-        else:
-            kwargs = {
-                # "storage": safe_json(fields_data).encode(),
-                "files": safe_json(files).encode(),
-                "fields": jsonfy(fields),
-            }
-        if self.unique_field_path and not kwargs.get("unique_field", None):
-            unique_value = self.get_unique_value(fields)
-            kwargs["unique_field"] = unique_value
-        if state.request and state.request.user.is_authenticated:
-            registrar = state.request.user
-        else:
-            registrar = None
-        kwargs.update(
-            {
-                "registrar": registrar,
-                "size": total_size(fields) + total_size(files),
-                "counters": fields_data.get("counters", {}),
-                "index1": fields_data.get("index1", None),
-            }
-        )
+        if not self.handler:
+            return SaveToDB(self).save(fields_data)
+        return self.handler.save(fields_data)
 
-        return Record.objects.create(registration=self, **kwargs)
+    #
+    # def _add_record(self, fields_data):
+    #     fields, files = router.decompress(fields_data)
+    #     crypter = Crypto()
+    #     if self.public_key:
+    #         kwargs = {
+    #             # "storage": self.encrypt(fields_data),
+    #             "files": self.encrypt(files),
+    #             "fields": base64.b64encode(self.encrypt(fields)).decode(),
+    #         }
+    #     elif self.encrypt_data:
+    #         kwargs = {
+    #             # "storage": Crypto().encrypt(fields_data).encode(),
+    #             "files": crypter.encrypt(files).encode(),
+    #             "fields": crypter.encrypt(fields),
+    #         }
+    #     else:
+    #         kwargs = {
+    #             # "storage": safe_json(fields_data).encode(),
+    #             "files": safe_json(files).encode(),
+    #             "fields": jsonfy(fields),
+    #         }
+    #     if self.unique_field_path and not kwargs.get("unique_field", None):
+    #         unique_value = self.get_unique_value(fields)
+    #         kwargs["unique_field"] = unique_value
+    #     if state.request and state.request.user.is_authenticated:
+    #         registrar = state.request.user
+    #     else:
+    #         registrar = None
+    #     kwargs.update(
+    #         {
+    #             "registrar": registrar,
+    #             "size": total_size(fields) + total_size(files),
+    #             "counters": fields_data.get("counters", {}),
+    #             "index1": fields_data.get("index1", None),
+    #         }
+    #     )
+    #
+    #     return Record.objects.create(registration=self, **kwargs)
 
     def get_unique_value(self, cleaned_data):
         unique_value = None
@@ -227,6 +239,13 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
 
     @cached_property
     def metadata(self):
+        script: Validator
+
+        def _get_validator(owner):
+            if owner.validator:
+                return {}
+            return {}
+
         def _get_field_details(flex_field: FlexFormField):
             kwargs = flex_field.get_field_kwargs()
             return {
@@ -236,6 +255,7 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 "smart_attrs": kwargs["smart_attrs"],
                 "widget_kwargs": kwargs["widget_kwargs"],
                 "choices": kwargs.get("choices"),
+                "validator": _get_validator(flex_field),
             }
 
         def _process_form(frm):
@@ -245,13 +265,22 @@ class Registration(NaturalKeyModel, I18NModel, models.Model):
                 if field.field_type not in [LabelOnlyField]
             }
 
-        metadata = {"base": {"fields": _process_form(self.flex_form)}}
+        metadata = {
+            "base": {"fields": _process_form(self.flex_form)},
+            "scripts": [],
+            "validator": _get_validator(self.flex_form),
+        }
         for name, fs in self.flex_form.get_formsets({}).items():
             metadata[name] = {
                 "fields": _process_form(fs.form.flex_form),
                 "min_num": fs.min_num,
                 "max_num": fs.max_num,
+                "validator": _get_validator(fs.form.flex_form),
             }
+
+        for script in self.scripts.all():
+            url = state.request.build_absolute_uri(script.get_script_url())
+            metadata["scripts"].append({"name": script.name, "url": url})
 
         return metadata
 
@@ -321,8 +350,11 @@ class Record(models.Model):
             return self.decrypt(secret=None)
         else:
             files = {}
-            if self.files:
-                files = json.loads(self.files.tobytes().decode())
+            f = self.files
+            if f:
+                if not isinstance(f, bytes):
+                    f = self.files.tobytes()
+                files = json.loads(f.decode())
             return merge(files, self.fields or {})
 
 

@@ -194,7 +194,7 @@ def get_qrcode(content):
     basewidth = 100
     wpercent = basewidth / float(logo.size[0])
     hsize = int((float(logo.size[1]) * float(wpercent)))
-    logo = logo.resize((basewidth, hsize), Image.ANTIALIAS)
+    logo = logo.resize((basewidth, hsize), Image.LANCZOS)
     QRcode = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
     QRcode.add_data(content)
     QRcode.make()
@@ -451,16 +451,24 @@ def get_session_id(request=None):
 
 def flatten_dict(d, parent_key="", sep="_") -> Dict:
     items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, Mapping):
-            items.extend(flatten_dict(v, new_key, sep=sep).items())
-        elif isinstance(v, (list, tuple)):
-            base_key = new_key
-            for i, r in enumerate(v):
-                items.extend(flatten_dict(r, f"{base_key}{sep}{i}", sep=sep).items())
-        else:
-            items.append((new_key, v))
+    if isinstance(d, dict):
+        for k, v in d.items():
+            new_key = parent_key + sep + k if parent_key else k
+            if isinstance(v, Mapping):
+                items.extend(flatten_dict(v, new_key, sep=sep).items())
+            elif isinstance(v, (list, tuple)):
+                base_key = new_key
+                if v and isinstance(v[0], dict):
+                    for i, r in enumerate(v):
+                        items.extend(flatten_dict(r, f"{base_key}{sep}{i}", sep=sep).items())
+                else:
+                    items.extend({new_key: ",".join(v)}.items())
+            else:
+                items.append((new_key, v))
+    # elif isinstance(d, list):
+    #     breakpoint()
+    #     for i, r in enumerate(d):
+    #         items.extend(flatten_dict(r, f"{parent_key}{sep}{i}", sep=sep).items())
     return dict(items)
 
 
