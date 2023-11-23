@@ -1,5 +1,5 @@
 from django.http import HttpResponseForbidden
-from rest_framework.routers import DefaultRouter, APIRootView
+from rest_framework.routers import APIRootView, DefaultRouter
 
 
 class AuroraAPIRootView(APIRootView):

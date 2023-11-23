@@ -1,8 +1,8 @@
 import json
-from django.conf import settings
 from typing import Dict
 
 from django import forms
+from django.conf import settings
 from django.core.cache import caches
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -10,7 +10,7 @@ from django.template import Context, Template
 from django.utils.functional import cached_property
 
 from aurora.core.fields.widgets import JavascriptEditor
-from aurora.core.forms import VersionMedia, FlexFormBaseForm
+from aurora.core.forms import FlexFormBaseForm, VersionMedia
 from aurora.core.models import FlexFormField, OptionSet
 from aurora.core.utils import merge_data
 

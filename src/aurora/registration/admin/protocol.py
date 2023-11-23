@@ -1,13 +1,46 @@
-from typing import Iterable
+import logging
+from typing import Any, Iterable, Sequence, Union
 
 from admin_sync.collector import ForeignKeysCollector
-from admin_sync.exceptions import SyncError
+from admin_sync.exceptions import ProtocolError, SyncError
 from admin_sync.protocol import LoadDumpProtocol
+from django.core.serializers.json import Deserializer as JsonDeserializer
+from django.db import connections, transaction
 from django.db.models import Q
+
+logger = logging.getLogger(__name__)
 
 
 class AuroraSyncRegistrationProtocol(LoadDumpProtocol):
-    def collect(self, data: Iterable, collect_related=True):
+    def serialize(self, data: Iterable):
+        return super().serialize(data)
+
+    def deserialize(self, payload: str) -> list[list[Union[str, Any]]]:
+        processed = []
+        try:
+            connection = connections[self.using]
+            with connection.constraint_checks_disabled():
+                with transaction.atomic(self.using):
+                    objects = JsonDeserializer(
+                        payload,
+                        ignorenonexistent=True,
+                        handle_forward_references=True,
+                    )
+                    for obj in objects:
+                        obj.save(using=self.using)
+                        processed.append(
+                            [
+                                obj.object._meta.object_name,
+                                str(obj.object.pk),
+                                str(obj.object),
+                            ]
+                        )
+        except Exception as e:
+            logger.exception(e)
+            raise ProtocolError(e)
+        return processed
+
+    def collect(self, data: Sequence, collect_related=True):
         from aurora.core.models import FlexFormField, FormSet
         from aurora.registration.models import Registration
 

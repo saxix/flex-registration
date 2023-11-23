@@ -6,12 +6,14 @@ from django.utils import timezone
 from factory.base import FactoryMetaClass
 from rest_framework.authtoken.models import TokenProxy
 from social_django.models import Association, Nonce, UserSocialAuth
+from strategy_field.utils import fqn
 
 import dbtemplates.models as dbtemplates
 from aurora.core.models import (
     CustomFieldType,
     FlexForm,
     FlexFormField,
+    FormSet,
     OptionSet,
     Organization,
     Project,
@@ -19,6 +21,7 @@ from aurora.core.models import (
 )
 from aurora.counters.models import Counter
 from aurora.registration.models import Record, Registration
+from aurora.security.models import AuroraRole
 
 factories_registry = {}
 
@@ -66,7 +69,7 @@ class ProjectFactory(AutoRegisterModelFactory):
 
     class Meta:
         model = Project
-        django_get_or_create = ("name",)
+        django_get_or_create = ("name", "organization")
 
 
 class UserFactory(AutoRegisterModelFactory):
@@ -112,16 +115,28 @@ class FormFactory(AutoRegisterModelFactory):
 
     class Meta:
         model = FlexForm
-        django_get_or_create = ("name",)
+        django_get_or_create = ("name", "project")
 
 
 class FlexFormFieldFactory(AutoRegisterModelFactory):
+    flex_form = factory.SubFactory(FormFactory)
     name = factory.Sequence(lambda d: "FormField-%s" % d)
-    field_type = "forms.CharField"
+    field_type = fqn(forms.CharField)
+    validator = None
 
     class Meta:
         model = FlexFormField
-        django_get_or_create = ("name",)
+        django_get_or_create = ("name", "flex_form")
+
+
+class FormSetFactory(AutoRegisterModelFactory):
+    name = factory.Sequence(lambda d: "FormSet-%s" % d)
+    flex_form = factory.SubFactory(FormFactory)
+    parent = factory.SubFactory(FormFactory)
+
+    class Meta:
+        model = FormSet
+        django_get_or_create = ("name", "flex_form")
 
 
 class CustomFieldTypeFactory(AutoRegisterModelFactory):
@@ -143,7 +158,7 @@ class RegistrationFactory(AutoRegisterModelFactory):
 
     class Meta:
         model = Registration
-        django_get_or_create = ("name",)
+        django_get_or_create = ("name", "project")
 
 
 class RecordFactory(AutoRegisterModelFactory):
@@ -205,3 +220,12 @@ class TemplateFactory(AutoRegisterModelFactory):
 
     class Meta:
         model = dbtemplates.Template
+
+
+class AuroraRoleFactory(AutoRegisterModelFactory):
+    role = factory.SubFactory(GroupFactory)
+    user = factory.SubFactory(UserFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+
+    class Meta:
+        model = AuroraRole

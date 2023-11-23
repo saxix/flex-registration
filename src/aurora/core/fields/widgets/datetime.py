@@ -1,8 +1,8 @@
 from django import forms
 from django.conf import settings
 
-from .mixins import TailWindMixin
 from ...version_media import VersionMedia
+from .mixins import TailWindMixin
 
 
 class SmartDateWidget(TailWindMixin, forms.DateInput):

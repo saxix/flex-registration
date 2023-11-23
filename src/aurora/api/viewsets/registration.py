@@ -5,7 +5,7 @@ import os
 from collections import OrderedDict
 from urllib import parse
 
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.utils.cache import get_conditional_response
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +17,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from ...core.utils import get_etag, get_session_id, build_dict
+from ...core.utils import build_dict, get_etag, get_session_id
 from ...registration.models import Record, Registration
 from ..serializers import RegistrationDetailSerializer, RegistrationListSerializer
 from ..serializers.record import DataTableRecordSerializer
@@ -161,9 +161,8 @@ class RegistrationViewSet(SmartViewSet):
         }
         """
         reg: Registration = self.get_object()
+        from aurora.core.forms import CSVOptionsForm, DateFormatsForm
         from aurora.registration.forms import RegistrationExportForm
-        from aurora.core.forms import CSVOptionsForm
-        from aurora.core.forms import DateFormatsForm
 
         try:
             form = RegistrationExportForm(request.GET, initial=RegistrationExportForm.defaults)

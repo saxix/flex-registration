@@ -4,14 +4,13 @@ import re
 from datetime import date, datetime, time
 from inspect import isclass
 from json import JSONDecodeError
-
-from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from pathlib import Path
 
 import jsonpickle
 from admin_ordering.models import OrderableModel
 from concurrency.fields import AutoIncVersionField
 from django import forms
+from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from django.contrib.postgres.fields import CICharField
 from django.core.cache import caches
 from django.core.exceptions import ValidationError
@@ -55,12 +54,14 @@ class AdminReverseMixin:
         return reverse(admin_urlname(self._meta, "changelist"))
 
 
-class OrganizationManager(TreeManager):
+class OrganizationManager(NaturalKeyModelManager, TreeManager):
     def get_by_natural_key(self, slug):
         return self.get(slug=slug)
 
 
-class Organization(AdminReverseMixin, MPTTModel):
+class Organization(AdminReverseMixin, NaturalKeyModel, MPTTModel):
+    _natural_key = ("slug",)
+
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
@@ -76,27 +77,26 @@ class Organization(AdminReverseMixin, MPTTModel):
     def __str__(self):
         return self.name
 
-    def natural_key(self):
-        return (self.slug,)
-
     def save(self, *args, **kwargs):
         if self._state.adding and not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
 
-class ProjectManager(TreeManager):
+class ProjectManager(NaturalKeyModelManager, TreeManager):
     def get_by_natural_key(self, slug, org_slug):
         return self.get(slug=slug, organization__slug=org_slug)
 
 
-class Project(AdminReverseMixin, MPTTModel):
+class Project(AdminReverseMixin, NaturalKeyModel, MPTTModel):
+    _natural_key = ("slug", "organization")
+
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
 
     name = CICharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=100, blank=True, null=True)
-    organization = models.ForeignKey(Organization, null=True, related_name="projects", on_delete=models.CASCADE)
+    slug = models.SlugField(max_length=100, blank=True)
+    organization = models.ForeignKey(Organization, related_name="projects", on_delete=models.CASCADE)
     parent = TreeForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="children")
 
     objects = ProjectManager()
@@ -109,9 +109,6 @@ class Project(AdminReverseMixin, MPTTModel):
 
     def __str__(self):
         return self.name
-
-    def natural_key(self):
-        return self.slug, self.organization.slug
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -304,7 +301,7 @@ def get_validators(field):
 class FlexForm(AdminReverseMixin, I18NModel, NaturalKeyModel):
     version = AutoIncVersionField()
     last_update_date = models.DateTimeField(auto_now=True)
-    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     name = CICharField(max_length=255, unique=True)
     base_type = StrategyClassField(registry=form_registry, default=FlexFormBaseForm)
     validator = models.ForeignKey(

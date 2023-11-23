@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils import translation
+from django.utils import timezone, translation
 from django.utils.cache import get_conditional_response
 from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
@@ -27,14 +27,9 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from sentry_sdk import set_tag
 
-from aurora.core.version_media import VersionMedia
 from aurora.core.models import FormSet
-from aurora.core.utils import (
-    get_etag,
-    get_qrcode,
-    has_token,
-    never_ever_cache,
-)
+from aurora.core.utils import get_etag, get_qrcode, has_token, never_ever_cache
+from aurora.core.version_media import VersionMedia
 from aurora.i18n.gettext import gettext as _
 from aurora.registration.models import Record, Registration
 from aurora.state import state
@@ -256,6 +251,9 @@ class RegisterView(RegistrationMixin, AdminAccesMixin, FormView):
         kwargs["registration"] = self.registration
         kwargs["can_edit_inpage"] = self.request.user.is_staff
         kwargs["can_translate"] = self.request.user.is_staff
+        kwargs["today"] = timezone.now().date()
+        kwargs["now"] = timezone.now()
+        kwargs["time"] = timezone.now().time()
 
         ctx = super().get_context_data(**kwargs)
         ctx["media"] = self.media

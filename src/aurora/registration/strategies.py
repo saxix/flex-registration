@@ -1,6 +1,6 @@
 import base64
-from django.db.transaction import atomic
 
+from django.db.transaction import atomic
 from django.shortcuts import render
 from django.urls import reverse
 from strategy_field.registry import Registry

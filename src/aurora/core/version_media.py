@@ -1,9 +1,8 @@
 import os
-
 from itertools import chain
 
 from django import forms
-from django.utils.html import html_safe, format_html
+from django.utils.html import format_html, html_safe
 
 
 @html_safe

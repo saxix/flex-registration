@@ -21,9 +21,9 @@ class RegexList(_RegexList):
 GLOBAL_EXCLUDED_MODELS = RegexList(
     [
         r"reversion.",
-        r"security.",
-        r"core.FormSet",
-        r"core.FlexFormField",
+        # r"security.",
+        # r"core.FormSet",
+        # r"core.FlexFormField",
     ]
 )
 
@@ -36,7 +36,7 @@ GLOBAL_EXCLUDED_BUTTONS = RegexList(
         r"registration.RecordAdmin:preview",
         r"registration.RecordAdmin:inspect",
         r"registration.RecordAdmin:decrypt",
-        "auth.UserAdmin:hijack",
+        "security.UserAdmin:hijack",
     ]
 )
 

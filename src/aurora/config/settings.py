@@ -50,10 +50,9 @@ INSTALLED_APPS = [
     "reversion_compare",  # https://github.com/jedie/django-reversion-compare
     "django_filters",
     # ---
-    # "aurora.admin.apps.AuroraAdminUIConfig",
     "smart_admin.apps.SmartLogsConfig",
     "smart_admin.apps.SmartTemplateConfig",
-    # "smart_admin.apps.SmartAuthConfig",
+    "smart_admin.apps.SmartAuthConfig",
     "smart_admin.apps.SmartConfig",
     "aurora.administration.apps.AuroraAdminConfig",
     "front_door.contrib",
@@ -571,7 +570,7 @@ AZURE_GRAPH_API_VERSION = "v1.0"
 AZURE_TOKEN_URL = "https://login.microsoftonline.com/unicef.org/oauth2/token"
 
 # Social Auth settings.
-SOCIAL_AUTH_BACKEND_NAME = 'macioce'
+SOCIAL_AUTH_BACKEND_NAME = "macioce"
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_SECRET = env.str("AZURE_CLIENT_SECRET")
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = env("AZURE_TENANT_ID")
 SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_KEY = env.str("AZURE_CLIENT_KEY")
@@ -638,6 +637,7 @@ SOURCES = (
     "browser.sentry-cdn.com",
     "cdnjs.cloudflare.com",
     "unisitetracker.unicef.io",
+    "cdn.jsdelivr.net",
     "register.unicef.org",
     "uni-hope-ukr-sr.azurefd.net",
     "uni-hope-ukr-sr-dev.azurefd.net",
@@ -647,9 +647,7 @@ MIDDLEWARE += [
     "csp.middleware.CSPMiddleware",
 ]
 CSP_DEFAULT_SRC = SOURCES
-CSP_FRAME_ANCESTORS = (
-    "'self'",
-)
+CSP_FRAME_ANCESTORS = ("'self'",)
 # CSP_SCRIPT_SRC = SOURCES
 # CSP_STYLE_SRC = (
 #     "'self'",
@@ -671,20 +669,21 @@ CSP_FRAME_ANCESTORS = (
 # CSP_MEDIA_SRC = ("self",)
 # CSP_REPORT_URI = ("https://624948b721ea44ac2a6b4de4.endpoint.csper.io/?v=0;",)
 # CSP_WORKER_SRC = ("self",)
-"""default-src 'self';
-script-src 'report-sample' 'self';
-style-src 'report-sample' 'self';
-object-src 'none';
-base-uri 'self';
-connect-src 'self';
-font-src 'self';
-frame-src 'self';
-img-src 'self';
-manifest-src 'self';
-media-src 'self';
-report-uri https://624948b721ea44ac2a6b4de4.endpoint.csper.io/?v=0;
-worker-src 'none';
-"""
+# """default-src 'self';
+# script-src 'report-sample' 'self';
+# style-src 'report-sample' 'self';
+# object-src 'none';
+#
+# base-uri 'self';
+# connect-src 'self';
+# font-src 'self';
+# frame-src 'self';
+# img-src 'self';
+# manifest-src 'self';
+# media-src 'self';
+# report-uri https://624948b721ea44ac2a6b4de4.endpoint.csper.io/?v=0;
+# worker-src 'none';
+# """
 
 # CSP_INCLUDE_NONCE_IN = env("CSP_INCLUDE_NONCE_IN")
 # CSP_REPORT_ONLY = env("CSP_REPORT_ONLY")

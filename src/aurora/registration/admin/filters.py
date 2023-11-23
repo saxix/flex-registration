@@ -18,10 +18,10 @@ class OrganizationFilter(BaseAutoCompleteFilter):
 
 
 class RegistrationProjectFilter(BaseAutoCompleteFilter):
-    fk_name = "flex_form__project__organization__exact"
+    fk_name = "_project__organization__exact"
 
     def has_output(self):
-        return "flex_form__project__organization__exact" in self.request.GET
+        return "project__organization__exact" in self.request.GET
 
     def get_url(self):
         url = reverse("%s:autocomplete" % self.admin_site.name)

@@ -6,8 +6,8 @@ from django.forms import BoundField
 from django.urls import NoReverseMatch, reverse
 from django.utils.translation import get_language
 
-from .widgets.mixins import TailWindMixin
 from ..version_media import VersionMedia
+from .widgets.mixins import TailWindMixin
 
 logger = logging.getLogger(__name__)
 

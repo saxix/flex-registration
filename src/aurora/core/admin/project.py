@@ -16,13 +16,16 @@ cache = caches["default"]
 
 @register(Project)
 class ProjectAdmin(SyncMixin, LinkedObjectsMixin, MPTTModelAdmin):
-    list_display = ("name",)
+    list_display = ("name", "organization")
     list_filter = ("organization",)
     mptt_level_indent = 20
     mptt_indent_field = "name"
     search_fields = ("name",)
     protocol_class = AuroraSyncProjectProtocol
     autocomplete_fields = "parent, "
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("organization")
 
     def get_search_results(self, request, queryset, search_term):
         queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)

@@ -1,7 +1,7 @@
 from django.urls import include, path
-from .router import AuroraRouter
 
 from . import viewsets
+from .router import AuroraRouter
 
 app_name = "api"
 

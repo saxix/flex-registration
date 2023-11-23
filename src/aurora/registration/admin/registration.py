@@ -2,7 +2,6 @@ import csv
 import io
 import json
 import logging
-from django.utils.module_loading import import_string
 from hashlib import md5
 
 from admin_extra_buttons.decorators import button, choice, view
@@ -20,6 +19,7 @@ from django.shortcuts import render
 from django.template import Template
 from django.template.loader import select_template
 from django.urls import reverse, translate_url
+from django.utils.module_loading import import_string
 from django.utils.text import slugify
 from django_redis import get_redis_connection
 from jsoneditor.forms import JSONEditor
@@ -27,7 +27,7 @@ from smart_admin.modeladmin import SmartModelAdmin
 
 from aurora.core.admin.base import ConcurrencyVersionAdmin
 from aurora.core.forms import CSVOptionsForm, DateFormatsForm, VersionMedia
-from aurora.core.models import FormSet, Validator, FlexForm, FlexFormField
+from aurora.core.models import FlexForm, FlexFormField, FormSet, Validator
 from aurora.core.utils import (
     build_dict,
     build_form_fake_data,
@@ -64,13 +64,23 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     date_hierarchy = "start"
     list_filter = (
         "active",
-        ("flex_form__project__organization", OrganizationFilter),
-        ("flex_form__project", RegistrationProjectFilter),
+        ("project__organization", OrganizationFilter),
+        ("project", RegistrationProjectFilter),
         "archived",
         "protected",
         "show_in_homepage",
     )
-    list_display = ("name", "slug", "project", "secure", "active", "archived", "protected", "show_in_homepage")
+    list_display = (
+        "name",
+        "slug",
+        "organization",
+        "project",
+        "secure",
+        "active",
+        "archived",
+        "protected",
+        "show_in_homepage",
+    )
     exclude = ("public_key",)
     autocomplete_fields = ("flex_form",)
     save_as = True
@@ -105,7 +115,15 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     protocol_class = AuroraSyncRegistrationProtocol
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("project")
+        return super().get_queryset(request).select_related("project", "project__organization")
+
+    def get_list_display(self, request):
+        base = list(self.list_display)
+        if "project__organization__exact" in request.GET:
+            base.remove("organization")
+        else:
+            base.remove("project")
+        return base
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)

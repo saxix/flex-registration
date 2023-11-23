@@ -79,11 +79,12 @@ class AuroraRoleManager(models.Manager):
     def get_by_natural_key(self, org_slug, prj_slug, registration_slug, username, group):
         if org_slug:
             flt = {"organization__slug": org_slug}
-        if prj_slug:
+        elif prj_slug:
             flt = {"project__slug": prj_slug}
-        if registration_slug:
+        elif registration_slug:
             flt = {"registration__slug": registration_slug}
-
+        else:
+            flt = {}
         return self.get(user__username=username, role__name=group, **flt)
 
 
@@ -113,11 +114,21 @@ class AuroraRole(NaturalKeyModel, models.Model):
 
     def natural_key(self):
         if self.organization:
-            return (self.organization.slug, None, None, self.role.name)
+            return (self.organization.slug, None, None, self.user.username, self.role.name)
         elif self.project:
-            return (None, self.project.slug, None, self.role.name)
+            return (None, self.project.slug, None, self.user.username, self.role.name)
         elif self.registration:
-            return (None, None, self.registration.slug, self.role.name)
+            return (None, None, self.registration.slug, self.user.username, self.role.name)
+        else:
+            return (None, None, None, self.user.username, self.role.name)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.registration:
+            self.project = self.registration.project
+            self.organization = self.project.organization
+        elif self.project:
+            self.organization = self.project.organization
+        return super().save(force_insert, force_update, using, update_fields)
 
 
 class AuroraUser(User):

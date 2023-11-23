@@ -1,4 +1,4 @@
-{% load static feature_flags http2 %}<!DOCTYPE html>
+{% load static feature_flags  %}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -67,7 +67,11 @@
         </div>
     </header>
 {% endblock %}
+{% block body_top %}{% endblock %}
+
 {% block body %}{% endblock body %}
+{% block body_bottom %}{% endblock %}
+
 {% block footer %}{% include "_footer.html" %}{% endblock %}
 
 {#<script type="text/javascript">#}

@@ -4,12 +4,12 @@ import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from aurora.core.utils import (
+    apply_nested,
     extract_content,
+    flatten_dict,
     merge_data,
     namify,
     underscore_to_camelcase,
-    apply_nested,
-    flatten_dict,
 )
 from aurora.registration.storage import Router
 

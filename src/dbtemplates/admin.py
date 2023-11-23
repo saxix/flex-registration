@@ -212,7 +212,7 @@ class TemplateAdmin(SyncMixin, AdminFiltersMixin, PublishMixin, TemplateModelAdm
 
     @button()
     def preview(self, request, pk):
-        ctx = self.get_common_context(request, pk, title="Preview")
+        ctx = self.get_common_context(request, pk, title="Preview", preview_template=True)
         return render(request, "admin/dbtemplates/template/preview.html", ctx)
 
 

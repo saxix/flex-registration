@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load aurora formset l10n static itrans http2 %}
+{% extends "base.html" %}{% load aurora formset l10n static itrans  %}
 {% block meta %}
     <meta name="Description" content="Module: '{{ registration.title}}' Version: {{ registration.version }} - Form version: {{ form.flex_form.version }}">
     <meta name="Project" content="{{ registration.project }}">
@@ -12,8 +12,9 @@
 {% endblock meta %}
 {% block cache %}{% endblock %}
 {% block head %}
-{#    <script src="{% static "admin/js/vendor/jquery/jquery.js" %}"></script>#}
+    {% if registration %}
     <script src="{% url 'javascript-catalog' registration.locale %}"></script>
+    {% endif %}
 {#    <script src="{% static 'registration/survey.min.js' %}"></script>#}
 {#    <script>var VERSION="{{ project.version }}";var DSN="{{ project.sentry_dsn }}";</script>#}
 
