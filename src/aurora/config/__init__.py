@@ -54,7 +54,7 @@ OPTIONS = {
     "DEBUG": (bool, False),
     "DEBUG_PROPAGATE_EXCEPTIONS": (bool, False),
     "DJANGO_ADMIN_TITLE": (str, "Aurora"),
-    "EMAIL_BACKEND": (str, "django.core.mail.backends.smtp.EmailBackend"),
+    "EMAIL_BACKEND": (str, "anymail.backends.mailjet.EmailBackend"),
     # "EMAIL_FROM_EMAIL": (str, ""),
     # "EMAIL_HOST": (str, ""),
     # "EMAIL_HOST_PASSWORD": (str, ""),
