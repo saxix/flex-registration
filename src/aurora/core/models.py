@@ -6,9 +6,6 @@ from inspect import isclass
 from json import JSONDecodeError
 from pathlib import Path
 
-import jsonpickle
-from admin_ordering.models import OrderableModel
-from concurrency.fields import AutoIncVersionField
 from django import forms
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from django.contrib.postgres.fields import CICharField
@@ -23,6 +20,10 @@ from django.utils.deconstruct import deconstructible
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
+
+import jsonpickle
+from admin_ordering.models import OrderableModel
+from concurrency.fields import AutoIncVersionField
 from mptt.fields import TreeForeignKey
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel
@@ -36,10 +37,10 @@ from ..i18n.models import I18NModel
 from ..state import state
 from . import fields
 from .compat import RegexField, StrategyClassField
-from .fields import WIDGET_FOR_FORMFIELD_DEFAULTS, SmartFieldMixin
+from .fields import SmartFieldMixin, WIDGET_FOR_FORMFIELD_DEFAULTS
 from .forms import CustomFieldMixin, FlexFormBaseForm, SmartBaseFormSet
 from .registry import field_registry, form_registry, import_custom_field
-from .utils import JSONEncoder, dict_setdefault, jsonfy, namify, underscore_to_camelcase
+from .utils import dict_setdefault, JSONEncoder, jsonfy, namify, underscore_to_camelcase
 
 logger = logging.getLogger(__name__)
 

@@ -2,6 +2,8 @@ import logging
 
 from django.contrib.admin import register
 from django.core.cache import caches
+
+from adminfilters.mixin import AdminAutoCompleteSearchMixin
 from mptt.admin import MPTTModelAdmin
 from smart_admin.mixins import LinkedObjectsMixin
 
@@ -15,7 +17,7 @@ cache = caches["default"]
 
 
 @register(Organization)
-class OrganizationAdmin(SyncMixin, LinkedObjectsMixin, MPTTModelAdmin):
+class OrganizationAdmin(SyncMixin, AdminAutoCompleteSearchMixin, LinkedObjectsMixin, MPTTModelAdmin):
     list_display = ("name",)
     mptt_level_indent = 20
     mptt_indent_field = "name"

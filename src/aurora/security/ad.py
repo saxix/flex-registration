@@ -1,8 +1,8 @@
-import logging
-from collections import namedtuple
 from typing import Any, Dict
 
-from admin_extra_buttons.decorators import button
+import logging
+from collections import namedtuple
+
 from django import forms
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -12,6 +12,8 @@ from django.core.validators import validate_email
 from django.forms.forms import Form
 from django.http import Http404, HttpRequest
 from django.template.response import TemplateResponse
+
+from admin_extra_buttons.decorators import button
 from requests import HTTPError
 
 from aurora.core.models import Organization, Project

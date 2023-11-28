@@ -25,7 +25,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        from aurora.config import MANDATORY, OPTIONS, SmartEnv, env
+        from aurora.config import env, MANDATORY, OPTIONS, SmartEnv
 
         if options["defaults"]:
             EE = type("SmartEnv", (SmartEnv,), {"ENVIRON": {}})

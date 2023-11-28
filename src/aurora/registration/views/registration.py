@@ -1,3 +1,5 @@
+from typing import Dict, Type
+
 import json
 import logging
 import os
@@ -5,10 +7,7 @@ import time
 from functools import wraps
 from hashlib import md5
 from json import JSONDecodeError
-from typing import Dict, Type
 
-import sentry_sdk
-from constance import config
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -25,6 +24,9 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
+
+import sentry_sdk
+from constance import config
 from sentry_sdk import set_tag
 
 from aurora.core.models import FormSet

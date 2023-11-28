@@ -1,5 +1,6 @@
-import json
 from typing import Dict
+
+import json
 
 from django import forms
 from django.conf import settings
@@ -151,8 +152,7 @@ class FieldEditor:
         return HttpResponse(rendered, content_type="text/plain")
 
     def get_code(self):
-        from bs4 import BeautifulSoup as bs
-        from bs4 import formatter
+        from bs4 import BeautifulSoup as bs, formatter
         from pygments import highlight
         from pygments.formatters.html import HtmlFormatter
         from pygments.lexers import HtmlLexer

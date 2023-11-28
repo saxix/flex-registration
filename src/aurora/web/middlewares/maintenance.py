@@ -1,9 +1,10 @@
 import logging
 
-from constance import config
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+
+from constance import config
 
 from aurora.core.utils import has_token
 

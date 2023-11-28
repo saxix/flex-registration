@@ -1,8 +1,9 @@
 import os
 
-from constance import config
 from django.conf import settings
 from django.http import JsonResponse
+
+from constance import config
 
 from aurora.core.utils import has_token
 

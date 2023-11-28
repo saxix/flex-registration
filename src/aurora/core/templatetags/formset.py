@@ -1,8 +1,9 @@
 import logging
 
-import markdown as md
 from django.template import Library
 from django.utils.safestring import mark_safe
+
+import markdown as md
 
 from aurora.i18n.gettext import gettext as _
 

@@ -2,6 +2,7 @@ import logging
 import os
 
 from django.conf import settings
+
 from sentry_sdk import configure_scope
 
 logger = logging.getLogger(__name__)

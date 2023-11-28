@@ -3,9 +3,10 @@
 import logging
 from pathlib import Path
 
-import djclick as click
 from django.core.cache import cache
-from django.core.management import CommandError, call_command
+from django.core.management import call_command, CommandError
+
+import djclick as click
 from redis.exceptions import LockError
 
 from aurora import VERSION
@@ -46,7 +47,7 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, org
     try:
         # ensure project/org
         click.echo("Set default Org/Project")
-        UNICEF = Organization.objects.get_or_create(slug="unicef", defaults={"name": "UNICEF"})
+        UNICEF, __ = Organization.objects.get_or_create(slug="unicef", defaults={"name": "UNICEF"})
         DEF = Project.objects.get_or_create(slug="default-project", organization=UNICEF)
 
         Project.objects.filter(organization__isnull=True).update(organization=UNICEF)

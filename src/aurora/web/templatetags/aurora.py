@@ -4,9 +4,10 @@ import json
 import logging
 import re
 
-import markdown as md
 from django.template import Library, Node
 from django.utils.safestring import mark_safe
+
+import markdown as md
 from PIL import Image, UnidentifiedImageError
 
 from aurora.i18n.gettext import gettext as _

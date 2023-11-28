@@ -2,8 +2,9 @@
 """
 import logging
 
-import djclick as click
 from django.db.transaction import atomic
+
+import djclick as click
 
 from aurora.core import registry
 from aurora.core.models import CustomFieldType, FlexForm, OptionSet

@@ -1,15 +1,17 @@
+from typing import Union
+
 import base64
 import io
 import json
 import logging
-from typing import Union
+
+from django.conf import settings
 
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import unpad
 from cryptography.fernet import Fernet
-from django.conf import settings
 
 from aurora.core.utils import safe_json
 
