@@ -3,6 +3,7 @@ from inspect import isclass
 
 from django import forms
 from django.core.exceptions import ObjectDoesNotExist
+
 from simplemathcaptcha.fields import MathCaptchaField
 from strategy_field.exceptions import StrategyAttributeError
 from strategy_field.registry import Registry

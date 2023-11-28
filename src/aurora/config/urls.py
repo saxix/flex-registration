@@ -1,9 +1,10 @@
-import adminactions.actions as actions
-import debug_toolbar
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import include, path, re_path
+
+import adminactions.actions as actions
+import debug_toolbar
 
 from aurora.core.views import service_worker
 from aurora.web.views.site import error_404

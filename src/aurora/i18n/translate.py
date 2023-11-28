@@ -2,8 +2,9 @@ import logging
 import uuid
 from abc import ABC, abstractmethod
 
-import requests
 from django.conf import settings
+
+import requests
 
 logger = logging.getLogger(__name__)
 

@@ -4,9 +4,6 @@ import json
 import logging
 from hashlib import md5
 
-from admin_extra_buttons.decorators import button, choice, view
-from admin_sync.mixin import SyncMixin
-from dateutil.utils import today
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -21,6 +18,11 @@ from django.template.loader import select_template
 from django.urls import reverse, translate_url
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
+
+from admin_extra_buttons.decorators import button, choice, view
+from admin_sync.mixin import SyncMixin
+from adminfilters.mixin import AdminAutoCompleteSearchMixin
+from dateutil.utils import today
 from django_redis import get_redis_connection
 from jsoneditor.forms import JSONEditor
 from smart_admin.modeladmin import SmartModelAdmin
@@ -28,28 +30,13 @@ from smart_admin.modeladmin import SmartModelAdmin
 from aurora.core.admin.base import ConcurrencyVersionAdmin
 from aurora.core.forms import CSVOptionsForm, DateFormatsForm, VersionMedia
 from aurora.core.models import FlexForm, FlexFormField, FormSet, Validator
-from aurora.core.utils import (
-    build_dict,
-    build_form_fake_data,
-    clone_model,
-    get_system_cache_version,
-    is_root,
-    namify,
-)
+from aurora.core.utils import build_dict, build_form_fake_data, clone_model, get_system_cache_version, is_root, namify
 from aurora.i18n.forms import TemplateForm, TranslationForm
 from aurora.i18n.translate import Translator
-from aurora.registration.admin.filters import (
-    OrganizationFilter,
-    RegistrationProjectFilter,
-)
+from aurora.registration.admin.filters import OrganizationFilter, RegistrationProjectFilter
 from aurora.registration.admin.forms import DebugForm
 from aurora.registration.admin.protocol import AuroraSyncRegistrationProtocol
-from aurora.registration.forms import (
-    CloneForm,
-    JamesForm,
-    RegistrationExportForm,
-    RegistrationForm,
-)
+from aurora.registration.forms import CloneForm, JamesForm, RegistrationExportForm, RegistrationForm
 from aurora.registration.models import Record, Registration
 
 logger = logging.getLogger(__name__)
@@ -59,7 +46,7 @@ def can_export_data(request, obj, handler=None):
     return (obj.export_allowed and request.user.has_perm("registration.export_data", obj)) or is_root(request)
 
 
-class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
+class RegistrationAdmin(ConcurrencyVersionAdmin, AdminAutoCompleteSearchMixin, SyncMixin, SmartModelAdmin):
     search_fields = ("name", "title", "slug")
     date_hierarchy = "start"
     list_filter = (
@@ -117,6 +104,12 @@ class RegistrationAdmin(ConcurrencyVersionAdmin, SyncMixin, SmartModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("project", "project__organization")
 
+    # def get_search_results(self, request, queryset, search_term):
+    #     queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+    #     if "oid" in request.GET:
+    #         queryset = queryset.filter(project__id=request.GET["oid"])
+    #     return queryset, may_have_duplicates
+    #
     def get_list_display(self, request):
         base = list(self.list_display)
         if "project__organization__exact" in request.GET:

@@ -1,11 +1,12 @@
 import logging
 import re
 
-import jmespath
-from adminfilters.querystring import QueryStringFilter
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
+
+import jmespath
+from adminfilters.querystring import QueryStringFilter
 from django_regex.utils import RegexList
 from mdeditor.fields import MDTextFormField
 

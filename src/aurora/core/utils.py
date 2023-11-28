@@ -1,3 +1,5 @@
+from typing import Dict
+
 import base64
 import datetime
 import decimal
@@ -16,12 +18,7 @@ from hashlib import md5
 from itertools import chain
 from pathlib import Path
 from sys import getsizeof, stderr
-from typing import Dict
 
-import faker
-import qrcode
-from constance import config
-from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
 from django.core.files.utils import FileProxyMixin
@@ -37,6 +34,11 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.timezone import is_aware
+
+import faker
+import qrcode
+from constance import config
+from dateutil.relativedelta import relativedelta
 
 from aurora import VERSION
 from aurora.state import state

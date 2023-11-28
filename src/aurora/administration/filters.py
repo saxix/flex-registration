@@ -1,14 +1,19 @@
-from adminfilters.autocomplete import get_real_field
-from adminfilters.mixin import MediaDefinitionFilter, SmartFieldListFilter
 from django.conf import settings
 from django.contrib.admin.widgets import SELECT2_TRANSLATIONS
 from django.urls import reverse
 from django.utils.translation import get_language
 
+from adminfilters.autocomplete import AutoCompleteFilter, get_real_field
+from adminfilters.mixin import MediaDefinitionFilter, SmartFieldListFilter
+
 from aurora.core.version_media import VersionMedia
 
 
-class BaseAutoCompleteFilter(SmartFieldListFilter, MediaDefinitionFilter):
+class BaseAutoCompleteFilter(AutoCompleteFilter):
+    pass
+
+
+class BaseAutoCompleteFilter___(SmartFieldListFilter, MediaDefinitionFilter):
     template = "adminfilters/autocomplete.html"
     url_name = "%s:%s_%s_autocomplete"
     filter_title = None

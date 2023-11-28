@@ -2,9 +2,6 @@ import base64
 import json
 import logging
 
-import jmespath
-from concurrency.fields import AutoIncVersionField
-from Crypto.PublicKey import RSA
 from django.conf import settings
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.postgres.fields import CICharField
@@ -13,21 +10,19 @@ from django.utils import timezone, translation
 from django.utils.functional import cached_property
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
+
+import jmespath
+from concurrency.fields import AutoIncVersionField
+from Crypto.PublicKey import RSA
 from natural_keys import NaturalKeyModel, NaturalKeyModelManager
 from strategy_field.fields import StrategyField
 from strategy_field.utils import fqn
 
-from aurora.core.crypto import Crypto, crypt, decrypt, decrypt_offline
+from aurora.core.crypto import crypt, Crypto, decrypt, decrypt_offline
 from aurora.core.fields import AjaxSelectField, LabelOnlyField
 from aurora.core.forms import VersionMedia
 from aurora.core.models import FlexForm, FlexFormField, Project, Validator
-from aurora.core.utils import (
-    cache_aware_reverse,
-    dict_setdefault,
-    get_client_ip,
-    get_registration_id,
-    safe_json,
-)
+from aurora.core.utils import cache_aware_reverse, dict_setdefault, get_client_ip, get_registration_id, safe_json
 from aurora.i18n.models import I18NModel
 from aurora.registration.fields import ChoiceArrayField
 from aurora.registration.storage import router

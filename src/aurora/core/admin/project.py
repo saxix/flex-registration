@@ -2,6 +2,8 @@ import logging
 
 from django.contrib.admin import register
 from django.core.cache import caches
+
+from adminfilters.mixin import AdminAutoCompleteSearchMixin
 from mptt.admin import MPTTModelAdmin
 from smart_admin.mixins import LinkedObjectsMixin
 
@@ -15,7 +17,7 @@ cache = caches["default"]
 
 
 @register(Project)
-class ProjectAdmin(SyncMixin, LinkedObjectsMixin, MPTTModelAdmin):
+class ProjectAdmin(SyncMixin, AdminAutoCompleteSearchMixin, LinkedObjectsMixin, MPTTModelAdmin):
     list_display = ("name", "organization")
     list_filter = ("organization",)
     mptt_level_indent = 20
@@ -27,11 +29,12 @@ class ProjectAdmin(SyncMixin, LinkedObjectsMixin, MPTTModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("organization")
 
-    def get_search_results(self, request, queryset, search_term):
-        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
-        if "oid" in request.GET:
-            queryset = queryset.filter(organization__id=request.GET["oid"])
-        return queryset, may_have_duplicates
+    #
+    # def get_search_results(self, request, queryset, search_term):
+    #     queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+    #     if "oid" in request.GET:
+    #         queryset = queryset.filter(organization__id=request.GET["oid"])
+    #     return queryset, may_have_duplicates
 
     def get_readonly_fields(self, request, obj=None):
         ro = super().get_readonly_fields(request, obj)

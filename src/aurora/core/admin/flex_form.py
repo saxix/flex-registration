@@ -1,16 +1,16 @@
 import logging
 
+from django import forms
+from django.contrib import messages
+from django.contrib.admin import register, TabularInline
+from django.core.cache import caches
+
 from admin_extra_buttons.decorators import button, view
 from admin_ordering.admin import OrderableAdmin
 from adminfilters.autocomplete import AutoCompleteFilter
 from adminfilters.querystring import QueryStringFilter
-from django import forms
-from django.contrib import messages
-from django.contrib.admin import TabularInline, register
-from django.core.cache import caches
 from smart_admin.modeladmin import SmartModelAdmin
 
-from ...administration.mixin import LoadDumpMixin
 from ..admin_sync import SyncMixin
 from ..models import FlexForm, FlexFormField, FormSet
 from ..utils import render
@@ -47,7 +47,7 @@ class FlexFormFieldFormInline(forms.ModelForm):
             self.fields["name"].widget.attrs = {"readonly": True, "tyle": "background-color:#f8f8f8;border:none"}
 
 
-class FlexFormFieldInline(LoadDumpMixin, OrderableAdmin, TabularInline):
+class FlexFormFieldInline(OrderableAdmin, TabularInline):
     template = "admin/core/flexformfield/tabular.html"
     model = FlexFormField
     form = FlexFormFieldFormInline
