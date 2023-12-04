@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     "simplemathcaptcha",
     "dbtemplates",
     "admin_sync",
+    "anymail",
     # ---
     "aurora.apps.Config",
     "aurora.flatpages.apps.Config",
@@ -847,3 +848,7 @@ AZURE_CLIENT_SECRET = env("AZURE_CLIENT_SECRET")
 
 MATOMO_SITE = env("MATOMO_SITE", default="https://unisitetracker.unicef.io/")
 MATOMO_ID = env("MATOMO_ID", default="N/A")
+ANYMAIL = {
+    "MAILJET_API_KEY": env("MAILJET_API_KEY"),
+    "MAILJET_SECRET_KEY": env("MAILJET_SECRET_KEY")
+}
