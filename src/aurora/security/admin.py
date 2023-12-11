@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 
 from admin_extra_buttons.decorators import button
@@ -20,6 +21,18 @@ from .forms import AuroraRoleForm
 from .utils import generate_pwd
 
 logger = logging.getLogger(__name__)
+
+
+def generate_passwords(modeladmin, request, queryset):  # noqa
+    opts = modeladmin.model._meta
+    perm = "{0}.{1}".format(opts.app_label, "add_aurorauser")
+    if not request.user.has_perm(perm):
+        messages.error(request, _("Sorry you do not have rights to execute this action"))
+        return
+    for user in queryset:
+        generate_pwd(user.pk)
+    emails = len(queryset)
+    messages.success(request, f"{emails} have been sent!")
 
 
 class GroupProtocol(LoadDumpProtocol):
@@ -64,7 +77,10 @@ class UserAdmin(AdminActionPermMixin, ADUSerMixin, UserAdmin_):
 
     @button()
     def generate_password(self, request, pk):
-        generate_pwd(pk)
+        message = generate_pwd(pk)
+        self.message_user(request, message, messages.SUCCESS)
+
+    actions = [generate_passwords]
 
 
 class UserProfileAdmin(SmartModelAdmin):
