@@ -116,6 +116,7 @@ stages:
                             -ROOT_TOKEN $(ROOT_TOKEN)
                             -ADMIN_EMAIL $(ADMIN_EMAIL)
                             -ADMIN_PASSWORD $(ADMIN_PASSWORD)
+                            -EMAIL_HOST_USER $(EMAIL_HOST_USER)
                             -MAILJET_API_KEY $(MAILJET_API_KEY)
                             -MAILJET_SECRET_KEY $(MAILJET_SECRET_KEY)
                             -AZURE_CLIENT_ID $(KEY_VALUT_AZURE_CLIENT_ID)
