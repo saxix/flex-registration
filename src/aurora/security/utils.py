@@ -38,3 +38,4 @@ def generate_pwd(user_pk):
         user.email,
     ]
     send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+    return f"{subject} sent to {user.first_name}!"
