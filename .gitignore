@@ -18,6 +18,10 @@ package.json
 !.flake8
 !.pre-commit-config.yaml
 .env
+.venv
+__packages__
 docker/conf/nginx.conf
 docker/conf/redis.conf
 src/aurora/staticfiles
+
+.pdm-python

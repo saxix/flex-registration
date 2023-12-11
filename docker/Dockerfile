@@ -1,4 +1,4 @@
-FROM python:3.9.16-slim-bullseye
+FROM python:3.11-slim-bullseye
 ARG BUILD_DATE
 ARG VERSION
 
@@ -52,14 +52,14 @@ ENV PATH="${PATH}:/root/.local/bin" \
 
 #    STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage" \
 
-RUN pip install "poetry==1.2.2"
+RUN pip install pdm==2.9.4
+ADD pyproject.toml ./
+ADD pdm.toml ./
+ADD pdm.lock ./
+RUN sed -i 's/use_venv = true/use_venv = false/' pdm.toml
+RUN pdm sync --prod --no-editable --no-self
 
-ADD poetry.lock pyproject.toml /code/
-
-RUN poetry config virtualenvs.create false \
-    && mkdir -p /var/nginx/system \
-    && poetry install --no-interaction --no-ansi --no-root --without dev \
-    && pip install uwsgi
+RUN mkdir -p /var/nginx/system \
 
 ADD . /code/
 ADD ./docker/conf/nginx/* /var/nginx/
