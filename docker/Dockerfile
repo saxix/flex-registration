@@ -52,14 +52,13 @@ ENV PATH="${PATH}:/root/.local/bin" \
 
 #    STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage" \
 
-RUN pip install "poetry==1.2.2"
+RUN pip install pdm==2.9.3
 
-ADD poetry.lock pyproject.toml /code/
+ADD pdm.toml /code/
+ADD pdm.lock /code/
+RUN pdm sync --prod --no-editable --no-self
 
-RUN poetry config virtualenvs.create false \
-    && mkdir -p /var/nginx/system \
-    && poetry install --no-interaction --no-ansi --no-root --without dev \
-    && pip install uwsgi
+RUN mkdir -p /var/nginx/system \
 
 ADD . /code/
 ADD ./docker/conf/nginx/* /var/nginx/
