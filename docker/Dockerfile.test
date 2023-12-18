@@ -51,7 +51,7 @@ ENV PATH="${PATH}:/root/.local/bin" \
     VERSION=${VERSION} \
     POETRY_VERSION=${POETRY_VERSION}
 
-RUN pip install pdm==2.9.4
+RUN pip install pdm==2.9.3
 
 ADD pdm.toml pdm.lock /code/
 RUN pdm sync --prod --no-editable --no-self

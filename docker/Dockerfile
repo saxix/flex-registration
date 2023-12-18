@@ -52,7 +52,7 @@ ENV PATH="${PATH}:/root/.local/bin" \
 
 #    STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage" \
 
-RUN pip install pdm==2.9.4
+RUN pip install pdm==2.9.3
 ADD pyproject.toml ./
 ADD pdm.toml ./
 ADD pdm.lock ./
