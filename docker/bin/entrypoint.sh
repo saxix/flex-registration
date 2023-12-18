@@ -7,12 +7,12 @@ export REDIS_MAXMEMORY="${REDIS_MAXMEMORY:-100Mb}"
 export REDIS_MAXMEMORY_POLICY="${REDIS_MAXMEMORY_POLICY:-volatile-ttl}"
 export AURORA_VERSION=${VERSION}
 export AURORA_BUILD=${BUILD_DATE}
+export PYTHONPATH="/code/src/:/code/__pypackages__/3.11/lib"
 
 export DOLLAR='$'
 
 mkdir -p /var/run /var/nginx ${NGINX_CACHE_DIR} ${MEDIA_ROOT} ${STATIC_ROOT}
 echo "created support dirs /var/run ${MEDIA_ROOT} ${STATIC_ROOT}"
-
 
 if [ $# -eq 0 ]; then
     envsubst < /conf/nginx.conf.tpl > /conf/nginx.conf && nginx -tc /conf/nginx.conf

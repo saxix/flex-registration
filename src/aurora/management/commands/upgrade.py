@@ -45,21 +45,21 @@ def upgrade(admin_email, admin_password, static, migrate, prompt, verbosity, org
     extra = {"no_input": prompt, "verbosity": verbosity - 1, "stdout": None}
     click.echo("Run upgrade.. waiting for lock")
     try:
-        # ensure project/org
-        click.echo("Set default Org/Project")
-        UNICEF, __ = Organization.objects.get_or_create(slug="unicef", defaults={"name": "UNICEF"})
-        DEF, __ = Project.objects.get_or_create(slug="default-project", organization=UNICEF)
-
-        Project.objects.filter(organization__isnull=True).update(organization=UNICEF)
-        Registration.objects.filter(project__isnull=True).update(project=DEF)
-        FlexForm.objects.filter(project__isnull=True).update(project=DEF)
-
         with cache.lock(env("MIGRATION_LOCK_KEY"), timeout=60 * 10, blocking_timeout=2, version=VERSION):
             if migrate:
                 if verbosity >= 1:
                     click.echo("Run migrations")
                 call_command("migrate", **extra)
                 call_command("create_extra_permissions")
+
+            # ensure project/org
+            click.echo("Set default Org/Project")
+            UNICEF, __ = Organization.objects.get_or_create(slug="unicef", defaults={"name": "UNICEF"})
+            DEF, __ = Project.objects.get_or_create(slug="default-project", organization=UNICEF)
+
+            Project.objects.filter(organization__isnull=True).update(organization=UNICEF)
+            Registration.objects.filter(project__isnull=True).update(project=DEF)
+            FlexForm.objects.filter(project__isnull=True).update(project=DEF)
 
             static_root = Path(env("STATIC_ROOT"))
             if not static_root.exists():
