@@ -24,7 +24,7 @@ RUN apt-get update \
     && locale-gen --no-purge uk_UA.UTF-8 \
     && apt-get clean
 
-ENV PATH="${PATH}:/root/.local/bin" \
+ENV PATH="${PATH}:/root/.local/bin:/code/__pypackages__/3.11/bin" \
     ADMINS="" \
     BUILD_DATE=${BUILD_DATE} \
     CACHE_DEFAULT="redis://127.0.0.1/0" \
@@ -40,7 +40,7 @@ ENV PATH="${PATH}:/root/.local/bin" \
     REDIS_LOGLEVEL="warning" \
     REDIS_MAXMEMORY="100Mb" \
     REDIS_MAXMEMORY_POLICY="volatile-ttl" \
-    PYTHONPATH="/code/src/" \
+    PYTHONPATH="/code/src/:/code/__pypackages__/3.11/lib" \
     PYTHONUNBUFFERED=1 \
     SECRET_KEY="secret-key-just-for-build" \
     SENTRY_DSN="" \
@@ -53,15 +53,13 @@ ENV PATH="${PATH}:/root/.local/bin" \
 #    STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage" \
 
 RUN pip install pdm==2.9.3
-ADD pyproject.toml ./
-ADD pdm.toml ./
-ADD pdm.lock ./
+ADD pyproject.toml pdm.toml pdm.lock ./
 RUN sed -i 's/use_venv = true/use_venv = false/' pdm.toml
 RUN pdm sync --prod --no-editable --no-self
 
-RUN mkdir -p /var/nginx/system \
+RUN mkdir -p /var/nginx/system
 
-ADD . /code/
+ADD . ./
 ADD ./docker/conf/nginx/* /var/nginx/
 ADD ./docker/conf/* /conf/
 ADD ./docker/bin/* /usr/local/bin/
