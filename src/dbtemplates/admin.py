@@ -14,8 +14,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import ungettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 
 from dbtemplates.conf import settings
 from dbtemplates.models import Template, add_template_to_cache, remove_cached_template
@@ -147,7 +147,7 @@ class TemplateAdmin(SyncMixin, AdminFiltersMixin, PublishMixin, TemplateModelAdm
         for template in queryset:
             remove_cached_template(template)
         count = queryset.count()
-        message = ungettext(
+        message = ngettext(
             "Cache of one template successfully invalidated.",
             "Cache of %(count)d templates successfully invalidated.",
             count,
@@ -160,7 +160,7 @@ class TemplateAdmin(SyncMixin, AdminFiltersMixin, PublishMixin, TemplateModelAdm
         for template in queryset:
             add_template_to_cache(template)
         count = queryset.count()
-        message = ungettext(
+        message = ngettext(
             "Cache successfully repopulated with one template.",
             "Cache successfully repopulated with %(count)d templates.",
             count,
@@ -177,7 +177,7 @@ class TemplateAdmin(SyncMixin, AdminFiltersMixin, PublishMixin, TemplateModelAdm
                 errors.append("%s: %s" % (template.name, error))
         if errors:
             count = len(errors)
-            message = ungettext(
+            message = ngettext(
                 "Template syntax check FAILED for %(names)s.",
                 "Template syntax check FAILED for %(count)d templates: %(names)s.",
                 count,
@@ -185,7 +185,7 @@ class TemplateAdmin(SyncMixin, AdminFiltersMixin, PublishMixin, TemplateModelAdm
             self.message_user(request, message % {"count": count, "names": ", ".join(errors)})
         else:
             count = queryset.count()
-            message = ungettext("Template syntax OK.", "Template syntax OK for %(count)d templates.", count)
+            message = ngettext("Template syntax OK.", "Template syntax OK for %(count)d templates.", count)
             self.message_user(request, message % {"count": count})
 
     check_syntax.short_description = _("Check template syntax")
