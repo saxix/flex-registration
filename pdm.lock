@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:f4fe8a9fc59608193b7acad659e804527d6fe9760331cfac7606519fa603f7ae"
+content_hash = "sha256:1402e3660d9e5c901afa74fc468d4d2c1951c1eda17c1d4c63fabf6fe3ff0ecf"
 
 [[package]]
 name = "amqp"
@@ -582,18 +582,18 @@ files = [
 
 [[package]]
 name = "django"
-version = "3.2.23"
-requires_python = ">=3.6"
-summary = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
+version = "5.0"
+requires_python = ">=3.10"
+summary = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 groups = ["default", "dev"]
 dependencies = [
-    "asgiref<4,>=3.3.2",
-    "pytz",
-    "sqlparse>=0.2.2",
+    "asgiref>=3.7.0",
+    "sqlparse>=0.3.1",
+    "tzdata; sys_platform == \"win32\"",
 ]
 files = [
-    {file = "Django-3.2.23-py3-none-any.whl", hash = "sha256:d48608d5f62f2c1e260986835db089fa3b79d6f58510881d316b8d88345ae6e1"},
-    {file = "Django-3.2.23.tar.gz", hash = "sha256:82968f3640e29ef4a773af2c28448f5f7a08d001c6ac05b32d02aeee6509508b"},
+    {file = "Django-5.0-py3-none-any.whl", hash = "sha256:3a9fd52b8dbeae335ddf4a9dfa6c6a0853a1122f1fb071a8d5eca979f73a05c8"},
+    {file = "Django-5.0.tar.gz", hash = "sha256:7d29e14dfbc19cb6a95a4bd669edbde11f5d4c6a71fdaa42c2d40b6846e807f7"},
 ]
 
 [[package]]
@@ -1018,17 +1018,17 @@ files = [
 
 [[package]]
 name = "django-simple-captcha"
-version = "0.5.20"
+version = "0.6.0"
 summary = "A very simple, yet powerful, Django captcha application"
 groups = ["default"]
 dependencies = [
-    "Django>=3.2",
+    "Django>=4.2",
     "Pillow>=6.2.0",
     "django-ranged-response==0.2.0",
 ]
 files = [
-    {file = "django-simple-captcha-0.5.20.tar.gz", hash = "sha256:20273009a7beb44297e9f6c7a6bd21ada3d2fa93c314d2f6bf5e394ceeb6a297"},
-    {file = "django_simple_captcha-0.5.20-py2.py3-none-any.whl", hash = "sha256:3359cb033c489eae6544a80ad92517db3d35b3b328b3b427393399c3d7f55275"},
+    {file = "django-simple-captcha-0.6.0.tar.gz", hash = "sha256:d188516d326fadd2d5ad076eb89649d55c02cabafe3fdcc2154ac18e9f6d4b97"},
+    {file = "django_simple_captcha-0.6.0-py2.py3-none-any.whl", hash = "sha256:3ae9a7e650cb0cdbcfd4a75aa91fdf25dcc523ef541a7b1f004bd4357798fc03"},
 ]
 
 [[package]]
@@ -2412,7 +2412,7 @@ files = [
 name = "pytz"
 version = "2023.3.post1"
 summary = "World timezone definitions, modern and historical"
-groups = ["default", "dev"]
+groups = ["default"]
 files = [
     {file = "pytz-2023.3.post1-py2.py3-none-any.whl", hash = "sha256:ce42d816b81b68506614c11e8937d3aa9e41007ceb50bfdcb0749b921bf646c7"},
     {file = "pytz-2023.3.post1.tar.gz", hash = "sha256:7b4fddbeb94a1eba4b557da24f19fdf9db575192544270a9101d8509f9f43d7b"},
@@ -2894,7 +2894,7 @@ name = "tzdata"
 version = "2023.3"
 requires_python = ">=2"
 summary = "Provider of IANA time zone data"
-groups = ["default"]
+groups = ["default", "dev"]
 files = [
     {file = "tzdata-2023.3-py2.py3-none-any.whl", hash = "sha256:7e65763eef3120314099b6939b5546db7adce1e7d6f2e179e3df563c70511eda"},
     {file = "tzdata-2023.3.tar.gz", hash = "sha256:11ef1e08e54acb0d4f95bdb1be05da659673de4acbd21bf9c69e94cc5e907a3a"},

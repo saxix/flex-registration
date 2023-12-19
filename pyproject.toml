@@ -10,7 +10,7 @@ dependencies = [
     "Pillow",
     "celery",
     "cryptography",
-    "django<4,>=3",
+    "django",
     "django-admin-extra-buttons",
     "django-admin-ordering",
     "django-admin-sync",
