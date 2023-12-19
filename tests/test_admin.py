@@ -175,10 +175,10 @@ def test_changeform(app, modeladmin, record):
     res = app.get(url)
     assert str(opts.app_config.verbose_name) in res.body.decode()
     if modeladmin.has_change_permission(Mock(user=app._user)):
-        res = res.form.submit()
+        res = res.forms[1].submit()
         assert res.status_code in [302, 200]
     # else:
-    #     res.form.submit(expect_errors=True)
+    #     res.forms[1].submit(expect_errors=True)
     #     assert res.status_code in [403]
 
 
@@ -191,7 +191,7 @@ def test_add(
     url = reverse(admin_urlname(modeladmin.model._meta, "add"))
     if modeladmin.has_add_permission(Mock(user=app._user)):
         res = app.get(url)
-        res.form.submit()
+        res.forms[1].submit()
         assert res.status_code in [200, 302]
     else:
         pytest.skip("No 'add' permission")
@@ -203,7 +203,7 @@ def test_delete(app, modeladmin, record, monkeypatch):
     url = reverse(admin_urlname(modeladmin.model._meta, "delete"), args=[record.pk])
     if modeladmin.has_delete_permission(Mock(user=app._user)):
         res = app.get(url)
-        res.form.submit()
+        res.forms[1].submit()
         assert res.status_code in [200, 302]
     else:
         pytest.skip("No 'delete' permission")

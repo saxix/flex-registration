@@ -118,11 +118,11 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 
 ROOT_URLCONF = "aurora.config.urls"
 
-# TEMPLATE_LOADERS = (
-#     "dbtemplates.loader.Loader",
-#     "django.template.loaders.filesystem.Loader",
-#     "django.template.loaders.app_directories.Loader",
-# )
+TEMPLATE_LOADERS = (
+    "dbtemplates.loader.Loader",
+    "django.template.loaders.filesystem.Loader",
+    "django.template.loaders.app_directories.Loader",
+)
 
 TEMPLATES = [
     {
@@ -138,11 +138,7 @@ TEMPLATES = [
         ],
         "APP_DIRS": False,
         "OPTIONS": {
-            "loaders": [
-                "dbtemplates.loader.Loader",
-                "django.template.loaders.filesystem.Loader",
-                "django.template.loaders.app_directories.Loader",
-            ],
+            "loaders": TEMPLATE_LOADERS,
             # 'builtins': [
             #     'http2.templatetags',
             # ],
