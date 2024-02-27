@@ -45,11 +45,11 @@ class TranslateNode(Node):
         value = translator[current_locale][msgid]
 
         if self.asvar:
-            context[self.asvar] = value
+            context[self.asvar] = str(value)
             context[f"{self.asvar}_msgid"] = msgid
             return ""
         else:
-            return value
+            return str(value)
 
 
 class BlockTranslateNode(Node):
@@ -136,10 +136,10 @@ class BlockTranslateNode(Node):
             with translation.override(None):
                 result = self.render(context, nested=True)
         if self.asvar:
-            context[self.asvar] = result
+            context[self.asvar] = str(result)
             return ""
         else:
-            return result
+            return str(result)
 
 
 @register.tag("translate")
