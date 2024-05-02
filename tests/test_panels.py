@@ -1,4 +1,5 @@
 import pytest
+
 from django.contrib.admin.sites import site
 from django.urls import reverse
 

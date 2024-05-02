@@ -1,14 +1,16 @@
 from typing import List
-from unittest.mock import Mock
 
 import pytest
-from _pytest.mark import Mark
-from _pytest.python import Metafunc
-from admin_extra_buttons.handlers import ChoiceHandler
+from unittest.mock import Mock
+
 from django.contrib.admin.sites import site
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from django.db.models.options import Options
 from django.urls import reverse
+
+from _pytest.mark import Mark
+from _pytest.python import Metafunc
+from admin_extra_buttons.handlers import ChoiceHandler
 from django_regex.utils import RegexList as _RegexList
 
 

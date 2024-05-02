@@ -2,6 +2,7 @@ from contextlib import ContextDecorator
 from random import choice
 
 from django.contrib.auth.models import Permission
+
 from faker import Faker
 
 from aurora.core.models import Organization

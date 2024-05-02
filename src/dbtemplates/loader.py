@@ -4,12 +4,7 @@ from django.template import Origin, TemplateDoesNotExist
 from django.template.loaders.base import Loader as BaseLoader
 
 from dbtemplates.models import Template
-from dbtemplates.utils.cache import (
-    cache,
-    get_cache_key,
-    get_cache_notfound_key,
-    set_and_return,
-)
+from dbtemplates.utils.cache import cache, get_cache_key, get_cache_notfound_key, set_and_return
 
 
 class Loader(BaseLoader):

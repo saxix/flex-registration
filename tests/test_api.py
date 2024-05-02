@@ -2,8 +2,10 @@ import base64
 import time
 
 import pytest
-from Crypto.PublicKey import RSA
+
 from django.urls import reverse
+
+from Crypto.PublicKey import RSA
 
 from aurora.core.crypto import decrypt
 
