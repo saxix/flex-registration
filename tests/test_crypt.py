@@ -1,9 +1,10 @@
 import json
 
 import pytest
+
 from Crypto.PublicKey import RSA
 
-from aurora.core.crypto import RSACrypto, crypt, decrypt
+from aurora.core.crypto import crypt, decrypt, RSACrypto
 
 LANGUAGES = {
     "english": "first",
