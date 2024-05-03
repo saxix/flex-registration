@@ -45,7 +45,7 @@ def pytest_configure(config):
 
     from django.conf import global_settings, settings
 
-    settings.STATICFILES_STORAGE = global_settings.STATICFILES_STORAGE
+    settings.STORAGES = global_settings.STORAGES
 
 
 @pytest.fixture()
